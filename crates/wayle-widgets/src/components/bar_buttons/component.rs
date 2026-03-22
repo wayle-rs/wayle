@@ -7,7 +7,7 @@ use glib::prelude::CastNone;
 use gtk4::prelude::StyleContextExt;
 use gtk4::prelude::{BoxExt, ListModelExt, OrientableExt, WidgetExt};
 use relm4::{ComponentParts, ComponentSender, gtk, prelude::*};
-use wayle_config::schemas::{bar::IconPosition, styling::CssToken};
+use wayle_config::schemas::{bar::IconPosition, styling::{CssToken, ThresholdColors}};
 
 use super::{
     helpers::setup_event_controllers,
@@ -51,6 +51,8 @@ pub enum BarButtonInput {
     ThawSize,
     /// Config property changed.
     ConfigChanged,
+    /// Apply threshold-based color overrides.
+    SetThresholdColors(ThresholdColors),
 }
 
 /// Command outputs from async watchers.
@@ -74,6 +76,8 @@ pub struct BarButton {
     pub(super) behavior: BarButtonBehavior,
     pub(super) settings: BarSettings,
     pub(super) css_provider: gtk::CssProvider,
+    /// Threshold-based color overrides. Applied on top of config colors.
+    pub(super) threshold_overrides: ThresholdColors,
 }
 
 #[relm4::component(pub)]
@@ -183,6 +187,7 @@ impl Component for BarButton {
             behavior: init.behavior,
             settings: init.settings,
             css_provider,
+            threshold_overrides: ThresholdColors::default(),
         };
 
         #[allow(deprecated)]
@@ -228,6 +233,10 @@ impl Component for BarButton {
                 }
             }
             BarButtonInput::ConfigChanged => {}
+            BarButtonInput::SetThresholdColors(colors) => {
+                self.threshold_overrides = colors;
+                self.reload_css();
+            }
         }
     }
 

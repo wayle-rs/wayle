@@ -11,7 +11,7 @@ use relm4::prelude::*;
 use wayle_common::ConfigProperty;
 use wayle_config::{ConfigService, schemas::styling::CssToken};
 use wayle_widgets::prelude::{
-    BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonOutput,
+    BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonInput, BarButtonOutput,
 };
 
 use self::helpers::{IconContext, format_label, select_icon};
@@ -144,6 +144,10 @@ impl Component for NotificationModule {
             }
             NotificationCmd::IconConfigChanged => {
                 self.update_display(notification_config);
+            }
+            NotificationCmd::UpdateThresholdColors(colors) => {
+                self.bar_button
+                    .emit(BarButtonInput::SetThresholdColors(colors));
             }
         }
     }
