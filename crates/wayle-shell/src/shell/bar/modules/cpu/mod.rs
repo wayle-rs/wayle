@@ -117,6 +117,10 @@ impl Component for CpuModule {
             CpuCmd::UpdateIcon(icon) => {
                 self.bar_button.emit(BarButtonInput::SetIcon(icon));
             }
+            CpuCmd::UpdateThresholdColors(colors) => {
+                self.bar_button
+                    .emit(BarButtonInput::SetThresholdColors(colors));
+            }
         }
     }
 }

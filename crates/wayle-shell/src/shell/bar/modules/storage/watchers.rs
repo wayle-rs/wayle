@@ -2,7 +2,7 @@ use std::{path::Path, sync::Arc};
 
 use relm4::ComponentSender;
 use wayle_common::watch;
-use wayle_config::schemas::modules::StorageConfig;
+use wayle_config::schemas::{modules::StorageConfig, styling::evaluate_thresholds};
 use wayle_sysinfo::SysinfoService;
 
 use super::{StorageModule, helpers::format_label, messages::StorageCmd};
@@ -14,6 +14,7 @@ pub(super) fn spawn_watchers(
 ) {
     let format = config.format.clone();
     let mount_point = config.mount_point.clone();
+    let thresholds = config.thresholds.clone();
 
     let sysinfo_disks = sysinfo.clone();
     let sysinfo_format = sysinfo.clone();
@@ -26,6 +27,9 @@ pub(super) fn spawn_watchers(
         if let Some(disk) = disks.iter().find(|d| d.mount_point == target_path) {
             let label = format_label(&format.get(), disk);
             let _ = out.send(StorageCmd::UpdateLabel(label));
+
+            let colors = evaluate_thresholds(disk.usage_percent as f64, &thresholds.get());
+            let _ = out.send(StorageCmd::UpdateThresholdColors(colors));
         }
     });
 

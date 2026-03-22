@@ -3,7 +3,7 @@ use std::sync::Arc;
 use relm4::ComponentSender;
 use wayle_battery::BatteryService;
 use wayle_common::watch;
-use wayle_config::schemas::modules::BatteryConfig;
+use wayle_config::schemas::{modules::BatteryConfig, styling::evaluate_thresholds};
 
 use super::{
     BatteryModule,
@@ -19,6 +19,7 @@ pub(super) fn spawn_watchers(
     let level_icons = config.level_icons.clone();
     let charging_icon = config.charging_icon.clone();
     let alert_icon = config.alert_icon.clone();
+    let thresholds = config.thresholds.clone();
 
     let device = battery.device.clone();
 
@@ -59,6 +60,9 @@ pub(super) fn spawn_watchers(
                 alert_icon: &alert_icon_val,
             });
             let _ = out.send(BatteryCmd::UpdateIcon(icon));
+
+            let colors = evaluate_thresholds(percentage, &thresholds.get());
+            let _ = out.send(BatteryCmd::UpdateThresholdColors(colors));
         }
     );
 }

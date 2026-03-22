@@ -1,6 +1,6 @@
 use std::{rc::Rc, sync::Arc};
 
-use wayle_config::ConfigService;
+use wayle_config::{ConfigService, schemas::styling::ThresholdColors};
 use wayle_notification::NotificationService;
 use wayle_widgets::prelude::BarSettings;
 
@@ -28,4 +28,5 @@ pub(crate) enum NotificationCmd {
     NotificationsChanged(usize),
     DndChanged(bool),
     IconConfigChanged,
+    UpdateThresholdColors(ThresholdColors),
 }

@@ -4,7 +4,7 @@ use wayle_derive::wayle_config;
 
 use crate::{
     docs::{ModuleInfo, ModuleInfoProvider},
-    schemas::styling::{ColorValue, CssToken},
+    schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
 /// Battery module configuration.
@@ -106,6 +106,27 @@ pub struct BatteryConfig {
     #[serde(rename = "scroll-down")]
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
+
+    /// Dynamic color thresholds based on battery percentage.
+    ///
+    /// Entries are checked in order; the last matching entry wins for each
+    /// color slot. Use `below` for low-value warnings (e.g., low battery).
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [[modules.battery.thresholds]]
+    /// below = 40
+    /// icon-color = "status-warning"
+    ///
+    /// [[modules.battery.thresholds]]
+    /// below = 20
+    /// icon-color = "status-error"
+    /// label-color = "status-error"
+    /// ```
+    #[serde(rename = "thresholds")]
+    #[default(Vec::new())]
+    pub thresholds: ConfigProperty<Vec<ThresholdEntry>>,
 }
 
 impl ModuleInfoProvider for BatteryConfig {
