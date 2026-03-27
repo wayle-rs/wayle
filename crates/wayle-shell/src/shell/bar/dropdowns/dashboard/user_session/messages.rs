@@ -10,6 +10,8 @@ pub(crate) struct UserSessionInit {
 #[derive(Debug)]
 pub(crate) enum UserSessionInput {
     Lock,
+    Sleep,
+    Hibernate,
     Logout,
     Reboot,
     PowerOff,
