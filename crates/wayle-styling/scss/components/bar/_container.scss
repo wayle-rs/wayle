@@ -1,5 +1,5 @@
 .bar {
-    background-color: color-mix(in srgb, var(--bar-bg) var(--bar-opacity), transparent);
+    background: color-mix(in srgb, var(--bar-bg) var(--bar-opacity), transparent);
     border-radius: var(--bar-rounding-container);
     border-style: solid;
     border-color: var(--bar-border-color);
