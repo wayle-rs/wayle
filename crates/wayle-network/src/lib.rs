@@ -93,6 +93,8 @@ pub mod types;
 pub mod wifi;
 /// Wired device functionality
 pub mod wired;
+/// WireGuard VPN functionality
+pub mod wireguard;
 
 pub use error::Error;
 pub use service::NetworkService;

@@ -14,6 +14,7 @@ use super::{
     types::connectivity::ConnectionType,
     wifi::Wifi,
     wired::Wired,
+    wireguard::WireGuard,
 };
 use crate::{
     core::{
@@ -40,6 +41,7 @@ use crate::{
     types::states::NMState,
     wifi::LiveWifiParams,
     wired::LiveWiredParams,
+    wireguard::LiveWireGuardParams,
 };
 
 /// Entry point for network management. See [crate-level docs](crate) for usage.
@@ -55,6 +57,8 @@ pub struct NetworkService {
     pub wifi: Property<Option<Arc<Wifi>>>,
     /// Wired device, if present (live-updated on hot-plug).
     pub wired: Property<Option<Arc<Wired>>>,
+    /// WireGuard VPN service for managing WireGuard tunnels.
+    pub wireguard: Property<Option<Arc<WireGuard>>>,
     /// Primary connection type as reported by NetworkManager.
     pub primary: Property<ConnectionType>,
 }
@@ -128,6 +132,20 @@ impl NetworkService {
             None
         };
 
+        let wireguard = match WireGuard::get_live(LiveWireGuardParams {
+            connection: &connection,
+            cancellation_token: &cancellation_token,
+            settings: settings.clone(),
+        })
+        .await
+        {
+            Ok(wg) => Some(wg),
+            Err(e) => {
+                warn!(error = %e, "cannot create WireGuard service");
+                None
+            }
+        };
+
         let primary = Property::new(ConnectionType::None);
 
         let service = Self {
@@ -136,6 +154,7 @@ impl NetworkService {
             settings,
             wifi: Property::new(wifi),
             wired: Property::new(wired),
+            wireguard: Property::new(wireguard),
             primary,
         };
 

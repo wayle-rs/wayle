@@ -38,6 +38,16 @@
             color: var(--accent);
         }
     }
+
+    &.vpn {
+        background: var(--accent-subtle);
+
+        image {
+            margin: calc(var(--space-sm) + var(--space-xs));
+            -gtk-icon-size: var(--icon-md);
+            color: var(--accent);
+        }
+    }
 }
 
 .network-connection-name {
@@ -93,6 +103,16 @@
             margin: var(--space-xs) var(--space-sm);
         }
     }
+}
+
+.network-connection-name-edit {
+    border: none;
+    background: transparent;
+    padding: 0;
+    min-height: 0;
+    font-size: var(--text-md);
+    font-weight: var(--weight-bold);
+    color: var(--fg-default);
 }
 
 button.network-action-forget:hover {

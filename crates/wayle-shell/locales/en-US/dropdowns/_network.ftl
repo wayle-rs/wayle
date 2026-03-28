@@ -38,6 +38,14 @@ dropdown-network-step-authenticating = Authenticating...
 dropdown-network-step-obtaining-ip = Obtaining IP address...
 dropdown-network-step-verifying = Verifying connection...
 
+## WireGuard
+
+dropdown-network-wireguard-tunnels = WireGuard Tunnels
+dropdown-network-wireguard-import = Import Configuration
+dropdown-network-wireguard-active = Active
+dropdown-network-wireguard-inactive = Inactive
+dropdown-network-wireguard-delete = Delete
+
 ## Connection Errors
 
 dropdown-network-error-wrong-password = Authentication failed
