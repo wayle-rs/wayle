@@ -5,6 +5,7 @@ mod bluetooth;
 mod cava;
 mod clock;
 mod cpu;
+mod cpuchart;
 mod custom;
 mod dashboard;
 mod hyprland_workspaces;
@@ -28,14 +29,16 @@ mod weather;
 mod window_title;
 mod world_clock;
 
+pub use super::barchart::BarDirection;
 pub use battery::BatteryConfig;
 pub use bluetooth::BluetoothConfig;
 pub use cava::{
-    BarCount as CavaBarCount, CavaConfig, CavaDirection, CavaInput, CavaStyle,
-    Framerate as CavaFramerate, FrequencyHz,
+    BarCount as CavaBarCount, CavaConfig, CavaInput, CavaStyle, Framerate as CavaFramerate,
+    FrequencyHz,
 };
 pub use clock::ClockConfig;
 pub use cpu::CpuConfig;
+pub use cpuchart::CpuChartConfig;
 pub use custom::{CustomModuleDefinition, ExecutionMode, RestartDelay, RestartPolicy};
 pub use dashboard::DashboardConfig;
 pub use hyprland_workspaces::{
@@ -80,6 +83,9 @@ pub struct ModulesConfig {
     pub clock: ClockConfig,
     /// CPU usage module.
     pub cpu: CpuConfig,
+    /// CPU usage chart module.
+    #[serde(rename = "cpu-chart")]
+    pub cpuchart: CpuChartConfig,
     /// Dashboard module.
     pub dashboard: DashboardConfig,
     /// Hyprland workspace switcher module.

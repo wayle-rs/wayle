@@ -1,4 +1,3 @@
-mod color;
 mod factory;
 mod helpers;
 mod messages;
@@ -16,6 +15,7 @@ use wayle_config::{ConfigProperty, ConfigService};
 use wayle_widgets::{
     WatcherToken,
     prelude::{BarContainer, BarContainerBehavior, BarContainerColors, BarContainerInit},
+    primitives::barchart::calculate_widget_length,
 };
 
 use self::messages::CavaMsg;
@@ -98,7 +98,7 @@ impl Component for CavaModule {
         let padding_px = helpers::rem_to_px(internal_padding, bar_scale);
 
         let drawing_area = gtk::DrawingArea::new();
-        let length = helpers::calculate_widget_length(bars, bar_width, bar_gap, padding_px);
+        let length = calculate_widget_length(bars, bar_width, bar_gap, padding_px);
 
         if is_vertical {
             drawing_area.set_size_request(-1, length);

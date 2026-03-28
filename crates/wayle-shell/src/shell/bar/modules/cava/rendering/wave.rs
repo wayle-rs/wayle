@@ -1,5 +1,5 @@
 use gtk4::cairo;
-use wayle_config::schemas::modules::CavaDirection;
+use wayle_config::schemas::barchart::BarDirection;
 
 use super::{RenderParams, apply_color};
 
@@ -10,7 +10,7 @@ pub(crate) fn draw_wave(
     values: &[f64],
     canvas_width: f64,
     canvas_height: f64,
-    direction: CavaDirection,
+    direction: BarDirection,
     params: &RenderParams,
 ) {
     if values.is_empty() {
@@ -31,9 +31,9 @@ pub(crate) fn draw_wave(
     let amplitude_to_y = |amplitude: f64| -> f64 {
         let clamped_amplitude = amplitude.max(min_amplitude);
         match direction {
-            CavaDirection::Normal => canvas_height * (1.0 - clamped_amplitude),
-            CavaDirection::Reverse => canvas_height * clamped_amplitude,
-            CavaDirection::Mirror => canvas_height * (1.0 - clamped_amplitude) / 2.0,
+            BarDirection::Normal => canvas_height * (1.0 - clamped_amplitude),
+            BarDirection::Reverse => canvas_height * clamped_amplitude,
+            BarDirection::Mirror => canvas_height * (1.0 - clamped_amplitude) / 2.0,
         }
     };
 
@@ -83,18 +83,18 @@ fn close_wave_path(
     canvas_height: f64,
     point_spacing: f64,
     min_amplitude: f64,
-    direction: CavaDirection,
+    direction: BarDirection,
 ) {
     match direction {
-        CavaDirection::Normal => {
+        BarDirection::Normal => {
             cr.line_to(canvas_width, canvas_height);
             cr.line_to(0.0, canvas_height);
         }
-        CavaDirection::Reverse => {
+        BarDirection::Reverse => {
             cr.line_to(canvas_width, 0.0);
             cr.line_to(0.0, 0.0);
         }
-        CavaDirection::Mirror => {
+        BarDirection::Mirror => {
             trace_mirror_bottom(cr, values, point_spacing, min_amplitude, canvas_height);
         }
     }

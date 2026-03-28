@@ -198,19 +198,6 @@ pub enum CavaStyle {
     Peaks,
 }
 
-/// Bar growth direction relative to the bar's attached screen edge.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
-pub enum CavaDirection {
-    /// Bars grow away from the attached edge.
-    #[default]
-    Normal,
-    /// Bars grow toward the attached edge.
-    Reverse,
-    /// Bars grow symmetrically from center.
-    Mirror,
-}
-
 /// Audio capture backend.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]

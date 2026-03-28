@@ -23,6 +23,8 @@ pub use property::{
 pub mod schemas {
     /// Bar layout configuration.
     pub mod bar;
+    /// Generic barchart configuration types.
+    pub mod barchart;
     /// General Wayle configuration.
     pub mod general;
     /// Module-specific configurations.

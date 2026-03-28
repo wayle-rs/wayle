@@ -1,31 +1,25 @@
-mod bars;
 mod peaks;
 mod wave;
 
 use gtk4::cairo;
-use wayle_config::schemas::modules::CavaDirection;
+use wayle_config::schemas::barchart::BarDirection;
+use wayle_widgets::primitives::barchart::{BarchartParams, MIN_BAR_HEIGHT};
 
-pub(super) use self::{bars::draw_bars, peaks::draw_peak_bars, wave::draw_wave};
-use super::color::Rgba;
+pub(super) use self::{peaks::draw_peak_bars, wave::draw_wave};
 
-const MIN_BAR_HEIGHT: f64 = 2.0;
-
-pub(super) struct RenderParams {
-    pub bar_width: f64,
-    pub bar_spacing: f64,
-    pub fill_color: Rgba,
-}
+// Use BarchartParams directly instead of wrapper type
+pub(super) type RenderParams = BarchartParams;
 
 fn apply_color(cr: &cairo::Context, params: &RenderParams) {
     let color = &params.fill_color;
     cr.set_source_rgba(color.red, color.green, color.blue, color.alpha);
 }
 
-fn bar_origin_y(direction: CavaDirection, bar_height: f64, canvas_height: f64) -> f64 {
+fn bar_origin_y(direction: BarDirection, bar_height: f64, canvas_height: f64) -> f64 {
     match direction {
-        CavaDirection::Normal => canvas_height - bar_height,
-        CavaDirection::Reverse => 0.0,
-        CavaDirection::Mirror => (canvas_height - bar_height) / 2.0,
+        BarDirection::Normal => canvas_height - bar_height,
+        BarDirection::Reverse => 0.0,
+        BarDirection::Mirror => (canvas_height - bar_height) / 2.0,
     }
 }
 
@@ -34,7 +28,7 @@ fn fill_bar_rect(
     x: f64,
     bar_height: f64,
     canvas_height: f64,
-    direction: CavaDirection,
+    direction: BarDirection,
     bar_width: f64,
 ) {
     let y = bar_origin_y(direction, bar_height, canvas_height);

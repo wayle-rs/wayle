@@ -2,6 +2,7 @@
 
 pub mod alert;
 pub mod badge;
+pub mod barchart;
 pub mod buttons;
 pub mod card;
 pub mod checkbox;
