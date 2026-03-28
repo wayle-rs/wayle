@@ -13,7 +13,7 @@ impl VolumeModule {
         let percentage = device.volume.get().average_percentage().round() as u16;
         let muted = device.muted.get();
 
-        let label = format_label(percentage);
+        let label = format_label(&config.format.get(), percentage);
         self.bar_button.emit(BarButtonInput::SetLabel(label));
 
         let icons = config.level_icons.get();

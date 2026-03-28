@@ -19,6 +19,7 @@ pub(super) fn spawn_watchers(
     let level_icons = config.level_icons.clone();
     let charging_icon = config.charging_icon.clone();
     let alert_icon = config.alert_icon.clone();
+    let format = config.format.clone();
 
     let device = battery.device.clone();
 
@@ -28,6 +29,7 @@ pub(super) fn spawn_watchers(
     let level_icons_stream = level_icons.watch();
     let charging_icon_stream = charging_icon.watch();
     let alert_icon_stream = alert_icon.watch();
+    let format_stream = format.watch();
 
     watch!(
         sender,
@@ -37,14 +39,15 @@ pub(super) fn spawn_watchers(
             is_present_stream,
             level_icons_stream,
             charging_icon_stream,
-            alert_icon_stream
+            alert_icon_stream,
+            format_stream
         ],
         |out| {
             let percentage = device.percentage.get();
             let state = device.state.get();
             let is_present = device.is_present.get();
 
-            let label = format_label(percentage, is_present);
+            let label = format_label(&format.get(), percentage, is_present);
             let _ = out.send(BatteryCmd::UpdateLabel(label));
 
             let level_icons_val = level_icons.get();

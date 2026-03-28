@@ -1,3 +1,4 @@
+use serde_json::json;
 use wayle_battery::types::DeviceState;
 
 use crate::i18n::t;
@@ -37,9 +38,12 @@ pub(crate) fn select_icon(ctx: &IconContext<'_>) -> String {
         .unwrap_or_else(|| ctx.level_icons.last().cloned().unwrap_or_default())
 }
 
-pub(crate) fn format_label(percentage: f64, is_present: bool) -> String {
+pub(crate) fn format_label(format: &str, percentage: f64, is_present: bool) -> String {
     if is_present {
-        format!("{:.0}%", percentage)
+        let ctx = json!({
+            "percent": percentage.round() as u32,
+        });
+        crate::template::render(format, ctx).unwrap_or_default()
     } else {
         t!("bar-battery-unavailable")
     }
@@ -200,13 +204,19 @@ mod tests {
 
     #[test]
     fn format_label_present() {
-        assert_eq!(format_label(75.0, true), "75%");
-        assert_eq!(format_label(100.0, true), "100%");
-        assert_eq!(format_label(0.0, true), "0%");
+        assert_eq!(format_label("{{ percent }}%", 75.0, true), "75%");
+        assert_eq!(format_label("{{ percent }}", 100.0, true), "100");
+        assert_eq!(format_label("Bat: {{ percent }}", 0.0, true), "Bat: 0");
     }
 
     #[test]
     fn format_label_not_present() {
-        assert_eq!(format_label(50.0, false), "N/A");
+        assert_eq!(format_label("{{ percent }}%", 50.0, false), "N/A");
+    }
+
+    #[test]
+    fn format_label_no_spaces() {
+        assert_eq!(format_label("{{percent}}", 75.0, true), "75");
+        assert_eq!(format_label("{{percent}}%", 75.0, true), "75%");
     }
 }

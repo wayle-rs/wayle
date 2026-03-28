@@ -74,6 +74,19 @@ pub struct VolumeConfig {
     #[default(ColorValue::Token(CssToken::Red))]
     pub label_color: ConfigProperty<ColorValue>,
 
+    /// Format string for the label.
+    ///
+    /// ## Placeholders
+    ///
+    /// - `{{ percent }}` - Volume (0-100)
+    ///
+    /// ## Examples
+    ///
+    /// - `"{{ percent }}%"` - "45%"
+    #[serde(rename = "format")]
+    #[default(String::from("{{ percent }}%"))]
+    pub format: ConfigProperty<String>,
+
     /// Max label characters before truncation with ellipsis. Set to 0 to disable.
     #[serde(rename = "label-max-length")]
     #[default(0)]

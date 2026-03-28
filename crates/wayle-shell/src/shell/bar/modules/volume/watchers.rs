@@ -22,7 +22,8 @@ pub(super) fn spawn_watchers(
 
     let level_icons = config.level_icons.clone();
     let muted_icon = config.icon_muted.clone();
-    watch!(sender, [level_icons.watch(), muted_icon.watch()], |out| {
+    let format = config.format.clone();
+    watch!(sender, [level_icons.watch(), muted_icon.watch(), format.watch()], |out| {
         let _ = out.send(VolumeCmd::IconConfigChanged);
     });
 }

@@ -1,3 +1,5 @@
+use serde_json::json;
+
 pub(crate) struct IconContext<'a> {
     pub(crate) percentage: u16,
     pub(crate) muted: bool,
@@ -28,8 +30,11 @@ pub(crate) fn select_icon(ctx: &IconContext<'_>) -> String {
         .unwrap_or_else(|| ctx.muted_icon.to_string())
 }
 
-pub(crate) fn format_label(percentage: u16) -> String {
-    format!("{percentage}%")
+pub(crate) fn format_label(format: &str, percentage: u16) -> String {
+    let ctx = json!({
+        "percent": percentage,
+    });
+    crate::template::render(format, ctx).unwrap_or_default()
 }
 
 #[cfg(test)]
@@ -125,5 +130,18 @@ mod tests {
             muted_icon: "muted",
         });
         assert_eq!(result, "vol-3");
+    }
+
+    #[test]
+    fn format_label_default() {
+        assert_eq!(format_label("{{ percent }}%", 75), "75%");
+        assert_eq!(format_label("{{ percent }}", 100), "100");
+        assert_eq!(format_label("Vol: {{ percent }}", 50), "Vol: 50");
+    }
+
+    #[test]
+    fn format_label_no_spaces() {
+        assert_eq!(format_label("{{percent}}", 75), "75");
+        assert_eq!(format_label("{{percent}}%", 75), "75%");
     }
 }
