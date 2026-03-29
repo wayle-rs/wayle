@@ -1,6 +1,6 @@
 use std::{rc::Rc, sync::Arc};
 
-use wayle_config::ConfigService;
+use wayle_config::{ConfigService, schemas::styling::ThresholdColors};
 use wayle_sysinfo::SysinfoService;
 use wayle_widgets::prelude::BarSettings;
 
@@ -23,7 +23,9 @@ pub(crate) enum CpuMsg {
 }
 
 #[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
 pub(crate) enum CpuCmd {
     UpdateLabel(String),
     UpdateIcon(String),
+    UpdateThresholdColors(ThresholdColors),
 }

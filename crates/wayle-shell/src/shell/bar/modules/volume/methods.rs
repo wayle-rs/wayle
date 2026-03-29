@@ -1,6 +1,6 @@
 use relm4::ComponentController;
 use wayle_audio::core::device::output::OutputDevice;
-use wayle_config::schemas::modules::VolumeConfig;
+use wayle_config::schemas::{modules::VolumeConfig, styling::evaluate_thresholds};
 use wayle_widgets::prelude::BarButtonInput;
 
 use super::{
@@ -25,5 +25,12 @@ impl VolumeModule {
             muted_icon: &muted_icon_val,
         });
         self.bar_button.emit(BarButtonInput::SetIcon(icon));
+    }
+
+    pub(super) fn apply_thresholds(&self, config: &VolumeConfig, device: &OutputDevice) {
+        let percentage = device.volume.get().average_percentage().round() as u16;
+        let colors = evaluate_thresholds(percentage as f64, &config.thresholds.get());
+        self.bar_button
+            .emit(BarButtonInput::SetThresholdColors(colors));
     }
 }

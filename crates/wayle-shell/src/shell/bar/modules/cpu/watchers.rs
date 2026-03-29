@@ -1,7 +1,7 @@
 use std::{sync::Arc, time::Duration};
 
 use relm4::ComponentSender;
-use wayle_config::schemas::modules::CpuConfig;
+use wayle_config::schemas::{modules::CpuConfig, styling::evaluate_thresholds};
 use wayle_sysinfo::SysinfoService;
 use wayle_widgets::watch;
 
@@ -13,12 +13,16 @@ pub(super) fn spawn_watchers(
     sysinfo: &Arc<SysinfoService>,
 ) {
     let format = config.format.clone();
+    let thresholds = config.thresholds.clone();
 
     let sysinfo_cpu = sysinfo.clone();
     watch!(sender, [sysinfo.cpu.watch()], |out| {
         let cpu = sysinfo_cpu.cpu.get();
         let label = format_label(&format.get(), &cpu);
         let _ = out.send(CpuCmd::UpdateLabel(label));
+
+        let colors = evaluate_thresholds(cpu.usage_percent as f64, &thresholds.get());
+        let _ = out.send(CpuCmd::UpdateThresholdColors(colors));
     });
 
     let format_watch = config.format.clone();

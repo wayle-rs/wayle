@@ -1,7 +1,7 @@
 use std::{rc::Rc, sync::Arc};
 
 use wayle_battery::BatteryService;
-use wayle_config::ConfigService;
+use wayle_config::{ConfigService, schemas::styling::ThresholdColors};
 use wayle_widgets::prelude::BarSettings;
 
 use crate::shell::bar::dropdowns::DropdownRegistry;
@@ -23,7 +23,9 @@ pub(crate) enum BatteryMsg {
 }
 
 #[derive(Debug)]
+#[allow(clippy::enum_variant_names)]
 pub(crate) enum BatteryCmd {
     UpdateLabel(String),
     UpdateIcon(String),
+    UpdateThresholdColors(ThresholdColors),
 }

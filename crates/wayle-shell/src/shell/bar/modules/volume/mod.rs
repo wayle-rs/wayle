@@ -10,9 +10,9 @@ use gtk::prelude::*;
 use relm4::prelude::*;
 use wayle_audio::AudioService;
 use wayle_config::{ConfigProperty, ConfigService, schemas::styling::CssToken};
-use wayle_widgets::{
-    WatcherToken,
-    prelude::{BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonOutput},
+use wayle_widgets::WatcherToken;
+use wayle_widgets::prelude::{
+    BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonInput, BarButtonOutput,
 };
 
 pub(crate) use self::{
@@ -125,6 +125,7 @@ impl Component for VolumeModule {
             VolumeCmd::DeviceChanged(device) => {
                 if let Some(device) = device {
                     self.update_display(volume_config, &device);
+                    self.apply_thresholds(volume_config, &device);
 
                     let token = self.active_device_watcher_token.reset();
                     watchers::spawn_device_watchers(&sender, &device, token);
@@ -133,7 +134,12 @@ impl Component for VolumeModule {
             VolumeCmd::VolumeOrMuteChanged | VolumeCmd::ConfigChanged => {
                 if let Some(device) = self.audio.default_output.get() {
                     self.update_display(volume_config, &device);
+                    self.apply_thresholds(volume_config, &device);
                 }
+            }
+            VolumeCmd::UpdateThresholdColors(colors) => {
+                self.bar_button
+                    .emit(BarButtonInput::SetThresholdColors(colors));
             }
         }
     }

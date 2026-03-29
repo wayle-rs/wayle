@@ -4,7 +4,7 @@ use wayle_derive::wayle_config;
 use crate::{
     ClickAction, ConfigProperty,
     docs::{ModuleInfo, ModuleInfoProvider},
-    schemas::styling::{ColorValue, CssToken},
+    schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
 /// RAM module configuration.
@@ -115,6 +115,28 @@ pub struct RamConfig {
     #[serde(rename = "scroll-down")]
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
+
+    /// Dynamic color thresholds based on RAM usage percentage.
+    ///
+    /// Entries are checked in order; the last matching entry wins for each
+    /// color slot. Use `above` for high-value warnings (e.g., high memory usage).
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [[modules.ram.thresholds]]
+    /// above = 80
+    /// icon-color = "status-warning"
+    /// label-color = "status-warning"
+    ///
+    /// [[modules.ram.thresholds]]
+    /// above = 95
+    /// icon-color = "status-error"
+    /// label-color = "status-error"
+    /// ```
+    #[serde(rename = "thresholds")]
+    #[default(Vec::new())]
+    pub thresholds: ConfigProperty<Vec<ThresholdEntry>>,
 }
 
 impl ModuleInfoProvider for RamConfig {

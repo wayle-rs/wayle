@@ -123,6 +123,10 @@ impl Component for StorageModule {
             StorageCmd::UpdateIcon(icon) => {
                 self.bar_button.emit(BarButtonInput::SetIcon(icon));
             }
+            StorageCmd::UpdateThresholdColors(colors) => {
+                self.bar_button
+                    .emit(BarButtonInput::SetThresholdColors(colors));
+            }
         }
     }
 }

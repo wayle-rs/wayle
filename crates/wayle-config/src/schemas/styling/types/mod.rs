@@ -3,6 +3,7 @@ mod extractor;
 mod rounding;
 mod sizing;
 mod theme;
+mod threshold;
 mod typography;
 mod validated;
 
@@ -14,5 +15,6 @@ pub use extractor::{
 pub use rounding::{RadiusClass, RoundingLevel};
 pub use sizing::{GapClass, IconSizeClass, PaddingClass};
 pub use theme::ThemeEntry;
+pub use threshold::{ThresholdColors, ThresholdEntry, evaluate_thresholds};
 pub use typography::{FontWeightClass, TextSizeClass};
 pub use validated::{HexColor, InvalidHexColor, NormalizedF64, Percentage, ScaleFactor, Spacing};

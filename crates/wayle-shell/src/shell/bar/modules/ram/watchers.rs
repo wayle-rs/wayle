@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use relm4::ComponentSender;
-use wayle_config::schemas::modules::RamConfig;
+use wayle_config::schemas::{modules::RamConfig, styling::evaluate_thresholds};
 use wayle_sysinfo::SysinfoService;
 use wayle_widgets::watch;
 
@@ -13,6 +13,7 @@ pub(super) fn spawn_watchers(
     sysinfo: &Arc<SysinfoService>,
 ) {
     let format = config.format.clone();
+    let thresholds = config.thresholds.clone();
 
     let sysinfo_memory = sysinfo.clone();
     let sysinfo_format = sysinfo.clone();
@@ -21,6 +22,9 @@ pub(super) fn spawn_watchers(
         let mem = sysinfo_memory.memory.get();
         let label = format_label(&format.get(), &mem);
         let _ = out.send(RamCmd::UpdateLabel(label));
+
+        let colors = evaluate_thresholds(mem.usage_percent as f64, &thresholds.get());
+        let _ = out.send(RamCmd::UpdateThresholdColors(colors));
     });
 
     let format_watch = config.format.clone();
