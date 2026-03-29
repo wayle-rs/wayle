@@ -32,6 +32,14 @@ pub(super) fn spawn_watchers(
     let alert_icon_stream = alert_icon.watch();
     let format_stream = format.watch();
 
+    let thresholds_watch = thresholds.clone();
+    let device_watch = device.clone();
+    watch!(sender, [thresholds_watch.watch()], |out| {
+        let percentage = device_watch.percentage.get();
+        let colors = evaluate_thresholds(percentage, &thresholds_watch.get());
+        let _ = out.send(BatteryCmd::UpdateThresholdColors(colors));
+    });
+
     watch!(
         sender,
         [

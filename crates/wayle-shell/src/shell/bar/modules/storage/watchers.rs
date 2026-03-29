@@ -19,6 +19,20 @@ pub(super) fn spawn_watchers(
     let sysinfo_disks = sysinfo.clone();
     let sysinfo_format = sysinfo.clone();
 
+    let thresholds_watch = thresholds.clone();
+    let sysinfo_thresholds = sysinfo.clone();
+    let mount_point_thresholds = mount_point.clone();
+    watch!(sender, [thresholds_watch.watch()], |out| {
+        let disks = sysinfo_thresholds.disks.get();
+        let target = mount_point_thresholds.get();
+        let target_path = Path::new(&target);
+
+        if let Some(disk) = disks.iter().find(|d| d.mount_point == target_path) {
+            let colors = evaluate_thresholds(disk.usage_percent as f64, &thresholds_watch.get());
+            let _ = out.send(StorageCmd::UpdateThresholdColors(colors));
+        }
+    });
+
     watch!(sender, [sysinfo.disks.watch()], |out| {
         let disks = sysinfo_disks.disks.get();
         let target = mount_point.get();

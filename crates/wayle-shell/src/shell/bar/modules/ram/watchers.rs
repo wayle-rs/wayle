@@ -18,6 +18,14 @@ pub(super) fn spawn_watchers(
     let sysinfo_memory = sysinfo.clone();
     let sysinfo_format = sysinfo.clone();
 
+    let thresholds_watch = thresholds.clone();
+    let sysinfo_thresholds = sysinfo.clone();
+    watch!(sender, [thresholds_watch.watch()], |out| {
+        let mem = sysinfo_thresholds.memory.get();
+        let colors = evaluate_thresholds(mem.usage_percent as f64, &thresholds_watch.get());
+        let _ = out.send(RamCmd::UpdateThresholdColors(colors));
+    });
+
     watch!(sender, [sysinfo.memory.watch()], |out| {
         let mem = sysinfo_memory.memory.get();
         let label = format_label(&format.get(), &mem);

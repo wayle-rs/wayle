@@ -16,6 +16,15 @@ pub(super) fn spawn_watchers(
     let thresholds = config.thresholds.clone();
 
     let sysinfo_cpu = sysinfo.clone();
+
+    let thresholds_watch = thresholds.clone();
+    let sysinfo_thresholds = sysinfo.clone();
+    watch!(sender, [thresholds_watch.watch()], |out| {
+        let cpu = sysinfo_thresholds.cpu.get();
+        let colors = evaluate_thresholds(cpu.usage_percent as f64, &thresholds_watch.get());
+        let _ = out.send(CpuCmd::UpdateThresholdColors(colors));
+    });
+
     watch!(sender, [sysinfo.cpu.watch()], |out| {
         let cpu = sysinfo_cpu.cpu.get();
         let label = format_label(&format.get(), &cpu);

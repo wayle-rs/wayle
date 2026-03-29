@@ -14,6 +14,17 @@ pub(super) fn spawn_watchers(
     audio: &Arc<AudioService>,
 ) {
     let default_input = audio.default_input.clone();
+
+    let thresholds = config.thresholds.clone();
+    let audio_thresholds = default_input.clone();
+    watch!(sender, [thresholds.watch()], |out| {
+        if let Some(device) = audio_thresholds.get() {
+            let percentage = device.volume.get().average_percentage();
+            let colors = evaluate_thresholds(percentage, &thresholds.get());
+            let _ = out.send(MicrophoneCmd::UpdateThresholdColors(colors));
+        }
+    });
+
     watch!(sender, [default_input.watch()], |out| {
         let _ = out.send(MicrophoneCmd::DeviceChanged(default_input.get()));
     });
