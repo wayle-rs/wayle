@@ -29,7 +29,6 @@ mod weather;
 mod window_title;
 mod world_clock;
 
-pub use super::types::chart::Direction;
 pub use battery::BatteryConfig;
 pub use bluetooth::BluetoothConfig;
 pub use cava::{
@@ -68,6 +67,7 @@ pub use weather::{TemperatureUnit, WeatherConfig, WeatherProvider};
 pub use window_title::{BUILTIN_MAPPINGS as WINDOW_TITLE_BUILTIN_MAPPINGS, WindowTitleConfig};
 pub use world_clock::WorldClockConfig;
 
+pub use super::types::chart::Direction;
 use crate::ConfigProperty;
 
 /// Configuration for all available Wayle modules.

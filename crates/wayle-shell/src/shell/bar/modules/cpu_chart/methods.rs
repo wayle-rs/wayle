@@ -1,9 +1,10 @@
 use std::sync::Arc;
 
-use crate::shell::bar::modules::shared;
 use gtk4::prelude::*;
 use shared::rem_to_px;
 use wayle_config::ConfigService;
+
+use crate::shell::bar::modules::shared;
 
 pub(super) fn setup_draw_func(
     drawing_area: &gtk4::DrawingArea,

@@ -3,9 +3,9 @@ use std::{cell::Cell, rc::Rc, sync::Arc};
 use gtk::{glib::Propagation, prelude::*};
 use relm4::prelude::*;
 use wayle_config::{ConfigService, schemas::modules::CavaStyle};
-use wayle_widgets::{
-    primitives::barchart::{calculate_widget_length, draw_barchart},
-    primitives::chart::Params,
+use wayle_widgets::primitives::{
+    barchart::{calculate_widget_length, draw_barchart},
+    chart::Params,
 };
 
 use super::{CavaModule, helpers, messages::CavaMsg, rendering};

@@ -7,7 +7,6 @@ pub use types::{BarCount, CavaInput, CavaStyle, Framerate, FrequencyHz};
 use wayle_derive::wayle_config;
 
 pub use crate::schemas::types::chart::Direction;
-
 use crate::{
     ClickAction, ConfigProperty,
     docs::{ModuleInfo, ModuleInfoProvider},

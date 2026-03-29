@@ -1,4 +1,7 @@
-use std::sync::{Arc, atomic::AtomicUsize, atomic::Ordering};
+use std::sync::{
+    Arc,
+    atomic::{AtomicUsize, Ordering},
+};
 
 use relm4::ComponentSender;
 use wayle_config::schemas::modules::CpuChartConfig;
