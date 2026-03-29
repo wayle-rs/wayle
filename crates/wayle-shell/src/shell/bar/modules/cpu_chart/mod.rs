@@ -50,7 +50,7 @@ impl Component for CpuChartModule {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let config = init.config.config();
-        let cpuchart_config = &config.modules.cpuchart;
+        let cpuchart_config = &config.modules.cpu_chart;
 
         let cpu_data = init.sysinfo.cpu.get();
         let num_cores = cpu_data.cores.len();
@@ -125,7 +125,7 @@ impl Component for CpuChartModule {
     }
 
     fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
-        let cpuchart_config = &self.config.config().modules.cpuchart;
+        let cpuchart_config = &self.config.config().modules.cpu_chart;
 
         let action = match msg {
             CpuChartMsg::LeftClick => cpuchart_config.left_click.get(),

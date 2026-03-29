@@ -3,7 +3,7 @@
 use wayle_config::schemas::types::chart::Direction;
 
 /// RGBA color with components normalized to 0.0-1.0.
-#[derive(Clone,Copy)]
+#[derive(Clone, Copy)]
 pub struct Rgba {
     /// Red component (0.0-1.0).
     pub red: f64,

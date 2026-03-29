@@ -85,7 +85,7 @@ pub struct ModulesConfig {
     pub cpu: CpuConfig,
     /// CPU usage chart module.
     #[serde(rename = "cpu-chart")]
-    pub cpuchart: CpuChartConfig,
+    pub cpu_chart: CpuChartConfig,
     /// Dashboard module.
     pub dashboard: DashboardConfig,
     /// Hyprland workspace switcher module.

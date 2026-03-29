@@ -24,7 +24,7 @@ pub(super) fn setup_draw_func(
         }
 
         let full_config = config_clone.config();
-        let cpuchart_config = &full_config.modules.cpuchart;
+        let cpuchart_config = &full_config.modules.cpu_chart;
 
         let bar_width = cpuchart_config.bar_width.get() as f64;
         let bar_spacing = cpuchart_config.bar_gap.get() as f64;
@@ -61,7 +61,7 @@ pub(super) fn update_size(
     is_vertical: bool,
 ) {
     let full_config = config.config();
-    let cpuchart_config = &full_config.modules.cpuchart;
+    let cpuchart_config = &full_config.modules.cpu_chart;
     let bar_scale = full_config.bar.scale.get().value();
 
     let bar_width = cpuchart_config.bar_width.get() as f64;
