@@ -13,8 +13,6 @@ pub(crate) fn draw_peak_bars(
     cr: &cairo::Context,
     values: &[f64],
     peaks: &mut PeakState,
-    canvas_height: f64,
-    direction: Direction,
     bar_width: f64,
     bar_spacing: f64,
     params: &Params,
@@ -27,21 +25,28 @@ pub(crate) fn draw_peak_bars(
 
     for (bar_idx, &amplitude) in values.iter().enumerate() {
         let x = bar_idx as f64 * bar_stride;
-        let bar_height = (amplitude * canvas_height).clamp(MIN_BAR_HEIGHT, canvas_height);
+        let bar_height = (amplitude * params.height).clamp(MIN_BAR_HEIGHT, params.height);
 
-        fill_bar_rect(cr, x, bar_height, canvas_height, direction, bar_width);
+        fill_bar_rect(
+            cr,
+            x,
+            bar_height,
+            params.height,
+            params.direction,
+            bar_width,
+        );
         let _ = cr.fill();
 
         update_peak(&mut peaks[bar_idx], amplitude);
 
-        let peak_height = peaks[bar_idx] * canvas_height;
+        let peak_height = peaks[bar_idx] * params.height;
         draw_peak_cap(
             cr,
             x,
             peak_height,
             bar_height,
-            canvas_height,
-            direction,
+            params.height,
+            params.direction,
             bar_width,
         );
     }

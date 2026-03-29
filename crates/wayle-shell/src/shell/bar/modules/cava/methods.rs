@@ -74,8 +74,6 @@ impl CavaModule {
         let padding_rem = cava_config.internal_padding.get().value();
         let horizontal_padding = helpers::rem_to_px(padding_rem, bar_scale);
 
-        let chart_params = Params { fill_color };
-
         let peak_state = Cell::new(Vec::<f64>::new());
 
         drawing_area.set_draw_func(move |_area, cr, width, height| {
@@ -100,29 +98,20 @@ impl CavaModule {
                 cr.rotate(-std::f64::consts::FRAC_PI_2);
             }
 
+            let chart_params = Params {
+                fill_color,
+                height: canvas_height,
+                direction,
+            };
+
             cr.translate(horizontal_padding, 0.0);
 
             match style {
                 CavaStyle::Bars => {
-                    draw_barchart(
-                        cr,
-                        &values,
-                        canvas_height,
-                        direction,
-                        bar_width,
-                        bar_spacing,
-                        &chart_params,
-                    );
+                    draw_barchart(cr, &values, bar_width, bar_spacing, &chart_params);
                 }
                 CavaStyle::Wave => {
-                    rendering::draw_wave(
-                        cr,
-                        &values,
-                        content_width,
-                        canvas_height,
-                        direction,
-                        &chart_params,
-                    );
+                    rendering::draw_wave(cr, &values, content_width, &chart_params);
                 }
                 CavaStyle::Peaks => {
                     let mut peaks = peak_state.take();
@@ -130,8 +119,6 @@ impl CavaModule {
                         cr,
                         &values,
                         &mut peaks,
-                        canvas_height,
-                        direction,
                         bar_width,
                         bar_spacing,
                         &chart_params,

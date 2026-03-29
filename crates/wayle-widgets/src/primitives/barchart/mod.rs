@@ -29,8 +29,6 @@ pub struct BarchartParams {
 pub fn draw_barchart(
     cr: &cairo::Context,
     values: &[f64],
-    canvas_height: f64,
-    direction: Direction,
     bar_width: f64,
     bar_spacing: f64,
     params: &Params,
@@ -41,9 +39,16 @@ pub fn draw_barchart(
 
     for (bar_idx, &amplitude) in values.iter().enumerate() {
         let x = bar_idx as f64 * bar_stride;
-        let bar_height = (amplitude * canvas_height).clamp(MIN_BAR_HEIGHT, canvas_height);
+        let bar_height = (amplitude * params.height).clamp(MIN_BAR_HEIGHT, params.height);
 
-        fill_bar_rect(cr, x, bar_height, canvas_height, direction, bar_width);
+        fill_bar_rect(
+            cr,
+            x,
+            bar_height,
+            params.height,
+            params.direction,
+            bar_width,
+        );
         let _ = cr.fill();
     }
 }

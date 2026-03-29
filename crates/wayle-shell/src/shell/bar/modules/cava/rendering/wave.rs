@@ -5,14 +5,7 @@ use super::{Params, apply_color};
 
 const MIN_WAVE_HEIGHT: f64 = 2.0;
 
-pub(crate) fn draw_wave(
-    cr: &cairo::Context,
-    values: &[f64],
-    canvas_width: f64,
-    canvas_height: f64,
-    direction: Direction,
-    params: &Params,
-) {
+pub(crate) fn draw_wave(cr: &cairo::Context, values: &[f64], canvas_width: f64, params: &Params) {
     if values.is_empty() {
         return;
     }
@@ -26,14 +19,14 @@ pub(crate) fn draw_wave(
         canvas_width
     };
 
-    let min_amplitude = MIN_WAVE_HEIGHT / canvas_height;
+    let min_amplitude = MIN_WAVE_HEIGHT / params.height;
 
     let amplitude_to_y = |amplitude: f64| -> f64 {
         let clamped_amplitude = amplitude.max(min_amplitude);
-        match direction {
-            Direction::Normal => canvas_height * (1.0 - clamped_amplitude),
-            Direction::Reverse => canvas_height * clamped_amplitude,
-            Direction::Mirror => canvas_height * (1.0 - clamped_amplitude) / 2.0,
+        match params.direction {
+            Direction::Normal => params.height * (1.0 - clamped_amplitude),
+            Direction::Reverse => params.height * clamped_amplitude,
+            Direction::Mirror => params.height * (1.0 - clamped_amplitude) / 2.0,
         }
     };
 
@@ -42,10 +35,10 @@ pub(crate) fn draw_wave(
         cr,
         values,
         canvas_width,
-        canvas_height,
+        params.height,
         point_spacing,
         min_amplitude,
-        direction,
+        params.direction,
     );
 
     cr.close_path();

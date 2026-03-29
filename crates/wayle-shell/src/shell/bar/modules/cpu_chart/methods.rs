@@ -41,11 +41,13 @@ pub(super) fn setup_draw_func(
         wayle_widgets::primitives::barchart::draw_barchart(
             cr,
             &core_data,
-            pixel_height,
-            direction,
             bar_width,
             bar_spacing,
-            &wayle_widgets::primitives::chart::Params { fill_color },
+            &wayle_widgets::primitives::chart::Params {
+                fill_color,
+                height: pixel_height,
+                direction,
+            },
         );
 
         values.set(core_data);

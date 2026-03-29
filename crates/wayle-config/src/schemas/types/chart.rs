@@ -6,7 +6,7 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-/// Visualization growth direction relative to asattached screen edge.
+/// Visualization growth direction relative to attached screen edge.
 ///
 /// This type is used by modules that display charts (CAVA, CPU, etc.).
 /// Each module declares its own `direction` config property using this enum.
