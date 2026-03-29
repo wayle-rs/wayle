@@ -4,7 +4,7 @@ use std::path::Path;
 
 use tokio::{fs, process::Command};
 use tracing::{debug, warn};
-use wayle_config::ConfigPaths;
+use wayle_core::paths::ConfigPaths;
 
 use super::Tool;
 use crate::error::Error;

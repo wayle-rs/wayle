@@ -6,7 +6,7 @@ use std::path::PathBuf;
 
 use tokio::{fs, process::Command};
 use tracing::debug;
-use wayle_config::ConfigPaths;
+use wayle_core::paths::ConfigPaths;
 
 use super::Tool;
 use crate::error::Error;

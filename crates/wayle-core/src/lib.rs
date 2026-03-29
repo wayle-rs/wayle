@@ -23,6 +23,8 @@
 
 #[macro_use]
 mod macros;
+/// XDG Base Directory path resolution.
+pub mod paths;
 mod property;
 
 use std::sync::Arc;

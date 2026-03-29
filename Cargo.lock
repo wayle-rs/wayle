@@ -4858,7 +4858,6 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-config",
  "wayle-core",
  "wayle-traits",
  "zbus",

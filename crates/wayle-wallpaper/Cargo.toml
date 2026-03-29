@@ -20,7 +20,6 @@ zbus.workspace = true
 smithay-client-toolkit.workspace = true
 
 wayle-core.workspace = true
-wayle-config.workspace = true
 wayle-traits.workspace = true
 
 [lints]
