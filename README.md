@@ -322,6 +322,63 @@ Scroll events are debounced (50ms) so rapid scrolling doesn't fire dozens of
 commands. Set `interval-ms = 0` if you only want updates from `on-action` (no
 polling at all).
 
+You can also open built-in dropdowns from custom modules:
+
+```toml
+left-click = "dropdown:audio"
+```
+
+### Dropdown Picker
+
+Custom modules can show an inline dropdown with selectable options — useful for
+context switchers like kubectl or gcloud. Set `left-click = "dropdown"` (bare,
+no colon) and provide commands to list and select items:
+
+```toml
+[[modules.custom]]
+id = "kube-context"
+command = "kubectl config current-context"
+interval-ms = 5000
+format = "{{ output }}"
+icon-name = "ld-layers-symbolic"
+label-max-length = 24
+label-ellipsize = "middle"
+left-click = "dropdown"
+dropdown-list-command = "kubectl config get-contexts -o name"
+dropdown-select-command = 'kubectl config use-context "$WAYLE_SELECTED"'
+```
+
+- **`dropdown-list-command`** runs on click and populates the dropdown. Each
+  non-empty line of output becomes a selectable item.
+- **`dropdown-select-command`** runs when the user picks an item. The selected
+  value is passed via the `$WAYLE_SELECTED` environment variable — always
+  quote it (`"$WAYLE_SELECTED"`) to handle values with spaces.
+- The **active item** is determined by matching list entries against the current
+  `command` output (exact trimmed text match). It gets a checkmark and accent
+  styling.
+- After selection, the main `command` re-runs immediately so the label updates
+  without waiting for the next poll.
+
+Use `label-ellipsize = "middle"` to truncate long context names in the middle
+(`"my-long-…-name"`) instead of at the end. Supported values: `end` (default),
+`middle`, `start`.
+
+Another example — gcloud configuration switcher:
+
+```toml
+[[modules.custom]]
+id = "gcloud-config"
+command = 'gcloud config configurations list --filter=is_active=true "--format=value(name)"'
+interval-ms = 5000
+format = "{{ output }}"
+icon-name = "ld-cloud-symbolic"
+label-max-length = 20
+label-ellipsize = "middle"
+left-click = "dropdown"
+dropdown-list-command = 'gcloud config configurations list "--format=value(name)"'
+dropdown-select-command = 'gcloud config configurations activate "$WAYLE_SELECTED"'
+```
+
 ### JSON Reserved Fields
 
 When outputting JSON, these fields have special meaning:
@@ -379,6 +436,7 @@ All other fields are available in `format` and `tooltip-format` templates.
 | `label-show`       | bool   | `true`        | Show the text label                     |
 | `label-color`      | color  | `"auto"`      | Label text color                        |
 | `label-max-length` | number | `0`           | Truncate after N chars (`0` = no limit) |
+| `label-ellipsize`  | string | `"end"`       | Where to truncate: `"end"`, `"middle"`, `"start"` |
 | `button-bg-color`  | color  | theme default | Button background                       |
 | `border-show`      | bool   | `false`       | Show border                             |
 | `border-color`     | color  | `"auto"`      | Border color                            |
@@ -387,12 +445,19 @@ All other fields are available in `format` and `tooltip-format` templates.
 
 | Field          | Type   | Default | Description                                   |
 | -------------- | ------ | ------- | --------------------------------------------- |
-| `left-click`   | string | `""`    | Command on left click                         |
+| `left-click`   | string | `""`    | Command, `"dropdown"` for inline picker, or `"dropdown:<name>"` |
 | `right-click`  | string | `""`    | Command on right click                        |
 | `middle-click` | string | `""`    | Command on middle click                       |
 | `scroll-up`    | string | `""`    | Command on scroll up (50ms debounce)          |
 | `scroll-down`  | string | `""`    | Command on scroll down (50ms debounce)        |
 | `on-action`    | string | none    | Runs after any action, output updates display |
+
+#### Dropdown
+
+| Field                    | Type   | Default | Description                                                     |
+| ------------------------ | ------ | ------- | --------------------------------------------------------------- |
+| `dropdown-list-command`  | string | none    | Command returning newline-separated items for the dropdown      |
+| `dropdown-select-command`| string | none    | Command run on selection; `$WAYLE_SELECTED` has the chosen item |
 
 Color values: `"auto"`, hex (`"#ff0000"`), or theme token (`"red"`, `"primary"`,
 etc.).
