@@ -3,7 +3,11 @@ use tracing::debug;
 use wayle_config::schemas::modules::{CustomModuleDefinition, ExecutionMode};
 use wayle_widgets::{prelude::BarButtonInput, utils::force_window_resize};
 
-use super::{CustomModule, helpers, watchers};
+use super::{
+    CustomModule,
+    dropdown::{CustomDropdownPicker, DropdownPickerInput, DropdownPickerOutput},
+    helpers, messages::CustomCmd, messages::CustomMsg, watchers,
+};
 
 impl CustomModule {
     pub(super) fn handle_definition_removed(&mut self, root: &gtk::Box) {
@@ -19,6 +23,7 @@ impl CustomModule {
         self.definition_present = false;
         self.stop_execution_watchers();
         self.cancel_inflight_commands();
+        self.cleanup_dropdown();
         root.set_visible(false);
         force_window_resize(root);
     }
@@ -38,6 +43,13 @@ impl CustomModule {
             was_removed || Self::execution_settings_changed(&self.definition, &new_definition);
 
         self.cancel_inflight_commands();
+
+        // Recreate dropdown if its config changed.
+        if self.definition.dropdown_list_command != new_definition.dropdown_list_command
+            || self.definition.dropdown_select_command != new_definition.dropdown_select_command
+        {
+            self.cleanup_dropdown();
+        }
 
         self.apply_visual_properties(&new_definition);
         self.definition = new_definition;
@@ -72,6 +84,15 @@ impl CustomModule {
         self.icon_bg_color.set(definition.icon_bg_color.clone());
         self.button_bg_color.set(definition.button_bg_color.clone());
         self.border_color.set(definition.border_color.clone());
+
+        // Re-apply ellipsize mode so hot-reload works correctly.
+        use wayle_config::schemas::modules::LabelEllipsize;
+        let ellipsize = match definition.label_ellipsize {
+            LabelEllipsize::End => gtk::pango::EllipsizeMode::End,
+            LabelEllipsize::Middle => gtk::pango::EllipsizeMode::Middle,
+            LabelEllipsize::Start => gtk::pango::EllipsizeMode::Start,
+        };
+        self.bar_button.emit(BarButtonInput::SetEllipsize(ellipsize));
     }
 
     fn stop_execution_watchers(&mut self) {
@@ -110,6 +131,170 @@ impl CustomModule {
         let last_output = self.last_output.clone();
         self.apply_output(&last_output, root);
         force_window_resize(root);
+    }
+
+    // --- Inline dropdown methods ---
+
+    pub(super) fn toggle_inline_dropdown(&mut self, sender: &ComponentSender<Self>) {
+        let Some(list_cmd) = &self.definition.dropdown_list_command else {
+            return;
+        };
+
+        // Lazy-create the popover and picker on first use.
+        if self.dropdown_popover.is_none() {
+            let picker = CustomDropdownPicker::builder()
+                .launch(())
+                .forward(sender.input_sender(), |output| match output {
+                    DropdownPickerOutput::Selected(item) => CustomMsg::DropdownItemSelected(item),
+                });
+
+            // Wrap the picker in a .dropdown container so it gets standard
+            // dropdown styling (background, border-radius, shadow, etc.).
+            let wrapper = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            wrapper.add_css_class("dropdown");
+            wrapper.append(picker.widget());
+
+            let popover = gtk::Popover::new();
+            popover.set_child(Some(&wrapper));
+            popover.set_has_arrow(false);
+            popover.set_autohide(true);
+            popover.add_css_class("shadow");
+
+            let bar_widget = self.bar_button.widget().upcast_ref::<gtk::Widget>();
+            popover.set_parent(bar_widget);
+
+            // Position based on bar location (top → dropdown goes down, etc.).
+            let position = Self::detect_popover_position(bar_widget);
+            popover.set_position(position);
+
+            self.dropdown_picker = Some(picker);
+            self.dropdown_popover = Some(popover);
+        }
+
+        let popover = self.dropdown_popover.as_ref().unwrap_or_else(|| unreachable!());
+
+        if popover.is_visible() {
+            popover.popdown();
+            return;
+        }
+
+        // Run dropdown-list-command asynchronously. The popover opens when
+        // items arrive in show_dropdown_with_items().
+        self.dropdown_load_gen = self.dropdown_load_gen.wrapping_add(1);
+        let generation = self.dropdown_load_gen;
+        let list_cmd = list_cmd.clone();
+        let active_item = self.last_output.trim().to_string();
+        sender.oneshot_command(async move {
+            let output = watchers::run_command_for_output(&list_cmd).await;
+            let items: Vec<String> = output
+                .lines()
+                .map(|l| l.trim().to_string())
+                .filter(|l| !l.is_empty())
+                .collect();
+            CustomCmd::DropdownListLoaded {
+                items,
+                active_item,
+                generation,
+            }
+        });
+    }
+
+    pub(super) fn show_dropdown_with_items(
+        &mut self,
+        items: Vec<String>,
+        active_item: String,
+    ) {
+        use wayle_config::schemas::modules::LabelEllipsize;
+        let ellipsize = match self.definition.label_ellipsize {
+            LabelEllipsize::End => gtk::pango::EllipsizeMode::End,
+            LabelEllipsize::Middle => gtk::pango::EllipsizeMode::Middle,
+            LabelEllipsize::Start => gtk::pango::EllipsizeMode::Start,
+        };
+        if let Some(picker) = &self.dropdown_picker {
+            picker.emit(DropdownPickerInput::Refresh {
+                items,
+                active_item,
+                ellipsize,
+            });
+        }
+        // Defer popup() to the next idle cycle so the factory has time to
+        // create the row widgets. Without this, the popover measures empty
+        // content and opens with minimal height.
+        if let Some(popover) = &self.dropdown_popover {
+            let popover = popover.clone();
+            gtk::glib::idle_add_local_once(move || {
+                popover.popup();
+            });
+        }
+    }
+
+    pub(super) fn handle_dropdown_selection(
+        &mut self,
+        sender: &ComponentSender<Self>,
+        selected: &str,
+    ) {
+        // Close the dropdown.
+        if let Some(popover) = &self.dropdown_popover {
+            popover.popdown();
+        }
+
+        // Run the select command, wait for it to complete, then refresh
+        // the main command so the label updates immediately.
+        //
+        // The selected item is passed via the WAYLE_SELECTED environment
+        // variable to avoid shell injection from item text containing
+        // metacharacters. The command template can reference it as
+        // $WAYLE_SELECTED.
+        let select_cmd = self.definition.dropdown_select_command.clone();
+        let selected = selected.to_string();
+        let refresh_cmd = self.definition.command.clone();
+        let token = self.command_token.reset();
+        sender.oneshot_command(async move {
+            // First: run the selection command and wait for it to finish.
+            if let Some(cmd) = select_cmd {
+                let _ = watchers::run_command_with_env(
+                    &cmd,
+                    "WAYLE_SELECTED",
+                    &selected,
+                )
+                .await;
+            }
+
+            // Then: run the main command to get the updated value.
+            if let Some(cmd) = refresh_cmd {
+                let output = watchers::run_command_for_output(&cmd).await;
+                // Check cancellation before delivering.
+                if token.is_cancelled() {
+                    return CustomCmd::CommandCancelled;
+                }
+                return CustomCmd::CommandOutput(output);
+            }
+
+            CustomCmd::CommandCancelled
+        });
+    }
+
+    fn detect_popover_position(widget: &gtk::Widget) -> gtk::PositionType {
+        let Some(window) = widget.root().and_then(|r| r.downcast::<gtk::Window>().ok()) else {
+            return gtk::PositionType::Bottom;
+        };
+
+        if window.has_css_class("bottom") {
+            gtk::PositionType::Top
+        } else if window.has_css_class("left") {
+            gtk::PositionType::Right
+        } else if window.has_css_class("right") {
+            gtk::PositionType::Left
+        } else {
+            gtk::PositionType::Bottom
+        }
+    }
+
+    fn cleanup_dropdown(&mut self) {
+        if let Some(popover) = self.dropdown_popover.take() {
+            popover.unparent();
+        }
+        self.dropdown_picker = None;
     }
 
     pub(super) fn apply_output(&mut self, output: &str, root: &gtk::Box) {

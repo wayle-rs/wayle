@@ -362,6 +362,9 @@ fn dispatch_action(
                 toggle(&dropdown, style);
             }
         }
+        ClickAction::InlineDropdown => {
+            // Handled by the module itself, not the registry.
+        }
         ClickAction::Shell(cmd) => process::run_if_set(cmd),
         ClickAction::None => {}
     }
