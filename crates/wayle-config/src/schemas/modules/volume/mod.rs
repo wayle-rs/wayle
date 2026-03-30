@@ -5,7 +5,7 @@ use wayle_derive::wayle_config;
 use crate::{
     ClickAction, ConfigProperty,
     docs::{ModuleInfo, ModuleInfoProvider},
-    schemas::styling::{ColorValue, CssToken},
+    schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
 /// Icon source for app volume entries in the dropdown.
@@ -126,6 +126,28 @@ pub struct VolumeConfig {
     #[serde(rename = "dropdown-app-icons")]
     #[default(AppIconSource::Mapped)]
     pub dropdown_app_icons: ConfigProperty<AppIconSource>,
+
+    /// Dynamic color thresholds based on volume percentage.
+    ///
+    /// Entries are checked in order; the last matching entry wins for each
+    /// color slot. Use `above` for high-value warnings (e.g., boosted volume).
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [[modules.volume.thresholds]]
+    /// above = 100
+    /// icon-color = "status-warning"
+    /// label-color = "status-warning"
+    ///
+    /// [[modules.volume.thresholds]]
+    /// above = 130
+    /// icon-color = "status-error"
+    /// label-color = "status-error"
+    /// ```
+    #[serde(rename = "thresholds")]
+    #[default(Vec::new())]
+    pub thresholds: ConfigProperty<Vec<ThresholdEntry>>,
 }
 
 impl ModuleInfoProvider for VolumeConfig {

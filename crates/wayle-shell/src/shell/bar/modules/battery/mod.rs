@@ -120,6 +120,10 @@ impl Component for BatteryModule {
             BatteryCmd::UpdateIcon(icon) => {
                 self.bar_button.emit(BarButtonInput::SetIcon(icon));
             }
+            BatteryCmd::UpdateThresholdColors(colors) => {
+                self.bar_button
+                    .emit(BarButtonInput::SetThresholdColors(colors));
+            }
         }
     }
 }

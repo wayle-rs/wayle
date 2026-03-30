@@ -9,7 +9,7 @@ use wayle_derive::wayle_config;
 use crate::{
     ClickAction, ConfigProperty,
     docs::{ModuleInfo, ModuleInfoProvider},
-    schemas::styling::{ColorValue, CssToken, Spacing},
+    schemas::styling::{ColorValue, CssToken, Spacing, ThresholdEntry},
 };
 
 /// Notification module configuration.
@@ -182,6 +182,29 @@ pub struct NotificationConfig {
     #[serde(rename = "popup-urgency-bar")]
     #[default(UrgencyBarThreshold::default())]
     pub popup_urgency_bar: ConfigProperty<UrgencyBarThreshold>,
+
+    /// Dynamic color thresholds based on notification count.
+    ///
+    /// Entries are checked in order; the last matching entry wins for each
+    /// color slot. Use `above` for high-value warnings (e.g., many unread
+    /// notifications).
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [[modules.notification.thresholds]]
+    /// above = 5
+    /// icon-color = "status-warning"
+    /// label-color = "status-warning"
+    ///
+    /// [[modules.notification.thresholds]]
+    /// above = 20
+    /// icon-color = "status-error"
+    /// label-color = "status-error"
+    /// ```
+    #[serde(rename = "thresholds")]
+    #[default(Vec::new())]
+    pub thresholds: ConfigProperty<Vec<ThresholdEntry>>,
 }
 
 impl ModuleInfoProvider for NotificationConfig {

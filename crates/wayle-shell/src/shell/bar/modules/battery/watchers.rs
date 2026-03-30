@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use relm4::ComponentSender;
 use wayle_battery::BatteryService;
-use wayle_config::schemas::modules::BatteryConfig;
+use wayle_config::schemas::{modules::BatteryConfig, styling::evaluate_thresholds};
 use wayle_widgets::watch;
 
 use super::{
@@ -20,6 +20,7 @@ pub(super) fn spawn_watchers(
     let charging_icon = config.charging_icon.clone();
     let alert_icon = config.alert_icon.clone();
     let format = config.format.clone();
+    let thresholds = config.thresholds.clone();
 
     let device = battery.device.clone();
 
@@ -30,6 +31,14 @@ pub(super) fn spawn_watchers(
     let charging_icon_stream = charging_icon.watch();
     let alert_icon_stream = alert_icon.watch();
     let format_stream = format.watch();
+
+    let thresholds_watch = thresholds.clone();
+    let device_watch = device.clone();
+    watch!(sender, [thresholds_watch.watch()], |out| {
+        let percentage = device_watch.percentage.get();
+        let colors = evaluate_thresholds(percentage, &thresholds_watch.get());
+        let _ = out.send(BatteryCmd::UpdateThresholdColors(colors));
+    });
 
     watch!(
         sender,
@@ -62,6 +71,9 @@ pub(super) fn spawn_watchers(
                 alert_icon: &alert_icon_val,
             });
             let _ = out.send(BatteryCmd::UpdateIcon(icon));
+
+            let colors = evaluate_thresholds(percentage, &thresholds.get());
+            let _ = out.send(BatteryCmd::UpdateThresholdColors(colors));
         }
     );
 }
