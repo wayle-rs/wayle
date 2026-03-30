@@ -1,32 +1,16 @@
 [workspace]
 resolver = "2"
 members = [
-    "crates/wayle-audio",
-    "crates/wayle-battery",
-    "crates/wayle-bluetooth",
-    "crates/wayle-brightness",
-    "crates/wayle-cava",
-    "crates/wayle-core",
-    "crates/wayle-config",
-    "crates/wayle-derive",
-    "crates/wayle-hyprland",
-    "crates/wayle-i18n",
-    "crates/wayle-icons",
-    "crates/wayle-idle-inhibit",
-    "crates/wayle-ipc",
-    "crates/wayle-media",
-    "crates/wayle-network",
-    "crates/wayle-notification",
-    "crates/wayle-power-profiles",
-    "crates/wayle-shell",
-    "crates/wayle-styling",
-    "crates/wayle-sysinfo",
-    "crates/wayle-systray",
-    "crates/wayle-traits",
-    "crates/wayle-wallpaper",
-    "crates/wayle-weather",
-    "crates/wayle-widgets",
-    "wayle",
+	"crates/wayle-config",
+	"crates/wayle-derive",
+	"crates/wayle-i18n",
+	"crates/wayle-icons",
+	"crates/wayle-idle-inhibit",
+	"crates/wayle-ipc",
+	"crates/wayle-shell",
+	"crates/wayle-styling",
+	"crates/wayle-widgets",
+	"wayle",
 ]
 exclude = ["sandbox"]
 
@@ -46,33 +30,41 @@ chrono = { version = "0.4.42", features = ["clock", "serde"] }
 clap = { version = "4.5.48", features = ["color", "derive"] }
 console = "0.16"
 derive_more = { version = "2.0.1", default-features = false, features = [
-    "debug",
+	"debug",
 ] }
 dotenvy = "0.15"
 fnv = "1.0"
 futures = "0.3.31"
+gdk-pixbuf = "0.21.2"
+gdk4 = "0.10.1"
+glib = "0.21.3"
 glob = "0.3.2"
-gdk-pixbuf = { version = "0.21.2" }
-gdk4 = { version = "0.10.1" }
-glib = { version = "0.21.3" }
 grass = "0.13.4"
 gtk4 = { version = "0.10.1", features = ["v4_12"] }
 gtk4-layer-shell = "0.7"
 i18n-embed = { version = "0.16", features = [
-    "desktop-requester",
-    "fluent-system",
+	"desktop-requester",
+	"fluent-system",
 ] }
 i18n-embed-fl = "0.10"
 indicatif = "0.18"
 libc = "0.2.176"
-minijinja = { version = "2.15", default-features = false, features = ["builtins", "serde"] }
 libpulse-binding = "2.30.1"
+minijinja = { version = "2.15", default-features = false, features = [
+	"builtins",
+	"serde",
+] }
 notify = "8"
 palette = "0.7"
 png = "0.18"
 rand = "0.9.2"
 relm4 = { version = "0.10", features = ["macros"] }
-reqwest = { version = "0.13", default-features = false, features = ["rustls", "json", "query", "charset"] }
+reqwest = { version = "0.13", default-features = false, features = [
+	"charset",
+	"json",
+	"query",
+	"rustls",
+] }
 rusqlite = { version = "0.38.0", features = ["bundled"] }
 rust-embed = "8"
 schemars = { version = "1.0.4", features = ["derive"] }
@@ -80,7 +72,13 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 serde_json_path = "0.7"
 smithay-client-toolkit = "0.20"
-sysinfo = { version = "0.33", default-features = false, features = ["system", "component", "disk", "network", "user"] }
+sysinfo = { version = "0.33", default-features = false, features = [
+	"component",
+	"disk",
+	"network",
+	"system",
+	"user",
+] }
 thiserror = "2.0.17"
 tokio = { version = "1.47.1", features = ["full", "time"] }
 tokio-stream = { version = "0.1.17", features = ["sync"] }
@@ -88,33 +86,38 @@ tokio-util = "0.7.16"
 toml = "0.9.7"
 tracing = "0.1.41"
 tracing-appender = "0.2.3"
+tracing-attributes = "0.1.30"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
 unic-langid = "0.9"
-wayle-audio = { path = "crates/wayle-audio" }
-wayle-battery = { path = "crates/wayle-battery" }
-wayle-brightness = { path = "crates/wayle-brightness" }
-wayle-bluetooth = { path = "crates/wayle-bluetooth" }
-wayle-cava = { path = "crates/wayle-cava", features = ["vendored"] }
-wayle-ipc = { path = "crates/wayle-ipc" }
-wayle-core = { path = "crates/wayle-core" }
-wayle-config = { path = "crates/wayle-config" }
-wayle-derive = { path = "crates/wayle-derive" }
-wayle-hyprland = { path = "crates/wayle-hyprland" }
-wayle-icons = { path = "crates/wayle-icons" }
-wayle-idle-inhibit = { path = "crates/wayle-idle-inhibit" }
-wayle-media = { path = "crates/wayle-media" }
-wayle-network = { path = "crates/wayle-network" }
-wayle-notification = { path = "crates/wayle-notification" }
-wayle-power-profiles = { path = "crates/wayle-power-profiles" }
-wayle-styling = { path = "crates/wayle-styling" }
-wayle-sysinfo = { path = "crates/wayle-sysinfo" }
-wayle-systray = { path = "crates/wayle-systray" }
-wayle-traits = { path = "crates/wayle-traits" }
-wayle-wallpaper = { path = "crates/wayle-wallpaper" }
-wayle-weather = { path = "crates/wayle-weather" }
-wayle-widgets = { path = "crates/wayle-widgets" }
 wildcard = "0.3"
 zbus = { version = "5.11.0", default-features = false, features = ["tokio"] }
+
+wayle-audio = "0.1.0"
+wayle-battery = "0.1.0"
+wayle-bluetooth = "0.1.0"
+wayle-brightness = "0.1.0"
+wayle-cava = { version = "0.1.0", features = ["vendored"] }
+wayle-core = "0.1.0"
+wayle-hyprland = "0.1.0"
+wayle-media = "0.1.0"
+wayle-network = "0.1.0"
+wayle-notification = "0.1.0"
+wayle-power-profiles = "0.1.0"
+wayle-sysinfo = "0.1.0"
+wayle-systray = "0.1.0"
+wayle-traits = "0.1.0"
+wayle-wallpaper = "0.1.0"
+wayle-weather = "0.1.0"
+
+wayle-config = { path = "crates/wayle-config" }
+wayle-derive = { path = "crates/wayle-derive" }
+wayle-i18n = { path = "crates/wayle-i18n" }
+wayle-icons = { path = "crates/wayle-icons" }
+wayle-idle-inhibit = { path = "crates/wayle-idle-inhibit" }
+wayle-ipc = { path = "crates/wayle-ipc" }
+wayle-shell = { path = "crates/wayle-shell" }
+wayle-styling = { path = "crates/wayle-styling" }
+wayle-widgets = { path = "crates/wayle-widgets" }
 
 [workspace.lints.clippy]
 cognitive_complexity = "warn"
