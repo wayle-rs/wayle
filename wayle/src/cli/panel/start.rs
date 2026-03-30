@@ -26,8 +26,8 @@ pub async fn execute() -> CliAction {
 
     info!("Starting Wayle panel");
 
-    let current_exe = env::current_exe()
-        .map_err(|err| format!("Failed to resolve executable: {err}"))?;
+    let current_exe =
+        env::current_exe().map_err(|err| format!("Failed to resolve executable: {err}"))?;
 
     Command::new(current_exe)
         .arg("shell")
