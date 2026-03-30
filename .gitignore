@@ -1,6 +1,5 @@
 target/
 dist/
-assets/
 wayle-design
 
 wayle-shell.ftl
