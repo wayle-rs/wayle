@@ -15,6 +15,26 @@ pub(crate) enum WorkspacesMsg {
     WorkspaceClicked(WorkspaceId),
     ScrollUp,
     ScrollDown,
+    // --- Preview lifecycle ---
+    /// Pointer entered a workspace button.
+    ButtonHoverEnter(WorkspaceId),
+    /// Pointer left a workspace button.
+    ButtonHoverLeave(WorkspaceId),
+    /// Pointer entered the preview popover content.
+    PopoverEnter,
+    /// Pointer left the preview popover content.
+    PopoverLeave,
+    /// Dwell timer fired — open preview for this workspace.
+    PreviewDwellFired(WorkspaceId),
+    /// Close timer fired — close the popover if pointer is gone.
+    PreviewCloseTimerFired,
+    /// Immediate show (right-click path, no dwell).
+    WorkspacePreviewRequest(WorkspaceId),
+    /// Popover's `connect_closed` signal — cleanup.
+    WorkspacePreviewClosed,
+    /// Preview component requested close (e.g., window clicked).
+    WorkspacePreviewDismiss,
+    FocusWindow(String),
 }
 
 #[derive(Debug)]

@@ -50,6 +50,17 @@ pub enum UrgentMode {
     Application,
 }
 
+/// How the workspace preview popup is triggered.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum PreviewTrigger {
+    /// Cursor dwell with configurable delay.
+    #[default]
+    Hover,
+    /// Right-click on workspace button.
+    RightClick,
+}
+
 /// Visual indicator style for the active workspace.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
@@ -338,6 +349,41 @@ pub struct HyprlandWorkspacesConfig {
     #[serde(rename = "workspace-map")]
     #[default(WorkspaceMap::default())]
     pub workspace_map: ConfigProperty<WorkspaceMap>,
+
+    /// Show a live preview popup when hovering over workspace buttons.
+    ///
+    /// Displays thumbnails of all windows in the workspace, captured via the
+    /// `hyprland_toplevel_export_manager_v1` Wayland protocol.
+    #[serde(rename = "preview-show")]
+    #[default(true)]
+    pub preview_show: ConfigProperty<bool>,
+
+    /// Width in pixels of the preview popup composite image.
+    #[serde(rename = "preview-width")]
+    #[default(640u32)]
+    pub preview_width: ConfigProperty<u32>,
+
+    /// Delay in milliseconds before the preview popup appears.
+    ///
+    /// Prevents accidental popups when the cursor passes through the
+    /// workspace area without intent to preview.
+    #[serde(rename = "preview-open-delay")]
+    #[default(300u32)]
+    pub preview_open_delay: ConfigProperty<u32>,
+
+    /// Delay in milliseconds before the preview popup closes after
+    /// the cursor leaves the workspace button or popup.
+    #[serde(rename = "preview-close-delay")]
+    #[default(300u32)]
+    pub preview_close_delay: ConfigProperty<u32>,
+
+    /// How the workspace preview is triggered.
+    ///
+    /// - `hover`: Cursor dwell on workspace button (with `preview-open-delay`)
+    /// - `right-click`: Right-click on workspace button
+    #[serde(rename = "preview-trigger")]
+    #[default(PreviewTrigger::Hover)]
+    pub preview_trigger: ConfigProperty<PreviewTrigger>,
 
     /// Application icon mapping with glob pattern support.
     ///

@@ -5,6 +5,7 @@ members = [
     "crates/wayle-battery",
     "crates/wayle-bluetooth",
     "crates/wayle-brightness",
+    "crates/wayle-capture",
     "crates/wayle-cava",
     "crates/wayle-core",
     "crates/wayle-config",
@@ -65,6 +66,7 @@ i18n-embed = { version = "0.16", features = [
 i18n-embed-fl = "0.10"
 indicatif = "0.18"
 libc = "0.2.176"
+memfd = "0.6"
 minijinja = { version = "2.15", default-features = false, features = ["builtins", "serde"] }
 libpulse-binding = "2.30.1"
 notify = "8"
@@ -90,10 +92,13 @@ tracing = "0.1.41"
 tracing-appender = "0.2.3"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
 unic-langid = "0.9"
+wayland-client = "0.31"
+wayland-protocols-hyprland = { version = "1.1.0", features = ["client"] }
 wayle-audio = { path = "crates/wayle-audio" }
 wayle-battery = { path = "crates/wayle-battery" }
 wayle-brightness = { path = "crates/wayle-brightness" }
 wayle-bluetooth = { path = "crates/wayle-bluetooth" }
+wayle-capture = { path = "crates/wayle-capture" }
 wayle-cava = { path = "crates/wayle-cava", features = ["vendored"] }
 wayle-ipc = { path = "crates/wayle-ipc" }
 wayle-core = { path = "crates/wayle-core" }

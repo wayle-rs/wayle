@@ -2160,6 +2160,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f52b00d39961fc5b2736ea853c9cc86238e165017a493d1d5c8eac6bdc4cc273"
 
 [[package]]
+name = "memfd"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ad38eb12aea514a0466ea40a80fd8cc83637065948eb4a426e4aa46261175227"
+dependencies = [
+ "rustix",
+]
+
+[[package]]
 name = "memmap2"
 version = "0.9.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4361,6 +4370,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "wayland-protocols-hyprland"
+version = "1.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "398431fac4608bdae919e5c21a1f53af76deb9fcafdf682912a506ecc945582f"
+dependencies = [
+ "bitflags 2.10.0",
+ "wayland-backend",
+ "wayland-client",
+ "wayland-protocols",
+ "wayland-protocols-wlr",
+ "wayland-scanner",
+]
+
+[[package]]
 name = "wayland-protocols-misc"
 version = "0.3.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4521,6 +4544,16 @@ dependencies = [
  "wayle-core",
  "wayle-traits",
  "zbus",
+]
+
+[[package]]
+name = "wayle-capture"
+version = "0.1.0"
+dependencies = [
+ "memfd",
+ "tracing",
+ "wayland-client",
+ "wayland-protocols-hyprland",
 ]
 
 [[package]]
@@ -4743,6 +4776,7 @@ dependencies = [
  "evdev",
  "futures",
  "gdk4",
+ "glib",
  "glob",
  "gtk4",
  "gtk4-layer-shell",
@@ -4766,6 +4800,7 @@ dependencies = [
  "wayle-battery",
  "wayle-bluetooth",
  "wayle-brightness",
+ "wayle-capture",
  "wayle-cava",
  "wayle-config",
  "wayle-core",

@@ -4,7 +4,9 @@ use std::{collections::HashSet, mem, sync::Arc};
 
 use gtk::prelude::*;
 use relm4::{factory::FactoryComponent, prelude::*};
-use wayle_config::schemas::modules::{ActiveIndicator, DisplayMode, HyprlandWorkspacesConfig};
+use wayle_config::schemas::modules::{
+    ActiveIndicator, DisplayMode, HyprlandWorkspacesConfig, PreviewTrigger,
+};
 use wayle_hyprland::{Address, Client, WorkspaceId};
 
 use crate::shell::bar::modules::hyprland_workspaces::helpers::{
@@ -58,6 +60,9 @@ pub(crate) struct WorkspaceButtonInit {
     pub urgent_addresses: HashSet<Address>,
     pub empty_icon: String,
     pub icon_gap_px: i32,
+
+    pub preview_show: bool,
+    pub preview_trigger: PreviewTrigger,
 }
 
 pub(super) struct AppIcon {
@@ -86,6 +91,9 @@ pub(crate) struct WorkspaceButton {
     initial_urgent_addrs: HashSet<Address>,
     pub(super) empty_icon: String,
     pub(super) icon_gap_px: i32,
+
+    preview_show: bool,
+    preview_trigger: PreviewTrigger,
 }
 
 #[derive(Debug)]
@@ -103,6 +111,12 @@ pub(crate) enum WorkspaceButtonOutput {
     Clicked(WorkspaceId),
     ScrollUp,
     ScrollDown,
+    /// Pointer entered this workspace button (hover trigger).
+    PreviewHoverEnter(WorkspaceId),
+    /// Pointer left this workspace button (hover trigger).
+    PreviewHoverLeave(WorkspaceId),
+    /// Immediate preview request (right-click trigger).
+    PreviewRequest(WorkspaceId),
 }
 
 #[relm4::factory(pub(crate))]
@@ -199,6 +213,9 @@ impl FactoryComponent for WorkspaceButton {
             initial_urgent_addrs: init.urgent_addresses,
             empty_icon: init.empty_icon,
             icon_gap_px: init.icon_gap_px,
+
+            preview_show: init.preview_show,
+            preview_trigger: init.preview_trigger,
         }
     }
 
@@ -230,6 +247,40 @@ impl FactoryComponent for WorkspaceButton {
         self.populate_identity(&widgets.identity);
         let urgent_addrs = mem::take(&mut self.initial_urgent_addrs);
         self.populate_app_icons(&widgets.app_icons_container, &urgent_addrs);
+
+        // Preview trigger controllers.
+        if self.preview_show {
+            let id = self.id;
+            match self.preview_trigger {
+                PreviewTrigger::Hover => {
+                    let motion = gtk::EventControllerMotion::new();
+                    let enter_sender = sender.clone();
+                    motion.connect_enter(move |_, _, _| {
+                        enter_sender
+                            .output(WorkspaceButtonOutput::PreviewHoverEnter(id))
+                            .ok();
+                    });
+                    let leave_sender = sender.clone();
+                    motion.connect_leave(move |_| {
+                        leave_sender
+                            .output(WorkspaceButtonOutput::PreviewHoverLeave(id))
+                            .ok();
+                    });
+                    root.add_controller(motion);
+                }
+                PreviewTrigger::RightClick => {
+                    let click = gtk::GestureClick::new();
+                    click.set_button(3);
+                    let sender_clone = sender.clone();
+                    click.connect_released(move |_, _, _, _| {
+                        sender_clone
+                            .output(WorkspaceButtonOutput::PreviewRequest(id))
+                            .ok();
+                    });
+                    root.add_controller(click);
+                }
+            }
+        }
 
         widgets
     }
@@ -303,5 +354,8 @@ pub(crate) fn build_button_init(
         urgent_addresses,
         empty_icon: config.app_icons_empty.get(),
         icon_gap_px,
+
+        preview_show: config.preview_show.get(),
+        preview_trigger: config.preview_trigger.get(),
     }
 }

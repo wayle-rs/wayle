@@ -172,6 +172,11 @@ fn spawn_config_watchers(
     let border_color = config.border_color.clone();
     let workspace_map = config.workspace_map.clone();
     let app_icon_map = config.app_icon_map.clone();
+    let preview_show = config.preview_show.clone();
+    let preview_width = config.preview_width.clone();
+    let preview_open_delay = config.preview_open_delay.clone();
+    let preview_close_delay = config.preview_close_delay.clone();
+    let preview_trigger = config.preview_trigger.clone();
     let border_width = settings.border_width.clone();
     let border_location = settings.border_location.clone();
     let is_vertical = settings.is_vertical.clone();
@@ -205,6 +210,11 @@ fn spawn_config_watchers(
             border_color.watch(),
             workspace_map.watch(),
             app_icon_map.watch(),
+            preview_show.watch(),
+            preview_width.watch(),
+            preview_open_delay.watch(),
+            preview_close_delay.watch(),
+            preview_trigger.watch(),
             theme_provider.watch(),
             bar_scale.watch(),
             border_width.watch(),

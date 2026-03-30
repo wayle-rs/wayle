@@ -1,0 +1,17 @@
+[package]
+name = "wayle-capture"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Hyprland toplevel export window capture for Wayle"
+repository.workspace = true
+license.workspace = true
+
+[dependencies]
+memfd.workspace = true
+tracing.workspace = true
+wayland-client.workspace = true
+wayland-protocols-hyprland.workspace = true
+
+[lints]
+workspace = true
