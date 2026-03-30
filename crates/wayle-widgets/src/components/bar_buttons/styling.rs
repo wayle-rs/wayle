@@ -4,8 +4,10 @@ use relm4::{ComponentSender, gtk};
 use wayle_config::schemas::styling::{ThemeProvider, ThresholdColors};
 
 use super::component::{BarButton, BarButtonCmd};
-use crate::styling::{InlineStyling, resolve_color};
-use crate::watch;
+use crate::{
+    styling::{InlineStyling, resolve_color},
+    watch,
+};
 
 impl InlineStyling for BarButton {
     type Sender = ComponentSender<Self>;
