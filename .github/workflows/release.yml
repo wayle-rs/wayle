@@ -33,6 +33,10 @@ jobs:
               run: |
                   VERSION="${GITHUB_REF_NAME#v}"
                   CARGO_VERSION=$(sed -n '/\[workspace\.package\]/,/\[/{/^version/p}' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+                  if [ -z "$CARGO_VERSION" ]; then
+                      echo "Failed to parse version from Cargo.toml"
+                      exit 1
+                  fi
                   if [ "$VERSION" != "$CARGO_VERSION" ]; then
                       echo "Tag $VERSION does not match Cargo.toml version $CARGO_VERSION"
                       exit 1
@@ -87,7 +91,7 @@ jobs:
                   ARCH="${{ matrix.arch }}"
                   STAGING="wayle-${VERSION}-${ARCH}-linux"
                   mkdir -p "${STAGING}"
-                  cp target/release/wayle target/release/wayle-shell LICENSE "${STAGING}/"
+                  cp target/release/wayle LICENSE "${STAGING}/"
                   tar czf "${STAGING}.tar.gz" "${STAGING}"
 
             - name: Upload to release
@@ -120,7 +124,7 @@ jobs:
             - name: Upload checksums
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-              run: gh release upload "${{ github.ref_name }}" SHA256SUMS --clobber
+              run: gh release upload "${{ github.ref_name }}" --repo "${{ github.repository }}" SHA256SUMS --clobber
 
     publish:
         name: Publish release

@@ -95,4 +95,6 @@ pub enum Commands {
         #[command(subcommand)]
         command: IdleCommands,
     },
+    /// Run the desktop shell in the foreground
+    Shell,
 }

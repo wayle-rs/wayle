@@ -52,6 +52,7 @@ wayle-power-profiles.workspace = true
 wayle-styling.workspace = true
 wayle-systray.workspace = true
 wayle-wallpaper.workspace = true
+wayle-shell.workspace = true
 wayle-widgets.workspace = true
 zbus.workspace = true
 
