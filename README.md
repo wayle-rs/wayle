@@ -157,26 +157,28 @@ for your config.toml (and other toml files).
 wayle config schema
 ```
 
-## Building
+## Installation
 
-Install Rust via [rustup](https://rustup.rs):
+### Arch Linux (AUR)
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+yay -S wayle-bin
 ```
 
-Clone the repository recursively and build:
+Then start the shell:
 
 ```bash
-git clone --recursive https://github.com/wayle-rs/wayle
+wayle shell
+```
+
+### From source
+
+Install Rust via [rustup](https://rustup.rs), then:
+
+```bash
+git clone https://github.com/wayle-rs/wayle
 cd wayle
 cargo install --path wayle
-```
-
-Once Wayle is installed, you can set up the icons (temporary measure) and start
-it via:
-
-```bash
 wayle icons setup
 wayle panel start
 ```
