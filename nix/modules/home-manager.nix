@@ -132,7 +132,7 @@ in
           ConditionEnvironment = "WAYLAND_DISPLAY";
         };
         Service = {
-          ExecStart = "${getExe' cfg.package "wayle-shell"}";
+          ExecStart = "${getExe' cfg.package "wayle"} shell";
           Restart = "on-failure";
         };
         Install = {
