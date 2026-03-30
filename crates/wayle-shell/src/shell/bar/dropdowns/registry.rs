@@ -89,6 +89,34 @@ impl DropdownInstance {
         self.show_for_widget(style);
     }
 
+    /// Opens the popover anchored to the given widget without toggling.
+    ///
+    /// Used for hover-triggered dropdowns where re-entering should always
+    /// open (not toggle). Handles re-parenting if the widget changed.
+    pub(crate) fn show_anchored_to(
+        &self,
+        widget: &impl IsA<gtk::Widget>,
+        style: DropdownStyle,
+    ) {
+        self.ensure_parent(widget.upcast_ref::<gtk::Widget>());
+        self.show_for_widget(style);
+    }
+
+    /// Closes the popover.
+    pub(crate) fn popdown(&self) {
+        self.popover.popdown();
+    }
+
+    /// Returns whether the popover is currently visible.
+    pub(crate) fn is_visible(&self) -> bool {
+        self.popover.is_visible()
+    }
+
+    /// Returns a reference to the inner popover for attaching controllers.
+    pub(crate) fn popover(&self) -> &gtk::Popover {
+        &self.popover
+    }
+
     fn show_for_widget(&self, style: DropdownStyle) {
         self.apply_position();
         self.apply_margins(style.margins);
@@ -216,7 +244,7 @@ impl Drop for DropdownInstance {
     }
 }
 
-struct DropdownStyle {
+pub(crate) struct DropdownStyle {
     margins: DropdownMargins,
     opacity: f64,
     shadow_enabled: bool,
@@ -232,7 +260,7 @@ const REM_PX: f32 = 16.0;
 /// The bar-facing edge gets a smaller gap; the opposite edge and sides get
 /// standard content padding.
 #[derive(Debug, Clone, Copy)]
-struct DropdownMargins {
+pub(crate) struct DropdownMargins {
     top: i32,
     bottom: i32,
     start: i32,
@@ -382,7 +410,28 @@ fn set_bar_keyboard_mode(popover: &gtk::Popover, mode: KeyboardMode) {
     window.set_keyboard_mode(mode);
 }
 
-fn dropdown_style(registry: &DropdownRegistry) -> DropdownStyle {
+impl DropdownStyle {
+    /// Create a dropdown style from config values. Used by modules that
+    /// manage their own `DropdownInstance` outside the registry.
+    ///
+    /// Set `autohide` to control whether the popover closes on focus loss.
+    /// Hover-triggered popovers should set this to `false` and manage close
+    /// behavior via timers instead.
+    pub(crate) fn from_config(config: &wayle_config::ConfigService, autohide: bool) -> Self {
+        let config = config.config();
+        let bar = &config.bar;
+        let scale = bar.scale.get().value();
+        Self {
+            margins: DropdownMargins::new(scale, bar.location.get()),
+            opacity: f64::from(bar.dropdown_opacity.get().value()) / 100.0,
+            shadow_enabled: bar.dropdown_shadow.get(),
+            autohide,
+            freeze_label: false,
+        }
+    }
+}
+
+pub(crate) fn dropdown_style(registry: &DropdownRegistry) -> DropdownStyle {
     let config = registry.services.config.config();
     let bar = &config.bar;
     let scale = bar.scale.get().value();

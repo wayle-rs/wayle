@@ -139,18 +139,21 @@
     font-weight: var(--weight-bold);
 }
 
-// Workspace preview popup
+// Workspace preview popup — the .ws-preview-popup sits inside a
+// .dropdown wrapper managed by DropdownInstance. We remove the extra
+// padding since DropdownHeader/DropdownContent handle their own.
+.dropdown.ws-preview-dropdown {
+    min-width: 0;
+}
+
 .ws-preview-popup {
-    background-color: var(--bg-surface-elevated);
-    border: 1px solid var(--border-default);
-    border-radius: var(--radius-lg);
-    padding: 6px 8px;
+    // No extra padding — header and content handle their own spacing.
 }
 
 .ws-preview-canvas {
-    background-color: var(--bg-surface);
-    border-radius: var(--radius-md);
-    margin-bottom: 4px;
+    background-color: var(--bg-overlay);
+    border-radius: var(--rounding-element);
+    margin-bottom: var(--space-xs);
 }
 
 .ws-popup-item {

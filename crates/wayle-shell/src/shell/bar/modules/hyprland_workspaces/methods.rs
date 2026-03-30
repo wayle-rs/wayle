@@ -3,7 +3,7 @@ use std::{
     sync::Arc,
 };
 
-use gtk::prelude::*;
+use gtk::{glib, prelude::*};
 use relm4::prelude::*;
 use tracing::{debug, error, warn};
 use wayle_config::schemas::{
@@ -356,41 +356,106 @@ impl HyprlandWorkspaces {
         });
     }
 
-    pub(super) fn compute_preview_position(
-        &self,
+    // --- Preview popover lifecycle ---
+
+    pub(super) fn cancel_preview_close_timer(&mut self) {
+        if let Some(id) = self.preview_close_timer.take() {
+            id.remove();
+        }
+    }
+
+    pub(super) fn cancel_preview_dwell_timer(&mut self) {
+        if let Some(id) = self.preview_dwell_timer.take() {
+            id.remove();
+        }
+    }
+
+    pub(super) fn start_preview_close_timer(&mut self, sender: &ComponentSender<Self>) {
+        self.cancel_preview_close_timer();
+        let config = self.config.config();
+        let delay = config.modules.hyprland_workspaces.preview_close_delay.get();
+        let timer_sender = sender.input_sender().clone();
+        let id = glib::timeout_add_local_once(
+            std::time::Duration::from_millis(u64::from(delay)),
+            move || {
+                timer_sender.emit(WorkspacesMsg::PreviewCloseTimerFired);
+            },
+        );
+        self.preview_close_timer = Some(id);
+    }
+
+    pub(super) fn start_preview_dwell_timer(
+        &mut self,
+        sender: &ComponentSender<Self>,
         ws_id: WorkspaceId,
-        container: &gtk::Box,
-    ) -> (i32, i32) {
-        // Find the button widget for this workspace and compute its position
-        // relative to the display root, so the preview popup can be anchored
-        // below it via layer-shell margins.
-        for idx in 0..self.buttons.len() {
-            if let Some(button) = self.buttons.get(idx)
-                && button.id() == ws_id
-            {
-                let widget = self.buttons.widget();
-                if let Some(root_widget) = widget.root()
-                    && let Some(btn_widget) = widget.observe_children().item(idx as u32)
-                    && let Some(btn) = btn_widget.downcast_ref::<gtk::Widget>()
-                    && let Some(bounds) =
-                        btn.compute_bounds(root_widget.upcast_ref::<gtk::Widget>())
-                {
-                    let top = (bounds.y() + bounds.height()) as i32;
-                    let left = bounds.x() as i32;
-                    return (top, left);
-                }
-            }
+    ) {
+        self.cancel_preview_dwell_timer();
+        let config = self.config.config();
+        let delay = config.modules.hyprland_workspaces.preview_open_delay.get();
+        let timer_sender = sender.input_sender().clone();
+        let id = glib::timeout_add_local_once(
+            std::time::Duration::from_millis(u64::from(delay)),
+            move || {
+                timer_sender.emit(WorkspacesMsg::PreviewDwellFired(ws_id));
+            },
+        );
+        self.preview_dwell_timer = Some(id);
+    }
+
+    #[allow(clippy::too_many_lines)]
+    pub(super) fn show_preview_for_workspace(&mut self, ws_id: WorkspaceId) {
+        if self.preview.is_none() {
+            return;
         }
 
-        // Fallback: below the container widget.
-        if let Some(root_widget) = container.root()
-            && let Some(bounds) =
-                container.compute_bounds(root_widget.upcast_ref::<gtk::Widget>())
+        // Already showing this workspace — just cancel close timer.
+        if self.current_preview_ws == Some(ws_id) {
+            self.cancel_preview_close_timer();
+            return;
+        }
+
+        let is_visible = self
+            .preview_dropdown
+            .as_ref()
+            .is_some_and(|d| d.is_visible());
+
+        // Stop old streaming if switching workspaces.
+        if is_visible
+            && let Some(ref preview) = self.preview
         {
-            return ((bounds.y() + bounds.height()) as i32, bounds.x() as i32);
+            preview.emit(super::preview::WorkspacePreviewMsg::Hide);
         }
 
-        (40, 0)
+        // Send Show to the preview component.
+        if let Some(ref preview) = self.preview {
+            let config = self.config.config();
+            let ws_config = &config.modules.hyprland_workspaces;
+            preview.emit(super::preview::WorkspacePreviewMsg::Show {
+                ws_id,
+                hyprland: self.hyprland.clone(),
+                settings: Box::new(self.settings.clone()),
+                preview_width: ws_config.preview_width.get(),
+            });
+        }
+
+        // Show the popover via DropdownInstance (handles parenting, position,
+        // margins, styling — same as all other dropdowns).
+        if !is_visible
+            && let Some(ref dropdown) = self.preview_dropdown
+        {
+            let style = self.preview_dropdown_style();
+            let container = self.buttons.widget();
+            dropdown.show_anchored_to(container, style);
+        }
+
+        self.current_preview_ws = Some(ws_id);
+    }
+
+    fn preview_dropdown_style(&self) -> crate::shell::bar::dropdowns::DropdownStyle {
+        // Disable autohide — the preview uses hover-based close timers, not
+        // focus-based autohide. With autohide on, the popover closes
+        // immediately when hover event processing changes focus.
+        crate::shell::bar::dropdowns::DropdownStyle::from_config(&self.config, false)
     }
 
     pub(super) fn reinitialize_preview(&mut self, sender: &ComponentSender<Self>) {
@@ -400,26 +465,56 @@ impl HyprlandWorkspaces {
         let is_active = self.preview.is_some();
 
         // Only recreate when the enabled state actually toggled.
-        // Other preview config changes (width, delay, trigger) take effect
-        // on the next hover since they're re-read from config at that time.
         if should_show == is_active {
             return;
         }
 
         if should_show {
             let preview_ctrl = WorkspacePreview::builder()
-                .launch(WorkspacePreviewInit {
-                    preview_width: ws_config.preview_width.get(),
-                    close_delay_ms: ws_config.preview_close_delay.get(),
-                    monitor_connector: self.settings.monitor_name.clone(),
-                })
+                .launch(WorkspacePreviewInit {})
                 .forward(sender.input_sender(), |output| match output {
                     WorkspacePreviewOutput::FocusWindow(addr) => {
                         WorkspacesMsg::FocusWindow(addr)
                     }
+                    WorkspacePreviewOutput::Dismiss => {
+                        WorkspacesMsg::WorkspacePreviewDismiss
+                    }
                 });
+
+            let wrapper = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            wrapper.add_css_class("dropdown");
+            wrapper.add_css_class("ws-preview-dropdown");
+            wrapper.append(preview_ctrl.widget());
+
+            let popover_motion = gtk::EventControllerMotion::new();
+            let enter_sender = sender.input_sender().clone();
+            popover_motion.connect_enter(move |_, _, _| {
+                enter_sender.emit(WorkspacesMsg::PopoverEnter);
+            });
+            let leave_sender = sender.input_sender().clone();
+            popover_motion.connect_leave(move |_| {
+                leave_sender.emit(WorkspacesMsg::PopoverLeave);
+            });
+            wrapper.add_controller(popover_motion);
+
+            let popover = gtk::Popover::new();
+            popover.set_child(Some(&wrapper));
+            popover.set_has_arrow(false);
+            popover.add_css_class("dropdown");
+
+            let dropdown = std::rc::Rc::new(
+                crate::shell::bar::dropdowns::DropdownInstance::new(popover, Box::new(())),
+            );
+
+            let hide_sender = sender.input_sender().clone();
+            dropdown.popover().connect_closed(move |_| {
+                hide_sender.emit(WorkspacesMsg::WorkspacePreviewClosed);
+            });
+
             self.preview = Some(preview_ctrl);
+            self.preview_dropdown = Some(dropdown);
         } else {
+            self.preview_dropdown = None;
             self.preview = None;
         }
     }

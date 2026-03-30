@@ -22,6 +22,7 @@ mod watchers;
 
 use std::{
     collections::{HashMap, HashSet},
+    rc::Rc,
     sync::Arc,
     time::Duration,
 };
@@ -39,6 +40,7 @@ use self::{
     helpers::should_update_for_monitor,
     preview::{WorkspacePreview, WorkspacePreviewInit, WorkspacePreviewOutput},
 };
+use crate::shell::bar::dropdowns::DropdownInstance;
 pub(crate) use self::{
     factory::Factory,
     messages::{WorkspacesCmd, WorkspacesInit, WorkspacesMsg},
@@ -59,6 +61,12 @@ pub(crate) struct HyprlandWorkspaces {
     css_provider: gtk::CssProvider,
     buttons: FactoryVecDeque<WorkspaceButton>,
     preview: Option<Controller<WorkspacePreview>>,
+    preview_dropdown: Option<Rc<DropdownInstance>>,
+    hovered_button_ws: Option<WorkspaceId>,
+    pointer_in_popover: bool,
+    current_preview_ws: Option<WorkspaceId>,
+    preview_close_timer: Option<glib::SourceId>,
+    preview_dwell_timer: Option<glib::SourceId>,
 }
 
 #[relm4::component(pub(crate))]
@@ -80,6 +88,7 @@ impl Component for HyprlandWorkspaces {
         }
     }
 
+    #[allow(clippy::too_many_lines)]
     fn init(
         init: Self::Init,
         root: Self::Root,
@@ -119,29 +128,66 @@ impl Component for HyprlandWorkspaces {
                 WorkspaceButtonOutput::Clicked(id) => WorkspacesMsg::WorkspaceClicked(id),
                 WorkspaceButtonOutput::ScrollUp => WorkspacesMsg::ScrollUp,
                 WorkspaceButtonOutput::ScrollDown => WorkspacesMsg::ScrollDown,
+                WorkspaceButtonOutput::PreviewHoverEnter(id) => {
+                    WorkspacesMsg::ButtonHoverEnter(id)
+                }
+                WorkspaceButtonOutput::PreviewHoverLeave(id) => {
+                    WorkspacesMsg::ButtonHoverLeave(id)
+                }
                 WorkspaceButtonOutput::PreviewRequest(id) => {
                     WorkspacesMsg::WorkspacePreviewRequest(id)
                 }
-                WorkspaceButtonOutput::PreviewDismiss => WorkspacesMsg::WorkspacePreviewDismiss,
             },
         );
 
         // Initialize preview popup if enabled.
-        let preview = if workspaces_config.preview_show.get() {
+        let (preview, preview_dropdown) = if workspaces_config.preview_show.get() {
             let preview_ctrl = WorkspacePreview::builder()
-                .launch(WorkspacePreviewInit {
-                    preview_width: workspaces_config.preview_width.get(),
-                    close_delay_ms: workspaces_config.preview_close_delay.get(),
-                    monitor_connector: init.settings.monitor_name.clone(),
-                })
+                .launch(WorkspacePreviewInit {})
                 .forward(sender.input_sender(), |output| match output {
                     WorkspacePreviewOutput::FocusWindow(addr) => {
                         WorkspacesMsg::FocusWindow(addr)
                     }
+                    WorkspacePreviewOutput::Dismiss => {
+                        WorkspacesMsg::WorkspacePreviewDismiss
+                    }
                 });
-            Some(preview_ctrl)
+
+            // Wrap the preview in a DropdownInstance — same infrastructure
+            // used by all other dropdowns (audio, network, etc.).
+            let wrapper = gtk::Box::new(gtk::Orientation::Vertical, 0);
+            wrapper.add_css_class("dropdown");
+            wrapper.add_css_class("ws-preview-dropdown");
+            wrapper.append(preview_ctrl.widget());
+
+            let popover = gtk::Popover::new();
+            popover.set_child(Some(&wrapper));
+            popover.set_has_arrow(false);
+            popover.add_css_class("dropdown");
+
+            let dropdown = Rc::new(DropdownInstance::new(popover, Box::new(())));
+
+            // Attach hover tracking to the content wrapper.
+            let popover_motion = gtk::EventControllerMotion::new();
+            let enter_sender = sender.input_sender().clone();
+            popover_motion.connect_enter(move |_, _, _| {
+                enter_sender.emit(WorkspacesMsg::PopoverEnter);
+            });
+            let leave_sender = sender.input_sender().clone();
+            popover_motion.connect_leave(move |_| {
+                leave_sender.emit(WorkspacesMsg::PopoverLeave);
+            });
+            wrapper.add_controller(popover_motion);
+
+            // When the popover closes, stop streaming.
+            let hide_sender = sender.input_sender().clone();
+            dropdown.popover().connect_closed(move |_| {
+                hide_sender.emit(WorkspacesMsg::WorkspacePreviewClosed);
+            });
+
+            (Some(preview_ctrl), Some(dropdown))
         } else {
-            None
+            (None, None)
         };
 
         let mut model = Self {
@@ -157,6 +203,12 @@ impl Component for HyprlandWorkspaces {
             css_provider,
             buttons,
             preview,
+            preview_dropdown,
+            hovered_button_ws: None,
+            pointer_in_popover: false,
+            current_preview_ws: None,
+            preview_close_timer: None,
+            preview_dwell_timer: None,
         };
 
         styling::apply_styling(&model.css_provider, &model.config, &model.settings);
@@ -166,7 +218,7 @@ impl Component for HyprlandWorkspaces {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, root: &Self::Root) {
+    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
         match msg {
             WorkspacesMsg::WorkspaceClicked(id) => {
                 self.switch_to_workspace(id);
@@ -177,27 +229,93 @@ impl Component for HyprlandWorkspaces {
             WorkspacesMsg::ScrollDown => {
                 self.navigate_workspace(1);
             }
-            WorkspacesMsg::WorkspacePreviewRequest(id) => {
-                if let Some(ref preview) = self.preview {
-                    let (margin_top, margin_left) =
-                        self.compute_preview_position(id, root);
-                    let config = self.config.config();
-                    let ws_config = &config.modules.hyprland_workspaces;
-                    preview.emit(preview::WorkspacePreviewMsg::Show {
-                        ws_id: id,
-                        hyprland: self.hyprland.clone(),
-                        settings: Box::new(self.settings.clone()),
-                        margin_top,
-                        margin_left,
-                        preview_width: ws_config.preview_width.get(),
-                        close_delay_ms: ws_config.preview_close_delay.get(),
-                    });
+
+            // --- Preview lifecycle ---
+            WorkspacesMsg::ButtonHoverEnter(id) => {
+                self.hovered_button_ws = Some(id);
+                self.cancel_preview_close_timer();
+                self.cancel_preview_dwell_timer();
+
+                let is_visible = self.preview_dropdown.as_ref().is_some_and(|d| d.is_visible());
+
+                if self.current_preview_ws == Some(id) && is_visible {
+                    // Already showing this workspace — nothing to do.
+                } else if is_visible {
+                    // Popover open for a different workspace — switch immediately.
+                    self.show_preview_for_workspace(id);
+                } else {
+                    // Not visible — start dwell timer.
+                    self.start_preview_dwell_timer(&sender, id);
                 }
             }
-            WorkspacesMsg::WorkspacePreviewDismiss => {
-                if let Some(ref preview) = self.preview {
-                    preview.emit(preview::WorkspacePreviewMsg::Dismiss);
+            WorkspacesMsg::ButtonHoverLeave(id) => {
+                if self.hovered_button_ws != Some(id) {
+                    return;
                 }
+                self.hovered_button_ws = None;
+                self.cancel_preview_dwell_timer();
+
+                let is_visible = self.preview_dropdown.as_ref().is_some_and(|d| d.is_visible());
+                if is_visible && !self.pointer_in_popover {
+                    self.start_preview_close_timer(&sender);
+                }
+            }
+            WorkspacesMsg::PopoverEnter => {
+                self.pointer_in_popover = true;
+                self.cancel_preview_close_timer();
+            }
+            WorkspacesMsg::PopoverLeave => {
+                self.pointer_in_popover = false;
+                if self.hovered_button_ws.is_none() {
+                    self.start_preview_close_timer(&sender);
+                }
+            }
+            WorkspacesMsg::PreviewDwellFired(id) => {
+                self.preview_dwell_timer = None;
+                if self.hovered_button_ws != Some(id) {
+                    return;
+                }
+                self.show_preview_for_workspace(id);
+            }
+            WorkspacesMsg::PreviewCloseTimerFired => {
+                self.preview_close_timer = None;
+                if self.pointer_in_popover || self.hovered_button_ws.is_some() {
+                    return;
+                }
+                if let Some(ref dropdown) = self.preview_dropdown
+                    && dropdown.is_visible()
+                {
+                    dropdown.popdown();
+                }
+            }
+            WorkspacesMsg::WorkspacePreviewRequest(id) => {
+                // Immediate show (right-click path).
+                self.cancel_preview_dwell_timer();
+                self.cancel_preview_close_timer();
+                self.show_preview_for_workspace(id);
+            }
+            WorkspacesMsg::WorkspacePreviewClosed => {
+                self.cancel_preview_close_timer();
+                self.cancel_preview_dwell_timer();
+                if let Some(ref preview) = self.preview {
+                    preview.emit(preview::WorkspacePreviewMsg::Hide);
+                }
+                self.current_preview_ws = None;
+                self.pointer_in_popover = false;
+            }
+            WorkspacesMsg::WorkspacePreviewDismiss => {
+                // Component requested close (window clicked).
+                self.cancel_preview_close_timer();
+                self.cancel_preview_dwell_timer();
+                if let Some(ref preview) = self.preview {
+                    preview.emit(preview::WorkspacePreviewMsg::Hide);
+                }
+                if let Some(ref dropdown) = self.preview_dropdown
+                    && dropdown.is_visible()
+                {
+                    dropdown.popdown();
+                }
+                self.current_preview_ws = None;
             }
             WorkspacesMsg::FocusWindow(address) => {
                 self.focus_window_by_address(&address);
