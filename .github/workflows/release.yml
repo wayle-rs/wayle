@@ -82,6 +82,9 @@ jobs:
               with:
                   submodules: recursive
 
+            - name: Fix git ownership
+              run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
             - name: Build release binaries
               run: cargo build --release --locked
 
