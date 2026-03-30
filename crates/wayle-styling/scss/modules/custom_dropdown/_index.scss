@@ -37,8 +37,6 @@
         }
 
         &.disabled {
-            cursor: default;
-
             .custom-dropdown-item-label {
                 color: var(--fg-subtle);
                 font-style: italic;
