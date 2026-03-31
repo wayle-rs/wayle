@@ -1,3 +1,5 @@
+use std::io;
+
 use clap::{
     CommandFactory, Parser, Subcommand,
     builder::styling::{AnsiColor, Effects, Styles},
@@ -107,10 +109,5 @@ pub enum Commands {
 
 /// Prints shell completions to stdout.
 pub fn generate_completions(shell: Shell) {
-    clap_complete::generate(
-        shell,
-        &mut Cli::command(),
-        "wayle",
-        &mut std::io::stdout(),
-    );
+    clap_complete::generate(shell, &mut Cli::command(), "wayle", &mut io::stdout());
 }
