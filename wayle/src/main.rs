@@ -16,8 +16,13 @@ use wayle::{
 fn main() {
     let cli = Cli::parse();
 
-    if matches!(cli.command, Commands::Shell) {
-        return run_shell();
+    match cli.command {
+        Commands::Shell => return run_shell(),
+        Commands::Completions { shell } => {
+            cli::app::generate_completions(shell);
+            return;
+        }
+        _ => {}
     }
 
     let Ok(runtime) = Runtime::new() else {
@@ -45,7 +50,7 @@ fn main() {
             Commands::Systray { command } => cli::systray::execute(command).await,
             Commands::Wallpaper { command } => cli::wallpaper::execute(command).await,
             Commands::Idle { command } => cli::idle::execute(command).await,
-            Commands::Shell => unreachable!(),
+            Commands::Shell | Commands::Completions { .. } => unreachable!(),
         }
     });
 

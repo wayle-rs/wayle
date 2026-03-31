@@ -88,14 +88,22 @@ jobs:
             - name: Build release binaries
               run: cargo build --release --locked
 
+            - name: Generate completions
+              run: |
+                  target/release/wayle completions bash > completions.bash
+                  target/release/wayle completions zsh > _wayle
+                  target/release/wayle completions fish > wayle.fish
+
             - name: Create archive
               run: |
                   VERSION="${GITHUB_REF_NAME#v}"
                   ARCH="${{ matrix.arch }}"
                   STAGING="wayle-${VERSION}-${ARCH}-linux"
-                  mkdir -p "${STAGING}/icons"
+                  mkdir -p "${STAGING}/icons" "${STAGING}/completions"
                   cp target/release/wayle LICENSE "${STAGING}/"
                   cp -r resources/icons/hicolor "${STAGING}/icons/"
+                  cp completions.bash _wayle wayle.fish "${STAGING}/completions/"
+                  cp resources/wayle.service "${STAGING}/"
                   tar czf "${STAGING}.tar.gz" "${STAGING}"
 
             - name: Upload to release
