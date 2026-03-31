@@ -23,6 +23,8 @@ pub use property::{
 pub mod schemas {
     /// Bar layout configuration.
     pub mod bar;
+    /// Custom dropdown configurations.
+    pub mod dropdowns;
     /// General Wayle configuration.
     pub mod general;
     /// Module-specific configurations.
@@ -69,8 +71,8 @@ pub use infrastructure::{
     watcher::FileWatcher,
 };
 use schemas::{
-    bar::BarConfig, modules::ModulesConfig, osd::OsdConfig, styling::StylingConfig,
-    wallpaper::WallpaperConfig,
+    bar::BarConfig, dropdowns::DropdownsConfig, modules::ModulesConfig, osd::OsdConfig,
+    styling::StylingConfig, wallpaper::WallpaperConfig,
 };
 use wayle_derive::wayle_config;
 
@@ -93,6 +95,10 @@ pub struct Config {
     #[wayle(skip)]
     #[serde(default)]
     pub imports: Vec<String>,
+
+    /// Custom dropdown panel definitions.
+    #[default(DropdownsConfig::default())]
+    pub dropdowns: ConfigProperty<DropdownsConfig>,
 
     /// General Wayle settings.
     pub general: GeneralConfig,

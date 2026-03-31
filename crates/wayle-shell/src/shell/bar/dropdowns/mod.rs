@@ -2,6 +2,7 @@ mod audio;
 mod battery;
 mod bluetooth;
 mod calendar;
+mod custom;
 mod dashboard;
 mod media;
 mod network;
@@ -29,8 +30,12 @@ macro_rules! register_dropdowns {
             match name {
                 $($name => <$factory as DropdownFactory>::create(services),)+
                 _ => {
-                    tracing::warn!(dropdown = name, "unknown dropdown type");
-                    None
+                    if let Some(custom_name) = name.strip_prefix("custom:") {
+                        custom::create(custom_name, services)
+                    } else {
+                        tracing::warn!(dropdown = name, "unknown dropdown type");
+                        None
+                    }
                 }
             }
         }

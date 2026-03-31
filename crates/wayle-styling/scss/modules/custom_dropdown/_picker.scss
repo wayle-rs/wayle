@@ -1,0 +1,54 @@
+@import "../../primitives/popover/mixins";
+
+.custom-picker-section {
+    .custom-picker-list {
+        background: transparent;
+
+        > row {
+            padding: 0;
+            background: transparent;
+            border-radius: var(--rounding-element);
+            transition: background var(--duration-fast);
+
+            &:hover {
+                background: var(--bg-overlay);
+            }
+
+            &:focus-visible {
+                background: var(--bg-overlay);
+                outline: var(--focus-ring-width) solid var(--accent);
+                outline-offset: calc(-0.125rem * var(--global-scale));
+            }
+        }
+
+        .popover-item {
+            min-height: calc(3rem * var(--global-scale));
+            padding: var(--space-xs) var(--space-sm);
+
+            .icon {
+                @include popover-item-icon;
+            }
+
+            .labels {
+                margin-left: var(--space-sm);
+
+                .label {
+                    font-size: var(--text-md);
+                    font-weight: var(--weight-semibold);
+                    color: var(--fg-default);
+                }
+
+                .subtitle {
+                    font-size: var(--text-base);
+                    font-weight: var(--weight-medium);
+                    color: var(--fg-subtle);
+                }
+            }
+
+            .active-icon {
+                @include popover-item-active-icon;
+            }
+        }
+    }
+
+}
