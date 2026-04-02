@@ -29,14 +29,14 @@ settings-modules-media-border-show = Afficher la bordure
 settings-modules-media-border-color = Couleur de bordure
     .description = Valeur de couleur de bordure
 
-settings-modules-media-icon-show = Afficher l'icone
-    .description = Afficher l'icone du module
+settings-modules-media-icon-show = Afficher l'icône
+    .description = Afficher l'icône du module
 
-settings-modules-media-icon-color = Couleur de l'icone
-    .description = Couleur de premier plan de l'icone
+settings-modules-media-icon-color = Couleur de l'icône
+    .description = Couleur de premier plan de l'icône
 
-settings-modules-media-icon-bg-color = Arriere-plan de l'icone
-    .description = Couleur d'arriere-plan du conteneur d'icone
+settings-modules-media-icon-bg-color = Arrière-plan de l'icône
+    .description = Couleur d'arrière-plan du conteneur d'icône
 
 settings-modules-media-label-show = Afficher le libellé
     .description = Afficher le libellé texte
@@ -45,10 +45,10 @@ settings-modules-media-label-color = Couleur du libellé
     .description = Couleur du texte du libellé
 
 settings-modules-media-label-max-length = Longueur max du libellé
-    .description = Nombre maximal de caracteres avant troncature
+    .description = Nombre maximal de caractères avant troncature
 
-settings-modules-media-button-bg-color = Arriere-plan du bouton
-    .description = Couleur d'arriere-plan du bouton
+settings-modules-media-button-bg-color = Arrière-plan du bouton
+    .description = Couleur d'arrière-plan du bouton
 
 settings-modules-media-right-click = Clic droit
     .description = Commande shell au clic droit
@@ -56,8 +56,8 @@ settings-modules-media-right-click = Clic droit
 settings-modules-media-middle-click = Clic milieu
     .description = Commande shell au clic milieu
 
-settings-modules-media-scroll-up = Defilement vers le haut
-    .description = Commande shell au defilement vers le haut
+settings-modules-media-scroll-up = Défilement vers le haut
+    .description = Commande shell au défilement vers le haut
 
-settings-modules-media-scroll-down = Defilement vers le bas
-    .description = Commande shell au defilement vers le bas
+settings-modules-media-scroll-down = Défilement vers le bas
+    .description = Commande shell au défilement vers le bas
