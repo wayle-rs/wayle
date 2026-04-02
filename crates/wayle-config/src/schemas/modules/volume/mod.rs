@@ -27,6 +27,7 @@ pub struct VolumeConfig {
     /// The percentage is divided evenly among icons. With 3 icons:
     /// 1-33% uses icons\[0\], 34-66% uses icons\[1\], 67-100% uses icons\[2\].
     #[serde(rename = "level-icons")]
+    #[i18n("settings-modules-volume-level-icons")]
     #[default(vec![
         String::from("ld-volume-symbolic"),
         String::from("ld-volume-1-symbolic"),
@@ -36,41 +37,49 @@ pub struct VolumeConfig {
 
     /// Icon shown when audio output is muted.
     #[serde(rename = "icon-muted")]
+    #[i18n("settings-modules-volume-muted-icon")]
     #[default(String::from("ld-volume-x-symbolic"))]
     pub icon_muted: ConfigProperty<String>,
 
     /// Display border around button.
     #[serde(rename = "border-show")]
+    #[i18n("settings-modules-volume-border-show")]
     #[default(false)]
     pub border_show: ConfigProperty<bool>,
 
     /// Border color token.
     #[serde(rename = "border-color")]
+    #[i18n("settings-modules-volume-border-color")]
     #[default(ColorValue::Token(CssToken::Red))]
     pub border_color: ConfigProperty<ColorValue>,
 
     /// Display module icon.
     #[serde(rename = "icon-show")]
+    #[i18n("settings-modules-volume-icon-show")]
     #[default(true)]
     pub icon_show: ConfigProperty<bool>,
 
     /// Icon foreground color. Auto selects based on variant for contrast.
     #[serde(rename = "icon-color")]
+    #[i18n("settings-modules-volume-icon-color")]
     #[default(ColorValue::Auto)]
     pub icon_color: ConfigProperty<ColorValue>,
 
     /// Icon container background color token.
     #[serde(rename = "icon-bg-color")]
+    #[i18n("settings-modules-volume-icon-bg-color")]
     #[default(ColorValue::Token(CssToken::Red))]
     pub icon_bg_color: ConfigProperty<ColorValue>,
 
     /// Display percentage label.
     #[serde(rename = "label-show")]
+    #[i18n("settings-modules-volume-label-show")]
     #[default(true)]
     pub label_show: ConfigProperty<bool>,
 
     /// Label text color token.
     #[serde(rename = "label-color")]
+    #[i18n("settings-modules-volume-label-color")]
     #[default(ColorValue::Token(CssToken::Red))]
     pub label_color: ConfigProperty<ColorValue>,
 
@@ -84,46 +93,55 @@ pub struct VolumeConfig {
     ///
     /// - `"{{ percent }}%"` - "45%"
     #[serde(rename = "format")]
+    #[i18n("settings-modules-volume-format")]
     #[default(String::from("{{ percent }}%"))]
     pub format: ConfigProperty<String>,
 
     /// Max label characters before truncation with ellipsis. Set to 0 to disable.
     #[serde(rename = "label-max-length")]
+    #[i18n("settings-modules-volume-label-max-length")]
     #[default(0)]
     pub label_max_length: ConfigProperty<u32>,
 
     /// Button background color token.
     #[serde(rename = "button-bg-color")]
+    #[i18n("settings-modules-volume-button-bg-color")]
     #[default(ColorValue::Token(CssToken::BgSurfaceElevated))]
     pub button_bg_color: ConfigProperty<ColorValue>,
 
     /// Action on left click. Default opens the audio dropdown.
     #[serde(rename = "left-click")]
+    #[i18n("settings-modules-volume-left-click")]
     #[default(ClickAction::Dropdown(String::from("audio")))]
     pub left_click: ConfigProperty<ClickAction>,
 
     /// Action on right click.
     #[serde(rename = "right-click")]
+    #[i18n("settings-modules-volume-right-click")]
     #[default(ClickAction::None)]
     pub right_click: ConfigProperty<ClickAction>,
 
     /// Action on middle click. Default toggles mute.
     #[serde(rename = "middle-click")]
+    #[i18n("settings-modules-volume-middle-click")]
     #[default(ClickAction::Shell(String::from("wayle audio output-mute")))]
     pub middle_click: ConfigProperty<ClickAction>,
 
     /// Action on scroll up.
     #[serde(rename = "scroll-up")]
+    #[i18n("settings-modules-volume-scroll-up")]
     #[default(ClickAction::None)]
     pub scroll_up: ConfigProperty<ClickAction>,
 
     /// Action on scroll down.
     #[serde(rename = "scroll-down")]
+    #[i18n("settings-modules-volume-scroll-down")]
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
 
     /// Icon source for app volume entries in the audio dropdown.
     #[serde(rename = "dropdown-app-icons")]
+    #[i18n("settings-modules-volume-dropdown-app-icons")]
     #[default(AppIconSource::Mapped)]
     pub dropdown_app_icons: ConfigProperty<AppIconSource>,
 
@@ -146,6 +164,7 @@ pub struct VolumeConfig {
     /// label-color = "status-error"
     /// ```
     #[serde(rename = "thresholds")]
+    #[i18n("settings-modules-volume-thresholds")]
     #[default(Vec::new())]
     pub thresholds: ConfigProperty<Vec<ThresholdEntry>>,
 }

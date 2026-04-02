@@ -17,86 +17,103 @@ use crate::{
 pub struct NotificationConfig {
     /// Icon shown when no notifications and DND is off.
     #[serde(rename = "icon-name")]
+    #[i18n("settings-modules-notification-icon-name")]
     #[default(String::from("ld-bell-symbolic"))]
     pub icon_name: ConfigProperty<String>,
 
     /// Icon shown when notifications exist.
     #[serde(rename = "icon-unread")]
+    #[i18n("settings-modules-notification-icon-unread")]
     #[default(String::from("ld-bell-dot-symbolic"))]
     pub icon_unread: ConfigProperty<String>,
 
     /// Icon shown when Do Not Disturb is active.
     #[serde(rename = "icon-dnd")]
+    #[i18n("settings-modules-notification-icon-dnd")]
     #[default(String::from("ld-bell-off-symbolic"))]
     pub icon_dnd: ConfigProperty<String>,
 
     /// Display border around button.
     #[serde(rename = "border-show")]
+    #[i18n("settings-modules-notification-border-show")]
     #[default(false)]
     pub border_show: ConfigProperty<bool>,
 
     /// Border color token.
     #[serde(rename = "border-color")]
+    #[i18n("settings-modules-notification-border-color")]
     #[default(ColorValue::Token(CssToken::Green))]
     pub border_color: ConfigProperty<ColorValue>,
 
     /// Display module icon.
     #[serde(rename = "icon-show")]
+    #[i18n("settings-modules-notification-icon-show")]
     #[default(true)]
     pub icon_show: ConfigProperty<bool>,
 
     /// Icon foreground color. Auto selects based on variant for contrast.
     #[serde(rename = "icon-color")]
+    #[i18n("settings-modules-notification-icon-color")]
     #[default(ColorValue::Auto)]
     pub icon_color: ConfigProperty<ColorValue>,
 
     /// Icon container background color token.
     #[serde(rename = "icon-bg-color")]
+    #[i18n("settings-modules-notification-icon-bg-color")]
     #[default(ColorValue::Token(CssToken::Green))]
     pub icon_bg_color: ConfigProperty<ColorValue>,
 
     /// Display notification count label.
     #[serde(rename = "label-show")]
+    #[i18n("settings-modules-notification-label-show")]
     #[default(true)]
     pub label_show: ConfigProperty<bool>,
 
     /// Label text color token.
     #[serde(rename = "label-color")]
+    #[i18n("settings-modules-notification-label-color")]
     #[default(ColorValue::Token(CssToken::Green))]
     pub label_color: ConfigProperty<ColorValue>,
 
     /// Max label characters before truncation with ellipsis. Set to 0 to disable.
     #[serde(rename = "label-max-length")]
+    #[i18n("settings-modules-notification-label-max-length")]
     #[default(0)]
     pub label_max_length: ConfigProperty<u32>,
 
     /// Button background color token.
     #[serde(rename = "button-bg-color")]
+    #[i18n("settings-modules-notification-button-bg-color")]
     #[default(ColorValue::Token(CssToken::BgSurfaceElevated))]
     pub button_bg_color: ConfigProperty<ColorValue>,
 
     /// Action on left click.
     #[serde(rename = "left-click")]
+    #[i18n("settings-modules-notification-left-click")]
     #[default(ClickAction::Dropdown(String::from("notification")))]
     pub left_click: ConfigProperty<ClickAction>,
 
     /// Action on right click. Default toggles Do Not Disturb.
     #[serde(rename = "right-click")]
+    #[i18n("settings-modules-notification-right-click")]
     #[default(ClickAction::Shell(String::from("wayle notify dnd")))]
     pub right_click: ConfigProperty<ClickAction>,
 
     /// Action on middle click.
     #[serde(rename = "middle-click")]
+    #[i18n("settings-modules-notification-middle-click")]
     #[default(ClickAction::None)]
     pub middle_click: ConfigProperty<ClickAction>,
 
     /// Action on scroll up.
     #[serde(rename = "scroll-up")]
+    #[i18n("settings-modules-notification-scroll-up")]
     #[default(ClickAction::None)]
     pub scroll_up: ConfigProperty<ClickAction>,
 
     /// Action on scroll down.
     #[serde(rename = "scroll-down")]
+    #[i18n("settings-modules-notification-scroll-down")]
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
 
@@ -107,6 +124,7 @@ pub struct NotificationConfig {
     ///
     /// Examples: `["notify-send", "*chromium*", "Vivaldi*"]`
     #[serde(rename = "blocklist")]
+    #[i18n("settings-modules-notification-blocklist")]
     #[default(Vec::new())]
     pub blocklist: ConfigProperty<Vec<String>>,
 
@@ -118,21 +136,25 @@ pub struct NotificationConfig {
     /// | `mapped` | Ignored | Mapped icon |
     /// | `application` | Shows the image | App's generic icon, then mapped fallback |
     #[serde(rename = "icon-source")]
+    #[i18n("settings-modules-notification-icon-source")]
     #[default(IconSource::default())]
     pub icon_source: ConfigProperty<IconSource>,
 
     /// Screen position for popup notifications.
     #[serde(rename = "popup-position")]
+    #[i18n("settings-modules-notification-popup-position")]
     #[default(PopupPosition::default())]
     pub popup_position: ConfigProperty<PopupPosition>,
 
     /// Maximum number of popups visible at once.
     #[serde(rename = "popup-max-visible")]
+    #[i18n("settings-modules-notification-popup-max-visible")]
     #[default(5)]
     pub popup_max_visible: ConfigProperty<u32>,
 
     /// Order in which popups stack on screen.
     #[serde(rename = "popup-stacking-order")]
+    #[i18n("settings-modules-notification-popup-stacking-order")]
     #[default(StackingOrder::default())]
     pub popup_stacking_order: ConfigProperty<StackingOrder>,
 
@@ -140,46 +162,55 @@ pub struct NotificationConfig {
     ///
     /// Applications may request a shorter timeout, which takes precedence.
     #[serde(rename = "popup-duration")]
+    #[i18n("settings-modules-notification-popup-duration")]
     #[default(5000u32)]
     pub popup_duration: ConfigProperty<u32>,
 
     /// Pause popup auto-dismiss timer on hover.
     #[serde(rename = "popup-hover-pause")]
+    #[i18n("settings-modules-notification-popup-hover-pause")]
     #[default(true)]
     pub popup_hover_pause: ConfigProperty<bool>,
 
     /// Horizontal margin from screen edges.
     #[serde(rename = "popup-margin-x")]
+    #[i18n("settings-modules-notification-popup-margin-x")]
     #[default(Spacing::new(0.0))]
     pub popup_margin_x: ConfigProperty<Spacing>,
 
     /// Vertical margin from screen edges.
     #[serde(rename = "popup-margin-y")]
+    #[i18n("settings-modules-notification-popup-margin-y")]
     #[default(Spacing::new(0.0))]
     pub popup_margin_y: ConfigProperty<Spacing>,
 
     /// Gap between stacked popups.
     #[serde(rename = "popup-gap")]
+    #[i18n("settings-modules-notification-popup-gap")]
     #[default(Spacing::new(8.0))]
     pub popup_gap: ConfigProperty<Spacing>,
 
     /// Target monitor: "primary" or a connector name like "DP-1".
     #[serde(rename = "popup-monitor")]
+    #[i18n("settings-modules-notification-popup-monitor")]
     #[default(PopupMonitor::default())]
     pub popup_monitor: ConfigProperty<PopupMonitor>,
 
     /// What happens when the close button on a popup is clicked.
     #[serde(rename = "popup-close-behavior")]
+    #[i18n("settings-modules-notification-popup-close-behavior")]
     #[default(PopupCloseBehavior::default())]
     pub popup_close_behavior: ConfigProperty<PopupCloseBehavior>,
 
     /// Display drop shadow on popup cards.
     #[serde(rename = "popup-shadow")]
+    #[i18n("settings-modules-notification-popup-shadow")]
     #[default(true)]
     pub popup_shadow: ConfigProperty<bool>,
 
     /// Minimum urgency level that displays a colored urgency bar.
     #[serde(rename = "popup-urgency-bar")]
+    #[i18n("settings-modules-notification-popup-urgency-bar")]
     #[default(UrgencyBarThreshold::default())]
     pub popup_urgency_bar: ConfigProperty<UrgencyBarThreshold>,
 
@@ -203,6 +234,7 @@ pub struct NotificationConfig {
     /// label-color = "status-error"
     /// ```
     #[serde(rename = "thresholds")]
+    #[i18n("settings-modules-notification-thresholds")]
     #[default(Vec::new())]
     pub thresholds: ConfigProperty<Vec<ThresholdEntry>>,
 }

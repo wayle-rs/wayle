@@ -143,6 +143,7 @@ pub struct HyprlandWorkspacesConfig {
     /// When set to N, at least N buttons are always visible, with empty ones
     /// using `empty-color` styling.
     #[serde(rename = "min-workspace-count")]
+    #[i18n("settings-modules-hyprland-workspaces-min-workspace-count")]
     #[default(0)]
     pub min_workspace_count: ConfigProperty<u8>,
 
@@ -151,6 +152,7 @@ pub struct HyprlandWorkspacesConfig {
     /// When true, each bar shows only its monitor's workspaces.
     /// When false, all workspaces from all monitors are shown.
     #[serde(rename = "monitor-specific")]
+    #[i18n("settings-modules-hyprland-workspaces-monitor-specific")]
     #[default(true)]
     pub monitor_specific: ConfigProperty<bool>,
 
@@ -158,6 +160,7 @@ pub struct HyprlandWorkspacesConfig {
     ///
     /// Special workspaces have negative IDs in Hyprland.
     #[serde(rename = "show-special")]
+    #[i18n("settings-modules-hyprland-workspaces-show-special")]
     #[default(true)]
     pub show_special: ConfigProperty<bool>,
 
@@ -166,6 +169,7 @@ pub struct HyprlandWorkspacesConfig {
     /// When a window requests attention (e.g., terminal bell), the workspace
     /// button pulses until you switch to it.
     #[serde(rename = "urgent-show")]
+    #[i18n("settings-modules-hyprland-workspaces-urgent-show")]
     #[default(true)]
     pub urgent_show: ConfigProperty<bool>,
 
@@ -175,6 +179,7 @@ pub struct HyprlandWorkspacesConfig {
     /// - `application`: Only the app icon(s) belonging to the urgent window
     ///   pulse, falling back to `workspace` when app icons are disabled
     #[serde(rename = "urgent-mode")]
+    #[i18n("settings-modules-hyprland-workspaces-urgent-mode")]
     #[default(UrgentMode::Workspace)]
     pub urgent_mode: ConfigProperty<UrgentMode>,
 
@@ -184,6 +189,7 @@ pub struct HyprlandWorkspacesConfig {
     /// - `icon`: Shows icon from `workspace-map` (falls back to label if unmapped)
     /// - `none`: Shows nothing - only app icons visible
     #[serde(rename = "display-mode")]
+    #[i18n("settings-modules-hyprland-workspaces-display-mode")]
     #[default(DisplayMode::Label)]
     pub display_mode: ConfigProperty<DisplayMode>,
 
@@ -192,6 +198,7 @@ pub struct HyprlandWorkspacesConfig {
     /// Only applies when `display-mode = "label"` or as fallback for unmapped
     /// workspaces in `display-mode = "icon"`.
     #[serde(rename = "label-use-name")]
+    #[i18n("settings-modules-hyprland-workspaces-label-use-name")]
     #[default(false)]
     pub label_use_name: ConfigProperty<bool>,
 
@@ -202,6 +209,7 @@ pub struct HyprlandWorkspacesConfig {
     ///   If a monitor has workspaces 4, 5, 6 assigned, they display as 1, 2, 3.
     ///   Useful when keybinds use per-monitor numbering.
     #[serde(rename = "numbering")]
+    #[i18n("settings-modules-hyprland-workspaces-numbering")]
     #[default(Numbering::Absolute)]
     pub numbering: ConfigProperty<Numbering>,
 
@@ -210,6 +218,7 @@ pub struct HyprlandWorkspacesConfig {
     /// Only shown when both `display-mode` is not `none` and `app-icons-show`
     /// is enabled. Common values: `"|"`, `"·"`, `"-"`.
     #[serde(rename = "divider")]
+    #[i18n("settings-modules-hyprland-workspaces-divider")]
     #[default(String::from(" "))]
     pub divider: ConfigProperty<String>,
 
@@ -218,6 +227,7 @@ pub struct HyprlandWorkspacesConfig {
     /// When enabled, displays icons for running applications.
     /// Icons are resolved via `app-icon-map` configuration.
     #[serde(rename = "app-icons-show")]
+    #[i18n("settings-modules-hyprland-workspaces-app-icons-show")]
     #[default(false)]
     pub app_icons_show: ConfigProperty<bool>,
 
@@ -226,11 +236,13 @@ pub struct HyprlandWorkspacesConfig {
     /// When true, shows only one icon per unique window class.
     /// When false, shows an icon for every window.
     #[serde(rename = "app-icons-dedupe")]
+    #[i18n("settings-modules-hyprland-workspaces-app-icons-dedupe")]
     #[default(true)]
     pub app_icons_dedupe: ConfigProperty<bool>,
 
     /// Fallback icon for applications not matched by `app-icon-map`.
     #[serde(rename = "app-icons-fallback")]
+    #[i18n("settings-modules-hyprland-workspaces-app-icons-fallback")]
     #[default(String::from("ld-app-window-symbolic"))]
     pub app_icons_fallback: ConfigProperty<String>,
 
@@ -239,6 +251,7 @@ pub struct HyprlandWorkspacesConfig {
     /// When a workspace has no windows but is displayed (via `min-workspace-count`),
     /// this icon appears as a placeholder.
     #[serde(rename = "app-icons-empty")]
+    #[i18n("settings-modules-hyprland-workspaces-app-icons-empty")]
     #[default(String::from("tb-minus-symbolic"))]
     pub app_icons_empty: ConfigProperty<String>,
 
@@ -246,6 +259,7 @@ pub struct HyprlandWorkspacesConfig {
     ///
     /// Only applies to spacing between app icons.
     #[serde(rename = "icon-gap")]
+    #[i18n("settings-modules-hyprland-workspaces-icon-gap")]
     #[default(Spacing::new(0.3))]
     pub icon_gap: ConfigProperty<Spacing>,
 
@@ -254,6 +268,7 @@ pub struct HyprlandWorkspacesConfig {
     /// For horizontal bars, controls horizontal (left/right) padding.
     /// For vertical bars, controls vertical (top/bottom) padding.
     #[serde(rename = "workspace-padding")]
+    #[i18n("settings-modules-hyprland-workspaces-workspace-padding")]
     #[default(Spacing::new(0.5))]
     pub workspace_padding: ConfigProperty<Spacing>,
 
@@ -262,6 +277,7 @@ pub struct HyprlandWorkspacesConfig {
     /// Applies to workspace identity icons and custom icons from `workspace-map`.
     /// Range: 0.25-3.0.
     #[serde(rename = "icon-size")]
+    #[i18n("settings-modules-hyprland-workspaces-icon-size")]
     #[default(ScaleFactor::default())]
     pub icon_size: ConfigProperty<ScaleFactor>,
 
@@ -270,6 +286,7 @@ pub struct HyprlandWorkspacesConfig {
     /// Applies to workspace number/name labels and the divider text.
     /// Range: 0.25-3.0.
     #[serde(rename = "label-size")]
+    #[i18n("settings-modules-hyprland-workspaces-label-size")]
     #[default(ScaleFactor::default())]
     pub label_size: ConfigProperty<ScaleFactor>,
 
@@ -279,11 +296,13 @@ pub struct HyprlandWorkspacesConfig {
     /// - `"10"` - hide workspace 10
     /// - `"1?"` - hide workspaces 10-19
     #[serde(rename = "workspace-ignore")]
+    #[i18n("settings-modules-hyprland-workspaces-workspace-ignore")]
     #[default(Vec::new())]
     pub workspace_ignore: ConfigProperty<Vec<String>>,
 
     /// Visual indicator for the active workspace.
     #[serde(rename = "active-indicator")]
+    #[i18n("settings-modules-hyprland-workspaces-active-indicator")]
     #[default(ActiveIndicator::Background)]
     pub active_indicator: ConfigProperty<ActiveIndicator>,
 
@@ -292,6 +311,7 @@ pub struct HyprlandWorkspacesConfig {
     /// Applied to icons and labels. In `background` indicator mode,
     /// also used as the button background.
     #[serde(rename = "active-color")]
+    #[i18n("settings-modules-hyprland-workspaces-active-color")]
     #[default(ColorValue::Token(CssToken::Accent))]
     pub active_color: ConfigProperty<ColorValue>,
 
@@ -299,6 +319,7 @@ pub struct HyprlandWorkspacesConfig {
     ///
     /// Applied to icons and labels.
     #[serde(rename = "occupied-color")]
+    #[i18n("settings-modules-hyprland-workspaces-occupied-color")]
     #[default(ColorValue::Token(CssToken::FgMuted))]
     pub occupied_color: ConfigProperty<ColorValue>,
 
@@ -306,21 +327,25 @@ pub struct HyprlandWorkspacesConfig {
     ///
     /// Applied to the empty placeholder icon and labels.
     #[serde(rename = "empty-color")]
+    #[i18n("settings-modules-hyprland-workspaces-empty-color")]
     #[default(ColorValue::Token(CssToken::FgSubtle))]
     pub empty_color: ConfigProperty<ColorValue>,
 
     /// Background color for the workspaces container.
     #[serde(rename = "container-bg-color")]
+    #[i18n("settings-modules-hyprland-workspaces-container-bg-color")]
     #[default(ColorValue::Token(CssToken::BgSurfaceElevated))]
     pub container_bg_color: ConfigProperty<ColorValue>,
 
     /// Display border around the workspaces container.
     #[serde(rename = "border-show")]
+    #[i18n("settings-modules-hyprland-workspaces-border-show")]
     #[default(false)]
     pub border_show: ConfigProperty<bool>,
 
     /// Border color for the workspaces container.
     #[serde(rename = "border-color")]
+    #[i18n("settings-modules-hyprland-workspaces-border-color")]
     #[default(ColorValue::Token(CssToken::BorderDefault))]
     pub border_color: ConfigProperty<ColorValue>,
 
@@ -336,6 +361,7 @@ pub struct HyprlandWorkspacesConfig {
     /// 2 = { icon = "ld-terminal-symbolic" }
     /// ```
     #[serde(rename = "workspace-map")]
+    #[i18n("settings-modules-hyprland-workspaces-workspace-map")]
     #[default(WorkspaceMap::default())]
     pub workspace_map: ConfigProperty<WorkspaceMap>,
 
@@ -356,6 +382,7 @@ pub struct HyprlandWorkspacesConfig {
     /// "title:*YouTube*" = "ld-youtube-symbolic"
     /// ```
     #[serde(rename = "app-icon-map")]
+    #[i18n("settings-modules-hyprland-workspaces-app-icon-map")]
     #[default(HashMap::new())]
     pub app_icon_map: ConfigProperty<HashMap<String, String>>,
 }

@@ -15,14 +15,17 @@ use crate::{
 #[wayle_config(bar_button)]
 pub struct WeatherConfig {
     /// Weather data provider.
+    #[i18n("settings-modules-weather-provider")]
     #[default(WeatherProvider::default())]
     pub provider: ConfigProperty<WeatherProvider>,
 
     /// Location for weather data (city name or "lat,lon" coordinates).
+    #[i18n("settings-modules-weather-location")]
     #[default(String::from("San Francisco"))]
     pub location: ConfigProperty<String>,
 
     /// Temperature unit.
+    #[i18n("settings-modules-weather-units")]
     #[default(TemperatureUnit::default())]
     pub units: ConfigProperty<TemperatureUnit>,
 
@@ -45,103 +48,123 @@ pub struct WeatherConfig {
     /// - `"{{ temp }}{{ temp_unit }}"` - "22°C"
     /// - `"{{ temp }}{{ temp_unit }} {{ condition }}"` - "22°C Partly Cloudy"
     /// - `"{{ temp }}{{ temp_unit }} H:{{ high }} L:{{ low }}"` - "22°C H:25 L:18"
+    #[i18n("settings-modules-weather-format")]
     #[default(String::from("{{ temp }}{{ temp_unit }}"))]
     pub format: ConfigProperty<String>,
 
     /// Time display format for sunrise/sunset and hourly forecast.
     #[serde(rename = "time-format")]
+    #[i18n("settings-modules-weather-time-format")]
     #[default(TimeFormat::default())]
     pub time_format: ConfigProperty<TimeFormat>,
 
     /// Polling interval in seconds.
     #[serde(rename = "refresh-interval-seconds")]
+    #[i18n("settings-modules-weather-refresh-interval")]
     #[default(1800)]
     pub refresh_interval_seconds: ConfigProperty<u32>,
 
     /// Visual Crossing API key. Supports `$VAR_NAME` syntax to reference
     /// environment variables from `.*.env` files in the config directory.
     #[serde(rename = "visual-crossing-key")]
+    #[i18n("settings-modules-weather-visual-crossing-key")]
     #[default(None)]
     pub visual_crossing_key: ConfigProperty<Option<String>>,
 
     /// WeatherAPI.com API key. Supports `$VAR_NAME` syntax to reference
     /// environment variables from `.*.env` files in the config directory.
     #[serde(rename = "weatherapi-key")]
+    #[i18n("settings-modules-weather-weatherapi-key")]
     #[default(None)]
     pub weatherapi_key: ConfigProperty<Option<String>>,
 
     /// Fallback icon for weather.
     #[serde(rename = "icon-name")]
+    #[i18n("settings-modules-weather-icon-name")]
     #[default(String::from("ld-sun-symbolic"))]
     pub icon_name: ConfigProperty<String>,
 
     /// Display border around button.
     #[serde(rename = "border-show")]
+    #[i18n("settings-modules-weather-border-show")]
     #[default(false)]
     pub border_show: ConfigProperty<bool>,
 
     /// Border color token.
     #[serde(rename = "border-color")]
+    #[i18n("settings-modules-weather-border-color")]
     #[default(ColorValue::Token(CssToken::BorderAccent))]
     pub border_color: ConfigProperty<ColorValue>,
 
     /// Display module icon.
     #[serde(rename = "icon-show")]
+    #[i18n("settings-modules-weather-icon-show")]
     #[default(true)]
     pub icon_show: ConfigProperty<bool>,
 
     /// Icon foreground color. Auto selects based on variant for contrast.
     #[serde(rename = "icon-color")]
+    #[i18n("settings-modules-weather-icon-color")]
     #[default(ColorValue::Auto)]
     pub icon_color: ConfigProperty<ColorValue>,
 
     /// Icon container background color token.
     #[serde(rename = "icon-bg-color")]
+    #[i18n("settings-modules-weather-icon-bg-color")]
     #[default(ColorValue::Token(CssToken::Accent))]
     pub icon_bg_color: ConfigProperty<ColorValue>,
 
     /// Display temperature label.
     #[serde(rename = "label-show")]
+    #[i18n("settings-modules-weather-label-show")]
     #[default(true)]
     pub label_show: ConfigProperty<bool>,
 
     /// Label text color token.
     #[serde(rename = "label-color")]
+    #[i18n("settings-modules-weather-label-color")]
     #[default(ColorValue::Token(CssToken::Accent))]
     pub label_color: ConfigProperty<ColorValue>,
 
     /// Max label characters before truncation with ellipsis. Set to 0 to disable.
     #[serde(rename = "label-max-length")]
+    #[i18n("settings-modules-weather-label-max-length")]
     #[default(0)]
     pub label_max_length: ConfigProperty<u32>,
 
     /// Button background color token.
     #[serde(rename = "button-bg-color")]
+    #[i18n("settings-modules-weather-button-bg-color")]
     #[default(ColorValue::Token(CssToken::BgSurfaceElevated))]
     pub button_bg_color: ConfigProperty<ColorValue>,
 
     /// Action on left click.
     #[serde(rename = "left-click")]
+    #[i18n("settings-modules-weather-left-click")]
     #[default(ClickAction::Dropdown(String::from("weather")))]
     pub left_click: ConfigProperty<ClickAction>,
 
     /// Action on right click.
     #[serde(rename = "right-click")]
+    #[i18n("settings-modules-weather-right-click")]
     #[default(ClickAction::None)]
     pub right_click: ConfigProperty<ClickAction>,
 
     /// Action on middle click.
     #[serde(rename = "middle-click")]
+    #[i18n("settings-modules-weather-middle-click")]
     #[default(ClickAction::None)]
     pub middle_click: ConfigProperty<ClickAction>,
 
     /// Action on scroll up.
     #[serde(rename = "scroll-up")]
+    #[i18n("settings-modules-weather-scroll-up")]
     #[default(ClickAction::None)]
     pub scroll_up: ConfigProperty<ClickAction>,
 
     /// Action on scroll down.
     #[serde(rename = "scroll-down")]
+    #[i18n("settings-modules-weather-scroll-down")]
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
 }
