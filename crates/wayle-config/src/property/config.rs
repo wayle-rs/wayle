@@ -45,6 +45,7 @@ pub struct ConfigProperty<T: Clone + Send + Sync + PartialEq + 'static> {
     config: RwLock<Option<T>>,
     runtime: RwLock<Option<T>>,
     effective: Property<T>,
+    i18n_key: Option<&'static str>,
 }
 
 impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
@@ -56,7 +57,28 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
             config: RwLock::new(None),
             runtime: RwLock::new(None),
             effective,
+            i18n_key: None,
         }
+    }
+
+    /// Creates a ConfigProperty with a fluent i18n key for the settings GUI.
+    /// The key resolves to a label and `.description` in the FTL bundle.
+    pub fn with_i18n_key(default: T, key: &'static str) -> Self {
+        let effective = Property::new(default.clone());
+        Self {
+            default,
+            config: RwLock::new(None),
+            runtime: RwLock::new(None),
+            effective,
+            i18n_key: Some(key),
+        }
+    }
+
+    /// The fluent message ID for this property's settings label, if any.
+    /// Returns `None` for properties created with `new()` or marked
+    /// `#[i18n(skip)]`.
+    pub fn i18n_key(&self) -> Option<&'static str> {
+        self.i18n_key
     }
 
     /// Returns the effective (currently active) value.
@@ -162,6 +184,7 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> Clone for ConfigProperty<T> {
             config: RwLock::new(config_value),
             runtime: RwLock::new(runtime_value),
             effective: self.effective.clone(),
+            i18n_key: self.i18n_key,
         }
     }
 }
