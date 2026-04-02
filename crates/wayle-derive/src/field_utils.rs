@@ -78,61 +78,58 @@ pub fn extract_default_attr(attrs: &[Attribute]) -> syn::Result<(Option<Expr>, V
     Ok((default_expr, remaining))
 }
 
-/// The `#[setting]` attribute on a config field. Every `ConfigProperty`
+/// The `#[i18n]` attribute on a config field. Every `ConfigProperty`
 /// field either maps to a fluent key for the settings GUI, or is skipped.
-pub enum SettingAttr {
-    /// `#[setting("settings-bar-bg")]` - the fluent message ID used to
+pub enum I18nAttr {
+    /// `#[i18n("settings-bar-bg")]` - the fluent message ID used to
     /// look up this field's label and `.description` in the settings UI.
     Key(String),
 
-    /// `#[setting(skip)]` - don't show this field in the settings GUI.
+    /// `#[i18n(skip)]` - don't show this field in the settings GUI.
     Skip,
 }
 
-/// Finds `#[setting(...)]` among a field's attributes, parses it, and
+/// Finds `#[i18n(...)]` among a field's attributes, parses it, and
 /// returns everything else unchanged. Errors on duplicates or bad syntax.
-pub fn extract_setting_attr<'a>(
+pub fn extract_i18n_attr<'a>(
     attrs: &[&'a Attribute],
-) -> syn::Result<(Option<SettingAttr>, Vec<&'a Attribute>)> {
-    let mut setting = None;
+) -> syn::Result<(Option<I18nAttr>, Vec<&'a Attribute>)> {
+    let mut i18n = None;
     let mut remaining = Vec::new();
 
     for &attr in attrs {
-        if !attr.path().is_ident("setting") {
+        if !attr.path().is_ident("i18n") {
             remaining.push(attr);
             continue;
         }
 
-        if setting.is_some() {
-            return Err(syn::Error::new_spanned(
-                attr,
-                "duplicate #[setting] attribute",
-            ));
+        if i18n.is_some() {
+            return Err(syn::Error::new_spanned(attr, "duplicate #[i18n] attribute"));
         }
 
-        setting = Some(parse_setting_attr(attr)?);
+        i18n = Some(parse_i18n_attr(attr)?);
     }
 
-    Ok((setting, remaining))
+    Ok((i18n, remaining))
 }
 
-/// `#[setting("fluent-key")]` -> `Key("fluent-key")`
-/// `#[setting(skip)]` -> `Skip`
-fn parse_setting_attr(attr: &Attribute) -> syn::Result<SettingAttr> {
+/// `#[i18n("fluent-key")]` -> `Key("fluent-key")`
+/// `#[i18n(skip)]` -> `Skip`
+fn parse_i18n_attr(attr: &Attribute) -> syn::Result<I18nAttr> {
     let tokens = attr.meta.require_list()?.tokens.clone();
     let as_str: Result<syn::LitStr, _> = syn::parse2(tokens.clone());
 
     if let Ok(lit) = as_str {
-        return Ok(SettingAttr::Key(lit.value()));
+        return Ok(I18nAttr::Key(lit.value()));
     }
 
     let as_ident: Result<syn::Ident, _> = syn::parse2(tokens);
 
     match as_ident {
-        Ok(ident) if ident == "skip" => Ok(SettingAttr::Skip),
+        Ok(ident) if ident == "skip" => Ok(I18nAttr::Skip),
         _ => Err(syn::Error::new_spanned(
             attr,
-            "expected #[setting(\"fluent-key\")] or #[setting(skip)]",
+            "expected #[i18n(\"fluent-key\")] or #[i18n(skip)]",
         )),
     }
 }

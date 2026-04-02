@@ -5,7 +5,7 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{Fields, FieldsNamed, Ident, ItemStruct, parse_macro_input};
 
-use crate::field_utils::{SettingAttr, extract_default_attr, extract_setting_attr};
+use crate::field_utils::{I18nAttr, extract_default_attr, extract_i18n_attr};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ConfigType {
@@ -102,14 +102,14 @@ fn generate(parsed_struct: ItemStruct, config_type: ConfigType) -> syn::Result<T
 struct ProcessedFields {
     field_tokens: Vec<TokenStream2>,
     default_initializers: Vec<TokenStream2>,
-    setting_keys: Vec<(syn::Ident, String)>,
+    i18n_keys: Vec<(syn::Ident, String)>,
 }
 
 fn process_fields(fields: &FieldsNamed) -> syn::Result<ProcessedFields> {
     let mut output = ProcessedFields {
         field_tokens: Vec::new(),
         default_initializers: Vec::new(),
-        setting_keys: Vec::new(),
+        i18n_keys: Vec::new(),
     };
 
     for field in &fields.named {
@@ -122,11 +122,22 @@ fn process_fields(fields: &FieldsNamed) -> syn::Result<ProcessedFields> {
         let field_visibility = &field.vis;
 
         let (default_expr, attrs_without_default) = extract_default_attr(&field.attrs)?;
-        let (setting, passthrough_attrs) = extract_setting_attr(&attrs_without_default)?;
+        let (i18n_attr, passthrough_attrs) = extract_i18n_attr(&attrs_without_default)?;
 
-        if let Some(SettingAttr::Key(ref fluent_key)) = setting {
+        let is_config_property = default_expr.is_some();
+
+        if is_config_property && i18n_attr.is_none() {
+            return Err(syn::Error::new_spanned(
+                field,
+                format!(
+                    "ConfigProperty `{field_ident}` needs #[i18n(\"fluent-key\")] or #[i18n(skip)]"
+                ),
+            ));
+        }
+
+        if let Some(I18nAttr::Key(ref fluent_key)) = i18n_attr {
             output
-                .setting_keys
+                .i18n_keys
                 .push((field_ident.clone(), fluent_key.clone()));
         }
 
@@ -135,9 +146,16 @@ fn process_fields(fields: &FieldsNamed) -> syn::Result<ProcessedFields> {
             #field_visibility #field_ident: #field_type
         });
 
-        let initializer = match default_expr {
-            Some(expr) => quote! { #field_ident: wayle_config::ConfigProperty::new(#expr) },
-            None => quote! { #field_ident: Default::default() },
+        let initializer = match (&default_expr, &i18n_attr) {
+            (Some(expr), Some(I18nAttr::Key(key))) => {
+                quote! { #field_ident: wayle_config::ConfigProperty::with_i18n_key(#expr, #key) }
+            }
+            (Some(expr), _) => {
+                quote! { #field_ident: wayle_config::ConfigProperty::new(#expr) }
+            }
+            (None, _) => {
+                quote! { #field_ident: Default::default() }
+            }
         };
 
         output.default_initializers.push(initializer);
