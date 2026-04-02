@@ -5,7 +5,7 @@ use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
 use syn::{Fields, FieldsNamed, Ident, ItemStruct, parse_macro_input};
 
-use crate::field_utils::extract_default_attr;
+use crate::field_utils::{SettingAttr, extract_default_attr, extract_setting_attr};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ConfigType {
@@ -63,7 +63,9 @@ fn generate(parsed_struct: ItemStruct, config_type: ConfigType) -> syn::Result<T
         ConfigType::Standard => {}
     }
 
-    let (field_tokens, default_initializers) = process_fields(struct_fields)?;
+    let processed = process_fields(struct_fields)?;
+    let field_tokens = &processed.field_tokens;
+    let default_initializers = &processed.default_initializers;
 
     Ok(quote! {
         #(#struct_attrs)*
@@ -97,9 +99,18 @@ fn generate(parsed_struct: ItemStruct, config_type: ConfigType) -> syn::Result<T
     })
 }
 
-fn process_fields(fields: &FieldsNamed) -> syn::Result<(Vec<TokenStream2>, Vec<TokenStream2>)> {
-    let mut field_tokens = Vec::new();
-    let mut default_initializers = Vec::new();
+struct ProcessedFields {
+    field_tokens: Vec<TokenStream2>,
+    default_initializers: Vec<TokenStream2>,
+    setting_keys: Vec<(syn::Ident, String)>,
+}
+
+fn process_fields(fields: &FieldsNamed) -> syn::Result<ProcessedFields> {
+    let mut output = ProcessedFields {
+        field_tokens: Vec::new(),
+        default_initializers: Vec::new(),
+        setting_keys: Vec::new(),
+    };
 
     for field in &fields.named {
         let field_ident = field
@@ -107,14 +118,21 @@ fn process_fields(fields: &FieldsNamed) -> syn::Result<(Vec<TokenStream2>, Vec<T
             .as_ref()
             .ok_or_else(|| syn::Error::new_spanned(field, "expected named field"))?;
 
-        let field_ty = &field.ty;
-        let field_vis = &field.vis;
+        let field_type = &field.ty;
+        let field_visibility = &field.vis;
 
-        let (default_expr, remaining_attrs) = extract_default_attr(&field.attrs)?;
+        let (default_expr, attrs_without_default) = extract_default_attr(&field.attrs)?;
+        let (setting, passthrough_attrs) = extract_setting_attr(&attrs_without_default)?;
 
-        field_tokens.push(quote! {
-            #(#remaining_attrs)*
-            #field_vis #field_ident: #field_ty
+        if let Some(SettingAttr::Key(ref fluent_key)) = setting {
+            output
+                .setting_keys
+                .push((field_ident.clone(), fluent_key.clone()));
+        }
+
+        output.field_tokens.push(quote! {
+            #(#passthrough_attrs)*
+            #field_visibility #field_ident: #field_type
         });
 
         let initializer = match default_expr {
@@ -122,10 +140,10 @@ fn process_fields(fields: &FieldsNamed) -> syn::Result<(Vec<TokenStream2>, Vec<T
             None => quote! { #field_ident: Default::default() },
         };
 
-        default_initializers.push(initializer);
+        output.default_initializers.push(initializer);
     }
 
-    Ok((field_tokens, default_initializers))
+    Ok(output)
 }
 
 const BAR_BUTTON_REQUIRED: &[&str] = &[

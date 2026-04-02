@@ -77,3 +77,62 @@ pub fn extract_default_attr(attrs: &[Attribute]) -> syn::Result<(Option<Expr>, V
 
     Ok((default_expr, remaining))
 }
+
+/// The `#[setting]` attribute on a config field. Every `ConfigProperty`
+/// field either maps to a fluent key for the settings GUI, or is skipped.
+pub enum SettingAttr {
+    /// `#[setting("settings-bar-bg")]` - the fluent message ID used to
+    /// look up this field's label and `.description` in the settings UI.
+    Key(String),
+
+    /// `#[setting(skip)]` - don't show this field in the settings GUI.
+    Skip,
+}
+
+/// Finds `#[setting(...)]` among a field's attributes, parses it, and
+/// returns everything else unchanged. Errors on duplicates or bad syntax.
+pub fn extract_setting_attr<'a>(
+    attrs: &[&'a Attribute],
+) -> syn::Result<(Option<SettingAttr>, Vec<&'a Attribute>)> {
+    let mut setting = None;
+    let mut remaining = Vec::new();
+
+    for &attr in attrs {
+        if !attr.path().is_ident("setting") {
+            remaining.push(attr);
+            continue;
+        }
+
+        if setting.is_some() {
+            return Err(syn::Error::new_spanned(
+                attr,
+                "duplicate #[setting] attribute",
+            ));
+        }
+
+        setting = Some(parse_setting_attr(attr)?);
+    }
+
+    Ok((setting, remaining))
+}
+
+/// `#[setting("fluent-key")]` -> `Key("fluent-key")`
+/// `#[setting(skip)]` -> `Skip`
+fn parse_setting_attr(attr: &Attribute) -> syn::Result<SettingAttr> {
+    let tokens = attr.meta.require_list()?.tokens.clone();
+    let as_str: Result<syn::LitStr, _> = syn::parse2(tokens.clone());
+
+    if let Ok(lit) = as_str {
+        return Ok(SettingAttr::Key(lit.value()));
+    }
+
+    let as_ident: Result<syn::Ident, _> = syn::parse2(tokens);
+
+    match as_ident {
+        Ok(ident) if ident == "skip" => Ok(SettingAttr::Skip),
+        _ => Err(syn::Error::new_spanned(
+            attr,
+            "expected #[setting(\"fluent-key\")] or #[setting(skip)]",
+        )),
+    }
+}
