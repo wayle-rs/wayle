@@ -1,0 +1,79 @@
+//! Shared helpers for field attribute parsing across all macros.
+
+use syn::{Attribute, Expr, Field};
+
+/// Returns `true` if the field has `#[wayle(skip)]`. Skipped fields are
+/// excluded from all generated trait impls: config/runtime layer operations,
+/// change subscriptions, and path-based clearing.
+pub fn should_skip(field: &Field) -> bool {
+    field.attrs.iter().any(|attr| {
+        if !attr.path().is_ident("wayle") {
+            return false;
+        }
+
+        let mut skip = false;
+
+        let _ = attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("skip") {
+                skip = true;
+            }
+            Ok(())
+        });
+
+        skip
+    })
+}
+
+/// Returns the TOML key for a field. Uses `#[serde(rename = "...")]` if present,
+/// otherwise falls back to the Rust field name.
+pub fn serde_key(field: &Field) -> String {
+    for attr in &field.attrs {
+        if !attr.path().is_ident("serde") {
+            continue;
+        }
+
+        let mut rename = None;
+
+        let _ = attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("rename") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                rename = Some(value.value());
+            }
+            Ok(())
+        });
+
+        if let Some(name) = rename {
+            return name;
+        }
+    }
+
+    field
+        .ident
+        .as_ref()
+        .map(|ident| ident.to_string())
+        .unwrap_or_default()
+}
+
+/// Pulls `#[default(expr)]` out of a field's attributes.
+/// Returns the default expression (if any) and the remaining attributes
+/// with `#[default]` stripped.
+pub fn extract_default_attr(attrs: &[Attribute]) -> syn::Result<(Option<Expr>, Vec<&Attribute>)> {
+    let mut default_expr = None;
+    let mut remaining = Vec::new();
+
+    for attr in attrs {
+        if attr.path().is_ident("default") {
+            if default_expr.is_some() {
+                return Err(syn::Error::new_spanned(
+                    attr,
+                    "duplicate #[default] attribute",
+                ));
+            }
+            default_expr = Some(attr.parse_args::<Expr>()?);
+        } else {
+            remaining.push(attr);
+        }
+    }
+
+    Ok((default_expr, remaining))
+}
