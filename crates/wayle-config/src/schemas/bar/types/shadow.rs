@@ -1,10 +1,23 @@
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use wayle_derive::EnumVariants;
 
 use super::Location;
 
 /// Shadow style for the bar.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum ShadowPreset {
     /// No shadow.

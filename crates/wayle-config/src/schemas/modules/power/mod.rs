@@ -8,65 +8,55 @@ use crate::{
 };
 
 /// Power menu module configuration.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-modules-power")]
 pub struct PowerConfig {
     /// Icon name to display.
     #[serde(rename = "icon-name")]
-    #[i18n("settings-modules-power-icon-name")]
     #[default(String::from("ld-power-symbolic"))]
     pub icon_name: ConfigProperty<String>,
 
     /// Display border around button.
     #[serde(rename = "border-show")]
-    #[i18n("settings-modules-power-border-show")]
     #[default(false)]
     pub border_show: ConfigProperty<bool>,
 
     /// Border color token.
     #[serde(rename = "border-color")]
-    #[i18n("settings-modules-power-border-color")]
     #[default(ColorValue::Token(CssToken::Red))]
     pub border_color: ConfigProperty<ColorValue>,
 
     /// Icon foreground color. Auto selects based on variant for contrast.
     #[serde(rename = "icon-color")]
-    #[i18n("settings-modules-power-icon-color")]
     #[default(ColorValue::Auto)]
     pub icon_color: ConfigProperty<ColorValue>,
 
     /// Icon container background color token.
     #[serde(rename = "icon-bg-color")]
-    #[i18n("settings-modules-power-icon-bg-color")]
     #[default(ColorValue::Token(CssToken::Red))]
     pub icon_bg_color: ConfigProperty<ColorValue>,
 
     /// Action on right click.
     #[serde(rename = "right-click")]
-    #[i18n("settings-modules-power-right-click")]
     #[default(ClickAction::None)]
     pub right_click: ConfigProperty<ClickAction>,
 
     /// Action on middle click.
     #[serde(rename = "middle-click")]
-    #[i18n("settings-modules-power-middle-click")]
     #[default(ClickAction::None)]
     pub middle_click: ConfigProperty<ClickAction>,
 
     /// Action on scroll up.
     #[serde(rename = "scroll-up")]
-    #[i18n("settings-modules-power-scroll-up")]
     #[default(ClickAction::None)]
     pub scroll_up: ConfigProperty<ClickAction>,
 
     /// Action on scroll down.
     #[serde(rename = "scroll-down")]
-    #[i18n("settings-modules-power-scroll-down")]
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
 
     /// Action on left click.
     #[serde(rename = "left-click")]
-    #[i18n("settings-modules-power-left-click")]
     #[default(ClickAction::None)]
     pub left_click: ConfigProperty<ClickAction>,
 

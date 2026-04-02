@@ -66,11 +66,8 @@ settings-modules-media-scroll-down = Scroll Down
     .description = Shell command on scroll down
 
 
-settings-modules-media-player-icons = Player Icons
-    .description = Custom icons for media players
-
-settings-modules-media-players-ignored = Ignored Players
-    .description = Media players excluded from the module
-
-settings-modules-media-player-priority = Player Priority
-    .description = Preferred order when multiple players are active
+## MediaIconType variants
+enum-media-icon-type-default = Default
+enum-media-icon-type-application = Application
+enum-media-icon-type-spinning-disc = Spinning Disc
+enum-media-icon-type-application-mapped = Application Mapped

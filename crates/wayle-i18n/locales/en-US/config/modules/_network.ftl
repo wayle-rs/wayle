@@ -67,7 +67,3 @@ settings-modules-network-scroll-up = Scroll Up
 
 settings-modules-network-scroll-down = Scroll Down
     .description = Shell command on scroll down
-
-
-settings-modules-network-wifi-signal-icons = Signal Icons
-    .description = Icons shown at different WiFi signal strengths, from weak to strong

@@ -47,10 +47,6 @@ settings-modules-volume-scroll-up = Scroll Up
 settings-modules-volume-scroll-down = Scroll Down
     .description = Action on scroll down
 
-
-settings-modules-volume-level-icons = Level Icons
-    .description = Icons shown at different volume percentages, from muted to max
-
 settings-modules-volume-format = Format
     .description = Label template for volume display (e.g. "{percentage}%")
 
@@ -60,6 +56,13 @@ settings-modules-volume-left-click = Left Click
 settings-modules-volume-dropdown-app-icons = App Icons in Dropdown
     .description = Show application icons in the audio dropdown
 
-
 settings-modules-volume-thresholds = Thresholds
     .description = Color thresholds that change based on value levels
+
+settings-modules-volume-icon-muted = Muted Icon
+    .description = Icon shown when volume is muted
+
+## AppIconSource variants
+enum-app-icon-source-automatic = Automatic
+enum-app-icon-source-mapped = Mapped
+

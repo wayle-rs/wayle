@@ -1,6 +1,7 @@
 //! Derive macros for Wayle configuration management.
 
 mod derives;
+mod enum_variants;
 mod field_utils;
 mod wayle_config;
 
@@ -31,8 +32,12 @@ fn validate_named_struct(input: &DeriveInput) -> Result<&FieldsNamed, TokenStrea
 /// `Default` from `#[default(...)]` field annotations. Pass `bar_button` or
 /// `bar_container` to enforce that the required styling fields are present.
 ///
+/// When `i18n_prefix` is set, each `ConfigProperty` field automatically
+/// gets a fluent key built from the prefix + its serde key. Fields marked
+/// `#[i18n(skip)]` are excluded.
+///
 /// ```ignore
-/// #[wayle_config]
+/// #[wayle_config(i18n_prefix = "settings-general")]
 /// pub struct GeneralConfig {
 ///     #[serde(rename = "font-sans")]
 ///     #[default(String::from("Inter"))]
@@ -44,17 +49,22 @@ fn validate_named_struct(input: &DeriveInput) -> Result<&FieldsNamed, TokenStrea
 /// }
 /// ```
 ///
-/// The macro strips `#[default(...)]` and expands the struct with all the
-/// config layer derives (`ApplyConfigLayer`, `ResetConfigLayer`, etc.) plus
-/// a `Default` impl that calls `ConfigProperty::new(...)` with each
-/// default expression:
+/// The macro strips `#[default(...)]` and generates a `Default` impl.
+/// With `i18n_prefix`, each field uses `with_i18n_key` so the settings
+/// GUI can look up the field's label and description:
 ///
 /// ```ignore
 /// impl Default for GeneralConfig {
 ///     fn default() -> Self {
 ///         Self {
-///             font_sans: ConfigProperty::new(String::from("Inter")),
-///             tearing_mode: ConfigProperty::new(false),
+///             font_sans: ConfigProperty::with_i18n_key(
+///                 String::from("Inter"),
+///                 "settings-general-font-sans",
+///             ),
+///             tearing_mode: ConfigProperty::with_i18n_key(
+///                 false,
+///                 "settings-general-tearing-mode",
+///             ),
 ///         }
 ///     }
 /// }
@@ -62,6 +72,31 @@ fn validate_named_struct(input: &DeriveInput) -> Result<&FieldsNamed, TokenStrea
 #[proc_macro_attribute]
 pub fn wayle_config(attr: TokenStream, item: TokenStream) -> TokenStream {
     wayle_config::wayle_config(attr, item)
+}
+
+/// Lists all variants of a config enum for the settings GUI dropdown.
+/// Reads `#[serde(rename_all)]` to produce correct TOML values, and
+/// generates fluent keys from the enum + variant name (e.g.
+/// `Location::TopLeft` becomes `"enum-location-top-left"`).
+///
+/// Only works on enums with unit variants. Enums with data (like
+/// `ColorValue` or `ClickAction`) need custom widgets instead.
+///
+/// ```ignore
+/// #[derive(EnumVariants)]
+/// #[serde(rename_all = "kebab-case")]
+/// pub enum Location { Top, Bottom, Left, Right }
+///
+/// // Location::variants() returns:
+/// // [
+/// //   EnumVariant { value: "top", fluent_key: "enum-location-top" },
+/// //   EnumVariant { value: "bottom", fluent_key: "enum-location-bottom" },
+/// //   ...
+/// // ]
+/// ```
+#[proc_macro_derive(EnumVariants, attributes(wayle))]
+pub fn derive_enum_variants(input: TokenStream) -> TokenStream {
+    enum_variants::derive(input)
 }
 
 /// Loads config.toml values into each field's config layer by matching

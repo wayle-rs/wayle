@@ -5,6 +5,7 @@ use std::fmt;
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 pub use shadow::ShadowPreset;
+use wayle_derive::EnumVariants;
 
 /// Layout configuration for a bar on a specific monitor.
 ///
@@ -389,7 +390,9 @@ const BUILTIN_MODULES: &[&str] = &[
 ];
 
 /// Bar position on screen.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum Location {
     /// Top edge of the screen.

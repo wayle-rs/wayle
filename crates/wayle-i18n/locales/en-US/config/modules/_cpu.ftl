@@ -56,6 +56,5 @@ settings-modules-cpu-scroll-up = Scroll Up
 settings-modules-cpu-scroll-down = Scroll Down
     .description = Shell command on scroll down
 
-
 settings-modules-cpu-thresholds = Thresholds
     .description = Color thresholds that change based on value levels

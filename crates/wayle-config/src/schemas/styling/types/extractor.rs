@@ -3,9 +3,12 @@ use std::fmt::{self, Display, Formatter};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
 use tracing::warn;
+use wayle_derive::EnumVariants;
 
 /// Matugen color scheme type.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum MatugenScheme {
     /// Adapts to image content.
@@ -53,7 +56,9 @@ impl Display for MatugenScheme {
 }
 
 /// Wallust palette mode.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum WallustPalette {
     /// 8 dark colors with 16-color trick.

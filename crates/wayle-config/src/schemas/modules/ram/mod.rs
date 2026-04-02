@@ -8,13 +8,12 @@ use crate::{
 };
 
 /// RAM module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-ram")]
 pub struct RamConfig {
     /// Polling interval in milliseconds.
     ///
     /// Faster polling increases CPU usage.
     #[serde(rename = "poll-interval-ms")]
-    #[i18n("settings-modules-ram-poll-interval-ms")]
     #[default(5000)]
     pub poll_interval_ms: ConfigProperty<u64>,
 
@@ -39,97 +38,81 @@ pub struct RamConfig {
     /// - `"{{ used_gib }}/{{ total_gib }} GiB"` - "7.2/16.0 GiB"
     /// - `"{{ percent }}% (Swap: {{ swap_percent }}%)"` - "45% (Swap: 12%)"
     #[serde(rename = "format")]
-    #[i18n("settings-modules-ram-format")]
     #[default(String::from("{{ percent }}%"))]
     pub format: ConfigProperty<String>,
 
     /// Icon name.
     #[serde(rename = "icon-name")]
-    #[i18n("settings-modules-ram-icon-name")]
     #[default(String::from("ld-memory-stick-symbolic"))]
     pub icon_name: ConfigProperty<String>,
 
     /// Display border around button.
     #[serde(rename = "border-show")]
-    #[i18n("settings-modules-ram-border-show")]
     #[default(false)]
     pub border_show: ConfigProperty<bool>,
 
     /// Border color token.
     #[serde(rename = "border-color")]
-    #[i18n("settings-modules-ram-border-color")]
     #[default(ColorValue::Token(CssToken::Green))]
     pub border_color: ConfigProperty<ColorValue>,
 
     /// Display module icon.
     #[serde(rename = "icon-show")]
-    #[i18n("settings-modules-ram-icon-show")]
     #[default(true)]
     pub icon_show: ConfigProperty<bool>,
 
     /// Icon foreground color.
     #[serde(rename = "icon-color")]
-    #[i18n("settings-modules-ram-icon-color")]
     #[default(ColorValue::Auto)]
     pub icon_color: ConfigProperty<ColorValue>,
 
     /// Icon container background color token.
     #[serde(rename = "icon-bg-color")]
-    #[i18n("settings-modules-ram-icon-bg-color")]
     #[default(ColorValue::Token(CssToken::Green))]
     pub icon_bg_color: ConfigProperty<ColorValue>,
 
     /// Display label.
     #[serde(rename = "label-show")]
-    #[i18n("settings-modules-ram-label-show")]
     #[default(true)]
     pub label_show: ConfigProperty<bool>,
 
     /// Label text color token.
     #[serde(rename = "label-color")]
-    #[i18n("settings-modules-ram-label-color")]
     #[default(ColorValue::Token(CssToken::Green))]
     pub label_color: ConfigProperty<ColorValue>,
 
     /// Max label characters before truncation. Set to 0 to disable.
     #[serde(rename = "label-max-length")]
-    #[i18n("settings-modules-ram-label-max-length")]
     #[default(0)]
     pub label_max_length: ConfigProperty<u32>,
 
     /// Button background color token.
     #[serde(rename = "button-bg-color")]
-    #[i18n("settings-modules-ram-button-bg-color")]
     #[default(ColorValue::Token(CssToken::BgSurfaceElevated))]
     pub button_bg_color: ConfigProperty<ColorValue>,
 
     /// Action on left click.
     #[serde(rename = "left-click")]
-    #[i18n("settings-modules-ram-left-click")]
     #[default(ClickAction::None)]
     pub left_click: ConfigProperty<ClickAction>,
 
     /// Action on right click.
     #[serde(rename = "right-click")]
-    #[i18n("settings-modules-ram-right-click")]
     #[default(ClickAction::None)]
     pub right_click: ConfigProperty<ClickAction>,
 
     /// Action on middle click.
     #[serde(rename = "middle-click")]
-    #[i18n("settings-modules-ram-middle-click")]
     #[default(ClickAction::None)]
     pub middle_click: ConfigProperty<ClickAction>,
 
     /// Action on scroll up.
     #[serde(rename = "scroll-up")]
-    #[i18n("settings-modules-ram-scroll-up")]
     #[default(ClickAction::None)]
     pub scroll_up: ConfigProperty<ClickAction>,
 
     /// Action on scroll down.
     #[serde(rename = "scroll-down")]
-    #[i18n("settings-modules-ram-scroll-down")]
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
 
@@ -152,7 +135,6 @@ pub struct RamConfig {
     /// label-color = "status-error"
     /// ```
     #[serde(rename = "thresholds")]
-    #[i18n("settings-modules-ram-thresholds")]
     #[default(Vec::new())]
     pub thresholds: ConfigProperty<Vec<ThresholdEntry>>,
 }

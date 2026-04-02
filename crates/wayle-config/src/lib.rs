@@ -7,6 +7,7 @@ extern crate self as wayle_config;
 
 pub mod click_action;
 mod diagnostic;
+mod enum_variants;
 mod property;
 
 /// Documentation and metadata types for configuration schemas.
@@ -14,6 +15,7 @@ pub mod docs;
 
 pub use click_action::ClickAction;
 pub use diagnostic::Diagnostic;
+pub use enum_variants::{EnumVariant, EnumVariants};
 pub use property::{
     ApplyConfigLayer, ApplyRuntimeLayer, ClearRuntimeByPath, CommitConfigReload, ConfigProperty,
     ExtractRuntimeValues, ResetConfigLayer, ResetRuntimeLayer, SubscribeChanges, ValueSource,
@@ -111,4 +113,44 @@ pub struct Config {
 
     /// Wallpaper service settings.
     pub wallpaper: WallpaperConfig,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn all_i18n_keys_are_populated() {
+        let keys = Config::all_i18n_keys();
+
+        assert!(!keys.is_empty(), "all_i18n_keys() returned no keys");
+        assert!(keys.len() > 400, "expected 400+ keys, got {}", keys.len());
+
+        assert!(
+            keys.contains(&"settings-general-font-sans"),
+            "missing general font key"
+        );
+        assert!(
+            keys.contains(&"settings-bar-background-opacity"),
+            "missing bar key"
+        );
+        assert!(
+            keys.contains(&"settings-modules-clock-format"),
+            "missing module key"
+        );
+    }
+
+    #[test]
+    fn skipped_fields_are_excluded() {
+        let keys = Config::all_i18n_keys();
+
+        for key in &keys {
+            assert!(!key.is_empty(), "all_i18n_keys() returned an empty string");
+        }
+
+        assert!(
+            !keys.contains(&"settings-modules-dashboard-icon-show"),
+            "serde(skip) fields should not appear"
+        );
+    }
 }

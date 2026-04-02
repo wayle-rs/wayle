@@ -3,9 +3,9 @@
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{Fields, FieldsNamed, Ident, ItemStruct, parse_macro_input};
+use syn::{Fields, FieldsNamed, ItemStruct, parse_macro_input};
 
-use crate::field_utils::{I18nAttr, extract_default_attr, extract_i18n_attr};
+use crate::field_utils::{I18nAttr, extract_default_attr, extract_i18n_attr, serde_key};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum ConfigType {
@@ -14,34 +14,55 @@ enum ConfigType {
     BarContainer,
 }
 
-/// Entry point for the `#[wayle_config]` attribute macro. Accepts optional
-/// `bar_button` or `bar_container` arguments to validate required fields.
+/// Parsed arguments from `#[wayle_config(...)]`.
+struct MacroArgs {
+    config_type: ConfigType,
+    i18n_prefix: Option<String>,
+}
+
+/// Entry point for the `#[wayle_config]` attribute macro.
+///
+/// Accepts `bar_button` or `bar_container` to validate required fields,
+/// and `i18n_prefix = "settings-modules-clock"` to auto-generate fluent
+/// keys for each `ConfigProperty` field (prefix + serde key).
 pub fn wayle_config(attr: TokenStream, item: TokenStream) -> TokenStream {
     let parsed_struct = parse_macro_input!(item as ItemStruct);
-    let config_type = parse_config_type(attr);
+    let args = parse_args(attr);
 
-    match generate(parsed_struct, config_type) {
+    match generate(parsed_struct, args) {
         Ok(tokens) => tokens.into(),
         Err(err) => err.to_compile_error().into(),
     }
 }
 
-fn parse_config_type(attr: TokenStream) -> ConfigType {
+fn parse_args(attr: TokenStream) -> MacroArgs {
+    let mut args = MacroArgs {
+        config_type: ConfigType::Standard,
+        i18n_prefix: None,
+    };
+
     if attr.is_empty() {
-        return ConfigType::Standard;
+        return args;
     }
 
-    let attr2: TokenStream2 = attr.into();
-    let ident: Result<Ident, _> = syn::parse2(attr2);
+    let parser = syn::meta::parser(|meta| {
+        if meta.path.is_ident("bar_button") {
+            args.config_type = ConfigType::BarButton;
+        } else if meta.path.is_ident("bar_container") {
+            args.config_type = ConfigType::BarContainer;
+        } else if meta.path.is_ident("i18n_prefix") {
+            let value: syn::LitStr = meta.value()?.parse()?;
+            args.i18n_prefix = Some(value.value());
+        }
+        Ok(())
+    });
 
-    match ident {
-        Ok(id) if id == "bar_button" => ConfigType::BarButton,
-        Ok(id) if id == "bar_container" => ConfigType::BarContainer,
-        _ => ConfigType::Standard,
-    }
+    let _ = syn::parse::Parser::parse(parser, attr);
+
+    args
 }
 
-fn generate(parsed_struct: ItemStruct, config_type: ConfigType) -> syn::Result<TokenStream2> {
+fn generate(parsed_struct: ItemStruct, args: MacroArgs) -> syn::Result<TokenStream2> {
     let struct_name = &parsed_struct.ident;
     let struct_vis = &parsed_struct.vis;
     let struct_generics = &parsed_struct.generics;
@@ -57,15 +78,20 @@ fn generate(parsed_struct: ItemStruct, config_type: ConfigType) -> syn::Result<T
         }
     };
 
-    match config_type {
+    match args.config_type {
         ConfigType::BarButton => validate_bar_button(struct_fields)?,
         ConfigType::BarContainer => validate_bar_container(struct_fields)?,
         ConfigType::Standard => {}
     }
 
-    let processed = process_fields(struct_fields)?;
+    let processed = process_fields(struct_fields, args.i18n_prefix.as_deref())?;
     let field_tokens = &processed.field_tokens;
     let default_initializers = &processed.default_initializers;
+    let i18n_keys = &processed.i18n_keys;
+
+    let child_key_calls = processed.container_fields.iter().map(|(_, field_type)| {
+        quote! { keys.extend(<#field_type>::all_i18n_keys()); }
+    });
 
     Ok(quote! {
         #(#struct_attrs)*
@@ -96,20 +122,32 @@ fn generate(parsed_struct: ItemStruct, config_type: ConfigType) -> syn::Result<T
                 }
             }
         }
+
+        impl #struct_generics #struct_name #struct_generics {
+            /// All fluent i18n keys for this struct and its children.
+            /// Used by CI to verify every key has an FTL entry.
+            pub fn all_i18n_keys() -> Vec<&'static str> {
+                let mut keys: Vec<&'static str> = vec![#(#i18n_keys),*];
+                #(#child_key_calls)*
+                keys
+            }
+        }
     })
 }
 
 struct ProcessedFields {
     field_tokens: Vec<TokenStream2>,
     default_initializers: Vec<TokenStream2>,
-    i18n_keys: Vec<(syn::Ident, String)>,
+    i18n_keys: Vec<String>,
+    container_fields: Vec<(syn::Ident, syn::Type)>,
 }
 
-fn process_fields(fields: &FieldsNamed) -> syn::Result<ProcessedFields> {
+fn process_fields(fields: &FieldsNamed, i18n_prefix: Option<&str>) -> syn::Result<ProcessedFields> {
     let mut output = ProcessedFields {
         field_tokens: Vec::new(),
         default_initializers: Vec::new(),
         i18n_keys: Vec::new(),
+        container_fields: Vec::new(),
     };
 
     for field in &fields.named {
@@ -126,19 +164,35 @@ fn process_fields(fields: &FieldsNamed) -> syn::Result<ProcessedFields> {
 
         let is_config_property = default_expr.is_some();
 
-        if is_config_property && i18n_attr.is_none() {
-            return Err(syn::Error::new_spanned(
-                field,
-                format!(
-                    "ConfigProperty `{field_ident}` needs #[i18n(\"fluent-key\")] or #[i18n(skip)]"
-                ),
-            ));
+        let i18n_key = match &i18n_attr {
+            Some(I18nAttr::Key(explicit_key)) => Some(explicit_key.clone()),
+
+            Some(I18nAttr::Skip) => None,
+
+            None if is_config_property => i18n_prefix.map(|prefix| {
+                let serde_key = serde_key(field);
+                format!("{prefix}-{serde_key}")
+            }),
+
+            None => None,
+        };
+
+        if let Some(ref key) = i18n_key {
+            output.i18n_keys.push(key.clone());
         }
 
-        if let Some(I18nAttr::Key(ref fluent_key)) = i18n_attr {
+        let is_wayle_skipped = field.attrs.iter().any(|attr| {
+            attr.path().is_ident("wayle")
+                && attr
+                    .meta
+                    .require_list()
+                    .is_ok_and(|list| list.tokens.to_string().contains("skip"))
+        });
+
+        if !is_config_property && !is_wayle_skipped {
             output
-                .i18n_keys
-                .push((field_ident.clone(), fluent_key.clone()));
+                .container_fields
+                .push((field_ident.clone(), field_type.clone()));
         }
 
         output.field_tokens.push(quote! {
@@ -146,11 +200,11 @@ fn process_fields(fields: &FieldsNamed) -> syn::Result<ProcessedFields> {
             #field_visibility #field_ident: #field_type
         });
 
-        let initializer = match (&default_expr, &i18n_attr) {
-            (Some(expr), Some(I18nAttr::Key(key))) => {
+        let initializer = match (&default_expr, &i18n_key) {
+            (Some(expr), Some(key)) => {
                 quote! { #field_ident: wayle_config::ConfigProperty::with_i18n_key(#expr, #key) }
             }
-            (Some(expr), _) => {
+            (Some(expr), None) => {
                 quote! { #field_ident: wayle_config::ConfigProperty::new(#expr) }
             }
             (None, _) => {

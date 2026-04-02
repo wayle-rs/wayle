@@ -8,23 +8,20 @@ use crate::{
 };
 
 /// Separator module configuration.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-modules-separator")]
 pub struct SeparatorConfig {
     /// Thickness of the separator line in pixels.
     #[serde(rename = "size")]
-    #[i18n("settings-modules-separator-size")]
     #[default(1)]
     pub size: ConfigProperty<u32>,
 
     /// Length of the separator line.
     #[serde(rename = "length")]
-    #[i18n("settings-modules-separator-length")]
     #[default(Spacing::new(1.5))]
     pub length: ConfigProperty<Spacing>,
 
     /// Color of the separator line.
     #[serde(rename = "color")]
-    #[i18n("settings-modules-separator-color")]
     #[default(ColorValue::Token(CssToken::FgSubtle))]
     pub color: ConfigProperty<ColorValue>,
 }

@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Hyprsunset (blue light filter) module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-hyprsunset")]
 pub struct HyprsunsetConfig {
     /// Format string for the label.
     ///
@@ -26,115 +26,96 @@ pub struct HyprsunsetConfig {
     /// - `"{{ temp }}K {{ gamma }}%"` - "4500K 80%"
     /// - `"{{ status }} ({{ temp }}K)"` - "On (4500K)"
     #[serde(rename = "format")]
-    #[i18n("settings-modules-hyprsunset-format")]
     #[default(String::from("{{ status }}"))]
     pub format: ConfigProperty<String>,
 
     /// Color temperature in Kelvin when filter is enabled. Range: 1000-20000.
     #[serde(rename = "temperature")]
-    #[i18n("settings-modules-hyprsunset-temperature")]
     #[default(5000)]
     pub temperature: ConfigProperty<u32>,
 
     /// Display gamma percentage when filter is enabled. Range: 0-200.
     #[serde(rename = "gamma")]
-    #[i18n("settings-modules-hyprsunset-gamma")]
     #[default(100)]
     pub gamma: ConfigProperty<u32>,
 
     /// Icon when filter is disabled (showing normal daylight colors).
     #[serde(rename = "icon-off")]
-    #[i18n("settings-modules-hyprsunset-icon-off")]
     #[default(String::from("ld-sun-symbolic"))]
     pub icon_off: ConfigProperty<String>,
 
     /// Icon when filter is enabled (showing warm night colors).
     #[serde(rename = "icon-on")]
-    #[i18n("settings-modules-hyprsunset-icon-on")]
     #[default(String::from("ld-moon-symbolic"))]
     pub icon_on: ConfigProperty<String>,
 
     /// Display border around button.
     #[serde(rename = "border-show")]
-    #[i18n("settings-modules-hyprsunset-border-show")]
     #[default(false)]
     pub border_show: ConfigProperty<bool>,
 
     /// Border color token.
     #[serde(rename = "border-color")]
-    #[i18n("settings-modules-hyprsunset-border-color")]
     #[default(ColorValue::Token(CssToken::Yellow))]
     pub border_color: ConfigProperty<ColorValue>,
 
     /// Display module icon.
     #[serde(rename = "icon-show")]
-    #[i18n("settings-modules-hyprsunset-icon-show")]
     #[default(true)]
     pub icon_show: ConfigProperty<bool>,
 
     /// Icon foreground color. Auto selects based on variant for contrast.
     #[serde(rename = "icon-color")]
-    #[i18n("settings-modules-hyprsunset-icon-color")]
     #[default(ColorValue::Auto)]
     pub icon_color: ConfigProperty<ColorValue>,
 
     /// Icon container background color token.
     #[serde(rename = "icon-bg-color")]
-    #[i18n("settings-modules-hyprsunset-icon-bg-color")]
     #[default(ColorValue::Token(CssToken::Yellow))]
     pub icon_bg_color: ConfigProperty<ColorValue>,
 
     /// Display label.
     #[serde(rename = "label-show")]
-    #[i18n("settings-modules-hyprsunset-label-show")]
     #[default(true)]
     pub label_show: ConfigProperty<bool>,
 
     /// Label text color token.
     #[serde(rename = "label-color")]
-    #[i18n("settings-modules-hyprsunset-label-color")]
     #[default(ColorValue::Token(CssToken::Yellow))]
     pub label_color: ConfigProperty<ColorValue>,
 
     /// Max label characters before truncation with ellipsis. Set to 0 to disable.
     #[serde(rename = "label-max-length")]
-    #[i18n("settings-modules-hyprsunset-label-max-length")]
     #[default(0)]
     pub label_max_length: ConfigProperty<u32>,
 
     /// Button background color token.
     #[serde(rename = "button-bg-color")]
-    #[i18n("settings-modules-hyprsunset-button-bg-color")]
     #[default(ColorValue::Token(CssToken::BgSurfaceElevated))]
     pub button_bg_color: ConfigProperty<ColorValue>,
 
     /// Action on left click. Default toggles blue light filter.
     #[serde(rename = "left-click")]
-    #[i18n("settings-modules-hyprsunset-left-click")]
     #[default(ClickAction::Shell(String::from(":toggle")))]
     pub left_click: ConfigProperty<ClickAction>,
 
     /// Action on right click.
     #[serde(rename = "right-click")]
-    #[i18n("settings-modules-hyprsunset-right-click")]
     #[default(ClickAction::None)]
     pub right_click: ConfigProperty<ClickAction>,
 
     /// Action on middle click.
     #[serde(rename = "middle-click")]
-    #[i18n("settings-modules-hyprsunset-middle-click")]
     #[default(ClickAction::None)]
     pub middle_click: ConfigProperty<ClickAction>,
 
     /// Action on scroll up.
     #[serde(rename = "scroll-up")]
-    #[i18n("settings-modules-hyprsunset-scroll-up")]
     #[default(ClickAction::None)]
     pub scroll_up: ConfigProperty<ClickAction>,
 
     /// Action on scroll down.
     #[serde(rename = "scroll-down")]
-    #[i18n("settings-modules-hyprsunset-scroll-down")]
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
 }

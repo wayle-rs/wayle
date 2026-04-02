@@ -17,3 +17,14 @@ settings-osd-margin = Margin
 
 settings-osd-border = Border
     .description = Draw a border around the OSD overlay
+
+
+## OsdPosition variants
+enum-osd-position-top-left = Top Left
+enum-osd-position-top = Top
+enum-osd-position-top-right = Top Right
+enum-osd-position-right = Right
+enum-osd-position-bottom-right = Bottom Right
+enum-osd-position-bottom = Bottom
+enum-osd-position-bottom-left = Bottom Left
+enum-osd-position-left = Left

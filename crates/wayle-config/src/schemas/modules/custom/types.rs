@@ -3,9 +3,12 @@ use std::fmt::{self, Display, Formatter};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
 use tracing::warn;
+use wayle_derive::EnumVariants;
 
 /// Execution mode for custom module commands.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, JsonSchema, EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum ExecutionMode {
     /// Run command at regular intervals defined by `interval-ms`.

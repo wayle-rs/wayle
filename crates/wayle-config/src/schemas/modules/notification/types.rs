@@ -2,9 +2,12 @@ use std::{borrow::Cow, fmt};
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, Serializer, de};
+use wayle_derive::EnumVariants;
 
 /// Screen position for notification popups.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum PopupPosition {
     /// Top-left corner.
@@ -27,7 +30,9 @@ pub enum PopupPosition {
 }
 
 /// Order in which popups are stacked on screen.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum StackingOrder {
     /// Newest notifications appear closest to the configured position.
@@ -38,7 +43,9 @@ pub enum StackingOrder {
 }
 
 /// Behavior when the close button is clicked on a popup card.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum PopupCloseBehavior {
     /// Hide the popup; notification stays in history.
@@ -114,7 +121,9 @@ impl de::Visitor<'_> for PopupMonitorVisitor {
 ///
 /// All urgency levels at or above the threshold display the bar.
 /// For example, `Normal` shows bars on both normal and critical popups.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum UrgencyBarThreshold {
     /// Show urgency bars on all popups.
@@ -129,7 +138,9 @@ pub enum UrgencyBarThreshold {
 }
 
 /// Source for resolving notification icons.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum IconSource {
     /// Use per-notification images when provided, otherwise Wayle's mapped icon.

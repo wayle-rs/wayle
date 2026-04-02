@@ -63,7 +63,6 @@ settings-modules-cava-border-show = Show Border
 settings-modules-cava-border-color = Border Color
     .description = Border color token
 
-
 settings-modules-cava-left-click = Left Click
     .description = Action on left click
 
@@ -78,3 +77,14 @@ settings-modules-cava-scroll-up = Scroll Up
 
 settings-modules-cava-scroll-down = Scroll Down
     .description = Action on scroll down
+
+
+## CavaStyle variants
+enum-cava-style-bars = Bars
+enum-cava-style-wave = Wave
+enum-cava-style-peaks = Peaks
+
+## CavaDirection variants
+enum-cava-direction-normal = Normal
+enum-cava-direction-reverse = Reverse
+enum-cava-direction-mirror = Mirror

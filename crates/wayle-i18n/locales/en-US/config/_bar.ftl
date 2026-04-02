@@ -122,7 +122,6 @@ settings-bar-dropdown-autohide = Dropdown Autohide
 settings-bar-dropdown-freeze-label = Freeze Label
     .description = Prevent bar button label from updating while its dropdown is open
 
-
 settings-bar-shadow = Shadow
     .description = Enable drop shadow
 
@@ -138,6 +137,16 @@ settings-bar-button-group-module-gap = Group Module Gap
 settings-bar-button-group-rounding = Group Rounding
     .description = Corner rounding for button groups
 
+## Location enum variants
+enum-location-top = Top
+enum-location-bottom = Bottom
+enum-location-left = Left
+enum-location-right = Right
 
-settings-bar-layout = Layout
-    .description = Per-monitor bar layouts defining module placement
+
+## ShadowPreset variants
+enum-shadow-preset-none = None
+enum-shadow-preset-drop = Drop
+enum-shadow-preset-floating = Floating
+
+## Location variants

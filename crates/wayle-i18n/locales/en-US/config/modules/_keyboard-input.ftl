@@ -50,6 +50,5 @@ settings-modules-keyboard-input-scroll-up = Scroll Up
 settings-modules-keyboard-input-scroll-down = Scroll Down
     .description = Shell command on scroll down
 
-
 settings-modules-keyboard-input-layout-alias-map = Layout Aliases
     .description = Keyboard layout display name overrides

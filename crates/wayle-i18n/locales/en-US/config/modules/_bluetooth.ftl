@@ -53,6 +53,5 @@ settings-modules-bluetooth-scroll-up = Scroll Up
 settings-modules-bluetooth-scroll-down = Scroll Down
     .description = Shell command on scroll down
 
-
 settings-modules-bluetooth-left-click = Left Click
     .description = Action on left click

@@ -127,7 +127,6 @@ pub struct ModulesConfig {
     #[serde(rename = "world-clock")]
     pub world_clock: WorldClockConfig,
     /// Custom user-defined modules.
-    #[i18n("settings-modules-world-clock")]
     #[default(Vec::new())]
     pub custom: ConfigProperty<Vec<CustomModuleDefinition>>,
 }
