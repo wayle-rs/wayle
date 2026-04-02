@@ -28,3 +28,18 @@ settings-modules-dashboard-scroll-up = Scroll Up
 
 settings-modules-dashboard-scroll-down = Scroll Down
     .description = Shell command on scroll down
+
+settings-modules-dashboard-left-click = Left Click
+    .description = Shell command on left click
+
+settings-modules-dashboard-dropdown-lock-command = Lock Command
+    .description = Shell command for the lock button
+
+settings-modules-dashboard-dropdown-logout-command = Logout Command
+    .description = Shell command for the logout button
+
+settings-modules-dashboard-dropdown-reboot-command = Reboot Command
+    .description = Shell command for the reboot button
+
+settings-modules-dashboard-dropdown-poweroff-command = Power Off Command
+    .description = Shell command for the power-off button

@@ -36,3 +36,10 @@ settings-modules-systray-overrides-icon = Icon
 
 settings-modules-systray-overrides-color = Color
     .description = Custom icon color
+
+
+settings-modules-systray-blacklist = Blacklist
+    .description = Apps excluded from the system tray
+
+settings-modules-systray-overrides = Overrides
+    .description = Per-app tray icon and visibility overrides

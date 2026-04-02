@@ -121,3 +121,23 @@ settings-bar-dropdown-autohide = Dropdown Autohide
 
 settings-bar-dropdown-freeze-label = Freeze Label
     .description = Prevent bar button label from updating while its dropdown is open
+
+
+settings-bar-shadow = Shadow
+    .description = Enable drop shadow
+
+settings-bar-button-variant = Button Variant
+    .description = Visual style for bar buttons
+
+settings-bar-button-rounding = Button Rounding
+    .description = Corner rounding for bar buttons
+
+settings-bar-button-group-module-gap = Group Module Gap
+    .description = Gap between modules within a group
+
+settings-bar-button-group-rounding = Group Rounding
+    .description = Corner rounding for button groups
+
+
+settings-bar-layout = Layout
+    .description = Per-monitor bar layouts defining module placement

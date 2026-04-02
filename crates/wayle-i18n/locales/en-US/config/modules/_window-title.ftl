@@ -52,3 +52,7 @@ settings-modules-window-title-scroll-up = Scroll Up
 
 settings-modules-window-title-scroll-down = Scroll Down
     .description = Shell command on scroll down
+
+
+settings-modules-window-title-icon-mappings = Icon Mappings
+    .description = Window class to icon name overrides
