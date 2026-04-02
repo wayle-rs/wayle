@@ -23,8 +23,8 @@ settings-modules-systray-border-show = Afficher la bordure
 settings-modules-systray-border-color = Couleur de bordure
     .description = Valeur de couleur de bordure
 
-settings-modules-systray-button-bg-color = Arriere-plan du bouton
-    .description = Couleur d'arriere-plan du conteneur
+settings-modules-systray-button-bg-color = Arrière-plan du bouton
+    .description = Couleur d'arrière-plan du conteneur
 
 ## Configuration des surcharges d'éléments
 

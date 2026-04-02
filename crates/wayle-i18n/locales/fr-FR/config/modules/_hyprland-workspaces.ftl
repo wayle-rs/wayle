@@ -5,7 +5,7 @@
 settings-modules-hyprland-workspaces-min-workspace-count = Minimum espaces de travail
     .description = Nombre minimum de boutons à afficher (0 = seulement actifs/occupés)
 
-settings-modules-hyprland-workspaces-monitor-specific = Specifique ecran
+settings-modules-hyprland-workspaces-monitor-specific = Spécifique ecran
     .description = Afficher uniquement les espaces de travail de cet écran
 
 settings-modules-hyprland-workspaces-show-special = Afficher speciaux
@@ -20,31 +20,31 @@ settings-modules-hyprland-workspaces-display-mode = Mode affichage
 settings-modules-hyprland-workspaces-label-use-name = Utiliser nom
     .description = Afficher le nom de l'espace de travail au lieu du numéro
 
-settings-modules-hyprland-workspaces-numbering = Numerotation
+settings-modules-hyprland-workspaces-numbering = Numérotation
     .description = Comment les numéros d'espaces de travail sont affichés (absolu ou relatif)
 
-settings-modules-hyprland-workspaces-divider = Separateur
+settings-modules-hyprland-workspaces-divider = Séparateur
     .description = Texte entre l'identité de l'espace de travail et les icônes d'applications
 
-settings-modules-hyprland-workspaces-app-icons-show = Afficher icones apps
+settings-modules-hyprland-workspaces-app-icons-show = Afficher icônes apps
     .description = Afficher les icônes de fenêtre par espace de travail
 
 settings-modules-hyprland-workspaces-app-icons-dedupe = Dédupliquer les icônes
     .description = Afficher une seule icône par classe de fenêtre
 
-settings-modules-hyprland-workspaces-app-icons-fallback = Icone secours
+settings-modules-hyprland-workspaces-app-icons-fallback = Icône secours
     .description = Icône pour les applications non reconnues
 
-settings-modules-hyprland-workspaces-app-icons-empty = Icone vide
+settings-modules-hyprland-workspaces-app-icons-empty = Icône vide
     .description = Icône de remplacement pour les espaces de travail vides
 
-settings-modules-hyprland-workspaces-icon-gap = Ecart icones
+settings-modules-hyprland-workspaces-icon-gap = Écart icônes
     .description = Espacement entre les icônes d'applications (rem)
 
 settings-modules-hyprland-workspaces-workspace-padding = Remplissage espace de travail
     .description = Remplissage dans la direction de la barre (rem)
 
-settings-modules-hyprland-workspaces-icon-size = Taille icone
+settings-modules-hyprland-workspaces-icon-size = Taille icône
     .description = Multiplicateur d'échelle pour les icônes d'espaces de travail (0.25-3.0)
 
 settings-modules-hyprland-workspaces-label-size = Taille libellé
@@ -77,5 +77,5 @@ settings-modules-hyprland-workspaces-border-color = Couleur de bordure
 settings-modules-hyprland-workspaces-workspace-map = Carte espaces de travail
     .description = Surcharges d'icône et de couleur par espace de travail
 
-settings-modules-hyprland-workspaces-app-icon-map = Carte icones apps
+settings-modules-hyprland-workspaces-app-icon-map = Carte icônes apps
     .description = Mappages classe/titre de fenêtre vers icône
