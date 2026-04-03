@@ -92,22 +92,22 @@ unic-langid = "0.9"
 wildcard = "0.3"
 zbus = { version = "5.11.0", default-features = false, features = ["tokio"] }
 
-wayle-audio = "0.1.0"
-wayle-battery = "0.1.0"
-wayle-bluetooth = "0.1.0"
-wayle-brightness = "0.1.0"
-wayle-cava = { version = "0.1.0", features = ["vendored"] }
-wayle-core = "0.1.0"
-wayle-hyprland = "0.1.0"
-wayle-media = "0.1.0"
-wayle-network = "0.1.0"
-wayle-notification = "0.1.0"
-wayle-power-profiles = "0.1.0"
-wayle-sysinfo = "0.1.0"
-wayle-systray = "0.1.0"
-wayle-traits = "0.1.0"
-wayle-wallpaper = "0.1.0"
-wayle-weather = "0.1.0"
+wayle-audio = "0.1.2"
+wayle-battery = "0.1.2"
+wayle-bluetooth = "0.1.2"
+wayle-brightness = "0.1.2"
+wayle-cava = { version = "0.1.2", features = ["vendored"] }
+wayle-core = "0.1.2"
+wayle-hyprland = "0.1.2"
+wayle-media = "0.1.2"
+wayle-network = "0.1.2"
+wayle-notification = "0.1.2"
+wayle-power-profiles = "0.1.2"
+wayle-sysinfo = "0.1.2"
+wayle-systray = "0.1.2"
+wayle-traits = "0.1.2"
+wayle-wallpaper = "0.1.2"
+wayle-weather = "0.1.2"
 
 wayle-config = { path = "crates/wayle-config" }
 wayle-derive = { path = "crates/wayle-derive" }
