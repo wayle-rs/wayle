@@ -31,6 +31,8 @@ pub mod schemas {
     pub mod osd;
     /// Styling configuration.
     pub mod styling;
+    /// Shared configuration types.
+    pub mod types;
     /// Wallpaper service configuration.
     pub mod wallpaper;
 }

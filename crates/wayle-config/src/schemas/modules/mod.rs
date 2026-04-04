@@ -5,6 +5,7 @@ mod bluetooth;
 mod cava;
 mod clock;
 mod cpu;
+mod cpu_chart;
 mod custom;
 mod dashboard;
 mod hyprland_workspaces;
@@ -31,11 +32,12 @@ mod world_clock;
 pub use battery::BatteryConfig;
 pub use bluetooth::BluetoothConfig;
 pub use cava::{
-    BarCount as CavaBarCount, CavaConfig, CavaDirection, CavaInput, CavaStyle,
-    Framerate as CavaFramerate, FrequencyHz,
+    BarCount as CavaBarCount, CavaConfig, CavaInput, CavaStyle, Framerate as CavaFramerate,
+    FrequencyHz,
 };
 pub use clock::ClockConfig;
 pub use cpu::CpuConfig;
+pub use cpu_chart::CpuChartConfig;
 pub use custom::{CustomModuleDefinition, ExecutionMode, RestartDelay, RestartPolicy};
 pub use dashboard::DashboardConfig;
 pub use hyprland_workspaces::{
@@ -65,6 +67,7 @@ pub use weather::{TemperatureUnit, WeatherConfig, WeatherProvider};
 pub use window_title::{BUILTIN_MAPPINGS as WINDOW_TITLE_BUILTIN_MAPPINGS, WindowTitleConfig};
 pub use world_clock::WorldClockConfig;
 
+pub use super::types::chart::Direction;
 use crate::ConfigProperty;
 
 /// Configuration for all available Wayle modules.
@@ -80,6 +83,9 @@ pub struct ModulesConfig {
     pub clock: ClockConfig,
     /// CPU usage module.
     pub cpu: CpuConfig,
+    /// CPU usage chart module.
+    #[serde(rename = "cpu-chart")]
+    pub cpu_chart: CpuChartConfig,
     /// Dashboard module.
     pub dashboard: DashboardConfig,
     /// Hyprland workspace switcher module.

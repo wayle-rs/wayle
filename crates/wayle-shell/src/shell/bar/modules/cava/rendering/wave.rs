@@ -1,18 +1,11 @@
 use gtk4::cairo;
-use wayle_config::schemas::modules::CavaDirection;
+use wayle_config::schemas::types::chart::Direction;
 
-use super::{RenderParams, apply_color};
+use super::{Params, apply_color};
 
 const MIN_WAVE_HEIGHT: f64 = 2.0;
 
-pub(crate) fn draw_wave(
-    cr: &cairo::Context,
-    values: &[f64],
-    canvas_width: f64,
-    canvas_height: f64,
-    direction: CavaDirection,
-    params: &RenderParams,
-) {
+pub(crate) fn draw_wave(cr: &cairo::Context, values: &[f64], canvas_width: f64, params: &Params) {
     if values.is_empty() {
         return;
     }
@@ -26,14 +19,14 @@ pub(crate) fn draw_wave(
         canvas_width
     };
 
-    let min_amplitude = MIN_WAVE_HEIGHT / canvas_height;
+    let min_amplitude = MIN_WAVE_HEIGHT / params.height;
 
     let amplitude_to_y = |amplitude: f64| -> f64 {
         let clamped_amplitude = amplitude.max(min_amplitude);
-        match direction {
-            CavaDirection::Normal => canvas_height * (1.0 - clamped_amplitude),
-            CavaDirection::Reverse => canvas_height * clamped_amplitude,
-            CavaDirection::Mirror => canvas_height * (1.0 - clamped_amplitude) / 2.0,
+        match params.direction {
+            Direction::Normal => params.height * (1.0 - clamped_amplitude),
+            Direction::Reverse => params.height * clamped_amplitude,
+            Direction::Mirror => params.height * (1.0 - clamped_amplitude) / 2.0,
         }
     };
 
@@ -42,10 +35,10 @@ pub(crate) fn draw_wave(
         cr,
         values,
         canvas_width,
-        canvas_height,
+        params.height,
         point_spacing,
         min_amplitude,
-        direction,
+        params.direction,
     );
 
     cr.close_path();
@@ -83,18 +76,18 @@ fn close_wave_path(
     canvas_height: f64,
     point_spacing: f64,
     min_amplitude: f64,
-    direction: CavaDirection,
+    direction: Direction,
 ) {
     match direction {
-        CavaDirection::Normal => {
+        Direction::Normal => {
             cr.line_to(canvas_width, canvas_height);
             cr.line_to(0.0, canvas_height);
         }
-        CavaDirection::Reverse => {
+        Direction::Reverse => {
             cr.line_to(canvas_width, 0.0);
             cr.line_to(0.0, 0.0);
         }
-        CavaDirection::Mirror => {
+        Direction::Mirror => {
             trace_mirror_bottom(cr, values, point_spacing, min_amplitude, canvas_height);
         }
     }
