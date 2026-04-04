@@ -19,6 +19,7 @@ pub(crate) enum CustomMsg {
     MiddleClick,
     ScrollUp,
     ScrollDown,
+    DropdownItemSelected(String),
 }
 
 #[derive(Debug)]
@@ -30,4 +31,9 @@ pub(crate) enum CustomCmd {
     WatchOutput(String),
     DefinitionChanged(Box<CustomModuleDefinition>),
     DefinitionRemoved,
+    DropdownListLoaded {
+        items: Vec<String>,
+        active_item: String,
+        generation: u64,
+    },
 }

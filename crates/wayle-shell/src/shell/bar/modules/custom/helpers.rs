@@ -399,6 +399,9 @@ mod tests {
             scroll_up: String::new(),
             scroll_down: String::new(),
             on_action: None,
+            dropdown_list_command: None,
+            dropdown_select_command: None,
+            label_ellipsize: wayle_config::schemas::modules::LabelEllipsize::End,
         }
     }
 }

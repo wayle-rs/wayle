@@ -8,6 +8,19 @@ use serde::{Deserialize, Serialize};
 pub use self::types::{ExecutionMode, RestartDelay, RestartPolicy};
 use crate::schemas::styling::{ColorValue, CssToken};
 
+/// Where to place the ellipsis when a label is truncated.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "kebab-case")]
+pub enum LabelEllipsize {
+    /// Truncate at the end: `"long-context-na…"`
+    #[default]
+    End,
+    /// Truncate in the middle: `"long-…-name"`
+    Middle,
+    /// Truncate at the start: `"…ext-name"`
+    Start,
+}
+
 /// Custom module definition for user-defined bar modules.
 ///
 /// Custom modules execute shell commands and display the output in the bar.
@@ -351,6 +364,14 @@ pub struct CustomModuleDefinition {
     #[serde(rename = "label-max-length", default)]
     pub label_max_length: u32,
 
+    /// Where to place the ellipsis when `label-max-length` truncates the label.
+    ///
+    /// - `end` (default): `"long-context-na…"`
+    /// - `middle`: `"long-…-name"` — useful for context names, paths, configs
+    /// - `start`: `"…ext-name"`
+    #[serde(rename = "label-ellipsize", default)]
+    pub label_ellipsize: LabelEllipsize,
+
     /// Button background color.
     #[serde(rename = "button-bg-color", default = "default_button_bg")]
     pub button_bg_color: ColorValue,
@@ -414,6 +435,47 @@ pub struct CustomModuleDefinition {
     /// ```
     #[serde(rename = "on-action", default)]
     pub on_action: Option<String>,
+
+    /// Shell command that returns a newline-separated list of options for an
+    /// inline dropdown picker.
+    ///
+    /// When set alongside `left-click = "dropdown"`, clicking the module opens
+    /// a dropdown populated by running this command. Each non-empty line of
+    /// output becomes a selectable item.
+    ///
+    /// The currently active item is determined by matching list entries against
+    /// the module's current display output (from `command`).
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [[modules.custom]]
+    /// id = "kube-context"
+    /// command = "kubectl config current-context"
+    /// left-click = "dropdown"
+    /// dropdown-list-command = "kubectl config get-contexts -o name"
+    /// dropdown-select-command = "kubectl config use-context {{ selected }}"
+    /// ```
+    #[serde(rename = "dropdown-list-command", default)]
+    pub dropdown_list_command: Option<String>,
+
+    /// Shell command executed when a dropdown item is selected.
+    ///
+    /// The selected item text is available as the `$WAYLE_SELECTED` environment
+    /// variable. This avoids shell injection from item text containing
+    /// metacharacters. After execution, the module's main `command` is re-run
+    /// to refresh the display.
+    ///
+    /// **Important:** Quote `$WAYLE_SELECTED` in your command to handle values
+    /// containing spaces or shell metacharacters.
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// dropdown-select-command = 'gcloud config configurations activate "$WAYLE_SELECTED"'
+    /// ```
+    #[serde(rename = "dropdown-select-command", default)]
+    pub dropdown_select_command: Option<String>,
 }
 
 fn default_interval() -> u64 {
