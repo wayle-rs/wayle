@@ -314,6 +314,30 @@ impl DropdownRegistry {
         for name in super::DROPDOWN_NAMES {
             let _ = self.get_or_create(name);
         }
+
+        // Pre-warm custom dropdowns defined in config.
+        let config = self.services.config.config();
+        let dropdowns = config.dropdowns.get();
+        for name in dropdowns.custom.keys() {
+            let key = format!("custom:{name}");
+            let _ = self.get_or_create(&key);
+        }
+    }
+
+    /// Registers a callback to run once the next time a named dropdown closes.
+    ///
+    /// Used by custom modules to refresh their bar label after a dropdown
+    /// selection changes state (e.g., scale picker updates the active scale).
+    pub(crate) fn on_next_close(&self, name: &str, callback: impl FnOnce() + 'static) {
+        let Some(instance) = self.get_or_create(name) else {
+            return;
+        };
+        let callback = Cell::new(Some(callback));
+        instance.popover.connect_closed(move |_| {
+            if let Some(cb) = callback.take() {
+                cb();
+            }
+        });
     }
 
     fn get_or_create(&self, name: &str) -> Option<Rc<DropdownInstance>> {

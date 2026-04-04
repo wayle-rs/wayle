@@ -324,6 +324,43 @@ Scroll events are debounced (50ms) so rapid scrolling doesn't fire dozens of
 commands. Set `interval-ms = 0` if you only want updates from `on-action` (no
 polling at all).
 
+Click actions can also open dropdowns. Use `"dropdown:<name>"` for built-in
+dropdowns (audio, battery, etc.) or `"dropdown:custom:<name>"` for custom
+dropdowns defined in `[dropdowns.custom.<name>]`:
+
+```toml
+[[modules.custom]]
+id = "scale"
+command = "hypr-scale.sh get"
+interval-ms = 5000
+format = "{{ text }}"
+icon-name = "ld-monitor-symbolic"
+left-click = "dropdown:custom:scale"
+on-action = "hypr-scale.sh get"
+
+[dropdowns.custom.scale]
+title = "Display Scale"
+icon = "ld-monitor-symbolic"
+width = 340
+
+[[dropdowns.custom.scale.sections]]
+type = "picker"
+list-command = "hypr-scale.sh list --json"
+select-command = 'hypr-scale.sh set "$WAYLE_SELECTED"'
+```
+
+The `list-command` outputs one item per line — either plain text or JSON:
+
+```json
+{"value": "1.5", "label": "1.5x", "subtitle": "140 DPI", "active": true}
+```
+
+JSON fields: `value` (selection key), `label`, `subtitle`, `icon`, `active`
+(shows checkmark). Plain text lines use the text as both value and label.
+
+The `select-command` receives the chosen value via `$WAYLE_SELECTED`. After
+selection the dropdown closes and `on-action` runs to refresh the bar label.
+
 ### JSON Reserved Fields
 
 When outputting JSON, these fields have special meaning:
@@ -387,14 +424,14 @@ All other fields are available in `format` and `tooltip-format` templates.
 
 #### Actions
 
-| Field          | Type   | Default | Description                                   |
-| -------------- | ------ | ------- | --------------------------------------------- |
-| `left-click`   | string | `""`    | Command on left click                         |
-| `right-click`  | string | `""`    | Command on right click                        |
-| `middle-click` | string | `""`    | Command on middle click                       |
-| `scroll-up`    | string | `""`    | Command on scroll up (50ms debounce)          |
-| `scroll-down`  | string | `""`    | Command on scroll down (50ms debounce)        |
-| `on-action`    | string | none    | Runs after any action, output updates display |
+| Field          | Type   | Default | Description                                                        |
+| -------------- | ------ | ------- | ------------------------------------------------------------------ |
+| `left-click`   | string | `""`    | Shell command, `"dropdown:<name>"`, or `"dropdown:custom:<name>"`  |
+| `right-click`  | string | `""`    | Shell command, `"dropdown:<name>"`, or `"dropdown:custom:<name>"`  |
+| `middle-click` | string | `""`    | Shell command, `"dropdown:<name>"`, or `"dropdown:custom:<name>"`  |
+| `scroll-up`    | string | `""`    | Shell command or dropdown action (50ms debounce)                   |
+| `scroll-down`  | string | `""`    | Shell command or dropdown action (50ms debounce)                   |
+| `on-action`    | string | none    | Runs after shell actions or dropdown close, output updates display |
 
 Color values: `"auto"`, hex (`"#ff0000"`), or theme token (`"red"`, `"primary"`,
 etc.).
