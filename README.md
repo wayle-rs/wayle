@@ -1,13 +1,14 @@
+<p align="center">
+  <img src="assets/wayle.svg" width="200" alt="Wayle">
+</p>
+
 # Wayle
 
-> **⚠️ Work in Progress**: Wayle is under active development. The bar and
-> modules that are completed under the [UI Components](#ui-components) section
-> are ready to use. This, however, is not a stable environment, things are
-> subject to change.
+[![CI](https://img.shields.io/github/actions/workflow/status/wayle-rs/wayle/ci.yml?branch=master)](https://github.com/wayle-rs/wayle/actions)
+[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/wayle-rs/wayle/blob/master/LICENSE)
 
-A fast, configurable desktop environment shell for Wayland compositors. Built in
-Rust with Relm4 and focused on performance, modularity, and a great user
-experience. A successor to HyprPanel without the pain or dependency on Hyprland.
+A configurable desktop shell for Wayland compositors. Built in Rust with GTK4
+and Relm4. Compositor-agnostic successor to HyprPanel.
 
 ## Progress
 
@@ -156,27 +157,28 @@ for your config.toml (and other toml files).
 wayle config schema
 ```
 
-## Building
+## Installation
 
-Install Rust via [rustup](https://rustup.rs):
+### Arch Linux (AUR)
 
 ```bash
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+yay -S wayle-bin
 ```
 
-Clone the repository recursively and build:
+Then start the shell:
 
 ```bash
-git clone --recursive https://github.com/wayle-rs/wayle
+wayle shell
+```
+
+### From source
+
+Install Rust via [rustup](https://rustup.rs), then:
+
+```bash
+git clone https://github.com/wayle-rs/wayle
 cd wayle
-cargo install --path crates/wayle-shell
 cargo install --path wayle
-```
-
-Once Wayle is installed, you can set up the icons (temporary measure) and start
-it via:
-
-```bash
 wayle icons setup
 wayle panel start
 ```
@@ -401,8 +403,7 @@ etc.).
 
 ## Credits
 
-Big thanks to [@M70v](https://www.instagram.com/m70v.art/) for the Wayle logo
-contribution! Check out their work at <https://www.instagram.com/m70v.art/>.
+Logo by [@M70v](https://www.instagram.com/m70v.art/).
 
 ## License
 

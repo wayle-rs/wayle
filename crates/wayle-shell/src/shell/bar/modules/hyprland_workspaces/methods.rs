@@ -175,7 +175,32 @@ impl HyprlandWorkspaces {
         }
     }
 
+    pub(super) fn refresh_active_workspace(&mut self) {
+        let Some(hyprland) = &self.hyprland else {
+            return;
+        };
+
+        let config = self.config.config();
+        let monitor_specific = config.modules.hyprland_workspaces.monitor_specific.get();
+
+        let monitors = hyprland.monitors.get();
+
+        if monitor_specific
+            && let Some(bar_monitor) = &self.settings.monitor_name
+            && let Some(monitor) = monitors.iter().find(|m| m.name.get() == *bar_monitor)
+        {
+            self.active_workspace_id = monitor.active_workspace.get().id;
+            return;
+        }
+
+        if let Some(monitor) = monitors.iter().find(|m| m.focused.get()) {
+            self.active_workspace_id = monitor.active_workspace.get().id;
+        }
+    }
+
     pub(super) fn rebuild_buttons(&mut self) {
+        self.refresh_active_workspace();
+
         debug!(
             bar_monitor = ?self.settings.monitor_name,
             active_workspace = self.active_workspace_id,

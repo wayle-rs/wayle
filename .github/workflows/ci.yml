@@ -5,6 +5,9 @@ on:
         branches: [master]
     pull_request:
 
+permissions:
+    contents: read
+
 concurrency:
     group: ${{ github.workflow }}-${{ github.ref }}
     cancel-in-progress: true
@@ -19,7 +22,7 @@ jobs:
         outputs:
             code: ${{ steps.filter.outputs.code }}
         steps:
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
 
             - uses: dorny/paths-filter@v3
               id: filter
@@ -60,7 +63,7 @@ jobs:
                   rustup toolchain install nightly --component rustfmt
                   rustup component add clippy
 
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   submodules: recursive
 
@@ -99,7 +102,7 @@ jobs:
             - name: Setup Rust
               run: rustup default stable
 
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   submodules: recursive
 
@@ -132,7 +135,7 @@ jobs:
             - name: Setup Rust
               run: rustup default stable
 
-            - uses: actions/checkout@v4
+            - uses: actions/checkout@v6
               with:
                   submodules: recursive
 

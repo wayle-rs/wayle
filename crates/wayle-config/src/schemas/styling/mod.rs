@@ -6,7 +6,8 @@ pub use types::{
     ColorValue, CssToken, FontWeightClass, GapClass, HexColor, IconSizeClass, InvalidCssToken,
     InvalidHexColor, MatugenScheme, NormalizedF64, PaddingClass, Percentage, PywalContrast,
     RadiusClass, RoundingLevel, ScaleFactor, SignedNormalizedF64, Spacing, TextSizeClass,
-    ThemeEntry, ThemeProvider, WallustBackend, WallustColorspace, WallustPalette,
+    ThemeEntry, ThemeProvider, ThresholdColors, ThresholdEntry, WallustBackend, WallustColorspace,
+    WallustPalette, evaluate_thresholds,
 };
 use wayle_derive::wayle_config;
 

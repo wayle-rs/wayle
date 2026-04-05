@@ -14,6 +14,7 @@ path = "src/main.rs"
 [dependencies]
 chrono.workspace = true
 clap.workspace = true
+clap_complete = "4"
 console.workspace = true
 futures.workspace = true
 gdk4.workspace = true
@@ -52,6 +53,7 @@ wayle-power-profiles.workspace = true
 wayle-styling.workspace = true
 wayle-systray.workspace = true
 wayle-wallpaper.workspace = true
+wayle-shell.workspace = true
 wayle-widgets.workspace = true
 zbus.workspace = true
 

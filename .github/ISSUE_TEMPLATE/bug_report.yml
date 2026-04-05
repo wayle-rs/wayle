@@ -81,7 +81,7 @@ body:
       id: logs
       attributes:
           label: Logs
-          description: Run with `RUST_LOG=debug wayle-shell` for verbose output.
+          description: Run with `RUST_LOG=debug wayle shell` for verbose output.
           render: shell
       validations:
           required: false

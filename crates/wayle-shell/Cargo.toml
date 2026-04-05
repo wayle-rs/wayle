@@ -8,10 +8,6 @@ repository.workspace = true
 license.workspace = true
 build = "build.rs"
 
-[[bin]]
-name = "wayle-shell"
-path = "src/main.rs"
-
 [dependencies]
 # gtk4-layer-shell MUST be first - it shims libwayland calls
 gtk4-layer-shell.workspace = true

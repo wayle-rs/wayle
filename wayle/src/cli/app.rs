@@ -1,7 +1,10 @@
+use std::io;
+
 use clap::{
-    Parser, Subcommand,
+    CommandFactory, Parser, Subcommand,
     builder::styling::{AnsiColor, Effects, Styles},
 };
+use clap_complete::Shell;
 
 use crate::cli::{
     audio::commands::AudioCommands, config::commands::ConfigCommands,
@@ -95,4 +98,16 @@ pub enum Commands {
         #[command(subcommand)]
         command: IdleCommands,
     },
+    /// Run the desktop shell in the foreground
+    Shell,
+    /// Generate shell completions
+    Completions {
+        /// Shell to generate completions for.
+        shell: Shell,
+    },
+}
+
+/// Prints shell completions to stdout.
+pub fn generate_completions(shell: Shell) {
+    clap_complete::generate(shell, &mut Cli::command(), "wayle", &mut io::stdout());
 }

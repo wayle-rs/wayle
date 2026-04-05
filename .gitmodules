@@ -1,3 +1,0 @@
-[submodule "crates/wayle-cava/cava"]
-	path = crates/wayle-cava/cava
-	url = https://github.com/Jas-SinghFSU/cava.git

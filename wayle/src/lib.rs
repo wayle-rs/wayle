@@ -8,7 +8,7 @@
 //! - `wayle config` - Query/set configuration
 //! - `wayle icons` - Manage icon packs
 //!
-//! The GUI panel itself is provided by the `wayle-shell` binary.
+//! The GUI panel runs via `wayle shell` (or `wayle panel start` for daemon mode).
 
 /// Configuration schema definitions and validation.
 pub use wayle_config as config;

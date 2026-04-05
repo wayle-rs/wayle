@@ -1,43 +1,68 @@
-//! Wayle CLI - Entry point for Wayle command-line interface.
+//! Wayle CLI entry point.
 //!
-//! CLI commands for managing Wayle services.
-//! The GUI panel is a separate binary (`wayle-shell`).
+//! Parses CLI args and dispatches to the appropriate handler.
+//! The `shell` subcommand runs the GUI directly and manages its own
+//! tokio runtime. All other commands share a single runtime.
 
 use std::process;
 
 use clap::Parser;
+use tokio::runtime::Runtime;
 use wayle::{
-    cli::{Cli, Commands},
+    cli::{self, Cli, Commands},
     core::{init, tracing as tracing_init},
 };
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let cli = Cli::parse();
 
-    if let Err(e) = tracing_init::init_cli_mode() {
-        eprintln!("Failed to initialize tracing: {e}");
+    match cli.command {
+        Commands::Shell => return run_shell(),
+        Commands::Completions { shell } => {
+            cli::app::generate_completions(shell);
+            return;
+        }
+        _ => {}
     }
 
-    if let Err(e) = init::ensure_directories() {
-        eprintln!("Failed to ensure directories: {e}");
-    }
-
-    let result = match cli.command {
-        Commands::Audio { command } => wayle::cli::audio::execute(command).await,
-        Commands::Config { command } => wayle::cli::config::execute(command).await,
-        Commands::Icons { command } => wayle::cli::icons::execute(command).await,
-        Commands::Media { command } => wayle::cli::media::execute(command).await,
-        Commands::Notify { command } => wayle::cli::notify::execute(command).await,
-        Commands::Panel { command } => wayle::cli::panel::execute(command).await,
-        Commands::Power { command } => wayle::cli::power::execute(command).await,
-        Commands::Systray { command } => wayle::cli::systray::execute(command).await,
-        Commands::Wallpaper { command } => wayle::cli::wallpaper::execute(command).await,
-        Commands::Idle { command } => wayle::cli::idle::execute(command).await,
+    let Ok(runtime) = Runtime::new() else {
+        eprintln!("Failed to create tokio runtime");
+        process::exit(1);
     };
 
-    if let Err(e) = result {
-        eprintln!("Error: {e}");
+    let result = runtime.block_on(async {
+        if let Err(err) = tracing_init::init_cli_mode() {
+            eprintln!("Failed to initialize tracing: {err}");
+        }
+
+        if let Err(err) = init::ensure_directories() {
+            eprintln!("Failed to ensure directories: {err}");
+        }
+
+        match cli.command {
+            Commands::Audio { command } => cli::audio::execute(command).await,
+            Commands::Config { command } => cli::config::execute(command).await,
+            Commands::Icons { command } => cli::icons::execute(command).await,
+            Commands::Media { command } => cli::media::execute(command).await,
+            Commands::Notify { command } => cli::notify::execute(command).await,
+            Commands::Panel { command } => cli::panel::execute(command).await,
+            Commands::Power { command } => cli::power::execute(command).await,
+            Commands::Systray { command } => cli::systray::execute(command).await,
+            Commands::Wallpaper { command } => cli::wallpaper::execute(command).await,
+            Commands::Idle { command } => cli::idle::execute(command).await,
+            Commands::Shell | Commands::Completions { .. } => unreachable!(),
+        }
+    });
+
+    if let Err(err) = result {
+        eprintln!("Error: {err}");
+        process::exit(1);
+    }
+}
+
+fn run_shell() {
+    if let Err(err) = wayle_shell::run() {
+        eprintln!("Error: {err}");
         process::exit(1);
     }
 }

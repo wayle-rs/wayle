@@ -3,7 +3,7 @@ use std::{sync::Arc, time::Duration};
 use relm4::ComponentSender;
 use tokio_util::sync::CancellationToken;
 use wayle_audio::{AudioService, core::device::output::OutputDevice};
-use wayle_config::schemas::modules::VolumeConfig;
+use wayle_config::schemas::{modules::VolumeConfig, styling::evaluate_thresholds};
 use wayle_widgets::{watch, watch_cancellable_throttled};
 
 const VOLUME_THROTTLE: Duration = Duration::from_millis(30);
@@ -30,6 +30,16 @@ pub(super) fn spawn_watchers(
             let _ = out.send(VolumeCmd::ConfigChanged);
         }
     );
+
+    let thresholds = config.thresholds.clone();
+    let audio_thresholds = audio.default_output.clone();
+    watch!(sender, [thresholds.watch()], |out| {
+        if let Some(device) = audio_thresholds.get() {
+            let percentage = device.volume.get().average_percentage().round() as u16;
+            let colors = evaluate_thresholds(percentage as f64, &thresholds.get());
+            let _ = out.send(VolumeCmd::UpdateThresholdColors(colors));
+        }
+    });
 }
 
 pub(super) fn spawn_device_watchers(

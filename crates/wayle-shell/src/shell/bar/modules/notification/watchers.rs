@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use relm4::ComponentSender;
-use wayle_config::schemas::modules::NotificationConfig;
+use wayle_config::schemas::{modules::NotificationConfig, styling::evaluate_thresholds};
 use wayle_notification::NotificationService;
 use wayle_widgets::watch;
 
@@ -12,10 +12,24 @@ pub(super) fn spawn_watchers(
     config: &NotificationConfig,
     notification: &Arc<NotificationService>,
 ) {
+    let thresholds = config.thresholds.clone();
+
     let notifications = notification.notifications.clone();
+
+    let thresholds_watch = thresholds.clone();
+    let notifications_watch = notifications.clone();
+    watch!(sender, [thresholds_watch.watch()], |out| {
+        let count = notifications_watch.get().len();
+        let colors = evaluate_thresholds(count as f64, &thresholds_watch.get());
+        let _ = out.send(NotificationCmd::UpdateThresholdColors(colors));
+    });
+
     watch!(sender, [notifications.watch()], |out| {
         let count = notifications.get().len();
         let _ = out.send(NotificationCmd::NotificationsChanged(count));
+
+        let colors = evaluate_thresholds(count as f64, &thresholds.get());
+        let _ = out.send(NotificationCmd::UpdateThresholdColors(colors));
     });
 
     let dnd = notification.dnd.clone();

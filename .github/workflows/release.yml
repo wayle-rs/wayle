@@ -1,0 +1,149 @@
+name: Release
+
+on:
+    push:
+        tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
+
+permissions:
+    contents: write
+
+env:
+    CARGO_TERM_COLOR: always
+
+jobs:
+    changelog:
+        name: Changelog
+        runs-on: ubuntu-latest
+        outputs:
+            changelog: ${{ steps.changelog.outputs.changes }}
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0
+
+            - name: Generate changelog
+              id: changelog
+              uses: requarks/changelog-action@v1
+              with:
+                  token: ${{ secrets.GITHUB_TOKEN }}
+                  tag: ${{ github.ref_name }}
+                  excludeTypes: build,chore,style
+
+            - name: Verify tag matches Cargo.toml version
+              run: |
+                  VERSION="${GITHUB_REF_NAME#v}"
+                  CARGO_VERSION=$(sed -n '/\[workspace\.package\]/,/\[/{/^version/p}' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+                  if [ -z "$CARGO_VERSION" ]; then
+                      echo "Failed to parse version from Cargo.toml"
+                      exit 1
+                  fi
+                  if [ "$VERSION" != "$CARGO_VERSION" ]; then
+                      echo "Tag $VERSION does not match Cargo.toml version $CARGO_VERSION"
+                      exit 1
+                  fi
+
+            - name: Create GitHub release
+              uses: ncipollo/release-action@v1
+              with:
+                  tag: ${{ github.ref_name }}
+                  name: ${{ github.ref_name }}
+                  body: ${{ steps.changelog.outputs.changes }}
+                  draft: true
+                  token: ${{ secrets.GITHUB_TOKEN }}
+
+    build:
+        name: Build (${{ matrix.arch }})
+        needs: changelog
+        runs-on: ubuntu-latest
+        container:
+            image: archlinux:base-devel
+        strategy:
+            matrix:
+                arch: [x86_64]
+        steps:
+            - name: Install dependencies
+              run: |
+                  pacman --noconfirm --needed -Syu \
+                    git \
+                    github-cli \
+                    rustup \
+                    clang \
+                    gtk4 \
+                    gtk4-layer-shell \
+                    libpulse \
+                    fftw \
+                    libpipewire \
+                    systemd-libs
+
+            - name: Setup Rust
+              run: rustup default stable
+
+            - uses: actions/checkout@v6
+              with:
+                  submodules: recursive
+
+            - name: Fix git ownership
+              run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+            - name: Build release binaries
+              run: cargo build --release --locked
+
+            - name: Generate completions
+              run: |
+                  target/release/wayle completions bash > completions.bash
+                  target/release/wayle completions zsh > _wayle
+                  target/release/wayle completions fish > wayle.fish
+
+            - name: Create archive
+              run: |
+                  VERSION="${GITHUB_REF_NAME#v}"
+                  ARCH="${{ matrix.arch }}"
+                  STAGING="wayle-${VERSION}-${ARCH}-linux"
+                  mkdir -p "${STAGING}/icons" "${STAGING}/completions"
+                  cp target/release/wayle LICENSE "${STAGING}/"
+                  cp -r resources/icons/hicolor "${STAGING}/icons/"
+                  cp completions.bash _wayle wayle.fish "${STAGING}/completions/"
+                  cp resources/wayle.service "${STAGING}/"
+                  tar czf "${STAGING}.tar.gz" "${STAGING}"
+
+            - name: Upload to release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  VERSION="${GITHUB_REF_NAME#v}"
+                  ARCH="${{ matrix.arch }}"
+                  gh release upload "${{ github.ref_name }}" \
+                    "wayle-${VERSION}-${ARCH}-linux.tar.gz" \
+                    --clobber
+
+    checksums:
+        name: Checksums
+        needs: [changelog, build]
+        runs-on: ubuntu-latest
+        steps:
+            - name: Download assets
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  gh release download "${{ github.ref_name }}" \
+                    --repo "${{ github.repository }}" \
+                    --pattern "*.tar.gz" \
+                    --dir release
+
+            - name: Generate SHA256SUMS
+              run: cd release && sha256sum *.tar.gz > ../SHA256SUMS
+
+            - name: Upload checksums
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: gh release upload "${{ github.ref_name }}" --repo "${{ github.repository }}" SHA256SUMS --clobber
+
+    publish:
+        name: Publish release
+        needs: checksums
+        runs-on: ubuntu-latest
+        steps:
+            - name: Undraft release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: gh release edit "${{ github.ref_name }}" --repo "${{ github.repository }}" --draft=false

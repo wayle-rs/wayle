@@ -116,6 +116,10 @@ impl Component for RamModule {
             RamCmd::UpdateIcon(icon) => {
                 self.bar_button.emit(BarButtonInput::SetIcon(icon));
             }
+            RamCmd::UpdateThresholdColors(colors) => {
+                self.bar_button
+                    .emit(BarButtonInput::SetThresholdColors(colors));
+            }
         }
     }
 }
