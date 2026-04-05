@@ -46,27 +46,26 @@ impl Component for UserSessionSection {
         #[root]
         gtk::Box {
             set_css_classes: &["card", "dashboard-card"],
-            set_orientation: gtk::Orientation::Vertical,
 
             #[name = "session_row"]
             gtk::Box {
                 add_css_class: "dashboard-user-session",
+                set_orientation: gtk::Orientation::Vertical,
 
                 #[name = "user_info"]
                 gtk::Box {
                     add_css_class: "user-info",
-                    set_halign: gtk::Align::Start,
+                    set_orientation: gtk::Orientation::Vertical,
+                    set_halign: gtk::Align::Center,
 
                     #[name = "avatar"]
                     gtk::Box {
                         add_css_class: "user-avatar",
-                        set_halign: gtk::Align::Start,
-                        set_valign: gtk::Align::Start,
+                        set_valign: gtk::Align::Center,
 
                         gtk::Image {
                             set_icon_name: Some("ld-user-symbolic"),
                             set_hexpand: true,
-                            set_halign: gtk::Align::Center,
                             set_valign: gtk::Align::Center,
                             #[watch]
                             set_visible: !model.has_face,
@@ -75,13 +74,12 @@ impl Component for UserSessionSection {
 
                     #[name = "user_meta"]
                     gtk::Box {
-                        set_valign: gtk::Align::Center,
-                        set_halign: gtk::Align::Start,
+                        set_halign: gtk::Align::Center,
 
                         #[name = "username_label"]
                         gtk::Label {
                             add_css_class: "user-name",
-                            set_halign: gtk::Align::Start,
+                            set_halign: gtk::Align::Center,
                             #[watch]
                             set_label: &model.username,
                         },
@@ -92,7 +90,8 @@ impl Component for UserSessionSection {
                 gtk::Box {
                     add_css_class: "session-actions",
                     set_hexpand: true,
-                    set_halign: gtk::Align::End,
+                    set_halign: gtk::Align::Center,
+                    set_valign: gtk::Align::End,
 
                     #[template]
                     #[name = "lock_btn"]
@@ -103,6 +102,30 @@ impl Component for UserSessionSection {
 
                         gtk::Image {
                             set_icon_name: Some("ld-lock-symbolic"),
+                        },
+                    },
+
+                    #[template]
+                    #[name = "sleep_btn"]
+                    IconButton {
+                        add_css_class: "session-btn",
+                        set_tooltip_text: Some(&t!("dropdown-dashboard-sleep")),
+                        connect_clicked => UserSessionInput::Sleep,
+
+                        gtk::Image {
+                            set_icon_name: Some("ld-moon-symbolic"),
+                        },
+                    },
+
+                    #[template]
+                    #[name = "hibernate_btn"]
+                    IconButton {
+                        add_css_class: "session-btn",
+                        set_tooltip_text: Some(&t!("dropdown-dashboard-hibernate")),
+                        connect_clicked => UserSessionInput::Hibernate,
+
+                        gtk::Image {
+                            set_icon_name: Some("ld-snowflake-symbolic"),
                         },
                     },
 
@@ -189,6 +212,12 @@ impl Component for UserSessionSection {
         match msg {
             UserSessionInput::Lock => {
                 process::run_if_set(&dashboard.dropdown_lock_command.get());
+            }
+            UserSessionInput::Sleep => {
+                process::run_if_set(&dashboard.dropdown_sleep_command.get());
+            }
+            UserSessionInput::Hibernate => {
+                process::run_if_set(&dashboard.dropdown_hibernate_command.get());
             }
             UserSessionInput::Logout => {
                 process::run_if_set(&dashboard.dropdown_logout_command.get());
