@@ -4,6 +4,7 @@ mod cava;
 mod clock;
 mod compositor;
 mod cpu;
+mod cpu_chart;
 mod custom;
 mod dashboard;
 mod hyprland_workspaces;
@@ -20,6 +21,7 @@ mod power;
 mod ram;
 mod registry;
 mod separator;
+mod shared;
 mod storage;
 mod systray;
 mod volume;
@@ -62,6 +64,7 @@ register_modules! {
     Cava => cava::Factory,
     Clock => clock::Factory,
     Cpu => cpu::Factory,
+    CpuChart => cpu_chart::Factory,
     Dashboard => dashboard::Factory,
     HyprlandWorkspaces => hyprland_workspaces::Factory,
     Hyprsunset => hyprsunset::Factory,

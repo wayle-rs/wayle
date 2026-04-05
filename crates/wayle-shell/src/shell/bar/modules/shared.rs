@@ -1,17 +1,23 @@
+//! Shared utilities for bar modules.
+//!
+//! This module contains common functionality used across multiple bar modules,
+//! such as color resolution and unit conversion.
+
 use wayle_config::{
     ConfigService,
     schemas::styling::{ColorValue, CssToken},
 };
 use wayle_styling::resolve_palette;
+use wayle_widgets::primitives::chart::Rgba;
 
-/// RGBA color with components normalized to `[0.0, 1.0]`.
-pub(crate) struct Rgba {
-    pub red: f64,
-    pub green: f64,
-    pub blue: f64,
-    pub alpha: f64,
+const REM_BASE: f32 = 16.0;
+
+/// Converts rem units to pixels.
+pub(super) fn rem_to_px(rem: f32, scale: f32) -> f64 {
+    f64::from(rem * scale * REM_BASE)
 }
 
+/// Resolves a ColorValue to an RGBA color for rendering.
 pub(super) fn resolve_rgba(color: &ColorValue, config: &ConfigService) -> Rgba {
     let hex = match color {
         ColorValue::Token(token) => {

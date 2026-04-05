@@ -2,8 +2,10 @@
 
 pub mod alert;
 pub mod badge;
+pub mod barchart;
 pub mod buttons;
 pub mod card;
+pub mod chart;
 pub mod checkbox;
 pub mod confirm_modal;
 pub mod dropdown;

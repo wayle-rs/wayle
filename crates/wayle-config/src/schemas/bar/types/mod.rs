@@ -172,8 +172,10 @@ pub enum BarModule {
     Cava,
     /// Current time display.
     Clock,
-    /// CPU usage indicator.
+    /// CPU usage and temperature.
     Cpu,
+    /// CPU usage chart visualization.
+    CpuChart,
     /// Quick access dashboard button.
     Dashboard,
     /// Compositor keybind mode indicator (submaps in Hyprland, modes in Sway/River).
@@ -250,6 +252,7 @@ impl BarModule {
             Self::Cava => "cava",
             Self::Clock => "clock",
             Self::Cpu => "cpu",
+            Self::CpuChart => "cpu-chart",
             Self::Dashboard => "dashboard",
             Self::KeybindMode => "keybind-mode",
             Self::HyprlandWorkspaces => "hyprland-workspaces",
@@ -282,6 +285,7 @@ impl BarModule {
             "cava" => Self::Cava,
             "clock" => Self::Clock,
             "cpu" => Self::Cpu,
+            "cpu-chart" => Self::CpuChart,
             "dashboard" => Self::Dashboard,
             "keybind-mode" => Self::KeybindMode,
             "hyprland-workspaces" => Self::HyprlandWorkspaces,
@@ -365,6 +369,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "cava",
     "clock",
     "cpu",
+    "cpu-chart",
     "dashboard",
     "hyprland-workspaces",
     "hyprsunset",

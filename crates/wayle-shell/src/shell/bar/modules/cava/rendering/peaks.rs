@@ -1,7 +1,7 @@
 use gtk4::cairo;
-use wayle_config::schemas::modules::CavaDirection;
+use wayle_config::schemas::types::chart::Direction;
 
-use super::{MIN_BAR_HEIGHT, RenderParams, apply_color, fill_bar_rect};
+use super::{MIN_BAR_HEIGHT, Params, apply_color, fill_bar_rect};
 
 const PEAK_CAP_HEIGHT: f64 = 2.0;
 const PEAK_GRAVITY: f64 = 0.015;
@@ -13,41 +13,41 @@ pub(crate) fn draw_peak_bars(
     cr: &cairo::Context,
     values: &[f64],
     peaks: &mut PeakState,
-    canvas_height: f64,
-    direction: CavaDirection,
-    params: &RenderParams,
+    bar_width: f64,
+    bar_spacing: f64,
+    params: &Params,
 ) {
     apply_color(cr, params);
 
-    let bar_stride = params.bar_width + params.bar_spacing;
+    let bar_stride = bar_width + bar_spacing;
 
     peaks.resize(values.len(), 0.0);
 
     for (bar_idx, &amplitude) in values.iter().enumerate() {
         let x = bar_idx as f64 * bar_stride;
-        let bar_height = (amplitude * canvas_height).clamp(MIN_BAR_HEIGHT, canvas_height);
+        let bar_height = (amplitude * params.height).clamp(MIN_BAR_HEIGHT, params.height);
 
         fill_bar_rect(
             cr,
             x,
             bar_height,
-            canvas_height,
-            direction,
-            params.bar_width,
+            params.height,
+            params.direction,
+            bar_width,
         );
         let _ = cr.fill();
 
         update_peak(&mut peaks[bar_idx], amplitude);
 
-        let peak_height = peaks[bar_idx] * canvas_height;
+        let peak_height = peaks[bar_idx] * params.height;
         draw_peak_cap(
             cr,
             x,
             peak_height,
             bar_height,
-            canvas_height,
-            direction,
-            params.bar_width,
+            params.height,
+            params.direction,
+            bar_width,
         );
     }
 }
@@ -66,7 +66,7 @@ fn draw_peak_cap(
     peak_height: f64,
     bar_height: f64,
     canvas_height: f64,
-    direction: CavaDirection,
+    direction: Direction,
     bar_width: f64,
 ) {
     if peak_height <= bar_height {
@@ -76,7 +76,7 @@ fn draw_peak_cap(
     let cap_height = PEAK_CAP_HEIGHT.min(canvas_height);
 
     match direction {
-        CavaDirection::Normal => {
+        Direction::Normal => {
             cr.rectangle(
                 x,
                 canvas_height - peak_height - cap_height,
@@ -84,10 +84,10 @@ fn draw_peak_cap(
                 cap_height,
             );
         }
-        CavaDirection::Reverse => {
+        Direction::Reverse => {
             cr.rectangle(x, peak_height, bar_width, cap_height);
         }
-        CavaDirection::Mirror => {
+        Direction::Mirror => {
             let peak_half = peak_height / 2.0;
             let center = canvas_height / 2.0;
 
