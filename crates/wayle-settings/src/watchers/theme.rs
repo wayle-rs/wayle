@@ -1,0 +1,41 @@
+//! Watches config properties that affect settings dialog CSS and
+//! triggers a CSS reload when any of them change.
+
+use std::sync::Arc;
+
+use futures::StreamExt;
+use relm4::ComponentSender;
+use wayle_config::ConfigService;
+
+use crate::app::{SettingsApp, SettingsAppCmd};
+
+pub fn spawn(sender: &ComponentSender<SettingsApp>, config_service: &Arc<ConfigService>) {
+    let config = config_service.config();
+
+    watch_property(sender, config.styling.scale.watch());
+    watch_property(sender, config.styling.rounding.watch());
+    watch_property(sender, config.general.font_sans.watch());
+}
+
+fn watch_property<T: Send + 'static>(
+    sender: &ComponentSender<SettingsApp>,
+    stream: impl futures::Stream<Item = T> + Send + 'static,
+) {
+    sender.command(|out, shutdown| async move {
+        let mut stream = Box::pin(stream);
+        let shutdown_fut = shutdown.wait();
+        tokio::pin!(shutdown_fut);
+
+        stream.next().await;
+
+        loop {
+            tokio::select! {
+                () = &mut shutdown_fut => break,
+                item = stream.next() => {
+                    if item.is_none() { break; }
+                    let _ = out.send(SettingsAppCmd::CssReloadNeeded);
+                }
+            }
+        }
+    });
+}
