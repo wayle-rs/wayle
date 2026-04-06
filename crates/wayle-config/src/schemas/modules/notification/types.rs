@@ -1,14 +1,10 @@
 use std::{borrow::Cow, fmt};
 
-use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, Serializer, de};
-use wayle_derive::EnumVariants;
+use wayle_derive::wayle_enum;
 
 /// Screen position for notification popups.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum PopupPosition {
     /// Top-left corner.
     TopLeft,
@@ -30,10 +26,7 @@ pub enum PopupPosition {
 }
 
 /// Order in which popups are stacked on screen.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum StackingOrder {
     /// Newest notifications appear closest to the configured position.
     #[default]
@@ -43,10 +36,7 @@ pub enum StackingOrder {
 }
 
 /// Behavior when the close button is clicked on a popup card.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum PopupCloseBehavior {
     /// Hide the popup; notification stays in history.
     #[default]
@@ -121,10 +111,7 @@ impl de::Visitor<'_> for PopupMonitorVisitor {
 ///
 /// All urgency levels at or above the threshold display the bar.
 /// For example, `Normal` shows bars on both normal and critical popups.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum UrgencyBarThreshold {
     /// Show urgency bars on all popups.
     #[default]
@@ -138,10 +125,7 @@ pub enum UrgencyBarThreshold {
 }
 
 /// Source for resolving notification icons.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum IconSource {
     /// Use per-notification images when provided, otherwise Wayle's mapped icon.
     #[default]

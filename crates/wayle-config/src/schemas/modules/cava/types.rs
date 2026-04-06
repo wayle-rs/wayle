@@ -5,7 +5,7 @@ use std::fmt::{self, Display, Formatter};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
 use tracing::warn;
-use wayle_derive::EnumVariants;
+use wayle_derive::wayle_enum;
 
 const BAR_COUNT_MIN: u16 = 1;
 const BAR_COUNT_MAX: u16 = 256;
@@ -187,10 +187,7 @@ impl<'de> Deserialize<'de> for FrequencyHz {
 }
 
 /// Visualization rendering style.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum CavaStyle {
     /// Rectangular frequency bars.
     #[default]
@@ -202,10 +199,7 @@ pub enum CavaStyle {
 }
 
 /// Bar growth direction relative to the bar's attached screen edge.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum CavaDirection {
     /// Bars grow away from the attached edge.
     #[default]

@@ -1,6 +1,5 @@
-use schemars::{JsonSchema, schema_for};
-use serde::{Deserialize, Serialize};
-use wayle_derive::{EnumVariants, wayle_config};
+use schemars::schema_for;
+use wayle_derive::{wayle_config, wayle_enum};
 
 use crate::{
     ClickAction, ConfigProperty,
@@ -9,10 +8,7 @@ use crate::{
 };
 
 /// Icon source for app volume entries in the dropdown.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum AppIconSource {
     /// Wayle's curated symbolic icons matched by app name.
     #[default]

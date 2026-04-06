@@ -2,7 +2,7 @@ use std::{collections::HashMap, ops::Deref};
 
 use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use wayle_derive::{EnumVariants, wayle_config};
+use wayle_derive::{wayle_config, wayle_enum};
 
 use crate::{
     ConfigProperty,
@@ -11,10 +11,7 @@ use crate::{
 };
 
 /// What identifies a workspace in the UI.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum DisplayMode {
     /// Show workspace number or name.
     #[default]
@@ -53,10 +50,7 @@ pub enum UrgentMode {
 }
 
 /// Visual indicator style for the active workspace.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum ActiveIndicator {
     /// Entire button gets a colored background.
     #[default]

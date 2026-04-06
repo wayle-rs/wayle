@@ -5,7 +5,7 @@ use std::fmt;
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 pub use shadow::ShadowPreset;
-use wayle_derive::EnumVariants;
+use wayle_derive::wayle_enum;
 
 /// Layout configuration for a bar on a specific monitor.
 ///
@@ -390,10 +390,8 @@ const BUILTIN_MODULES: &[&str] = &[
 ];
 
 /// Bar position on screen.
-#[derive(
-    Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Hash)]
+#[wayle_enum]
 pub enum Location {
     /// Top edge of the screen.
     Top,
@@ -423,20 +421,8 @@ impl Location {
 }
 
 /// Border placement for bar buttons.
-#[derive(
-    Debug,
-    Default,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Hash,
-    Serialize,
-    Deserialize,
-    JsonSchema,
-    EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Hash)]
+#[wayle_enum(default)]
 pub enum BorderLocation {
     /// No border.
     #[default]
@@ -468,20 +454,8 @@ impl BorderLocation {
 }
 
 /// Visual style variants for bar buttons.
-#[derive(
-    Debug,
-    Default,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Hash,
-    Serialize,
-    Deserialize,
-    JsonSchema,
-    EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Hash)]
+#[wayle_enum(default)]
 pub enum BarButtonVariant {
     /// Icon + label, minimal background.
     #[default]
@@ -504,20 +478,8 @@ impl BarButtonVariant {
 }
 
 /// Icon position within bar buttons.
-#[derive(
-    Debug,
-    Default,
-    Clone,
-    Copy,
-    PartialEq,
-    Eq,
-    Hash,
-    Serialize,
-    Deserialize,
-    JsonSchema,
-    EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Hash)]
+#[wayle_enum(default)]
 pub enum IconPosition {
     /// Icon before label (left for horizontal, top for vertical bars).
     #[default]

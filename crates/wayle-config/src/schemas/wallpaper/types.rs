@@ -3,12 +3,10 @@ use std::fmt::{self, Display, Formatter};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
 use tracing::warn;
-use wayle_derive::EnumVariants;
+use wayle_derive::wayle_enum;
 
 /// Image scaling mode.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
+#[wayle_enum(default)]
 #[serde(rename_all = "lowercase")]
 pub enum FitMode {
     /// Scale to cover entire display, cropping excess.
@@ -23,9 +21,7 @@ pub enum FitMode {
 }
 
 /// Transition animation type.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
+#[wayle_enum(default)]
 #[serde(rename_all = "lowercase")]
 pub enum TransitionType {
     /// Instant change with no animation.
@@ -60,9 +56,7 @@ pub enum TransitionType {
 }
 
 /// Wallpaper cycling order.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
+#[wayle_enum(default)]
 #[serde(rename_all = "lowercase")]
 pub enum CyclingMode {
     /// Alphabetical order.

@@ -2,9 +2,8 @@ mod icons;
 
 use std::collections::HashMap;
 
-use schemars::{JsonSchema, schema_for};
-use serde::{Deserialize, Serialize};
-use wayle_derive::{EnumVariants, wayle_config};
+use schemars::schema_for;
+use wayle_derive::{wayle_config, wayle_enum};
 
 pub use self::icons::BUILTIN_MAPPINGS;
 use crate::{
@@ -145,10 +144,7 @@ pub struct MediaConfig {
 }
 
 /// Icon display mode for the media module.
-#[derive(
-    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
-)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum MediaIconType {
     /// Static icon from icon-name field.
     Default,
