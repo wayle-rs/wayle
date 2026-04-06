@@ -41,7 +41,9 @@ pub(super) fn hash_pixmaps(pixmaps: &[IconPixmap]) -> u64 {
 }
 
 pub(super) fn load_scaled_texture_from_file(path: &str) -> Option<gdk::Texture> {
-    let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(path, TARGET_ICON_SIZE, TARGET_ICON_SIZE, true).ok()?;
+    let pixbuf =
+        gdk_pixbuf::Pixbuf::from_file_at_scale(path, TARGET_ICON_SIZE, TARGET_ICON_SIZE, true)
+            .ok()?;
     Some(gdk::Texture::for_pixbuf(&pixbuf))
 }
 
@@ -61,7 +63,9 @@ pub(super) fn find_icon_in_theme_path(theme_path: &str, icon_name: &str) -> Opti
 }
 
 pub(super) fn load_icon_from_theme_path(theme_path: &str, icon_name: &str) -> Option<gdk::Texture> {
-    find_icon_in_theme_path(theme_path, icon_name).as_deref().and_then(load_scaled_texture_from_file)
+    find_icon_in_theme_path(theme_path, icon_name)
+        .as_deref()
+        .and_then(load_scaled_texture_from_file)
 }
 
 fn argb_to_rgba(argb: &[u8]) -> Vec<u8> {
