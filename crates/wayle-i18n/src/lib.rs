@@ -1,10 +1,10 @@
-//! Internationalization for Wayle using Mozilla Fluent.
+//! i18n lookups for Wayle, backed by embedded Fluent (FTL) files.
 //!
 //! ```ignore
-//! use wayle_i18n::t;
+//! use wayle_i18n::{t, t_attr};
 //!
-//! let text = t!("app-name");
-//! let greeting = t!("welcome-user", user = "Alice");
+//! let text = t("app-name");
+//! let desc = t_attr("app-name", "description");
 //! ```
 
 use std::sync::OnceLock;
@@ -13,8 +13,6 @@ use i18n_embed::{
     DesktopLanguageRequester, LanguageLoader,
     fluent::{FluentLanguageLoader, fluent_language_loader},
 };
-#[doc(hidden)]
-pub use i18n_embed_fl::fl as __fl;
 use rust_embed::RustEmbed;
 
 #[derive(RustEmbed)]
@@ -23,7 +21,7 @@ struct Localizations;
 
 static LOADER: OnceLock<FluentLanguageLoader> = OnceLock::new();
 
-/// Returns the language loader, auto-detecting system locale on first access.
+/// Lazy-initialized Fluent loader. Detects system locale on first call, falls back to en-US.
 ///
 /// # Panics
 ///
@@ -43,22 +41,23 @@ pub fn loader() -> &'static FluentLanguageLoader {
     })
 }
 
-/// Looks up a translated message by key.
-#[macro_export]
-macro_rules! t {
-    ($message_id:literal) => {{
-        $crate::__fl!($crate::loader(), $message_id)
-    }};
-    ($message_id:literal, $($args:tt)*) => {{
-        $crate::__fl!($crate::loader(), $message_id, $($args)*)
-    }};
+/// Returns the localized string for `key`, or the key itself if no FTL entry exists.
+pub fn t(key: &str) -> String {
+    loader().get(key)
+}
+
+/// Returns a localized attribute value, or the attribute path if no FTL entry exists.
+pub fn t_attr(key: &str, attr: &str) -> String {
+    loader().get_attr(key, attr)
 }
 
 #[cfg(test)]
 mod tests {
+    use super::t;
+
     #[test]
     fn keys_from_both_files_work() {
-        let _ = t!("app-name");
-        let _ = t!("settings-bar-scale");
+        let _ = t("app-name");
+        let _ = t("settings-bar-scale");
     }
 }
