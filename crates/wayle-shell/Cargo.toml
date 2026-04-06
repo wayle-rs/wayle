@@ -13,6 +13,7 @@ build = "build.rs"
 gtk4-layer-shell.workspace = true
 gtk4.workspace = true
 gdk4.workspace = true
+gdk-pixbuf.workspace = true
 bytesize.workspace = true
 chrono.workspace = true
 console.workspace = true

@@ -1,3 +1,5 @@
+use std::path::Path;
+
 #[allow(deprecated)]
 use gtk4::prelude::StyleContextExt;
 use gtk4::{gdk, gio, glib::idle_add_local_once};
@@ -12,8 +14,11 @@ use wayle_systray::{
 };
 
 use super::{
-    SystrayItem, SystrayItemMsg,
-    helpers::{create_texture_from_pixmap, load_icon_from_theme_path, select_best_pixmap},
+    IconSignature, SystrayItem, SystrayItemMsg,
+    helpers::{
+        create_texture_from_pixmap, find_icon_in_theme_path, hash_pixmaps,
+        load_icon_from_theme_path, load_scaled_texture_from_file, select_best_pixmap,
+    },
 };
 use crate::shell::bar::modules::systray::helpers::find_override;
 
@@ -165,13 +170,44 @@ impl SystrayItem {
             .and_then(|entry| entry.icon.clone())
             .or_else(|| self.item.icon_name.get());
 
-        self.apply_icon(image, icon_name.as_deref());
+        let icon_signature = self.icon_signature(icon_name.as_deref());
+
+        if self.icon_signature.as_ref() != Some(&icon_signature) {
+            self.apply_icon(image, icon_name.as_deref());
+            self.icon_signature = Some(icon_signature);
+        }
 
         if let Some(color) = override_match.and_then(|entry| entry.color.clone()) {
             self.apply_icon_color(image, &color.to_css());
         } else {
             self.clear_icon_color(image);
         }
+    }
+
+    fn icon_signature(&self, icon_name: Option<&str>) -> IconSignature {
+        if let Some(name) = icon_name {
+            let theme_path = self.item.icon_theme_path.get();
+
+            if let Some(file_path) = theme_path
+                .as_deref()
+                .and_then(|path| find_icon_in_theme_path(path, name))
+            {
+                return IconSignature::File(file_path);
+            }
+
+            if Path::new(name).is_file() {
+                return IconSignature::File(name.to_owned());
+            }
+
+            return IconSignature::Named(name.to_owned());
+        }
+
+        let pixmaps = self.item.icon_pixmap.get();
+        if pixmaps.is_empty() {
+            return IconSignature::Fallback;
+        }
+
+        IconSignature::Pixmap(hash_pixmaps(&pixmaps))
     }
 
     fn apply_icon_color(&mut self, image: &gtk::Image, css_color: &str) {
@@ -182,20 +218,29 @@ impl SystrayItem {
         let css = format!("image {{ color: {css_color}; }}");
         provider.load_from_string(&css);
 
-        #[allow(deprecated)]
-        image
-            .style_context()
-            .add_provider(provider, gtk::STYLE_PROVIDER_PRIORITY_USER + 1);
+        if !self.icon_color_provider_attached {
+            #[allow(deprecated)]
+            image
+                .style_context()
+                .add_provider(provider, gtk::STYLE_PROVIDER_PRIORITY_USER + 1);
+            self.icon_color_provider_attached = true;
+        }
     }
 
     fn clear_icon_color(&mut self, image: &gtk::Image) {
-        if let Some(provider) = self.icon_color_provider.take() {
+        if self.icon_color_provider_attached
+            && let Some(provider) = self.icon_color_provider.as_ref()
+        {
             #[allow(deprecated)]
-            image.style_context().remove_provider(&provider);
+            image.style_context().remove_provider(provider);
+            self.icon_color_provider_attached = false;
         }
     }
 
     fn apply_icon(&self, image: &gtk::Image, icon_name: Option<&str>) {
+        image.set_icon_name(None);
+        image.set_paintable(None::<&gdk::Texture>);
+
         if let Some(name) = icon_name {
             let theme_path = self.item.icon_theme_path.get();
             if let Some(texture) = theme_path
@@ -206,7 +251,7 @@ impl SystrayItem {
                 return;
             }
 
-            if let Ok(texture) = gdk::Texture::from_filename(name) {
+            if let Some(texture) = load_scaled_texture_from_file(name) {
                 image.set_paintable(Some(&texture));
                 return;
             }
