@@ -19,13 +19,19 @@ const MAX: f32 = 3.0;
 pub struct ScaleFactor(#[schemars(range(min = MIN, max = MAX))] f32);
 
 impl ScaleFactor {
+    /// `0.25`
+    pub const MIN: f32 = MIN;
+
+    /// `3.0`
+    pub const MAX: f32 = MAX;
+
     /// Creates a scale factor, clamping to 0.25-3.0.
     #[must_use]
     pub fn new(value: f32) -> Self {
-        Self(value.clamp(MIN, MAX))
+        Self(value.clamp(Self::MIN, Self::MAX))
     }
 
-    /// Returns the inner f32 value.
+    /// The raw `f32`.
     #[must_use]
     pub fn value(self) -> f32 {
         self.0

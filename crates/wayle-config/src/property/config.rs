@@ -1,4 +1,10 @@
-use std::{borrow::Cow, fmt::Debug, sync::RwLock};
+//! The core config property type backing every field in the config schema.
+
+use std::{
+    borrow::Cow,
+    fmt::Debug,
+    sync::{Arc, RwLock},
+};
 
 use futures::{Stream, StreamExt};
 use schemars::{JsonSchema, Schema, SchemaGenerator};
@@ -42,8 +48,8 @@ pub enum ValueSource {
 /// The effective value follows precedence: runtime > config > default.
 pub struct ConfigProperty<T: Clone + Send + Sync + PartialEq + 'static> {
     default: T,
-    config: RwLock<Option<T>>,
-    runtime: RwLock<Option<T>>,
+    config: Arc<RwLock<Option<T>>>,
+    runtime: Arc<RwLock<Option<T>>>,
     effective: Property<T>,
     i18n_key: Option<&'static str>,
 }
@@ -54,8 +60,8 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
         let effective = Property::new(default.clone());
         Self {
             default,
-            config: RwLock::new(None),
-            runtime: RwLock::new(None),
+            config: Arc::new(RwLock::new(None)),
+            runtime: Arc::new(RwLock::new(None)),
             effective,
             i18n_key: None,
         }
@@ -67,8 +73,8 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
         let effective = Property::new(default.clone());
         Self {
             default,
-            config: RwLock::new(None),
-            runtime: RwLock::new(None),
+            config: Arc::new(RwLock::new(None)),
+            runtime: Arc::new(RwLock::new(None)),
             effective,
             i18n_key: Some(key),
         }
@@ -176,13 +182,10 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
 
 impl<T: Clone + Send + Sync + PartialEq + 'static> Clone for ConfigProperty<T> {
     fn clone(&self) -> Self {
-        let config_value = self.config.read().ok().and_then(|guard| guard.clone());
-        let runtime_value = self.runtime.read().ok().and_then(|guard| guard.clone());
-
         Self {
             default: self.default.clone(),
-            config: RwLock::new(config_value),
-            runtime: RwLock::new(runtime_value),
+            config: Arc::clone(&self.config),
+            runtime: Arc::clone(&self.runtime),
             effective: self.effective.clone(),
             i18n_key: self.i18n_key,
         }

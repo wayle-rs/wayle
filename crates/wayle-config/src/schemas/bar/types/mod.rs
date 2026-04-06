@@ -423,7 +423,19 @@ impl Location {
 }
 
 /// Border placement for bar buttons.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum BorderLocation {
     /// No border.
@@ -456,7 +468,19 @@ impl BorderLocation {
 }
 
 /// Visual style variants for bar buttons.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum BarButtonVariant {
     /// Icon + label, minimal background.
@@ -480,7 +504,19 @@ impl BarButtonVariant {
 }
 
 /// Icon position within bar buttons.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Default,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum IconPosition {
     /// Icon before label (left for horizontal, top for vertical bars).

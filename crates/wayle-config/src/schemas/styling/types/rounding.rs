@@ -4,6 +4,7 @@
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use wayle_derive::EnumVariants;
 
 /// CSS variable references for semantic rounding tokens.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -15,7 +16,9 @@ pub struct RoundingCssValues {
 }
 
 /// Global rounding preference for UI components.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema, EnumVariants,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum RoundingLevel {
     /// Sharp corners (no rounding).

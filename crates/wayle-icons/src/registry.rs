@@ -1,7 +1,6 @@
-//! GTK IconTheme integration for Wayle icons.
+//! Registers the Wayle icon directory with GTK's IconTheme so icons are discoverable at runtime.
 //!
-//! The registry ensures GTK can discover icons in the Wayle icon directory.
-//! It also watches the icon directory for changes and automatically refreshes
+//! Also watches the icon directory for changes and automatically refreshes
 //! GTK's icon cache when icons are added or removed.
 
 use std::{fs, path::PathBuf, thread};
@@ -252,7 +251,7 @@ impl IconRegistry {
         Ok(())
     }
 
-    fn system_icon_paths() -> Vec<PathBuf> {
+    pub(crate) fn system_icon_paths() -> Vec<PathBuf> {
         let mut paths = Vec::new();
 
         let xdg_dirs = std::env::var("XDG_DATA_DIRS").unwrap_or_default();
