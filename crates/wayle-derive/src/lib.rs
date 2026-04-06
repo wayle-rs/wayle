@@ -4,6 +4,7 @@ mod derives;
 mod enum_variants;
 mod field_utils;
 mod wayle_config;
+mod wayle_enum;
 
 use proc_macro::TokenStream;
 use syn::{Data, DeriveInput, Fields, FieldsNamed};
@@ -72,6 +73,29 @@ fn validate_named_struct(input: &DeriveInput) -> Result<&FieldsNamed, TokenStrea
 #[proc_macro_attribute]
 pub fn wayle_config(attr: TokenStream, item: TokenStream) -> TokenStream {
     wayle_config::wayle_config(attr, item)
+}
+
+/// Injects standard derives and `#[serde(rename_all = "kebab-case")]` for
+/// config enums. Pass `default` to also derive `Default`.
+///
+/// ```ignore
+/// #[wayle_enum]
+/// pub enum BarLocation {
+///     Top,
+///     Bottom,
+/// }
+///
+/// #[wayle_enum(default)]
+/// pub enum Shadow {
+///     #[default]
+///     None,
+///     Subtle,
+///     Strong,
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn wayle_enum(attr: TokenStream, item: TokenStream) -> TokenStream {
+    wayle_enum::wayle_enum(attr, item)
 }
 
 /// Lists all variants of a config enum for the settings GUI dropdown.
