@@ -3,6 +3,7 @@
 
 use std::sync::Arc;
 
+use futures::StreamExt;
 use gtk4::{glib, prelude::*};
 use relm4::prelude::*;
 use wayle_config::ConfigProperty;
@@ -12,6 +13,8 @@ use super::ControlOutput;
 
 pub(crate) struct SliderControl<T: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<T>,
+    slider: DebouncedSlider,
+    to_slider: fn(&T) -> f64,
 }
 
 pub(crate) struct SliderInit<T: Clone + Send + Sync + PartialEq + 'static> {
@@ -24,7 +27,9 @@ pub(crate) struct SliderInit<T: Clone + Send + Sync + PartialEq + 'static> {
 }
 
 #[derive(Debug)]
-pub(crate) enum SliderMsg {}
+pub(crate) enum SliderMsg {
+    Refresh,
+}
 
 impl<T> SimpleComponent for SliderControl<T>
 where
@@ -68,14 +73,41 @@ where
             }),
         );
 
+        spawn_watcher(&init.property, &sender);
+
         root.append(&slider);
 
         let model = Self {
             property: init.property,
+            slider,
+            to_slider: init.to_slider,
         };
 
         ComponentParts { model, widgets: () }
     }
 
-    fn update(&mut self, _msg: Self::Input, _sender: ComponentSender<Self>) {}
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
+        match msg {
+            SliderMsg::Refresh => {
+                let value = (self.to_slider)(&self.property.get());
+                self.slider.set_value(value);
+            }
+        }
+    }
+}
+
+fn spawn_watcher<T: Clone + Send + Sync + PartialEq + 'static>(
+    property: &ConfigProperty<T>,
+    sender: &ComponentSender<SliderControl<T>>,
+) {
+    let mut stream = property.watch();
+    let input_sender = sender.input_sender().clone();
+
+    gtk4::glib::spawn_future_local(async move {
+        stream.next().await;
+
+        while stream.next().await.is_some() {
+            let _ = input_sender.send(SliderMsg::Refresh);
+        }
+    });
 }

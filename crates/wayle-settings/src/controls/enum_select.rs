@@ -1,5 +1,6 @@
 //! Dropdown control for config enums that derive `EnumVariants`.
 
+use futures::StreamExt;
 use gtk4::prelude::*;
 use relm4::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -8,14 +9,17 @@ use wayle_i18n::t;
 
 use super::ControlOutput;
 
-pub struct EnumSelectControl<E: Clone + Send + Sync + PartialEq + 'static> {
+pub(crate) struct EnumSelectControl<E: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<E>,
     selected: u32,
+    dropdown: gtk4::DropDown,
+    handler_id: gtk4::glib::SignalHandlerId,
 }
 
 #[derive(Debug)]
-pub enum EnumSelectMsg {
+pub(crate) enum EnumSelectMsg {
     Selected(u32),
+    Refresh,
 }
 
 impl<E> SimpleComponent for EnumSelectControl<E>
@@ -79,15 +83,19 @@ where
 
         let input_sender = sender.input_sender().clone();
 
-        dropdown.connect_selected_notify(move |dropdown| {
+        let handler_id = dropdown.connect_selected_notify(move |dropdown| {
             let _ = input_sender.send(EnumSelectMsg::Selected(dropdown.selected()));
         });
+
+        spawn_watcher(&property, &sender);
 
         root.append(&dropdown);
 
         let model = Self {
             property,
             selected: current_index,
+            dropdown,
+            handler_id,
         };
 
         ComponentParts { model, widgets: () }
@@ -106,8 +114,40 @@ where
 
                 let _ = sender.output(ControlOutput::ValueChanged);
             }
+
+            EnumSelectMsg::Refresh => {
+                let index = variant_index_of(&self.property.get(), E::variants());
+                self.selected = index;
+
+                self.dropdown.block_signal(&self.handler_id);
+                self.dropdown.set_selected(index);
+                self.dropdown.unblock_signal(&self.handler_id);
+            }
         }
     }
+}
+
+fn spawn_watcher<E>(property: &ConfigProperty<E>, sender: &ComponentSender<EnumSelectControl<E>>)
+where
+    E: EnumVariants
+        + Clone
+        + Send
+        + Sync
+        + PartialEq
+        + Serialize
+        + for<'de> Deserialize<'de>
+        + 'static,
+{
+    let mut stream = property.watch();
+    let input_sender = sender.input_sender().clone();
+
+    gtk4::glib::spawn_future_local(async move {
+        stream.next().await;
+
+        while stream.next().await.is_some() {
+            let _ = input_sender.send(EnumSelectMsg::Refresh);
+        }
+    });
 }
 
 fn variant_index_of<E: Serialize>(current: &E, variants: &[wayle_config::EnumVariant]) -> u32 {
