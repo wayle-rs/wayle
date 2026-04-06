@@ -22,14 +22,19 @@ pub fn wayle_enum(attr: TokenStream, item: TokenStream) -> TokenStream {
                 .is_ok_and(|list| list.tokens.to_string().contains("rename_all"))
     });
 
-    let (derive_helper_attrs, other_attrs): (Vec<_>, Vec<_>) =
-        parsed_enum.attrs.drain(..).partition(|attr| {
-            attr.path().is_ident("serde") || attr.path().is_ident("wayle")
-        });
+    let (derive_helper_attrs, other_attrs): (Vec<_>, Vec<_>) = parsed_enum
+        .attrs
+        .drain(..)
+        .partition(|attr| attr.path().is_ident("serde") || attr.path().is_ident("wayle"));
 
     parsed_enum.attrs = other_attrs;
 
-    let output = generate(parsed_enum, has_default, has_rename_all, derive_helper_attrs);
+    let output = generate(
+        parsed_enum,
+        has_default,
+        has_rename_all,
+        derive_helper_attrs,
+    );
     output.into()
 }
 
