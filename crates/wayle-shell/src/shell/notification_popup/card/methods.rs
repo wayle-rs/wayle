@@ -6,8 +6,12 @@ use wayle_notification::core::types::Action;
 use super::NotificationPopupCard;
 use crate::{
     i18n::t,
-    shell::notification_popup::helpers::{RelativeTime, ResolvedIcon, urgency_bar_visible},
+    shell::notification_popup::helpers::{
+        RelativeTime, ResolvedIcon, load_scaled_file_icon, urgency_bar_visible,
+    },
 };
+
+const POPUP_ICON_TEXTURE_SIZE_PX: i32 = 64;
 
 impl NotificationPopupCard {
     pub(super) fn apply_css_classes(
@@ -35,8 +39,12 @@ impl NotificationPopupCard {
             }
 
             ResolvedIcon::File(path) => {
-                icon.set_from_file(Some(path));
-                icon_container.add_css_class("file-icon");
+                if let Some(texture) = load_scaled_file_icon(path, POPUP_ICON_TEXTURE_SIZE_PX) {
+                    icon.set_paintable(Some(&texture));
+                    icon_container.add_css_class("file-icon");
+                } else {
+                    icon.set_icon_name(Some("ld-bell-symbolic"));
+                }
             }
         }
     }
