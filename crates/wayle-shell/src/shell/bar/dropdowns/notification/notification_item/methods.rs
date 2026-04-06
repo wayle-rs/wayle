@@ -22,8 +22,7 @@ impl NotificationItem {
             }
 
             ResolvedIcon::File(path) => {
-                if let Some(texture) = load_scaled_file_icon(path, DROPDOWN_ICON_TEXTURE_SIZE_PX)
-                {
+                if let Some(texture) = load_scaled_file_icon(path, DROPDOWN_ICON_TEXTURE_SIZE_PX) {
                     icon.set_paintable(Some(&texture));
                     icon_container.add_css_class("file-icon");
                 } else {
