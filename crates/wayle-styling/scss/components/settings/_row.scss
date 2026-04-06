@@ -1,0 +1,70 @@
+.setting-row {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.setting-row:last-child {
+    border-bottom: none;
+}
+
+.setting-label {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    color: var(--fg-default);
+}
+
+.setting-description {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--fg-subtle);
+}
+
+.setting-row .badge-subtle {
+    margin-left: var(--space-sm);
+    font-size: var(--text-xs);
+}
+
+.setting-control {
+    margin-left: var(--space-sm);
+}
+
+.setting-reset {
+    margin-left: var(--space-sm);
+    margin-right: var(--space-sm);
+    padding: var(--space-xs);
+    border-radius: var(--rounding-element);
+    color: var(--fg-subtle);
+    -gtk-icon-size: var(--icon-sm);
+}
+
+.setting-reset:hover {
+    color: var(--fg-default);
+    background-color: var(--bg-hover);
+}
+
+button.reset-menu-item {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--rounding-element);
+    color: var(--fg-muted);
+}
+
+button.reset-menu-item:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-default);
+}
+
+image.reset-menu-icon {
+    -gtk-icon-size: var(--icon-sm);
+    color: var(--fg-subtle);
+    margin-right: var(--space-sm);
+}
+
+.reset-menu-label {
+    font-size: var(--text-sm);
+}
+
+.reset-menu-value {
+    font-size: var(--text-sm);
+    color: var(--fg-subtle);
+    margin-left: var(--space-lg);
+}

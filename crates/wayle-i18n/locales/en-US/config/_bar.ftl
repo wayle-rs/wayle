@@ -149,4 +149,19 @@ enum-shadow-preset-none = None
 enum-shadow-preset-drop = Drop
 enum-shadow-preset-floating = Floating
 
-## Location variants
+## BorderLocation variants
+enum-border-location-none = None
+enum-border-location-top = Top
+enum-border-location-bottom = Bottom
+enum-border-location-left = Left
+enum-border-location-right = Right
+enum-border-location-all = All
+
+## BarButtonVariant variants
+enum-bar-button-variant-basic = Basic
+enum-bar-button-variant-block-prefix = Block Prefix
+enum-bar-button-variant-icon-square = Icon Square
+
+## IconPosition variants
+enum-icon-position-start = Start
+enum-icon-position-end = End

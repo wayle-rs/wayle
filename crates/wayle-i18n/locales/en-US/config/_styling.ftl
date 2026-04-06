@@ -135,3 +135,16 @@ enum-wallust-palette-softlightcomp = Softlightcomp
 enum-wallust-palette-softlightcomp16 = Softlightcomp16
 enum-wallust-palette-ansidark = Ansidark
 enum-wallust-palette-ansidark16 = Ansidark16
+
+## FontWeightClass variants
+enum-font-weight-class-normal = Normal
+enum-font-weight-class-medium = Medium
+enum-font-weight-class-semibold = Semibold
+enum-font-weight-class-bold = Bold
+
+## RoundingLevel variants
+enum-rounding-level-none = None
+enum-rounding-level-sm = Small
+enum-rounding-level-md = Medium
+enum-rounding-level-lg = Large
+enum-rounding-level-full = Full

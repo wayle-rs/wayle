@@ -63,6 +63,6 @@ settings-modules-volume-icon-muted = Muted Icon
     .description = Icon shown when volume is muted
 
 ## AppIconSource variants
-enum-app-icon-source-automatic = Automatic
 enum-app-icon-source-mapped = Mapped
+enum-app-icon-source-native = Native
 

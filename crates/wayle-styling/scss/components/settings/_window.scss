@@ -1,0 +1,30 @@
+window.settings-window {
+    background-color: var(--bg-surface);
+    color: var(--fg-default);
+    font-family: var(--font-sans);
+    font-size: var(--text-base);
+}
+
+stackswitcher.stack-switcher {
+    padding: var(--space-xs) var(--space-md);
+    border-bottom: 1px solid var(--border-default);
+    background-color: var(--bg-base);
+}
+
+stackswitcher.stack-switcher button {
+    padding: var(--space-xs) var(--space-md);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--fg-muted);
+}
+
+stackswitcher.stack-switcher button:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-default);
+}
+
+stackswitcher.stack-switcher button:checked {
+    background-color: var(--accent-subtle);
+    color: var(--accent);
+}

@@ -1,0 +1,99 @@
+.sidebar {
+    background-color: var(--bg-base);
+    border-right: 1px solid var(--border-default);
+    min-width: calc(15rem * var(--global-scale));
+}
+
+.sidebar-header {
+    padding: var(--space-lg) var(--space-md) var(--space-md);
+    border-bottom: 1px solid var(--border-default);
+}
+
+image.sidebar-icon {
+    -gtk-icon-size: var(--icon-md);
+    color: var(--fg-default);
+    margin-right: var(--space-sm);
+}
+
+.sidebar-title {
+    font-size: var(--text-lg);
+    font-weight: var(--weight-bold);
+    color: var(--fg-default);
+}
+
+.sidebar-nav {
+    padding: var(--space-sm);
+}
+
+.sidebar-section {
+    margin-bottom: var(--space-sm);
+}
+
+.sidebar-section-title {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    color: var(--fg-subtle);
+    letter-spacing: var(--tracking-wide);
+    padding: var(--space-sm) var(--space-sm) var(--space-xs);
+}
+
+button.sidebar-item {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+}
+
+button.sidebar-item:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-default);
+}
+
+button.sidebar-item.active {
+    background-color: var(--accent-subtle);
+    color: var(--accent);
+    font-weight: var(--weight-medium);
+}
+
+image.sidebar-item-icon {
+    -gtk-icon-size: var(--icon-sm);
+    margin-right: var(--space-sm);
+}
+
+image.sidebar-item-chevron {
+    -gtk-icon-size: var(--icon-xs);
+    color: var(--fg-subtle);
+}
+
+.sidebar-children {
+    padding-left: var(--space-lg);
+}
+
+button.sidebar-child {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-xs);
+    color: var(--fg-muted);
+}
+
+button.sidebar-child:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-default);
+}
+
+button.sidebar-child.active {
+    color: var(--accent);
+    font-weight: var(--weight-medium);
+}
+
+.sidebar-child-dot {
+    min-width: var(--space-xs);
+    min-height: var(--space-xs);
+    border-radius: var(--radius-full);
+    background-color: var(--fg-subtle);
+    margin-right: var(--space-sm);
+}
+
+button.sidebar-child.active .sidebar-child-dot {
+    background-color: var(--accent);
+}

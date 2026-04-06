@@ -1,0 +1,105 @@
+.setting-control dropdown {
+    min-width: calc(8rem * var(--global-scale));
+}
+
+.setting-control spinbutton {
+    min-width: calc(8rem * var(--global-scale));
+}
+
+dropdown button {
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-default);
+}
+
+dropdown button:hover {
+    border-color: var(--accent);
+}
+
+dropdown button arrow {
+    -gtk-icon-source: -gtk-icontheme("ld-chevron-down-symbolic");
+    -gtk-icon-size: var(--icon-xs);
+    color: var(--fg-subtle);
+    margin-left: var(--space-xs);
+}
+
+dropdown popover {
+    margin-top: var(--space-xs);
+}
+
+dropdown popover contents {
+    padding: var(--space-xs);
+}
+
+dropdown listview row {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+}
+
+dropdown listview row:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-default);
+}
+
+dropdown listview row:selected {
+    background-color: var(--accent-subtle);
+    color: var(--accent);
+}
+
+dropdown listview row image {
+    -gtk-icon-size: var(--icon-xs);
+    margin-left: var(--space-md);
+}
+
+dropdown listview row label {
+    margin-right: var(--space-md);
+}
+
+spinbutton {
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-default);
+}
+
+spinbutton text {
+    padding: var(--space-xs) var(--space-sm);
+}
+
+spinbutton button {
+    padding: 0 var(--space-xs);
+    color: var(--fg-muted);
+}
+
+spinbutton button:hover {
+    color: var(--fg-default);
+    background-color: var(--bg-hover);
+}
+
+entry {
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-default);
+}
+
+entry:focus-within {
+    border-color: var(--accent);
+}
+
+button.font {
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-default);
+}
