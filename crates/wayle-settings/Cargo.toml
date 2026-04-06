@@ -1,0 +1,31 @@
+[package]
+name = "wayle-settings"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+repository.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "wayle-settings"
+path = "src/main.rs"
+
+[dependencies]
+gtk4.workspace = true
+notify.workspace = true
+relm4.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+futures.workspace = true
+zbus.workspace = true
+wayle-config = { path = "../wayle-config" }
+wayle-icons = { path = "../wayle-icons" }
+wayle-i18n = { path = "../wayle-i18n" }
+wayle-styling = { path = "../wayle-styling" }
+wayle-wallpaper.workspace = true
+wayle-widgets = { path = "../wayle-widgets" }
+
+[lints]
+workspace = true

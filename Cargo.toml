@@ -9,6 +9,7 @@ members = [
 	"crates/wayle-ipc",
 	"crates/wayle-shell",
 	"crates/wayle-styling",
+	"crates/wayle-settings",
 	"crates/wayle-widgets",
 	"wayle",
 ]
@@ -106,7 +107,7 @@ wayle-power-profiles = "0.1.0"
 wayle-sysinfo = "0.1.0"
 wayle-systray = "0.1.0"
 wayle-traits = "0.1.0"
-wayle-wallpaper = "0.1.0"
+wayle-wallpaper = { path = "../wayle-services/wayle-wallpaper" }
 wayle-weather = "0.1.0"
 
 wayle-config = { path = "crates/wayle-config" }
