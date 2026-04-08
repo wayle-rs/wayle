@@ -10,8 +10,8 @@ use super::{
     watcher::FileWatcher,
 };
 use crate::{
-    ApplyConfigLayer, ApplyRuntimeLayer, ClearRuntimeByPath, Config, ExtractRuntimeValues,
-    infrastructure::themes::utils::load_themes,
+    ApplyConfigLayer, ApplyRuntimeLayer, ClearRuntimeByPath, CommitConfigReload, Config,
+    ExtractRuntimeValues, infrastructure::themes::utils::load_themes,
 };
 
 /// Reactive configuration service.
@@ -68,6 +68,8 @@ impl ConfigService {
             }
             Err(e) => warn!("runtime.toml failed:\n{e}"),
         }
+
+        config.commit_config_reload();
 
         let service = Arc::new(Self {
             config: Arc::new(config),

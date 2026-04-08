@@ -1,13 +1,10 @@
 //! Font picker using GTK's FontDialogButton. Only the family name is saved.
 
-use std::sync::Arc;
-
-use futures::StreamExt;
 use gtk4::{pango::FontDescription, prelude::*};
 use relm4::prelude::*;
 use wayle_config::ConfigProperty;
 
-use super::ControlOutput;
+use super::{ControlOutput, spawn_property_watcher};
 
 pub(crate) struct FontControl {
     property: ConfigProperty<String>,
@@ -45,7 +42,7 @@ impl SimpleComponent for FontControl {
         let current_font = FontDescription::from_string(&property.get());
         button.set_font_desc(&current_font);
 
-        let prop = Arc::new(property.clone());
+        let prop = property.clone();
         let output_sender = sender.output_sender().clone();
 
         let handler_id = button.connect_font_desc_notify(move |btn: &gtk4::FontDialogButton| {
@@ -60,7 +57,10 @@ impl SimpleComponent for FontControl {
             let _ = output_sender.send(ControlOutput::ValueChanged);
         });
 
-        spawn_watcher(&property, &sender);
+        let input_sender = sender.input_sender().clone();
+        spawn_property_watcher(&property, move || {
+            let _ = input_sender.send(FontMsg::Refresh);
+        });
 
         root.append(&button);
 
@@ -84,17 +84,4 @@ impl SimpleComponent for FontControl {
             }
         }
     }
-}
-
-fn spawn_watcher(property: &ConfigProperty<String>, sender: &ComponentSender<FontControl>) {
-    let mut stream = property.watch();
-    let input_sender = sender.input_sender().clone();
-
-    gtk4::glib::spawn_future_local(async move {
-        stream.next().await;
-
-        while stream.next().await.is_some() {
-            let _ = input_sender.send(FontMsg::Refresh);
-        }
-    });
 }

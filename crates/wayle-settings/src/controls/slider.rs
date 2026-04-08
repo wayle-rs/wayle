@@ -3,13 +3,12 @@
 
 use std::sync::Arc;
 
-use futures::StreamExt;
 use gtk4::{glib, prelude::*};
 use relm4::prelude::*;
 use wayle_config::ConfigProperty;
 use wayle_widgets::primitives::slider::DebouncedSlider;
 
-use super::ControlOutput;
+use super::{ControlOutput, spawn_property_watcher};
 
 pub(crate) struct SliderControl<T: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<T>,
@@ -73,7 +72,10 @@ where
             }),
         );
 
-        spawn_watcher(&init.property, &sender);
+        let input_sender = sender.input_sender().clone();
+        spawn_property_watcher(&init.property, move || {
+            let _ = input_sender.send(SliderMsg::Refresh);
+        });
 
         root.append(&slider);
 
@@ -94,20 +96,4 @@ where
             }
         }
     }
-}
-
-fn spawn_watcher<T: Clone + Send + Sync + PartialEq + 'static>(
-    property: &ConfigProperty<T>,
-    sender: &ComponentSender<SliderControl<T>>,
-) {
-    let mut stream = property.watch();
-    let input_sender = sender.input_sender().clone();
-
-    gtk4::glib::spawn_future_local(async move {
-        stream.next().await;
-
-        while stream.next().await.is_some() {
-            let _ = input_sender.send(SliderMsg::Refresh);
-        }
-    });
 }

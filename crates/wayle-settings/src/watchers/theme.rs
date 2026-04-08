@@ -6,7 +6,7 @@ use std::sync::Arc;
 use futures::StreamExt;
 use relm4::ComponentSender;
 use tokio::sync::mpsc;
-use wayle_config::{ConfigService, SubscribeChanges};
+use wayle_config::{ConfigService, SubscribeChanges, schemas::styling::ThemeProvider};
 
 use crate::app::{SettingsApp, SettingsAppCmd};
 
@@ -15,8 +15,16 @@ pub fn spawn(sender: &ComponentSender<SettingsApp>, config_service: &Arc<ConfigS
 
     watch_property(sender, config.styling.scale.watch());
     watch_property(sender, config.styling.rounding.watch());
-    watch_property(sender, config.styling.theme_provider.watch());
     watch_property(sender, config.general.font_sans.watch());
+
+    watch_property(
+        sender,
+        config
+            .styling
+            .theme_provider
+            .watch()
+            .filter(|provider| std::future::ready(*provider == ThemeProvider::Wayle)),
+    );
 
     watch_palette(sender, config_service);
 }

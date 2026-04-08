@@ -4,6 +4,7 @@
 use futures::StreamExt;
 use relm4::ComponentSender;
 use tracing::{info, warn};
+use wayle_wallpaper::WallpaperProxy;
 
 use crate::app::{SettingsApp, SettingsAppCmd};
 
@@ -14,7 +15,7 @@ pub fn spawn(sender: &ComponentSender<SettingsApp>) {
             return;
         };
 
-        let proxy = match wayle_wallpaper::WallpaperProxy::new(&connection).await {
+        let proxy = match WallpaperProxy::new(&connection).await {
             Ok(proxy) => proxy,
             Err(err) => {
                 warn!(error = %err, "wallpaper proxy unavailable, palette watcher disabled");

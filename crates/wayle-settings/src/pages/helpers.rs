@@ -113,7 +113,7 @@ pub(crate) fn number_u8(
             step: 1.0,
             digits: 0,
             to_f64: |value| f64::from(*value),
-            from_f64: |value| value.round() as u8,
+            from_f64: |value| value.round().clamp(f64::from(u8::MIN), f64::from(u8::MAX)) as u8,
         })
         .detach();
 
@@ -137,7 +137,7 @@ pub(crate) fn percentage(
             range_min: Percentage::MIN as f64,
             range_max: Percentage::MAX as f64,
             to_slider: |pct| pct.value() as f64,
-            from_slider: |value| Percentage::new(value.round() as u8),
+            from_slider: |value| Percentage::new(value.round().clamp(0.0, 100.0) as u8),
             format_label: |value| format!("{value:.0}%"),
         })
         .detach();

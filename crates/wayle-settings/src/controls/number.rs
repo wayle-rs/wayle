@@ -2,12 +2,11 @@
 
 use std::sync::Arc;
 
-use futures::StreamExt;
 use gtk4::prelude::*;
 use relm4::prelude::*;
 use wayle_config::ConfigProperty;
 
-use super::ControlOutput;
+use super::{ControlOutput, spawn_property_watcher};
 
 pub(crate) struct NumberControl<T: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<T>,
@@ -73,7 +72,10 @@ where
             let _ = output_sender.send(ControlOutput::ValueChanged);
         });
 
-        spawn_watcher(&init.property, &sender);
+        let input_sender = sender.input_sender().clone();
+        spawn_property_watcher(&init.property, move || {
+            let _ = input_sender.send(NumberMsg::Refresh);
+        });
 
         root.append(&spin);
 
@@ -98,20 +100,4 @@ where
             }
         }
     }
-}
-
-fn spawn_watcher<T: Clone + Send + Sync + PartialEq + 'static>(
-    property: &ConfigProperty<T>,
-    sender: &ComponentSender<NumberControl<T>>,
-) {
-    let mut stream = property.watch();
-    let input_sender = sender.input_sender().clone();
-
-    gtk4::glib::spawn_future_local(async move {
-        stream.next().await;
-
-        while stream.next().await.is_some() {
-            let _ = input_sender.send(NumberMsg::Refresh);
-        }
-    });
 }

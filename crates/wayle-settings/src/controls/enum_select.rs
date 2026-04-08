@@ -1,13 +1,12 @@
 //! Dropdown control for config enums that derive `EnumVariants`.
 
-use futures::StreamExt;
 use gtk4::prelude::*;
 use relm4::prelude::*;
 use serde::{Deserialize, Serialize};
-use wayle_config::{ConfigProperty, EnumVariants};
+use wayle_config::{ConfigProperty, EnumVariant, EnumVariants};
 use wayle_i18n::t;
 
-use super::ControlOutput;
+use super::{ControlOutput, spawn_property_watcher};
 
 pub(crate) struct EnumSelectControl<E: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<E>,
@@ -87,7 +86,10 @@ where
             let _ = input_sender.send(EnumSelectMsg::Selected(dropdown.selected()));
         });
 
-        spawn_watcher(&property, &sender);
+        let watcher_sender = sender.input_sender().clone();
+        spawn_property_watcher(&property, move || {
+            let _ = watcher_sender.send(EnumSelectMsg::Refresh);
+        });
 
         root.append(&dropdown);
 
@@ -127,30 +129,7 @@ where
     }
 }
 
-fn spawn_watcher<E>(property: &ConfigProperty<E>, sender: &ComponentSender<EnumSelectControl<E>>)
-where
-    E: EnumVariants
-        + Clone
-        + Send
-        + Sync
-        + PartialEq
-        + Serialize
-        + for<'de> Deserialize<'de>
-        + 'static,
-{
-    let mut stream = property.watch();
-    let input_sender = sender.input_sender().clone();
-
-    gtk4::glib::spawn_future_local(async move {
-        stream.next().await;
-
-        while stream.next().await.is_some() {
-            let _ = input_sender.send(EnumSelectMsg::Refresh);
-        }
-    });
-}
-
-fn variant_index_of<E: Serialize>(current: &E, variants: &[wayle_config::EnumVariant]) -> u32 {
+fn variant_index_of<E: Serialize>(current: &E, variants: &[EnumVariant]) -> u32 {
     let serialized = serde_json::to_string(current).unwrap_or_default();
     let current_value = serialized.trim_matches('"');
 

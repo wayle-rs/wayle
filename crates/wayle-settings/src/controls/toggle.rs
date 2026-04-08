@@ -1,11 +1,10 @@
 //! GTK Switch bound to a boolean config property.
 
-use futures::StreamExt;
 use gtk4::prelude::*;
 use relm4::prelude::*;
 use wayle_config::ConfigProperty;
 
-use super::ControlOutput;
+use super::{ControlOutput, spawn_property_watcher};
 
 pub struct ToggleControl {
     property: ConfigProperty<bool>,
@@ -48,7 +47,10 @@ impl SimpleComponent for ToggleControl {
     ) -> ComponentParts<Self> {
         let active = property.get();
 
-        spawn_watcher(&property, &sender);
+        let input_sender = sender.input_sender().clone();
+        spawn_property_watcher(&property, move || {
+            let _ = input_sender.send(ToggleMsg::Refresh);
+        });
 
         let model = Self { property, active };
         let widgets = view_output!();
@@ -69,17 +71,4 @@ impl SimpleComponent for ToggleControl {
             }
         }
     }
-}
-
-fn spawn_watcher(property: &ConfigProperty<bool>, sender: &ComponentSender<ToggleControl>) {
-    let mut stream = property.watch();
-    let input_sender = sender.input_sender().clone();
-
-    gtk4::glib::spawn_future_local(async move {
-        stream.next().await;
-
-        while stream.next().await.is_some() {
-            let _ = input_sender.send(ToggleMsg::Refresh);
-        }
-    });
 }

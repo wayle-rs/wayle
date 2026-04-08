@@ -25,27 +25,22 @@ fn format_toml_value(value: &toml::Value) -> String {
         .to_string()
 }
 
-/// Indicates where a configuration value originates from.
+/// Which layer the current effective value comes from.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum ValueSource {
-    /// Using the compiled default value.
+    /// No config.toml or runtime value; using compiled default.
     Default,
-    /// Set in config.toml (user's base configuration).
+    /// Set in config.toml with no runtime override.
     Config,
-    /// Changed via GUI, not present in config.toml.
-    Custom,
-    /// GUI override of a config.toml value.
-    Override,
+    /// Set via GUI/CLI, no config.toml entry exists for this field.
+    RuntimeOnly,
+    /// config.toml value exists but runtime takes precedence.
+    Overridden,
 }
 
-/// A layered configuration property with provenance tracking.
+/// A config value with three layers: default, config.toml, and runtime override.
 ///
-/// Wraps a reactive `Property<T>` and adds three-layer configuration support:
-/// - **Default**: Compiled-in default value
-/// - **Config**: Value from config.toml (user's base configuration)
-/// - **Runtime**: GUI overrides (stored in runtime.toml)
-///
-/// The effective value follows precedence: runtime > config > default.
+/// `get()` returns whichever layer has highest precedence (runtime > config > default).
 pub struct ConfigProperty<T: Clone + Send + Sync + PartialEq + 'static> {
     default: T,
     config: Arc<RwLock<Option<T>>>,
@@ -55,7 +50,7 @@ pub struct ConfigProperty<T: Clone + Send + Sync + PartialEq + 'static> {
 }
 
 impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
-    /// Creates a new ConfigProperty with the given default value.
+    /// Property with no i18n key (internal fields, non-GUI properties).
     pub fn new(default: T) -> Self {
         let effective = Property::new(default.clone());
         Self {
@@ -67,8 +62,7 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
         }
     }
 
-    /// Creates a ConfigProperty with a fluent i18n key for the settings GUI.
-    /// The key resolves to a label and `.description` in the FTL bundle.
+    /// Property with a fluent key for the settings GUI label and description.
     pub fn with_i18n_key(default: T, key: &'static str) -> Self {
         let effective = Property::new(default.clone());
         Self {
@@ -80,36 +74,32 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
         }
     }
 
-    /// The fluent message ID for this property's settings label, if any.
-    /// Returns `None` for properties created with `new()` or marked
-    /// `#[i18n(skip)]`.
+    /// Fluent message ID for the settings GUI, or `None` for internal fields.
     pub fn i18n_key(&self) -> Option<&'static str> {
         self.i18n_key
     }
 
-    /// Returns the effective (currently active) value.
-    ///
-    /// Precedence: runtime > config > default.
+    /// The effective value after layer resolution (runtime > config > default).
     pub fn get(&self) -> T {
         self.effective.get()
     }
 
-    /// Returns the compiled default value.
+    /// The compiled default, before any config or runtime layers.
     pub fn default(&self) -> &T {
         &self.default
     }
 
-    /// Returns the config.toml value, if set.
+    /// The raw config.toml value, ignoring runtime and default layers.
     pub fn config(&self) -> Option<T> {
         self.config.read().ok().and_then(|guard| guard.clone())
     }
 
-    /// Returns the runtime override value, if set.
+    /// The raw runtime override value, ignoring config and default layers.
     pub fn runtime(&self) -> Option<T> {
         self.runtime.read().ok().and_then(|guard| guard.clone())
     }
 
-    /// Returns where the current effective value originates from.
+    /// Which layer is currently winning.
     pub fn source(&self) -> ValueSource {
         let has_runtime = self
             .runtime
@@ -119,64 +109,76 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
         let has_config = self.config.read().ok().is_some_and(|guard| guard.is_some());
 
         match (has_runtime, has_config) {
-            (true, true) => ValueSource::Override,
-            (true, false) => ValueSource::Custom,
+            (true, true) => ValueSource::Overridden,
+            (true, false) => ValueSource::RuntimeOnly,
             (false, true) => ValueSource::Config,
             (false, false) => ValueSource::Default,
         }
     }
 
-    /// Sets a runtime override value (used by GUI).
-    ///
-    /// This value takes precedence over config.toml and default values.
+    /// Sets a runtime override and immediately notifies watchers.
+    /// This is the interactive path (GUI controls, CLI set).
     pub fn set(&self, value: T) {
         if let Ok(mut guard) = self.runtime.write() {
             *guard = Some(value);
         }
-        self.recompute_effective();
+        self.flush();
     }
 
-    /// Clears the runtime override, falling back to config or default.
+    /// Removes the runtime override and notifies watchers even if the
+    /// effective value stays the same (so PersistenceWatcher cleans up
+    /// the runtime.toml entry).
     pub fn clear_runtime(&self) {
         if let Ok(mut guard) = self.runtime.write() {
             *guard = None;
         }
-        self.recompute_effective();
+        self.flush_forced();
     }
 
-    /// Sets the config.toml value (used during config loading).
-    pub fn set_config(&self, value: T) {
+    /// Writes to the config layer without notifying anyone.
+    /// Part of the batch reload cycle; `commit_config_reload` flushes later.
+    pub fn stage_config(&self, value: T) {
         if let Ok(mut guard) = self.config.write() {
             *guard = Some(value);
         }
-        self.recompute_effective();
     }
 
-    /// Clears the config value (rarely needed).
-    pub fn clear_config(&self) {
-        if let Ok(mut guard) = self.config.write() {
-            *guard = None;
+    /// Writes to the runtime layer without notifying anyone.
+    /// Part of the batch reload cycle; `commit_config_reload` flushes later.
+    pub fn stage_runtime(&self, value: T) {
+        if let Ok(mut guard) = self.runtime.write() {
+            *guard = Some(value);
         }
-        self.recompute_effective();
     }
 
-    /// Watch for changes to the effective value.
-    ///
-    /// The stream immediately yields the current value, then yields
-    /// whenever the effective value changes.
+    /// Stream of effective value changes. Yields the current value
+    /// immediately on subscribe, then on every subsequent change.
     pub fn watch(&self) -> impl Stream<Item = T> + Send + 'static {
         self.effective.watch()
     }
 
-    fn recompute_effective(&self) {
+    /// Resolves layers and notifies watchers if the result changed.
+    fn flush(&self) {
+        let effective = self.resolve();
+        self.effective.set(effective);
+    }
+
+    /// Resolves layers and always notifies watchers, even if unchanged.
+    /// Used by `clear_runtime` so PersistenceWatcher saves even when
+    /// the runtime value happened to match the config value.
+    fn flush_forced(&self) {
+        let effective = self.resolve();
+        self.effective.replace(effective);
+    }
+
+    /// Pure layer resolution: runtime > config > default. No side effects.
+    fn resolve(&self) -> T {
         let runtime_value = self.runtime.read().ok().and_then(|guard| guard.clone());
         let config_value = self.config.read().ok().and_then(|guard| guard.clone());
 
-        let effective = runtime_value
+        runtime_value
             .or(config_value)
-            .unwrap_or_else(|| self.default.clone());
-
-        self.effective.set(effective);
+            .unwrap_or_else(|| self.default.clone())
     }
 }
 
@@ -247,7 +249,7 @@ where
         match T::deserialize(value.clone()) {
             Ok(new_value) => {
                 let has_runtime_override = self.runtime().is_some();
-                self.set_config(new_value);
+                self.stage_config(new_value);
 
                 if has_runtime_override {
                     let diag = Diagnostic::warning("config.toml change ignored")
@@ -278,7 +280,7 @@ where
         let _span = tracing::warn_span!("runtime_config", field = path).entered();
         match T::deserialize(value.clone()) {
             Ok(new_value) => {
-                self.set(new_value);
+                self.stage_runtime(new_value);
                 Ok(())
             }
             Err(e) => {
@@ -342,7 +344,7 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ResetRuntimeLayer for ConfigP
 
 impl<T: Clone + Send + Sync + PartialEq + 'static> CommitConfigReload for ConfigProperty<T> {
     fn commit_config_reload(&self) {
-        self.recompute_effective();
+        self.flush();
     }
 }
 
@@ -374,7 +376,7 @@ mod tests {
     fn set_config_changes_effective_value() {
         let prop = ConfigProperty::new(10);
 
-        prop.set_config(20);
+        prop.stage_config(20);
 
         assert_eq!(prop.get(), 20);
         assert_eq!(prop.source(), ValueSource::Config);
@@ -384,12 +386,12 @@ mod tests {
     #[test]
     fn set_runtime_overrides_config() {
         let prop = ConfigProperty::new(10);
-        prop.set_config(20);
+        prop.stage_config(20);
 
         prop.set(30);
 
         assert_eq!(prop.get(), 30);
-        assert_eq!(prop.source(), ValueSource::Override);
+        assert_eq!(prop.source(), ValueSource::Overridden);
         assert_eq!(prop.config(), Some(20));
         assert_eq!(prop.runtime(), Some(30));
     }
@@ -401,13 +403,13 @@ mod tests {
         prop.set(30);
 
         assert_eq!(prop.get(), 30);
-        assert_eq!(prop.source(), ValueSource::Custom);
+        assert_eq!(prop.source(), ValueSource::RuntimeOnly);
     }
 
     #[test]
     fn clear_runtime_falls_back_to_config() {
         let prop = ConfigProperty::new(10);
-        prop.set_config(20);
+        prop.stage_config(20);
         prop.set(30);
 
         prop.clear_runtime();
@@ -430,7 +432,7 @@ mod tests {
     #[test]
     fn default_returns_original_default() {
         let prop = ConfigProperty::new(42);
-        prop.set_config(100);
+        prop.stage_config(100);
         prop.set(200);
 
         assert_eq!(*prop.default(), 42);
@@ -439,7 +441,7 @@ mod tests {
     #[test]
     fn reset_config_layer_clears_without_recomputing() {
         let prop = ConfigProperty::new(10);
-        prop.set_config(20);
+        prop.stage_config(20);
         assert_eq!(prop.get(), 20);
 
         prop.reset_config_layer();
@@ -455,7 +457,7 @@ mod tests {
     #[test]
     fn commit_config_reload_recomputes_effective() {
         let prop = ConfigProperty::new(10);
-        prop.set_config(20);
+        prop.stage_config(20);
         prop.reset_config_layer();
         assert_eq!(prop.get(), 20);
 
@@ -468,7 +470,7 @@ mod tests {
     #[test]
     fn reset_apply_commit_reverts_removed_config_to_default() {
         let prop = ConfigProperty::new(10);
-        prop.set_config(20);
+        prop.stage_config(20);
         assert_eq!(prop.get(), 20);
 
         prop.reset_config_layer();
@@ -481,15 +483,15 @@ mod tests {
     #[test]
     fn reset_apply_commit_preserves_runtime_override() {
         let prop = ConfigProperty::new(10);
-        prop.set_config(20);
+        prop.stage_config(20);
         prop.set(30);
-        assert_eq!(prop.source(), ValueSource::Override);
+        assert_eq!(prop.source(), ValueSource::Overridden);
 
         prop.reset_config_layer();
         prop.commit_config_reload();
 
         assert_eq!(prop.get(), 30);
-        assert_eq!(prop.source(), ValueSource::Custom);
+        assert_eq!(prop.source(), ValueSource::RuntimeOnly);
         assert_eq!(prop.runtime(), Some(30));
         assert_eq!(prop.config(), None);
     }
@@ -497,10 +499,10 @@ mod tests {
     #[test]
     fn reset_apply_commit_with_new_config_value() {
         let prop = ConfigProperty::new(10);
-        prop.set_config(20);
+        prop.stage_config(20);
 
         prop.reset_config_layer();
-        prop.set_config(50);
+        prop.stage_config(50);
         prop.commit_config_reload();
 
         assert_eq!(prop.get(), 50);
@@ -526,10 +528,10 @@ mod tests {
     #[test]
     fn reset_runtime_then_commit_falls_back_to_config() {
         let prop = ConfigProperty::new(10);
-        prop.set_config(20);
+        prop.stage_config(20);
         prop.set(30);
         assert_eq!(prop.get(), 30);
-        assert_eq!(prop.source(), ValueSource::Override);
+        assert_eq!(prop.source(), ValueSource::Overridden);
 
         prop.reset_runtime_layer();
         prop.commit_config_reload();
@@ -542,7 +544,7 @@ mod tests {
     fn reset_runtime_then_commit_falls_back_to_default() {
         let prop = ConfigProperty::new(10);
         prop.set(30);
-        assert_eq!(prop.source(), ValueSource::Custom);
+        assert_eq!(prop.source(), ValueSource::RuntimeOnly);
 
         prop.reset_runtime_layer();
         prop.commit_config_reload();

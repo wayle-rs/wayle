@@ -33,7 +33,10 @@ pub enum SettingRowMsg {
 
 impl SettingRow {
     fn has_runtime_override(&self) -> bool {
-        matches!(self.source, ValueSource::Custom | ValueSource::Override)
+        matches!(
+            self.source,
+            ValueSource::RuntimeOnly | ValueSource::Overridden
+        )
     }
 
     fn has_source_badge(&self) -> bool {
@@ -44,8 +47,8 @@ impl SettingRow {
         match self.source {
             ValueSource::Default => "",
             ValueSource::Config => "info",
-            ValueSource::Custom => "success",
-            ValueSource::Override => "warning",
+            ValueSource::RuntimeOnly => "success",
+            ValueSource::Overridden => "warning",
         }
     }
 
@@ -55,15 +58,15 @@ impl SettingRow {
         self.source_label = match self.source {
             ValueSource::Default => String::new(),
             ValueSource::Config => t("settings-source-config"),
-            ValueSource::Custom => t("settings-source-custom"),
-            ValueSource::Override => t("settings-source-override"),
+            ValueSource::RuntimeOnly => t("settings-source-custom"),
+            ValueSource::Overridden => t("settings-source-override"),
         };
 
         self.source_tooltip = match self.source {
             ValueSource::Default => String::new(),
             ValueSource::Config => t_attr("settings-source-config", "description"),
-            ValueSource::Custom => t_attr("settings-source-custom", "description"),
-            ValueSource::Override => t_attr("settings-source-override", "description"),
+            ValueSource::RuntimeOnly => t_attr("settings-source-custom", "description"),
+            ValueSource::Overridden => t_attr("settings-source-override", "description"),
         };
 
         self.config_matches_default = self.source == ValueSource::Config

@@ -10,6 +10,7 @@ use relm4::prelude::*;
 use tracing::warn;
 use wayle_config::ConfigService;
 use wayle_i18n::t;
+use wayle_icons::IconRegistry;
 use wayle_styling::{STATIC_CSS, theme_css};
 
 use crate::{
@@ -78,7 +79,7 @@ impl Component for SettingsApp {
     ) -> ComponentParts<Self> {
         let widgets = view_output!();
 
-        if let Err(err) = wayle_icons::IconRegistry::new().and_then(|registry| registry.init()) {
+        if let Err(err) = IconRegistry::new().and_then(|registry| registry.init()) {
             warn!(error = %err, "icon registry init failed");
         }
 

@@ -6,7 +6,7 @@
 use std::{env, sync::Arc, time::Duration};
 
 use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher, event::EventKind};
-use relm4::ComponentSender;
+use relm4::{ComponentSender, Sender};
 use tokio::{
     sync::mpsc,
     time::{Instant, sleep_until},
@@ -70,7 +70,7 @@ fn should_reload(event: &Event) -> bool {
 async fn run_event_loop(
     _watcher: Arc<RecommendedWatcher>,
     mut rx: mpsc::UnboundedReceiver<Event>,
-    sender: relm4::Sender<SettingsAppMsg>,
+    sender: Sender<SettingsAppMsg>,
     config_service: Arc<ConfigService>,
 ) {
     let mut deadline: Option<Instant> = None;
