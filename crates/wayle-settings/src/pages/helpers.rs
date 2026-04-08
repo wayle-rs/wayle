@@ -24,28 +24,42 @@ use crate::{
     row::{SettingRow, SettingRowInit},
 };
 
-pub type Keepalive = Box<dyn Any>;
+pub(crate) type Keepalive = Box<dyn Any>;
 
-pub struct SettingSpec {
+pub(crate) struct SettingSpec {
     pub i18n_key: Option<&'static str>,
     pub handle: PropertyHandle,
     pub control: gtk4::Widget,
+    pub keepalive: Keepalive,
 }
 
-pub fn toggle(property: &ConfigProperty<bool>, controls: &mut Vec<Keepalive>) -> SettingSpec {
-    let controller = ToggleControl::builder().launch(property.clone()).detach();
+pub(crate) struct SectionSpec {
+    pub title_key: &'static str,
+    pub items: Vec<SettingSpec>,
+}
 
+pub(crate) struct PageSpec {
+    pub header_key: &'static str,
+    pub sections: Vec<SectionSpec>,
+}
+
+pub(crate) fn page_spec(header_key: &'static str, sections: Vec<SectionSpec>) -> PageSpec {
+    PageSpec { header_key, sections }
+}
+
+pub(crate) fn toggle(property: &ConfigProperty<bool>) -> SettingSpec {
+    let controller = ToggleControl::builder().launch(property.clone()).detach();
     let widget = controller.widget().clone();
-    controls.push(Box::new(controller));
 
     SettingSpec {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| value.to_string()),
         control: widget.upcast(),
+        keepalive: Box::new(controller),
     }
 }
 
-pub fn enum_select<E>(property: &ConfigProperty<E>, controls: &mut Vec<Keepalive>) -> SettingSpec
+pub(crate) fn enum_select<E>(property: &ConfigProperty<E>) -> SettingSpec
 where
     E: EnumVariants
         + Clone
@@ -61,7 +75,6 @@ where
         .detach();
 
     let widget = controller.widget().clone();
-    controls.push(Box::new(controller));
 
     SettingSpec {
         i18n_key: property.i18n_key(),
@@ -72,13 +85,11 @@ where
                 .to_owned()
         }),
         control: widget.upcast(),
+        keepalive: Box::new(controller),
     }
 }
 
-pub(crate) fn spacing(
-    property: &ConfigProperty<Spacing>,
-    keepalives: &mut Vec<Keepalive>,
-) -> SettingSpec {
+pub(crate) fn spacing(property: &ConfigProperty<Spacing>) -> SettingSpec {
     let controller = NumberControl::builder()
         .launch(NumberInit {
             property: property.clone(),
@@ -92,19 +103,16 @@ pub(crate) fn spacing(
         .detach();
 
     let widget = controller.widget().clone();
-    keepalives.push(Box::new(controller));
 
     SettingSpec {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| format!("{}", value.value())),
         control: widget.upcast(),
+        keepalive: Box::new(controller),
     }
 }
 
-pub(crate) fn number_u8(
-    property: &ConfigProperty<u8>,
-    keepalives: &mut Vec<Keepalive>,
-) -> SettingSpec {
+pub(crate) fn number_u8(property: &ConfigProperty<u8>) -> SettingSpec {
     let controller = NumberControl::builder()
         .launch(NumberInit {
             property: property.clone(),
@@ -118,19 +126,16 @@ pub(crate) fn number_u8(
         .detach();
 
     let widget = controller.widget().clone();
-    keepalives.push(Box::new(controller));
 
     SettingSpec {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| value.to_string()),
         control: widget.upcast(),
+        keepalive: Box::new(controller),
     }
 }
 
-pub(crate) fn percentage(
-    property: &ConfigProperty<Percentage>,
-    keepalives: &mut Vec<Keepalive>,
-) -> SettingSpec {
+pub(crate) fn percentage(property: &ConfigProperty<Percentage>) -> SettingSpec {
     let controller = SliderControl::builder()
         .launch(SliderInit {
             property: property.clone(),
@@ -143,19 +148,16 @@ pub(crate) fn percentage(
         .detach();
 
     let widget = controller.widget().clone();
-    keepalives.push(Box::new(controller));
 
     SettingSpec {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |pct| format!("{}%", pct.value())),
         control: widget.upcast(),
+        keepalive: Box::new(controller),
     }
 }
 
-pub(crate) fn scale(
-    property: &ConfigProperty<ScaleFactor>,
-    keepalives: &mut Vec<Keepalive>,
-) -> SettingSpec {
+pub(crate) fn scale(property: &ConfigProperty<ScaleFactor>) -> SettingSpec {
     let controller = SliderControl::builder()
         .launch(SliderInit {
             property: property.clone(),
@@ -168,19 +170,16 @@ pub(crate) fn scale(
         .detach();
 
     let widget = controller.widget().clone();
-    keepalives.push(Box::new(controller));
 
     SettingSpec {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |sf| format!("{:.2}x", sf.value())),
         control: widget.upcast(),
+        keepalive: Box::new(controller),
     }
 }
 
-pub(crate) fn normalized(
-    property: &ConfigProperty<NormalizedF64>,
-    keepalives: &mut Vec<Keepalive>,
-) -> SettingSpec {
+pub(crate) fn normalized(property: &ConfigProperty<NormalizedF64>) -> SettingSpec {
     let controller = SliderControl::builder()
         .launch(SliderInit {
             property: property.clone(),
@@ -193,32 +192,28 @@ pub(crate) fn normalized(
         .detach();
 
     let widget = controller.widget().clone();
-    keepalives.push(Box::new(controller));
 
     SettingSpec {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |nf| format!("{:.2}", nf.value())),
         control: widget.upcast(),
+        keepalive: Box::new(controller),
     }
 }
 
-pub(crate) fn font(
-    property: &ConfigProperty<String>,
-    keepalives: &mut Vec<Keepalive>,
-) -> SettingSpec {
+pub(crate) fn font(property: &ConfigProperty<String>) -> SettingSpec {
     let controller = FontControl::builder().launch(property.clone()).detach();
-
     let widget = controller.widget().clone();
-    keepalives.push(Box::new(controller));
 
     SettingSpec {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value: &String| value.clone()),
         control: widget.upcast(),
+        keepalive: Box::new(controller),
     }
 }
 
-pub fn build_page_header(title_key: &str) -> gtk4::Box {
+pub(crate) fn build_page_header(title_key: &str) -> gtk4::Box {
     let header = gtk4::Box::builder()
         .orientation(gtk4::Orientation::Vertical)
         .build();
@@ -244,48 +239,51 @@ pub fn build_page_header(title_key: &str) -> gtk4::Box {
     header
 }
 
-pub fn build_section(
+pub(crate) fn build_sections(
     parent: &gtk4::Box,
-    title_key: &str,
-    items: Vec<SettingSpec>,
-) -> Vec<Controller<SettingRow>> {
-    let section = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Vertical)
-        .build();
-    section.add_css_class("settings-section");
+    sections: Vec<SectionSpec>,
+) -> (Vec<Controller<SettingRow>>, Vec<Keepalive>) {
+    let mut rows = Vec::new();
+    let mut keepalives = Vec::new();
 
-    let title = t(title_key);
-    let section_title = gtk4::Label::builder()
-        .label(&title)
-        .halign(gtk4::Align::Start)
-        .build();
-    section_title.add_css_class("settings-section-title");
-    section.append(&section_title);
+    for section in sections {
+        let section_box = gtk4::Box::builder()
+            .orientation(gtk4::Orientation::Vertical)
+            .build();
+        section_box.add_css_class("settings-section");
 
-    let group = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Vertical)
-        .build();
-    group.add_css_class("settings-group");
+        let title = t(section.title_key);
+        let section_title = gtk4::Label::builder()
+            .label(&title)
+            .halign(gtk4::Align::Start)
+            .build();
+        section_title.add_css_class("settings-section-title");
+        section_box.append(&section_title);
 
-    let mut controllers = Vec::new();
+        let group = gtk4::Box::builder()
+            .orientation(gtk4::Orientation::Vertical)
+            .build();
+        group.add_css_class("settings-group");
 
-    for entry in items {
-        let key = entry.i18n_key.unwrap_or("missing-i18n-key");
+        for entry in section.items {
+            let key = entry.i18n_key.unwrap_or("missing-i18n-key");
+            keepalives.push(entry.keepalive);
 
-        let row = SettingRow::builder()
-            .launch(SettingRowInit {
-                i18n_key: key,
-                handle: entry.handle,
-                control_widget: Some(entry.control),
-            })
-            .detach();
+            let row = SettingRow::builder()
+                .launch(SettingRowInit {
+                    i18n_key: key,
+                    handle: entry.handle,
+                    control_widget: Some(entry.control),
+                })
+                .detach();
 
-        group.append(row.widget());
-        controllers.push(row);
+            group.append(row.widget());
+            rows.push(row);
+        }
+
+        section_box.append(&group);
+        parent.append(&section_box);
     }
 
-    section.append(&group);
-    parent.append(&section);
-
-    controllers
+    (rows, keepalives)
 }

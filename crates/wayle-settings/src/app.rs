@@ -14,10 +14,7 @@ use wayle_icons::IconRegistry;
 use wayle_styling::{STATIC_CSS, theme_css};
 
 use crate::{
-    pages::{
-        bar::{button::BarButtonPage, dropdown::BarDropdownPage, general::BarGeneralPage},
-        general::GeneralPage,
-    },
+    pages::{bar, general, page::SettingsPage},
     sidebar::{NavChild, NavItem, NavSection, Sidebar, SidebarInit, SidebarOutput},
     watchers,
 };
@@ -27,10 +24,7 @@ pub struct SettingsApp {
     config_service: Arc<ConfigService>,
     css_provider: CssProvider,
     stack: gtk4::Stack,
-    general_page: Controller<GeneralPage>,
-    bar_general_page: Controller<BarGeneralPage>,
-    bar_button_page: Controller<BarButtonPage>,
-    bar_dropdown_page: Controller<BarDropdownPage>,
+    pages: Vec<Controller<SettingsPage>>,
     sidebar: Controller<Sidebar>,
 }
 
@@ -89,39 +83,61 @@ impl Component for SettingsApp {
         watchers::spawn_theme_watcher(&sender, &config_service);
         watchers::spawn_scss_dev_watcher(&sender, &config_service);
 
+        let config = config_service.config();
+        let general_entry = general::entry(config);
+        let bar_entry = bar::entry(config);
+
+        let nav_sections = vec![NavSection {
+            i18n_key: "settings-nav-appearance",
+            items: vec![
+                NavItem {
+                    id: general_entry.id,
+                    i18n_key: general_entry.i18n_key,
+                    icon: general_entry.icon,
+                    children: vec![],
+                },
+                NavItem {
+                    id: bar_entry.id,
+                    i18n_key: bar_entry.i18n_key,
+                    icon: bar_entry.icon,
+                    children: bar_entry
+                        .children
+                        .iter()
+                        .map(|child| NavChild {
+                            id: child.id,
+                            i18n_key: child.i18n_key,
+                        })
+                        .collect(),
+                },
+            ],
+        }];
+
         let sidebar = Sidebar::builder()
             .launch(SidebarInit {
-                sections: build_nav_sections(),
+                sections: nav_sections,
             })
             .forward(sender.input_sender(), |output| match output {
                 SidebarOutput::PageSelected(id) => SettingsAppMsg::PageSelected(id),
             });
-
-        let general_page = GeneralPage::builder()
-            .launch(Arc::clone(&config_service))
-            .detach();
-
-        let bar_general_page = BarGeneralPage::builder()
-            .launch(Arc::clone(&config_service))
-            .detach();
 
         let stack = gtk4::Stack::new();
         stack.set_transition_type(gtk4::StackTransitionType::Crossfade);
         stack.set_hexpand(true);
         stack.set_vexpand(true);
 
-        let bar_button_page = BarButtonPage::builder()
-            .launch(Arc::clone(&config_service))
-            .detach();
+        let mut pages = Vec::new();
 
-        let bar_dropdown_page = BarDropdownPage::builder()
-            .launch(Arc::clone(&config_service))
+        let leaf_page = SettingsPage::builder()
+            .launch(general_entry.spec)
             .detach();
+        stack.add_named(leaf_page.widget(), Some(general_entry.id));
+        pages.push(leaf_page);
 
-        stack.add_named(general_page.widget(), Some("general"));
-        stack.add_named(bar_general_page.widget(), Some("bar-general"));
-        stack.add_named(bar_button_page.widget(), Some("bar-button"));
-        stack.add_named(bar_dropdown_page.widget(), Some("bar-dropdown"));
+        for child in bar_entry.children {
+            let child_page = SettingsPage::builder().launch(child.spec).detach();
+            stack.add_named(child_page.widget(), Some(child.id));
+            pages.push(child_page);
+        }
 
         widgets.layout.prepend(sidebar.widget());
         widgets.content.append(&stack);
@@ -130,10 +146,7 @@ impl Component for SettingsApp {
             config_service,
             css_provider,
             stack: stack.clone(),
-            general_page,
-            bar_general_page,
-            bar_button_page,
-            bar_dropdown_page,
+            pages,
             sidebar,
         };
 
@@ -169,39 +182,6 @@ impl Component for SettingsApp {
             }
         }
     }
-}
-
-fn build_nav_sections() -> Vec<NavSection> {
-    vec![NavSection {
-        i18n_key: "settings-nav-appearance",
-        items: vec![
-            NavItem {
-                id: "general",
-                i18n_key: "settings-nav-general",
-                icon: "ld-palette-symbolic",
-                children: vec![],
-            },
-            NavItem {
-                id: "bar",
-                i18n_key: "settings-nav-bar",
-                icon: "ld-layout-dashboard-symbolic",
-                children: vec![
-                    NavChild {
-                        id: "bar-general",
-                        i18n_key: "settings-nav-bar-general",
-                    },
-                    NavChild {
-                        id: "bar-button",
-                        i18n_key: "settings-nav-bar-button",
-                    },
-                    NavChild {
-                        id: "bar-dropdown",
-                        i18n_key: "settings-nav-bar-dropdown",
-                    },
-                ],
-            },
-        ],
-    }]
 }
 
 fn load_css(config_service: &ConfigService) -> CssProvider {

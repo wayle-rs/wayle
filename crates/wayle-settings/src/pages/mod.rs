@@ -3,3 +3,5 @@
 pub mod bar;
 pub mod general;
 pub mod helpers;
+pub mod nav;
+pub mod page;
