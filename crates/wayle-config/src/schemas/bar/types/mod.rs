@@ -196,6 +196,8 @@ pub enum BarModule {
     Netstat,
     /// Notification center button.
     Notifications,
+    /// Pomodoro timer.
+    Pomodoro,
     /// Power menu button.
     Power,
     /// RAM usage indicator.
@@ -261,6 +263,7 @@ impl BarModule {
             Self::Network => "network",
             Self::Netstat => "netstat",
             Self::Notifications => "notifications",
+            Self::Pomodoro => "pomodoro",
             Self::Power => "power",
             Self::Ram => "ram",
             Self::Separator => "separator",
@@ -293,6 +296,7 @@ impl BarModule {
             "network" => Self::Network,
             "netstat" => Self::Netstat,
             "notifications" => Self::Notifications,
+            "pomodoro" => Self::Pomodoro,
             "power" => Self::Power,
             "ram" => Self::Ram,
             "separator" => Self::Separator,
@@ -376,6 +380,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "netstat",
     "network",
     "notifications",
+    "pomodoro",
     "power",
     "ram",
     "separator",
