@@ -5,6 +5,6 @@ mod palette;
 mod scss_dev;
 mod theme;
 
-pub use palette::spawn_palette_watcher;
+pub use palette::spawn as spawn_palette_watcher;
 pub use scss_dev::spawn as spawn_scss_dev_watcher;
 pub use theme::spawn as spawn_theme_watcher;

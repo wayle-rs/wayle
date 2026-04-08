@@ -1,31 +1,33 @@
 //! Watches the wallpaper service's `ColorsExtracted` D-Bus signal
-//! and notifies the app to rebuild CSS with the new palette.
+//! and rebuilds CSS when color extraction completes.
 
 use futures::StreamExt;
 use relm4::ComponentSender;
-use tracing::debug;
+use tracing::{info, warn};
 
 use crate::app::{SettingsApp, SettingsAppCmd};
 
-pub fn spawn_palette_watcher(sender: &ComponentSender<SettingsApp>) {
+pub fn spawn(sender: &ComponentSender<SettingsApp>) {
     sender.command(|out, shutdown| async move {
         let Ok(connection) = zbus::Connection::session().await else {
-            debug!("no D-Bus session, palette signal unavailable");
+            warn!("no D-Bus session, palette watcher disabled");
             return;
         };
 
         let proxy = match wayle_wallpaper::WallpaperProxy::new(&connection).await {
             Ok(proxy) => proxy,
             Err(err) => {
-                debug!(error = %err, "wallpaper proxy unavailable, no reactive palette");
+                warn!(error = %err, "wallpaper proxy unavailable, palette watcher disabled");
                 return;
             }
         };
 
         let Ok(mut signal_stream) = proxy.receive_colors_extracted().await else {
-            debug!("cannot subscribe to colors_extracted signal");
+            warn!("cannot subscribe to ColorsExtracted, palette watcher disabled");
             return;
         };
+
+        info!("palette watcher connected");
 
         let shutdown_fut = shutdown.wait();
         tokio::pin!(shutdown_fut);
@@ -35,6 +37,7 @@ pub fn spawn_palette_watcher(sender: &ComponentSender<SettingsApp>) {
                 () = &mut shutdown_fut => break,
                 signal = signal_stream.next() => {
                     if signal.is_none() { break; }
+                    info!("ColorsExtracted signal received");
                     let _ = out.send(SettingsAppCmd::CssReloadNeeded);
                 }
             }

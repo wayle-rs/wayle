@@ -4790,6 +4790,7 @@ dependencies = [
  "serde_json",
  "tokio",
  "tracing",
+ "tracing-subscriber",
  "wayle-config",
  "wayle-i18n",
  "wayle-icons",

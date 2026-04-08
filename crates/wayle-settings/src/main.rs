@@ -8,6 +8,7 @@
 use std::process;
 
 use tokio::runtime::Runtime;
+use tracing_subscriber::EnvFilter;
 use wayle_config::{ConfigService, PersistenceWatcher};
 
 mod app;
@@ -19,6 +20,10 @@ mod sidebar;
 mod watchers;
 
 fn main() {
+    tracing_subscriber::fmt()
+        .with_env_filter(EnvFilter::from_default_env())
+        .init();
+
     let runtime = match Runtime::new() {
         Ok(runtime) => runtime,
         Err(err) => {
