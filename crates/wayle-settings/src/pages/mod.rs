@@ -5,3 +5,4 @@ pub mod general;
 pub mod helpers;
 pub mod nav;
 pub mod page;
+pub mod test_controls;

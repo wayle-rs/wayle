@@ -28,6 +28,19 @@
     margin-left: var(--space-sm);
 }
 
+.setting-row.vertical {
+    border-spacing: 0;
+}
+
+.setting-row.vertical > .setting-control {
+    margin-left: 0;
+    margin-top: var(--space-sm);
+}
+
+.file-picker {
+    border-spacing: var(--space-xs);
+}
+
 .setting-reset {
     margin-left: var(--space-sm);
     margin-right: var(--space-sm);

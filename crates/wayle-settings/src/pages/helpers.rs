@@ -8,17 +8,24 @@ use relm4::prelude::*;
 use serde::{Deserialize, Serialize};
 use wayle_config::{
     ConfigProperty, EnumVariants,
-    schemas::styling::{NormalizedF64, Percentage, ScaleFactor, Spacing},
+    schemas::styling::{
+        ColorValue, HexColor, NormalizedF64, Percentage, ScaleFactor, SignedNormalizedF64, Spacing,
+    },
 };
 use wayle_i18n::{t, t_attr};
 
 use crate::{
     controls::{
+        color::ColorControl,
+        color_value::ColorValueControl,
         enum_select::EnumSelectControl,
+        file_picker::{FilePickerControl, FilePickerInit},
         font::FontControl,
         number::{NumberControl, NumberInit},
         slider::{SliderControl, SliderInit},
+        text::{TextControl, TextInit},
         toggle::ToggleControl,
+        toml_editor::{TomlEditorControl, TomlEditorInit, helpers::serialize_with_key},
     },
     property_handle::PropertyHandle,
     row::{SettingRow, SettingRowInit},
@@ -26,11 +33,15 @@ use crate::{
 
 pub(crate) type Keepalive = Box<dyn Any>;
 
+const U64_DISPLAY_MAX: f64 = 1_000_000.0;
+
 pub(crate) struct SettingSpec {
     pub i18n_key: Option<&'static str>,
     pub handle: PropertyHandle,
     pub control: gtk4::Widget,
     pub keepalive: Keepalive,
+    pub full_width: bool,
+    pub dirty_badge: Option<gtk4::Label>,
 }
 
 pub(crate) struct SectionSpec {
@@ -44,7 +55,10 @@ pub(crate) struct PageSpec {
 }
 
 pub(crate) fn page_spec(header_key: &'static str, sections: Vec<SectionSpec>) -> PageSpec {
-    PageSpec { header_key, sections }
+    PageSpec {
+        header_key,
+        sections,
+    }
 }
 
 pub(crate) fn toggle(property: &ConfigProperty<bool>) -> SettingSpec {
@@ -56,6 +70,8 @@ pub(crate) fn toggle(property: &ConfigProperty<bool>) -> SettingSpec {
         handle: PropertyHandle::new(property, |value| value.to_string()),
         control: widget.upcast(),
         keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
     }
 }
 
@@ -86,6 +102,8 @@ where
         }),
         control: widget.upcast(),
         keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
     }
 }
 
@@ -109,6 +127,8 @@ pub(crate) fn spacing(property: &ConfigProperty<Spacing>) -> SettingSpec {
         handle: PropertyHandle::new(property, |value| format!("{}", value.value())),
         control: widget.upcast(),
         keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
     }
 }
 
@@ -132,6 +152,8 @@ pub(crate) fn number_u8(property: &ConfigProperty<u8>) -> SettingSpec {
         handle: PropertyHandle::new(property, |value| value.to_string()),
         control: widget.upcast(),
         keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
     }
 }
 
@@ -154,6 +176,8 @@ pub(crate) fn percentage(property: &ConfigProperty<Percentage>) -> SettingSpec {
         handle: PropertyHandle::new(property, |pct| format!("{}%", pct.value())),
         control: widget.upcast(),
         keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
     }
 }
 
@@ -176,6 +200,8 @@ pub(crate) fn scale(property: &ConfigProperty<ScaleFactor>) -> SettingSpec {
         handle: PropertyHandle::new(property, |sf| format!("{:.2}x", sf.value())),
         control: widget.upcast(),
         keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
     }
 }
 
@@ -198,6 +224,8 @@ pub(crate) fn normalized(property: &ConfigProperty<NormalizedF64>) -> SettingSpe
         handle: PropertyHandle::new(property, |nf| format!("{:.2}", nf.value())),
         control: widget.upcast(),
         keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
     }
 }
 
@@ -210,7 +238,210 @@ pub(crate) fn font(property: &ConfigProperty<String>) -> SettingSpec {
         handle: PropertyHandle::new(property, |value: &String| value.clone()),
         control: widget.upcast(),
         keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
     }
+}
+
+pub(crate) fn text(property: &ConfigProperty<String>) -> SettingSpec {
+    let badge = make_dirty_badge();
+
+    let controller = TextControl::builder()
+        .launch(TextInit {
+            property: property.clone(),
+            dirty_badge: badge.clone(),
+        })
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |value: &String| value.clone()),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: Some(badge),
+    }
+}
+
+pub(crate) fn color(property: &ConfigProperty<HexColor>) -> SettingSpec {
+    let controller = ColorControl::builder().launch(property.clone()).detach();
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |value| value.to_string()),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
+    }
+}
+
+pub(crate) fn color_value(property: &ConfigProperty<ColorValue>) -> SettingSpec {
+    let controller = ColorValueControl::builder()
+        .launch(property.clone())
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |value| match value {
+            ColorValue::Auto => "auto".to_owned(),
+            ColorValue::Transparent => "transparent".to_owned(),
+            ColorValue::Custom(hex) => hex.to_string(),
+            ColorValue::Token(token) => token
+                .as_str()
+                .strip_prefix("--")
+                .unwrap_or(token.as_str())
+                .to_owned(),
+        }),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
+    }
+}
+
+pub(crate) fn file_path(property: &ConfigProperty<String>) -> SettingSpec {
+    let badge = make_dirty_badge();
+
+    let controller = FilePickerControl::builder()
+        .launch(FilePickerInit {
+            property: property.clone(),
+            dirty_badge: badge.clone(),
+        })
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |value: &String| value.clone()),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: Some(badge),
+    }
+}
+
+pub(crate) fn number_u32(property: &ConfigProperty<u32>) -> SettingSpec {
+    let controller = NumberControl::builder()
+        .launch(NumberInit {
+            property: property.clone(),
+            range_min: f64::from(u32::MIN),
+            range_max: f64::from(u32::MAX),
+            step: 1.0,
+            digits: 0,
+            to_f64: |value| f64::from(*value),
+            from_f64: |value| {
+                value
+                    .round()
+                    .clamp(f64::from(u32::MIN), f64::from(u32::MAX)) as u32
+            },
+        })
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |value| value.to_string()),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
+    }
+}
+
+pub(crate) fn number_u64(property: &ConfigProperty<u64>) -> SettingSpec {
+    let controller = NumberControl::builder()
+        .launch(NumberInit {
+            property: property.clone(),
+            range_min: 0.0,
+            range_max: U64_DISPLAY_MAX,
+            step: 1.0,
+            digits: 0,
+            to_f64: |value| *value as f64,
+            from_f64: |value| value.round().clamp(0.0, U64_DISPLAY_MAX) as u64,
+        })
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |value| value.to_string()),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
+    }
+}
+
+pub(crate) fn signed_normalized(property: &ConfigProperty<SignedNormalizedF64>) -> SettingSpec {
+    let controller = SliderControl::builder()
+        .launch(SliderInit {
+            property: property.clone(),
+            range_min: -1.0,
+            range_max: 1.0,
+            to_slider: |snf| snf.value(),
+            from_slider: SignedNormalizedF64::new,
+            format_label: |value| format!("{value:.2}"),
+        })
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |snf| format!("{:.2}", snf.value())),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
+    }
+}
+
+pub(crate) fn toml_editor<T>(property: &ConfigProperty<T>, key: &'static str) -> SettingSpec
+where
+    T: Clone + Send + Sync + PartialEq + Serialize + for<'de> Deserialize<'de> + 'static,
+{
+    let badge = make_dirty_badge();
+
+    let controller = TomlEditorControl::builder()
+        .launch(TomlEditorInit {
+            property: property.clone(),
+            key,
+            dirty_badge: badge.clone(),
+        })
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, move |value| serialize_with_key(value, key)),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: true,
+        dirty_badge: Some(badge),
+    }
+}
+
+fn make_dirty_badge() -> gtk4::Label {
+    let badge = gtk4::Label::new(Some(&t("settings-source-unsaved")));
+
+    badge.add_css_class("badge-subtle");
+    badge.add_css_class("warning");
+
+    badge.set_visible(false);
+    badge.set_valign(gtk4::Align::Center);
+    badge.set_halign(gtk4::Align::Start);
+
+    badge
 }
 
 pub(crate) fn build_page_header(title_key: &str) -> gtk4::Box {
@@ -274,6 +505,8 @@ pub(crate) fn build_sections(
                     i18n_key: key,
                     handle: entry.handle,
                     control_widget: Some(entry.control),
+                    full_width: entry.full_width,
+                    dirty_badge: entry.dirty_badge,
                 })
                 .detach();
 

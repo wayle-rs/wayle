@@ -1,5 +1,11 @@
 ### Wayle Settings Dialog
 
+## Controls
+settings-apply = Apply
+settings-color-auto = Auto
+settings-color-transparent = Transparent
+settings-color-custom = Custom...
+
 ## Source badges
 settings-source-config = config
     .description = Set in config.toml

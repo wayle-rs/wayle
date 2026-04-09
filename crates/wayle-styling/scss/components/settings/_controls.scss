@@ -6,6 +6,10 @@
     min-width: calc(8rem * var(--global-scale));
 }
 
+.setting-control colorbutton button colorswatch {
+    border-radius: var(--rounding-element);
+}
+
 dropdown button {
     padding: var(--space-xs) var(--space-sm);
     background-color: var(--bg-overlay);
@@ -82,8 +86,9 @@ spinbutton button:hover {
     background-color: var(--bg-hover);
 }
 
-entry {
-    padding: var(--space-xs) var(--space-sm);
+.setting-control entry {
+    padding: 0;
+    min-height: 0;
     background-color: var(--bg-overlay);
     border: 1px solid var(--border-default);
     border-radius: var(--rounding-element);
@@ -91,8 +96,225 @@ entry {
     color: var(--fg-default);
 }
 
-entry:focus-within {
+.setting-control entry text {
+    padding: var(--space-sm);
+    min-height: 0;
+}
+
+.setting-control entry:focus-within {
     border-color: var(--accent);
+}
+
+.setting-control entry.dirty {
+    border-color: var(--status-warning);
+}
+
+.toml-editor.dirty {
+    border-color: var(--status-warning);
+}
+
+.color-value-control {
+    border-spacing: var(--space-sm);
+}
+
+.color-value-swatch {
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    min-width: calc(1.5rem * var(--global-scale));
+    min-height: calc(1.5rem * var(--global-scale));
+    padding: 0;
+}
+
+.color-value-swatch colorswatch {
+    border-radius: var(--rounding-element);
+    min-width: calc(1.25rem * var(--global-scale));
+    min-height: calc(1.25rem * var(--global-scale));
+}
+
+.color-value-row {
+    border-spacing: var(--space-sm);
+    padding: var(--space-xs) var(--space-sm);
+}
+
+.color-value-dot {
+    min-width: calc(0.625rem * var(--global-scale));
+    min-height: calc(0.625rem * var(--global-scale));
+    border-radius: calc(var(--rounding-element) * 0.5);
+    border: 1px solid var(--border-subtle);
+    background-color: var(--fg-muted);
+}
+
+.color-value-dot.token-bg-base {
+    background-color: var(--bg-base);
+}
+.color-value-dot.token-bg-surface {
+    background-color: var(--bg-surface);
+}
+.color-value-dot.token-bg-surface-elevated {
+    background-color: var(--bg-surface-elevated);
+}
+.color-value-dot.token-bg-elevated {
+    background-color: var(--bg-elevated);
+}
+.color-value-dot.token-bg-overlay {
+    background-color: var(--bg-overlay);
+}
+.color-value-dot.token-bg-hover {
+    background-color: var(--bg-hover);
+}
+.color-value-dot.token-bg-active {
+    background-color: var(--bg-active);
+}
+.color-value-dot.token-bg-selected {
+    background-color: var(--bg-selected);
+}
+
+.color-value-dot.token-fg-default {
+    background-color: var(--fg-default);
+}
+.color-value-dot.token-fg-muted {
+    background-color: var(--fg-muted);
+}
+.color-value-dot.token-fg-subtle {
+    background-color: var(--fg-subtle);
+}
+.color-value-dot.token-fg-on-accent {
+    background-color: var(--fg-on-accent);
+}
+
+.color-value-dot.token-accent {
+    background-color: var(--accent);
+}
+.color-value-dot.token-accent-subtle {
+    background-color: var(--accent-subtle);
+}
+.color-value-dot.token-accent-hover {
+    background-color: var(--accent-hover);
+}
+
+.color-value-dot.token-status-error {
+    background-color: var(--status-error);
+}
+.color-value-dot.token-status-warning {
+    background-color: var(--status-warning);
+}
+.color-value-dot.token-status-success {
+    background-color: var(--status-success);
+}
+.color-value-dot.token-status-info {
+    background-color: var(--status-info);
+}
+.color-value-dot.token-status-error-subtle {
+    background-color: var(--status-error-subtle);
+}
+.color-value-dot.token-status-warning-subtle {
+    background-color: var(--status-warning-subtle);
+}
+.color-value-dot.token-status-success-subtle {
+    background-color: var(--status-success-subtle);
+}
+.color-value-dot.token-status-info-subtle {
+    background-color: var(--status-info-subtle);
+}
+.color-value-dot.token-status-error-hover {
+    background-color: var(--status-error-hover);
+}
+
+.color-value-dot.token-red {
+    background-color: var(--red);
+}
+.color-value-dot.token-yellow {
+    background-color: var(--yellow);
+}
+.color-value-dot.token-green {
+    background-color: var(--green);
+}
+.color-value-dot.token-blue {
+    background-color: var(--blue);
+}
+
+.color-value-dot.token-border-subtle {
+    background-color: var(--border-subtle);
+}
+.color-value-dot.token-border-default {
+    background-color: var(--border-default);
+}
+.color-value-dot.token-border-strong {
+    background-color: var(--border-strong);
+}
+.color-value-dot.token-border-accent {
+    background-color: var(--border-accent);
+}
+.color-value-dot.token-border-error {
+    background-color: var(--border-error);
+}
+
+.color-value-dot.auto {
+    background-color: var(--accent);
+}
+
+.color-value-dot.transparent {
+    border-style: dashed;
+    background-color: transparent;
+}
+
+.color-value-dot.custom {
+    background-image: linear-gradient(135deg, var(--red), var(--green), var(--blue));
+    border: none;
+}
+
+.color-value-label {
+    font-size: var(--text-xs);
+}
+
+window.colorchooser {
+    font-size: var(--text-sm);
+}
+
+window.colorchooser headerbar {
+    min-height: calc(2rem * var(--global-scale));
+    padding: var(--space-xs) var(--space-sm);
+}
+
+window.colorchooser headerbar button {
+    padding: var(--space-xs) var(--space-md);
+}
+
+.color-value-group-header {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-semibold);
+    color: var(--fg-subtle);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    padding: var(--space-sm) var(--space-md) var(--space-xs);
+}
+
+.toml-editor {
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-default);
+    padding: var(--space-sm);
+    min-height: calc(12rem * var(--global-scale));
+}
+
+.toml-editor:focus-within {
+    border-color: var(--accent);
+}
+
+.toml-editor text {
+    background-color: transparent;
+    color: var(--fg-default);
+}
+
+.toml-editor text selection {
+    background-color: var(--accent-subtle);
+    color: var(--fg-default);
+}
+
+.toml-editor + button {
+    margin-top: var(--space-sm);
 }
 
 button.font {

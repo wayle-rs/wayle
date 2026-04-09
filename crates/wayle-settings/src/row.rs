@@ -12,6 +12,8 @@ pub struct SettingRowInit {
     pub i18n_key: &'static str,
     pub handle: PropertyHandle,
     pub control_widget: Option<gtk4::Widget>,
+    pub full_width: bool,
+    pub dirty_badge: Option<gtk4::Label>,
 }
 
 pub struct SettingRow {
@@ -22,7 +24,6 @@ pub struct SettingRow {
     source_label: String,
     source_tooltip: String,
     config_matches_default: bool,
-    dirty: bool,
 }
 
 #[derive(Debug)]
@@ -92,6 +93,7 @@ impl SimpleComponent for SettingRow {
                 set_hexpand: true,
                 set_valign: gtk4::Align::Center,
 
+                #[name = "label_row"]
                 gtk4::Box {
                     set_orientation: gtk4::Orientation::Horizontal,
 
@@ -119,18 +121,6 @@ impl SimpleComponent for SettingRow {
                         #[watch]
                         set_visible: model.has_source_badge(),
                     },
-
-                    #[name = "dirty_badge"]
-                    gtk4::Label {
-                        add_css_class: "badge-subtle",
-                        add_css_class: "warning",
-                        set_hexpand: false,
-                        set_vexpand: false,
-                        set_valign: gtk4::Align::Center,
-                        set_halign: gtk4::Align::Start,
-                        #[watch]
-                        set_visible: model.dirty,
-                    },
                 },
 
                 #[name = "row_description"]
@@ -150,6 +140,7 @@ impl SimpleComponent for SettingRow {
                 set_icon_name: "ld-rotate-ccw-symbolic",
                 set_valign: gtk4::Align::Center,
                 set_hexpand: false,
+                set_cursor_from_name: Some("pointer"),
                 #[watch]
                 set_visible: model.has_runtime_override(),
                 connect_clicked => SettingRowMsg::ClearOverride,
@@ -182,23 +173,25 @@ impl SimpleComponent for SettingRow {
             source_label: String::new(),
             source_tooltip: String::new(),
             config_matches_default: true,
-            dirty: false,
         };
 
         model.update_source_info();
 
         let widgets = view_output!();
 
-        if let Some(control) = init.control_widget {
-            control.set_hexpand(false);
-            control.set_valign(gtk4::Align::Center);
-            widgets.control_slot.append(&control);
+        if let Some(badge) = init.dirty_badge {
+            widgets.label_row.append(&badge);
         }
 
-        widgets.dirty_badge.set_label(&t("settings-source-unsaved"));
-        widgets
-            .dirty_badge
-            .set_tooltip_text(Some(&t_attr("settings-source-unsaved", "description")));
+        if let Some(control) = init.control_widget {
+            apply_control_layout(&control, &root, &widgets.control_slot, init.full_width);
+            widgets.control_slot.append(&control);
+
+            if init.full_width {
+                root.remove(&widgets.reset_button);
+                widgets.label_row.append(&widgets.reset_button);
+            }
+        }
 
         if let Some(watch) = watcher {
             let sender = sender.input_sender().clone();
@@ -214,14 +207,30 @@ impl SimpleComponent for SettingRow {
         match msg {
             SettingRowMsg::ClearOverride => {
                 self.handle.clear_runtime();
-                self.dirty = false;
                 self.update_source_info();
             }
 
             SettingRowMsg::Refresh => {
-                self.dirty = false;
                 self.update_source_info();
             }
         }
     }
+}
+
+fn apply_control_layout(
+    control: &gtk4::Widget,
+    root: &gtk4::Box,
+    slot: &gtk4::Box,
+    full_width: bool,
+) {
+    if full_width {
+        control.set_hexpand(true);
+        root.set_orientation(gtk4::Orientation::Vertical);
+        root.add_css_class("vertical");
+        slot.set_hexpand(true);
+        return;
+    }
+
+    control.set_hexpand(false);
+    control.set_valign(gtk4::Align::Center);
 }

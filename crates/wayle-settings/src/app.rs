@@ -3,7 +3,7 @@
 use std::sync::Arc;
 
 use gtk4::{
-    CssProvider, STYLE_PROVIDER_PRIORITY_USER, gdk::Display, prelude::*,
+    CssProvider, STYLE_PROVIDER_PRIORITY_USER, StackTransitionType, gdk::Display, prelude::*,
     style_context_add_provider_for_display,
 };
 use relm4::prelude::*;
@@ -14,7 +14,7 @@ use wayle_icons::IconRegistry;
 use wayle_styling::{STATIC_CSS, theme_css};
 
 use crate::{
-    pages::{bar, general, page::SettingsPage},
+    pages::{bar, general, page::SettingsPage, test_controls},
     sidebar::{NavChild, NavItem, NavSection, Sidebar, SidebarInit, SidebarOutput},
     watchers,
 };
@@ -86,6 +86,7 @@ impl Component for SettingsApp {
         let config = config_service.config();
         let general_entry = general::entry(config);
         let bar_entry = bar::entry(config);
+        let test_entry = test_controls::entry(config);
 
         let nav_sections = vec![NavSection {
             i18n_key: "settings-nav-appearance",
@@ -94,6 +95,12 @@ impl Component for SettingsApp {
                     id: general_entry.id,
                     i18n_key: general_entry.i18n_key,
                     icon: general_entry.icon,
+                    children: vec![],
+                },
+                NavItem {
+                    id: test_entry.id,
+                    i18n_key: test_entry.i18n_key,
+                    icon: test_entry.icon,
                     children: vec![],
                 },
                 NavItem {
@@ -121,17 +128,19 @@ impl Component for SettingsApp {
             });
 
         let stack = gtk4::Stack::new();
-        stack.set_transition_type(gtk4::StackTransitionType::Crossfade);
+        stack.set_transition_type(StackTransitionType::Crossfade);
         stack.set_hexpand(true);
         stack.set_vexpand(true);
 
         let mut pages = Vec::new();
 
-        let leaf_page = SettingsPage::builder()
-            .launch(general_entry.spec)
-            .detach();
+        let leaf_page = SettingsPage::builder().launch(general_entry.spec).detach();
         stack.add_named(leaf_page.widget(), Some(general_entry.id));
         pages.push(leaf_page);
+
+        let test_page = SettingsPage::builder().launch(test_entry.spec).detach();
+        stack.add_named(test_page.widget(), Some(test_entry.id));
+        pages.push(test_page);
 
         for child in bar_entry.children {
             let child_page = SettingsPage::builder().launch(child.spec).detach();
