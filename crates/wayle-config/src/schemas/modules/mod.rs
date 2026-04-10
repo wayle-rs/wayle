@@ -18,6 +18,7 @@ mod netstat;
 mod network;
 /// Notification module configuration and popup types.
 pub mod notification;
+mod pomodoro;
 mod power;
 mod ram;
 mod separator;
@@ -53,6 +54,7 @@ pub use notification::{
     IconSource, NotificationConfig, PopupCloseBehavior, PopupMonitor, PopupPosition, StackingOrder,
     UrgencyBarThreshold,
 };
+pub use pomodoro::PomodoroConfig;
 pub use power::PowerConfig;
 pub use ram::RamConfig;
 pub use separator::SeparatorConfig;
@@ -106,6 +108,8 @@ pub struct ModulesConfig {
     pub netstat: NetstatConfig,
     /// Notification center module.
     pub notification: NotificationConfig,
+    /// Pomodoro timer module.
+    pub pomodoro: PomodoroConfig,
     /// Power menu module.
     pub power: PowerConfig,
     /// RAM usage module.

@@ -1,0 +1,23 @@
+.pomodoro-dropdown {
+    .pomodoro-hero {
+        padding: 0 0 var(--space-xs);
+    }
+
+    label.pomodoro-hero-time {
+        font-size: calc(var(--text-2xl) * 2);
+        font-weight: var(--weight-normal);
+        color: var(--fg-default);
+    }
+
+    .pomodoro-hero-meta {
+        min-width: 0;
+    }
+
+    .pomodoro-hero-controls {
+        button.pomodoro-hero-toggle {
+            min-width: calc(var(--text-2xl) * 2);
+            min-height: calc(var(--text-2xl) * 2);
+            border-radius: 999px;
+        }
+    }
+}

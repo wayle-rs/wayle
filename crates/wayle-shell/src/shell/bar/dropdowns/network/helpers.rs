@@ -99,7 +99,7 @@ pub(crate) fn sorted_unique_access_points(
     }
 
     let mut snapshots: Vec<AccessPointSnapshot> = best_by_ssid.into_values().collect();
-    snapshots.sort_by(|left, right| right.strength.cmp(&left.strength));
+    snapshots.sort_by_key(|right| std::cmp::Reverse(right.strength));
     snapshots
 }
 

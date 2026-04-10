@@ -1,0 +1,52 @@
+.pomodoro {
+    &.pomodoro-work {
+        menubutton.bar-button {
+            .bar-button-label {
+                color: var(--blue);
+            }
+
+            .icon-container {
+                background-color: var(--blue);
+            }
+
+            .icon-container image,
+            > button.toggle image {
+                color: var(--fg-on-accent);
+            }
+        }
+    }
+
+    &.pomodoro-short-break {
+        menubutton.bar-button {
+            .bar-button-label {
+                color: var(--green);
+            }
+
+            .icon-container {
+                background-color: var(--green);
+            }
+
+            .icon-container image,
+            > button.toggle image {
+                color: var(--fg-on-accent);
+            }
+        }
+    }
+
+    &.pomodoro-long-break {
+        menubutton.bar-button {
+            .bar-button-label {
+                color: var(--yellow);
+            }
+
+            .icon-container {
+                background-color: var(--yellow);
+            }
+
+            .icon-container image,
+            > button.toggle image {
+                color: var(--fg-on-accent);
+            }
+        }
+    }
+}
