@@ -6,7 +6,10 @@ use std::{rc::Rc, sync::Arc};
 
 use gtk::prelude::*;
 use relm4::prelude::*;
-use wayle_config::{ConfigProperty, ConfigService, schemas::{modules::PomodoroConfig, styling::CssToken}};
+use wayle_config::{
+    ClickAction, ConfigProperty, ConfigService,
+    schemas::{modules::PomodoroConfig, styling::CssToken},
+};
 use wayle_widgets::prelude::{
     BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonInput, BarButtonOutput,
 };
@@ -110,6 +113,11 @@ impl Component for PomodoroModule {
             PomodoroMsg::ScrollDown => config.scroll_down.get(),
         };
 
+        if matches!(&action, ClickAction::Shell(s) if s == ":toggle-running") {
+            self.toggle_running();
+            return;
+        }
+
         dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
     }
 
@@ -147,6 +155,17 @@ impl Component for PomodoroModule {
 }
 
 impl PomodoroModule {
+    fn toggle_running(&self) {
+        match self.state.snapshot().timer_state {
+            TimerState::Running => {
+                self.state.pause();
+            }
+            TimerState::Stopped | TimerState::Paused => {
+                self.state.start();
+            }
+        }
+    }
+
     fn icon_for_snapshot(snapshot: &PomodoroSnapshot, config: &PomodoroConfig) -> String {
         match snapshot.timer_state {
             TimerState::Stopped => config.icon_name.get().clone(),

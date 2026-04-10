@@ -87,7 +87,7 @@ pub struct PomodoroConfig {
 
     /// Action on right click.
     #[serde(rename = "right-click")]
-    #[default(ClickAction::None)]
+    #[default(ClickAction::Shell(String::from(":toggle-running")))]
     pub right_click: ConfigProperty<ClickAction>,
 
     /// Action on middle click.
