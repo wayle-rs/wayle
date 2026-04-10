@@ -6,13 +6,7 @@ use std::{rc::Rc, sync::Arc};
 
 use gtk::prelude::*;
 use relm4::prelude::*;
-use wayle_config::{
-    ConfigProperty, ConfigService,
-    schemas::{
-        modules::PomodoroConfig,
-        styling::{ColorValue, CssToken, ThresholdColors},
-    },
-};
+use wayle_config::{ConfigProperty, ConfigService, schemas::{modules::PomodoroConfig, styling::CssToken}};
 use wayle_widgets::prelude::{
     BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonInput, BarButtonOutput,
 };
@@ -51,7 +45,7 @@ impl Component for PomodoroModule {
 
     fn init(
         init: Self::Init,
-        _root: Self::Root,
+        root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let config = init.config.config();
@@ -59,6 +53,7 @@ impl Component for PomodoroModule {
 
         let initial_snapshot = init.state.snapshot();
         let initial_label = initial_snapshot.format_time();
+        Self::apply_mode_css_class(&root, &initial_snapshot);
 
         let bar_button = BarButton::builder()
             .launch(BarButtonInit {
@@ -89,10 +84,6 @@ impl Component for PomodoroModule {
                 BarButtonOutput::ScrollUp => PomodoroMsg::ScrollUp,
                 BarButtonOutput::ScrollDown => PomodoroMsg::ScrollDown,
             });
-        bar_button.emit(BarButtonInput::SetThresholdColors(Self::colors_for_snapshot(
-            &initial_snapshot,
-            pomodoro_config,
-        )));
 
         watchers::spawn_watchers(&sender, pomodoro_config, &init.state);
 
@@ -126,18 +117,16 @@ impl Component for PomodoroModule {
         &mut self,
         msg: Self::CommandOutput,
         _sender: ComponentSender<Self>,
-        _root: &Self::Root,
+        root: &Self::Root,
     ) {
         match msg {
             PomodoroCmd::StateChanged(snapshot) => {
                 let pomodoro_config = &self.config.config().modules.pomodoro;
                 let icon = Self::icon_for_snapshot(&snapshot, pomodoro_config);
-                let colors = Self::colors_for_snapshot(&snapshot, pomodoro_config);
+                Self::apply_mode_css_class(root, &snapshot);
                 self.bar_button
                     .emit(BarButtonInput::SetLabel(snapshot.format_time()));
                 self.bar_button.emit(BarButtonInput::SetIcon(icon));
-                self.bar_button
-                    .emit(BarButtonInput::SetThresholdColors(colors));
             }
             PomodoroCmd::UpdateIcon(icon) => {
                 if self.state.snapshot().timer_state == TimerState::Stopped {
@@ -166,22 +155,23 @@ impl PomodoroModule {
         }
     }
 
-    fn colors_for_snapshot(
-        snapshot: &PomodoroSnapshot,
-        config: &PomodoroConfig,
-    ) -> ThresholdColors {
-        let accent = match snapshot.mode {
-            PomodoroMode::Work => config.work_color.get(),
-            PomodoroMode::ShortBreak => config.short_break_color.get(),
-            PomodoroMode::LongBreak => config.long_break_color.get(),
-        };
-
-        ThresholdColors {
-            icon_color: Some(ColorValue::Token(CssToken::FgOnAccent)),
-            label_color: Some(accent.clone()),
-            icon_background: Some(accent.clone()),
-            button_background: None,
-            border_color: Some(accent),
+    fn apply_mode_css_class(root: &gtk::Box, snapshot: &PomodoroSnapshot) {
+        match snapshot.mode {
+            PomodoroMode::Work => {
+                root.remove_css_class("pomodoro-short-break");
+                root.remove_css_class("pomodoro-long-break");
+                root.add_css_class("pomodoro-work");
+            }
+            PomodoroMode::ShortBreak => {
+                root.remove_css_class("pomodoro-work");
+                root.remove_css_class("pomodoro-long-break");
+                root.add_css_class("pomodoro-short-break");
+            }
+            PomodoroMode::LongBreak => {
+                root.remove_css_class("pomodoro-work");
+                root.remove_css_class("pomodoro-short-break");
+                root.add_css_class("pomodoro-long-break");
+            }
         }
     }
 }
