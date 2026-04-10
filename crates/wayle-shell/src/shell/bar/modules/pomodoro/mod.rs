@@ -6,7 +6,13 @@ use std::{rc::Rc, sync::Arc};
 
 use gtk::prelude::*;
 use relm4::prelude::*;
-use wayle_config::{ConfigProperty, ConfigService, schemas::styling::CssToken};
+use wayle_config::{
+    ConfigProperty, ConfigService,
+    schemas::{
+        modules::PomodoroConfig,
+        styling::{ColorValue, CssToken, ThresholdColors},
+    },
+};
 use wayle_widgets::prelude::{
     BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonInput, BarButtonOutput,
 };
@@ -16,7 +22,7 @@ pub(crate) use self::{
     messages::{PomodoroCmd, PomodoroInit, PomodoroMsg},
 };
 use crate::shell::{
-    SharedPomodoroState,
+    PomodoroMode, PomodoroSnapshot, SharedPomodoroState, TimerState,
     bar::dropdowns::{self, DropdownRegistry},
 };
 
@@ -51,11 +57,12 @@ impl Component for PomodoroModule {
         let config = init.config.config();
         let pomodoro_config = &config.modules.pomodoro;
 
-        let initial_label = init.state.snapshot().format_time();
+        let initial_snapshot = init.state.snapshot();
+        let initial_label = initial_snapshot.format_time();
 
         let bar_button = BarButton::builder()
             .launch(BarButtonInit {
-                icon: pomodoro_config.icon_name.get().clone(),
+                icon: Self::icon_for_snapshot(&initial_snapshot, pomodoro_config),
                 label: initial_label,
                 tooltip: None,
                 colors: BarButtonColors {
@@ -82,6 +89,10 @@ impl Component for PomodoroModule {
                 BarButtonOutput::ScrollUp => PomodoroMsg::ScrollUp,
                 BarButtonOutput::ScrollDown => PomodoroMsg::ScrollDown,
             });
+        bar_button.emit(BarButtonInput::SetThresholdColors(Self::colors_for_snapshot(
+            &initial_snapshot,
+            pomodoro_config,
+        )));
 
         watchers::spawn_watchers(&sender, pomodoro_config, &init.state);
 
@@ -119,11 +130,19 @@ impl Component for PomodoroModule {
     ) {
         match msg {
             PomodoroCmd::StateChanged(snapshot) => {
+                let pomodoro_config = &self.config.config().modules.pomodoro;
+                let icon = Self::icon_for_snapshot(&snapshot, pomodoro_config);
+                let colors = Self::colors_for_snapshot(&snapshot, pomodoro_config);
                 self.bar_button
                     .emit(BarButtonInput::SetLabel(snapshot.format_time()));
+                self.bar_button.emit(BarButtonInput::SetIcon(icon));
+                self.bar_button
+                    .emit(BarButtonInput::SetThresholdColors(colors));
             }
             PomodoroCmd::UpdateIcon(icon) => {
-                self.bar_button.emit(BarButtonInput::SetIcon(icon));
+                if self.state.snapshot().timer_state == TimerState::Stopped {
+                    self.bar_button.emit(BarButtonInput::SetIcon(icon));
+                }
             }
             PomodoroCmd::UpdateDurations {
                 work,
@@ -134,6 +153,35 @@ impl Component for PomodoroModule {
                 self.state
                     .update_durations(work, short_break, long_break, cycles);
             }
+        }
+    }
+}
+
+impl PomodoroModule {
+    fn icon_for_snapshot(snapshot: &PomodoroSnapshot, config: &PomodoroConfig) -> String {
+        match snapshot.timer_state {
+            TimerState::Stopped => config.icon_name.get().clone(),
+            TimerState::Running => String::from("ld-play-symbolic"),
+            TimerState::Paused => String::from("ld-pause-symbolic"),
+        }
+    }
+
+    fn colors_for_snapshot(
+        snapshot: &PomodoroSnapshot,
+        config: &PomodoroConfig,
+    ) -> ThresholdColors {
+        let accent = match snapshot.mode {
+            PomodoroMode::Work => config.work_color.get(),
+            PomodoroMode::ShortBreak => config.short_break_color.get(),
+            PomodoroMode::LongBreak => config.long_break_color.get(),
+        };
+
+        ThresholdColors {
+            icon_color: Some(ColorValue::Token(CssToken::FgOnAccent)),
+            label_color: Some(accent.clone()),
+            icon_background: Some(accent.clone()),
+            button_background: None,
+            border_color: Some(accent),
         }
     }
 }

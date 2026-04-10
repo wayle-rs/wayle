@@ -33,6 +33,22 @@ pub(super) fn spawn_watchers(
         let _ = out.send(PomodoroCmd::UpdateIcon(icon_name.get().clone()));
     });
 
+    let work_color = config.work_color.clone();
+    let short_break_color = config.short_break_color.clone();
+    let long_break_color = config.long_break_color.clone();
+    let state_colors = state.clone();
+    watch!(
+        sender,
+        [
+            work_color.watch(),
+            short_break_color.watch(),
+            long_break_color.watch()
+        ],
+        |out| {
+            let _ = out.send(PomodoroCmd::StateChanged(state_colors.snapshot()));
+        }
+    );
+
     let work = config.work_duration.clone();
     let short_break = config.short_break_duration.clone();
     let long_break = config.long_break_duration.clone();

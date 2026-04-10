@@ -70,6 +70,21 @@ pub struct PomodoroConfig {
     #[default(ColorValue::Token(CssToken::Blue))]
     pub label_color: ConfigProperty<ColorValue>,
 
+    /// Accent color for work sessions in the bar module.
+    #[serde(rename = "work-color")]
+    #[default(ColorValue::Token(CssToken::Blue))]
+    pub work_color: ConfigProperty<ColorValue>,
+
+    /// Accent color for short breaks in the bar module.
+    #[serde(rename = "short-break-color")]
+    #[default(ColorValue::Token(CssToken::Green))]
+    pub short_break_color: ConfigProperty<ColorValue>,
+
+    /// Accent color for long breaks in the bar module.
+    #[serde(rename = "long-break-color")]
+    #[default(ColorValue::Token(CssToken::Yellow))]
+    pub long_break_color: ConfigProperty<ColorValue>,
+
     /// Max label characters before truncation with ellipsis. Set to 0 to disable.
     #[serde(rename = "label-max-length")]
     #[default(0)]
