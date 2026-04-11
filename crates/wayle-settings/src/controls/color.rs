@@ -38,6 +38,7 @@ impl SimpleComponent for ColorControl {
     ) -> ComponentParts<Self> {
         let dialog = gtk4::ColorDialog::new();
         let button = gtk4::ColorDialogButton::new(Some(dialog));
+        button.set_cursor_from_name(Some("pointer"));
 
         let current = hex_to_rgba(&property.get());
         button.set_rgba(&current);

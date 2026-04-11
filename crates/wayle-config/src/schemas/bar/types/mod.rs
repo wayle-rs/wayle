@@ -244,6 +244,11 @@ impl schemars::JsonSchema for BarModule {
 impl BarModule {
     const CUSTOM_PREFIX: &str = "custom-";
 
+    /// All built-in module names in kebab-case.
+    pub fn builtin_names() -> &'static [&'static str] {
+        BUILTIN_MODULES
+    }
+
     fn to_kebab_case(&self) -> &'static str {
         match self {
             Self::Battery => "battery",
@@ -495,5 +500,36 @@ impl IconPosition {
             Self::Start => None,
             Self::End => Some("icon-end"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bar_layout_group_roundtrip() {
+        let layout = BarLayout {
+            monitor: String::from("DP-1"),
+            extends: None,
+            show: true,
+            left: vec![
+                BarItem::Module(ModuleRef::Plain(BarModule::Clock)),
+                BarItem::Group(BarGroup {
+                    name: String::from("status"),
+                    modules: vec![ModuleRef::Plain(BarModule::Battery)],
+                }),
+            ],
+            center: vec![],
+            right: vec![],
+        };
+
+        let value = toml::Value::try_from(&layout).expect("serialize to toml::Value");
+        let toml_string = toml::to_string_pretty(&value).expect("serialize to string");
+
+        let deserialized: BarLayout =
+            toml::from_str(&toml_string).expect("deserialize from string");
+
+        assert_eq!(layout, deserialized);
     }
 }

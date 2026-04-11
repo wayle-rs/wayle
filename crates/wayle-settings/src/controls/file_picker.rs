@@ -48,7 +48,7 @@ impl SimpleComponent for FilePickerControl {
         root.add_css_class("file-picker");
 
         let entry = gtk4::Entry::builder()
-            .text(&init.property.get())
+            .text(init.property.get())
             .valign(gtk4::Align::Center)
             .build();
 

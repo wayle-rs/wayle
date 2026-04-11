@@ -59,6 +59,7 @@ where
             .numeric(true)
             .build();
 
+        spin.set_cursor_from_name(Some("pointer"));
         spin.set_range(init.range_min, init.range_max);
         spin.set_increments(init.step, init.step * 10.0);
         spin.set_value(current);

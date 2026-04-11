@@ -1,0 +1,150 @@
+.layout-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--rounding-element);
+    margin-bottom: var(--space-sm);
+}
+
+.layout-card-header {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.layout-extends-label {
+    font-size: var(--text-md);
+    text-transform: capitalize;
+    color: var(--fg-subtle);
+    margin-left: var(--space-sm);
+    margin-right: var(--space-xs);
+}
+
+.layout-card-header button {
+    margin-left: var(--space-xs);
+}
+
+.group-name-entry {
+    font-weight: var(--weight-semibold);
+    color: var(--fg-subtle);
+    margin-right: var(--space-xs);
+}
+
+.layout-card-body {
+    padding: var(--space-sm) var(--space-md);
+}
+
+.layout-zone {
+    margin-bottom: var(--space-sm);
+}
+
+.layout-zone-label {
+    font-size: var(--text-xs);
+    font-weight: var(--weight-bold);
+    color: var(--fg-subtle);
+    min-width: calc(3.5rem * var(--global-scale));
+}
+
+.layout-zone-items {
+    background-color: var(--bg-base);
+    border: 2px dashed var(--border-subtle);
+    border-radius: var(--rounding-container);
+    padding: var(--space-sm);
+    border-spacing: calc(0.25rem * var(--global-scale));
+    margin-right: var(--space-md);
+}
+
+.module-chip {
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--rounding-element);
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--fg-default);
+}
+
+button.chip-remove,
+button.chip-add {
+    margin-left: var(--space-xs);
+    padding: var(--space-xs);
+    color: var(--fg-subtle);
+}
+
+button.chip-remove:hover,
+button.chip-add:hover {
+    color: var(--fg-default);
+    background-color: var(--bg-hover);
+}
+
+button.chip-remove image,
+button.chip-add image {
+    -gtk-icon-size: var(--icon-xs);
+}
+
+.group-chip {
+    background-color: var(--bg-surface-elevated);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    padding: var(--space-xs) var(--space-sm);
+}
+
+button.zone-add-btn {
+    min-width: calc(1.5rem * var(--global-scale));
+    min-height: calc(1.5rem * var(--global-scale));
+    padding: 0;
+    background: none;
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--rounding-element);
+    color: var(--fg-subtle);
+    font-size: var(--text-xs);
+    margin-right: var(--space-xs);
+}
+
+button.zone-add-btn:hover {
+    border-color: var(--border-default);
+    color: var(--fg-default);
+}
+
+.chip-dragging {
+    opacity: 0.3;
+}
+
+.layout-zone-items > .drop-before {
+    border-left: 2px solid var(--accent);
+}
+
+.layout-zone-items > .drop-after {
+    border-right: 2px solid var(--accent);
+}
+
+.layout-hidden-label {
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--fg-subtle);
+    padding: var(--space-xl);
+}
+
+.bar-layout-control > button.flat {
+    font-size: var(--text-sm);
+    color: var(--fg-muted);
+    margin-top: var(--space-xs);
+}
+
+.module-picker-popover contents {
+    padding: var(--space-sm);
+}
+
+.module-picker-scroll {
+    min-width: calc(12rem * var(--global-scale));
+    min-height: calc(15rem * var(--global-scale));
+}
+
+.module-picker-list row {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-sm);
+    color: var(--fg-default);
+    border-radius: var(--rounding-element);
+}
+
+.module-picker-list row:hover {
+    background-color: var(--bg-hover);
+}

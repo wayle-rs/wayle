@@ -13,7 +13,6 @@ pub(crate) const CUSTOM_ID: &str = "__custom";
 pub(crate) struct ColorItem {
     pub id: &'static str,
     pub label: String,
-    pub group: &'static str,
     pub value: ColorValue,
 }
 
@@ -236,19 +235,16 @@ pub(super) fn build_items() -> Vec<ColorItem> {
         ColorItem {
             id: AUTO_ID,
             label: t("settings-color-auto"),
-            group: "",
             value: ColorValue::Auto,
         },
         ColorItem {
             id: TRANSPARENT_ID,
             label: t("settings-color-transparent"),
-            group: "",
             value: ColorValue::Transparent,
         },
         ColorItem {
             id: CUSTOM_ID,
             label: t("settings-color-custom"),
-            group: "",
             value: ColorValue::Auto,
         },
     ];
@@ -262,7 +258,6 @@ pub(super) fn build_items() -> Vec<ColorItem> {
             items.push(ColorItem {
                 id: HEADER_ID,
                 label: group.to_string(),
-                group,
                 value: ColorValue::Auto,
             });
             last_group = group;
@@ -271,7 +266,6 @@ pub(super) fn build_items() -> Vec<ColorItem> {
         items.push(ColorItem {
             id,
             label: label.to_string(),
-            group,
             value: ColorValue::Token(token),
         });
     }

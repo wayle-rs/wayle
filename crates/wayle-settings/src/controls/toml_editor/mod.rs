@@ -92,7 +92,7 @@ where
         });
 
         let save_button = gtk4::Button::builder()
-            .label(&t("settings-apply"))
+            .label(t("settings-apply"))
             .halign(gtk4::Align::End)
             .build();
 

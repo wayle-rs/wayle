@@ -55,6 +55,7 @@ where
         let current = (init.to_slider)(&init.property.get());
 
         let slider = DebouncedSlider::with_label(0.0);
+        slider.set_cursor_from_name(Some("pointer"));
         slider.set_range(init.range_min, init.range_max);
         slider.set_formatter(init.format_label);
         slider.set_value(current);

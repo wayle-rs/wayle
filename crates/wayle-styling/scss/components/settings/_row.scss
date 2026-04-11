@@ -54,30 +54,3 @@
     color: var(--fg-default);
     background-color: var(--bg-hover);
 }
-
-button.reset-menu-item {
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--rounding-element);
-    color: var(--fg-muted);
-}
-
-button.reset-menu-item:hover {
-    background-color: var(--bg-hover);
-    color: var(--fg-default);
-}
-
-image.reset-menu-icon {
-    -gtk-icon-size: var(--icon-sm);
-    color: var(--fg-subtle);
-    margin-right: var(--space-sm);
-}
-
-.reset-menu-label {
-    font-size: var(--text-sm);
-}
-
-.reset-menu-value {
-    font-size: var(--text-sm);
-    color: var(--fg-subtle);
-    margin-left: var(--space-lg);
-}

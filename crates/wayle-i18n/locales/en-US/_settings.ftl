@@ -5,6 +5,24 @@ settings-apply = Apply
 settings-color-auto = Auto
 settings-color-transparent = Transparent
 settings-color-custom = Custom...
+settings-monitor-add = Add Monitor
+settings-layout-add = Add Monitor Layout
+settings-layout-add-module = Add module
+settings-layout-add-group = Add group
+settings-layout-monitor-label = Monitor
+settings-layout-extends-label = Extends
+settings-layout-extends-none = none
+settings-layout-default-group = group
+settings-layout-search = Search modules...
+settings-layout-count = { $count } layouts
+settings-wallpaper-monitor-label = Monitor
+settings-wallpaper-path-label = Wallpaper
+settings-wallpaper-count = { $count } monitors
+settings-layout-zone-left = LEFT
+settings-layout-zone-center = CENTER
+settings-layout-zone-right = RIGHT
+settings-layout-zone-empty = (empty)
+settings-layout-hidden = Bar hidden on this monitor
 
 ## Source badges
 settings-source-config = config

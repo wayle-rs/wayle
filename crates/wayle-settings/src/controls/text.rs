@@ -1,4 +1,4 @@
-//! Text entry for string config properties. Commits on Enter.
+//! Text entry for string-like config properties. Commits on Enter.
 
 use gtk4::prelude::*;
 use relm4::prelude::*;
@@ -6,15 +6,44 @@ use wayle_config::ConfigProperty;
 
 use super::{ControlOutput, spawn_property_watcher};
 
-pub(crate) struct TextControl {
-    property: ConfigProperty<String>,
+pub(crate) trait TextLike: Clone + Send + Sync + PartialEq + 'static {
+    fn to_entry_text(&self) -> String;
+    fn from_entry_text(text: &str) -> Self;
+}
+
+impl TextLike for String {
+    fn to_entry_text(&self) -> String {
+        self.clone()
+    }
+
+    fn from_entry_text(text: &str) -> Self {
+        text.to_string()
+    }
+}
+
+impl TextLike for Option<String> {
+    fn to_entry_text(&self) -> String {
+        self.clone().unwrap_or_default()
+    }
+
+    fn from_entry_text(text: &str) -> Self {
+        if text.is_empty() {
+            None
+        } else {
+            Some(text.to_string())
+        }
+    }
+}
+
+pub(crate) struct TextControl<T: TextLike> {
+    property: ConfigProperty<T>,
     entry: gtk4::Entry,
     activate_id: gtk4::glib::SignalHandlerId,
     changed_id: gtk4::glib::SignalHandlerId,
 }
 
-pub(crate) struct TextInit {
-    pub property: ConfigProperty<String>,
+pub(crate) struct TextInit<T: TextLike> {
+    pub property: ConfigProperty<T>,
     pub dirty_badge: gtk4::Label,
 }
 
@@ -23,8 +52,8 @@ pub(crate) enum TextMsg {
     Refresh,
 }
 
-impl SimpleComponent for TextControl {
-    type Init = TextInit;
+impl<T: TextLike> SimpleComponent for TextControl<T> {
+    type Init = TextInit<T>;
     type Input = TextMsg;
     type Output = ControlOutput;
     type Root = gtk4::Box;
@@ -43,7 +72,7 @@ impl SimpleComponent for TextControl {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let entry = gtk4::Entry::builder()
-            .text(&init.property.get())
+            .text(init.property.get().to_entry_text())
             .valign(gtk4::Align::Center)
             .build();
         entry.add_css_class("setting-text-entry");
@@ -58,7 +87,7 @@ impl SimpleComponent for TextControl {
         let dirty_badge_commit = init.dirty_badge;
 
         let activate_id = entry.connect_activate(move |entry| {
-            prop.set(entry.text().to_string());
+            prop.set(T::from_entry_text(&entry.text()));
             dirty_badge_commit.set_visible(false);
             let _ = output_sender.send(ControlOutput::ValueChanged);
         });
@@ -85,7 +114,7 @@ impl SimpleComponent for TextControl {
             TextMsg::Refresh => {
                 self.entry.block_signal(&self.activate_id);
                 self.entry.block_signal(&self.changed_id);
-                self.entry.set_text(&self.property.get());
+                self.entry.set_text(&self.property.get().to_entry_text());
                 self.entry.unblock_signal(&self.changed_id);
                 self.entry.unblock_signal(&self.activate_id);
             }

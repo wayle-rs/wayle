@@ -72,6 +72,7 @@ where
 
         let dropdown = gtk4::DropDown::new(Some(string_list), gtk4::Expression::NONE);
         dropdown.set_selected(current_index);
+        dropdown.set_cursor_from_name(Some("pointer"));
 
         if let Some(popover) = dropdown
             .last_child()

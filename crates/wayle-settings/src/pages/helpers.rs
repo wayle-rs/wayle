@@ -8,19 +8,27 @@ use relm4::prelude::*;
 use serde::{Deserialize, Serialize};
 use wayle_config::{
     ConfigProperty, EnumVariants,
-    schemas::styling::{
-        ColorValue, HexColor, NormalizedF64, Percentage, ScaleFactor, SignedNormalizedF64, Spacing,
+    schemas::{
+        bar::BarLayout,
+        modules::CustomModuleDefinition,
+        styling::{
+            ColorValue, HexColor, NormalizedF64, Percentage, ScaleFactor, SignedNormalizedF64,
+            Spacing,
+        },
+        wallpaper::MonitorWallpaperConfig,
     },
 };
 use wayle_i18n::{t, t_attr};
 
 use crate::{
     controls::{
+        bar_layout::{BarLayoutControl, BarLayoutInit},
         color::ColorControl,
         color_value::ColorValueControl,
         enum_select::EnumSelectControl,
         file_picker::{FilePickerControl, FilePickerInit},
         font::FontControl,
+        monitor_wallpaper::MonitorWallpaperControl,
         number::{NumberControl, NumberInit},
         slider::{SliderControl, SliderInit},
         text::{TextControl, TextInit},
@@ -265,6 +273,30 @@ pub(crate) fn text(property: &ConfigProperty<String>) -> SettingSpec {
     }
 }
 
+pub(crate) fn optional_text(property: &ConfigProperty<Option<String>>) -> SettingSpec {
+    let badge = make_dirty_badge();
+
+    let controller = TextControl::builder()
+        .launch(TextInit {
+            property: property.clone(),
+            dirty_badge: badge.clone(),
+        })
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |value: &Option<String>| {
+            value.clone().unwrap_or_default()
+        }),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: Some(badge),
+    }
+}
+
 pub(crate) fn color(property: &ConfigProperty<HexColor>) -> SettingSpec {
     let controller = ColorControl::builder().launch(property.clone()).detach();
     let widget = controller.widget().clone();
@@ -381,6 +413,37 @@ pub(crate) fn number_u64(property: &ConfigProperty<u64>) -> SettingSpec {
     }
 }
 
+pub(crate) fn number_f64(
+    property: &ConfigProperty<f64>,
+    range_min: f64,
+    range_max: f64,
+    step: f64,
+    digits: u32,
+) -> SettingSpec {
+    let controller = NumberControl::builder()
+        .launch(NumberInit {
+            property: property.clone(),
+            range_min,
+            range_max,
+            step,
+            digits,
+            to_f64: |value| *value,
+            from_f64: |value| value,
+        })
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |value| format!("{value:.2}")),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
+    }
+}
+
 pub(crate) fn signed_normalized(property: &ConfigProperty<SignedNormalizedF64>) -> SettingSpec {
     let controller = SliderControl::builder()
         .launch(SliderInit {
@@ -428,6 +491,48 @@ where
         keepalive: Box::new(controller),
         full_width: true,
         dirty_badge: Some(badge),
+    }
+}
+
+pub(crate) fn bar_layout(
+    property: &ConfigProperty<Vec<BarLayout>>,
+    custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,
+) -> SettingSpec {
+    let controller = BarLayoutControl::builder()
+        .launch(BarLayoutInit {
+            property: property.clone(),
+            custom_modules: custom_modules.clone(),
+        })
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |layouts| layouts.len().to_string()),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: true,
+        dirty_badge: None,
+    }
+}
+
+pub(crate) fn monitor_wallpaper(
+    property: &ConfigProperty<Vec<MonitorWallpaperConfig>>,
+) -> SettingSpec {
+    let controller = MonitorWallpaperControl::builder()
+        .launch(property.clone())
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingSpec {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |monitors| monitors.len().to_string()),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: true,
+        dirty_badge: None,
     }
 }
 

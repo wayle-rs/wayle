@@ -8,13 +8,14 @@ use futures::StreamExt;
 use gtk4::glib;
 use wayle_config::{ConfigProperty, ValueSource};
 
+pub(crate) type WatchCallback = Box<dyn FnOnce(Box<dyn Fn() + 'static>)>;
+
 pub(crate) struct PropertyHandle {
-    pub(crate) i18n_key: Option<&'static str>,
     pub(crate) source: Box<dyn Fn() -> ValueSource>,
     pub(crate) clear_runtime: Box<dyn Fn()>,
     pub(crate) config_display: Box<dyn Fn() -> Option<String>>,
     pub(crate) default_display: Box<dyn Fn() -> String>,
-    pub(crate) watch_changes: Option<Box<dyn FnOnce(Box<dyn Fn() + 'static>)>>,
+    pub(crate) watch_changes: Option<WatchCallback>,
 }
 
 impl PropertyHandle {
@@ -35,7 +36,6 @@ impl PropertyHandle {
         let watch_prop = Arc::clone(&prop);
 
         Self {
-            i18n_key: property.i18n_key(),
             source: Box::new(move || source_prop.source()),
             clear_runtime: Box::new(move || clear_prop.clear_runtime()),
 
@@ -57,10 +57,6 @@ impl PropertyHandle {
                 });
             })),
         }
-    }
-
-    pub(crate) fn i18n_key(&self) -> Option<&'static str> {
-        self.i18n_key
     }
 
     pub(crate) fn source(&self) -> ValueSource {

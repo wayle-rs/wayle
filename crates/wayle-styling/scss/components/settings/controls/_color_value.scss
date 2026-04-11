@@ -1,116 +1,16 @@
-.setting-control dropdown {
-    min-width: calc(8rem * var(--global-scale));
+.setting-control colorbutton {
+    min-width: calc(2.5rem * var(--global-scale));
+    min-height: calc(1.75rem * var(--global-scale));
 }
 
-.setting-control spinbutton {
-    min-width: calc(8rem * var(--global-scale));
+.setting-control colorbutton button {
+    padding: 0;
+    border: none;
+    border-radius: var(--rounding-element);
 }
 
 .setting-control colorbutton button colorswatch {
     border-radius: var(--rounding-element);
-}
-
-dropdown button {
-    padding: var(--space-xs) var(--space-sm);
-    background-color: var(--bg-overlay);
-    border: 1px solid var(--border-default);
-    border-radius: var(--rounding-element);
-    font-size: var(--text-sm);
-    color: var(--fg-default);
-}
-
-dropdown button:hover {
-    border-color: var(--accent);
-}
-
-dropdown button arrow {
-    -gtk-icon-source: -gtk-icontheme("ld-chevron-down-symbolic");
-    -gtk-icon-size: var(--icon-xs);
-    color: var(--fg-subtle);
-    margin-left: var(--space-xs);
-}
-
-dropdown popover {
-    margin-top: var(--space-xs);
-}
-
-dropdown popover contents {
-    padding: var(--space-xs);
-}
-
-dropdown listview row {
-    padding: var(--space-xs) var(--space-sm);
-    border-radius: var(--rounding-element);
-    font-size: var(--text-sm);
-    color: var(--fg-muted);
-}
-
-dropdown listview row:hover {
-    background-color: var(--bg-hover);
-    color: var(--fg-default);
-}
-
-dropdown listview row:selected {
-    background-color: var(--accent-subtle);
-    color: var(--accent);
-}
-
-dropdown listview row image {
-    -gtk-icon-size: var(--icon-xs);
-    margin-left: var(--space-md);
-}
-
-dropdown listview row label {
-    margin-right: var(--space-md);
-}
-
-spinbutton {
-    background-color: var(--bg-overlay);
-    border: 1px solid var(--border-default);
-    border-radius: var(--rounding-element);
-    font-size: var(--text-sm);
-    color: var(--fg-default);
-}
-
-spinbutton text {
-    padding: var(--space-xs) var(--space-sm);
-}
-
-spinbutton button {
-    padding: 0 var(--space-xs);
-    color: var(--fg-muted);
-}
-
-spinbutton button:hover {
-    color: var(--fg-default);
-    background-color: var(--bg-hover);
-}
-
-.setting-control entry {
-    padding: 0;
-    min-height: 0;
-    background-color: var(--bg-overlay);
-    border: 1px solid var(--border-default);
-    border-radius: var(--rounding-element);
-    font-size: var(--text-sm);
-    color: var(--fg-default);
-}
-
-.setting-control entry text {
-    padding: var(--space-sm);
-    min-height: 0;
-}
-
-.setting-control entry:focus-within {
-    border-color: var(--accent);
-}
-
-.setting-control entry.dirty {
-    border-color: var(--status-warning);
-}
-
-.toml-editor.dirty {
-    border-color: var(--status-warning);
 }
 
 .color-value-control {
@@ -259,12 +159,13 @@ spinbutton button:hover {
 }
 
 .color-value-dot.custom {
-    background-image: linear-gradient(135deg, var(--red), var(--green), var(--blue));
+    background-image: linear-gradient(135deg, var(--green), var(--red), var(--blue));
     border: none;
 }
 
 .color-value-label {
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
 }
 
 window.colorchooser {
@@ -281,47 +182,10 @@ window.colorchooser headerbar button {
 }
 
 .color-value-group-header {
-    font-size: var(--text-xs);
+    font-size: var(--text-sm);
     font-weight: var(--weight-semibold);
     color: var(--fg-subtle);
     text-transform: uppercase;
     letter-spacing: 0.06em;
     padding: var(--space-sm) var(--space-md) var(--space-xs);
-}
-
-.toml-editor {
-    background-color: var(--bg-overlay);
-    border: 1px solid var(--border-default);
-    border-radius: var(--rounding-element);
-    font-size: var(--text-sm);
-    color: var(--fg-default);
-    padding: var(--space-sm);
-    min-height: calc(12rem * var(--global-scale));
-}
-
-.toml-editor:focus-within {
-    border-color: var(--accent);
-}
-
-.toml-editor text {
-    background-color: transparent;
-    color: var(--fg-default);
-}
-
-.toml-editor text selection {
-    background-color: var(--accent-subtle);
-    color: var(--fg-default);
-}
-
-.toml-editor + button {
-    margin-top: var(--space-sm);
-}
-
-button.font {
-    padding: var(--space-xs) var(--space-sm);
-    background-color: var(--bg-overlay);
-    border: 1px solid var(--border-default);
-    border-radius: var(--rounding-element);
-    font-size: var(--text-sm);
-    color: var(--fg-default);
 }

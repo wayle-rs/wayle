@@ -5,11 +5,13 @@
 use futures::StreamExt;
 use wayle_config::ConfigProperty;
 
+pub mod bar_layout;
 pub mod color;
 pub mod color_value;
 pub mod enum_select;
 pub mod file_picker;
 pub mod font;
+pub mod monitor_wallpaper;
 pub mod number;
 pub mod slider;
 pub mod text;

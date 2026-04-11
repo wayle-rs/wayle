@@ -27,6 +27,7 @@ impl SimpleComponent for ToggleControl {
         gtk4::Switch {
             set_hexpand: false,
             set_valign: gtk4::Align::Center,
+            set_cursor_from_name: Some("pointer"),
 
             #[watch]
             #[block_signal(toggle_handler)]

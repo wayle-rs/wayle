@@ -38,6 +38,7 @@ impl SimpleComponent for FontControl {
     ) -> ComponentParts<Self> {
         let dialog = gtk4::FontDialog::new();
         let button = gtk4::FontDialogButton::new(Some(dialog));
+        button.set_cursor_from_name(Some("pointer"));
 
         let current_font = FontDescription::from_string(&property.get());
         button.set_font_desc(&current_font);

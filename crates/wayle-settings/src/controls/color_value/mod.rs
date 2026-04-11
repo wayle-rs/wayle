@@ -183,6 +183,7 @@ fn build_dropdown(
 
     let dropdown = gtk4::DropDown::new(Some(string_list), Expression::NONE);
     dropdown.set_selected(current_index);
+    dropdown.set_cursor_from_name(Some("pointer"));
     dropdown.add_css_class("color-value-dropdown");
 
     setup_dropdown_factory(&dropdown, items);
@@ -208,6 +209,7 @@ fn build_color_button(
 ) -> (gtk4::ColorDialogButton, gtk4::glib::SignalHandlerId) {
     let dialog = gtk4::ColorDialog::new();
     let button = gtk4::ColorDialogButton::new(Some(dialog));
+    button.set_cursor_from_name(Some("pointer"));
 
     button.add_css_class("color-value-swatch");
     button.set_vexpand(false);
