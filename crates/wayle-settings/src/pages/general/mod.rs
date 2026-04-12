@@ -1,9 +1,9 @@
-//! General settings page: fonts and display options.
+//! General settings page: fonts, display, scale, and rounding.
 
 use wayle_config::Config;
 
 use crate::{
-    editors::{font::font, toggle::toggle},
+    editors::{enum_select::enum_select, font::font, slider::scale, toggle::toggle},
     pages::{
         nav::LeafEntry,
         spec::{SectionSpec, page_spec},
@@ -12,6 +12,7 @@ use crate::{
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let general = &config.general;
+    let styling = &config.styling;
 
     LeafEntry {
         id: "general",
@@ -23,6 +24,10 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-fonts",
                     items: vec![font(&general.font_sans), font(&general.font_mono)],
+                },
+                SectionSpec {
+                    title_key: "settings-section-scale-rounding",
+                    items: vec![scale(&styling.scale), enum_select(&styling.rounding)],
                 },
                 SectionSpec {
                     title_key: "settings-section-display",

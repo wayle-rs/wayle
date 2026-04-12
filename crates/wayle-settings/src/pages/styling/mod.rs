@@ -1,4 +1,4 @@
-//! Theme settings page: provider selection, palette, scale, and provider-specific tuning.
+//! Theme settings page: provider selection, palette, and provider-specific tuning.
 
 use wayle_config::{Config, schemas::styling::PywalContrast};
 
@@ -7,7 +7,7 @@ use crate::{
         color::color,
         enum_select::enum_select,
         number::{number_newtype, number_u8},
-        slider::{normalized, percentage, scale, signed_normalized},
+        slider::{normalized, percentage, signed_normalized},
         text::text,
         theme_selector::theme_selector,
         toggle::toggle,
@@ -51,10 +51,6 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                         color(&palette.green),
                         color(&palette.blue),
                     ],
-                },
-                SectionSpec {
-                    title_key: "settings-section-scale-rounding",
-                    items: vec![scale(&styling.scale), enum_select(&styling.rounding)],
                 },
                 SectionSpec {
                     title_key: "settings-section-matugen",
