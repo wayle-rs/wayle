@@ -3,6 +3,9 @@
 
 mod card;
 mod module_picker;
+mod row;
+pub(crate) use row::*;
+
 pub(super) mod zone;
 
 use card::{LayoutCard, LayoutCardInit, LayoutCardOutput};

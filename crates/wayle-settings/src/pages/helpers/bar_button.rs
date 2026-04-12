@@ -2,10 +2,11 @@
 
 use wayle_config::{ClickAction, ConfigProperty, schemas::styling::ColorValue};
 
-use super::{
-    controls::{color_value, number_u32, text_like, toggle},
-    types::SectionSpec,
+use crate::editors::{
+    color_value::color_value, number::number_u32, text::text_like, toggle::toggle,
 };
+
+use super::types::SectionSpec;
 
 pub(crate) struct BarButtonFields<'a> {
     pub icon_show: &'a ConfigProperty<bool>,

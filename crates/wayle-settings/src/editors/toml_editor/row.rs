@@ -3,7 +3,7 @@ use relm4::prelude::*;
 use serde::{Deserialize, Serialize};
 use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 
-use super::make_dirty_badge;
+use crate::editors::make_dirty_badge;
 use crate::{
     editors::toml_editor::{TomlEditorControl, TomlEditorInit, helpers::serialize_with_key},
     pages::helpers::types::SettingSpec,

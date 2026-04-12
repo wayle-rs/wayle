@@ -2,7 +2,7 @@ use gtk4::prelude::*;
 use relm4::prelude::*;
 use wayle_config::ConfigProperty;
 
-use super::make_dirty_badge;
+use crate::editors::make_dirty_badge;
 use crate::{
     editors::text::{TextControl, TextInit, TextLike},
     pages::helpers::types::SettingSpec,

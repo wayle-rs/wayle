@@ -2,6 +2,9 @@
 //! themes; clicking one overwrites the current palette colors with that
 //! theme's values. The button has no persistent selection state.
 
+mod row;
+pub(crate) use row::*;
+
 use std::{cell::RefCell, collections::BTreeSet};
 
 use gtk4::{

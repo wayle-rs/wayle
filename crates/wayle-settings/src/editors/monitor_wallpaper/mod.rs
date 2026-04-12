@@ -3,6 +3,9 @@
 
 mod card;
 
+mod row;
+pub(crate) use row::*;
+
 use card::{MonitorCard, MonitorCardOutput};
 use gtk4::prelude::*;
 use relm4::prelude::*;

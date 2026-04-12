@@ -1,6 +1,9 @@
 //! Slider backed by DebouncedSlider. Throttled at 100ms during drag,
 //! with a final commit on release.
 
+mod row;
+pub(crate) use row::*;
+
 use std::sync::Arc;
 
 use gtk4::{glib, prelude::*};

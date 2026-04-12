@@ -1,5 +1,8 @@
 //! GTK Switch bound to a boolean config property.
 
+mod row;
+pub(crate) use row::*;
+
 use gtk4::prelude::*;
 use relm4::prelude::*;
 use wayle_config::ConfigProperty;

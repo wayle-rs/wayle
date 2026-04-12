@@ -1,5 +1,8 @@
 //! SpinButton wired to a typed numeric property via caller-provided conversion functions.
 
+mod row;
+pub(crate) use row::*;
+
 use std::sync::Arc;
 
 use gtk4::prelude::*;

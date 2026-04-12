@@ -2,14 +2,11 @@ use gtk4::prelude::*;
 use relm4::prelude::*;
 use wayle_config::{
     ConfigProperty,
-    schemas::{bar::BarLayout, modules::CustomModuleDefinition, wallpaper::MonitorWallpaperConfig},
+    schemas::{bar::BarLayout, modules::CustomModuleDefinition},
 };
 
 use crate::{
-    editors::{
-        bar_layout::{BarLayoutControl, BarLayoutInit},
-        monitor_wallpaper::MonitorWallpaperControl,
-    },
+    editors::bar_layout::{BarLayoutControl, BarLayoutInit},
     pages::helpers::types::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,
@@ -31,26 +28,6 @@ pub(crate) fn bar_layout(
     SettingSpec {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |layouts| layouts.len().to_string()),
-        control: widget.upcast(),
-        keepalive: Box::new(controller),
-        full_width: true,
-        dirty_badge: None,
-        behavior: RowBehavior::Setting,
-    }
-}
-
-pub(crate) fn monitor_wallpaper(
-    property: &ConfigProperty<Vec<MonitorWallpaperConfig>>,
-) -> SettingSpec {
-    let controller = MonitorWallpaperControl::builder()
-        .launch(property.clone())
-        .detach();
-
-    let widget = controller.widget().clone();
-
-    SettingSpec {
-        i18n_key: property.i18n_key(),
-        handle: PropertyHandle::new(property, |monitors| monitors.len().to_string()),
         control: widget.upcast(),
         keepalive: Box::new(controller),
         full_width: true,

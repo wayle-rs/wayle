@@ -3,6 +3,9 @@
 
 mod helpers;
 
+mod row;
+pub(crate) use row::*;
+
 use gtk4::{Expression, prelude::*};
 use helpers::{
     CUSTOM_ID, ColorItem, HEADER_ID, build_items, find_index, hex_to_rgba, rgba_to_hex,

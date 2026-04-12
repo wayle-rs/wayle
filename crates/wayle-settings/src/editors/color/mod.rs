@@ -1,5 +1,8 @@
 //! Color picker for HexColor config properties using GTK's ColorDialog.
 
+mod row;
+pub(crate) use row::*;
+
 use gtk4::{gdk, prelude::*};
 use relm4::prelude::*;
 use wayle_config::{ConfigProperty, schemas::styling::HexColor};

@@ -1,5 +1,8 @@
 //! File picker for path-valued config properties.
 
+mod row;
+pub(crate) use row::*;
+
 use gtk4::{gio, prelude::*};
 use relm4::prelude::*;
 use wayle_config::ConfigProperty;

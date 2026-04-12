@@ -1,5 +1,8 @@
 //! TOML source editor for complex config values (maps, lists, thresholds).
 
+mod row;
+pub(crate) use row::*;
+
 pub(crate) mod helpers;
 
 use std::{env, fs, path::PathBuf, sync::Mutex};

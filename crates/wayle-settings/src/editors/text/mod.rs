@@ -1,5 +1,8 @@
 //! Text entry for string-like config properties. Commits on Enter.
 
+mod row;
+pub(crate) use row::*;
+
 use gtk4::prelude::*;
 use relm4::prelude::*;
 use wayle_config::{

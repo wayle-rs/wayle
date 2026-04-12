@@ -1,5 +1,8 @@
 //! Dropdown control for config enums that derive `EnumVariants`.
 
+mod row;
+pub(crate) use row::*;
+
 use gtk4::prelude::*;
 use relm4::prelude::*;
 use serde::{Deserialize, de::value::StrDeserializer};

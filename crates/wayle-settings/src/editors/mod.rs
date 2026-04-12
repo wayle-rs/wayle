@@ -3,7 +3,9 @@
 //! Each owns its `ConfigProperty` and writes back on user interaction.
 
 use futures::StreamExt;
+use gtk4::prelude::*;
 use wayle_config::ConfigProperty;
+use wayle_i18n::t;
 
 pub mod bar_layout;
 pub mod color;
@@ -38,4 +40,17 @@ pub(super) fn spawn_property_watcher<T: Clone + Send + Sync + PartialEq + 'stati
             callback();
         }
     });
+}
+
+pub(crate) fn make_dirty_badge() -> gtk4::Label {
+    let badge = gtk4::Label::new(Some(&t("settings-source-unsaved")));
+
+    badge.add_css_class("badge-subtle");
+    badge.add_css_class("warning");
+
+    badge.set_visible(false);
+    badge.set_valign(gtk4::Align::Center);
+    badge.set_halign(gtk4::Align::Start);
+
+    badge
 }

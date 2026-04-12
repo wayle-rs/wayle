@@ -1,5 +1,8 @@
 //! Font picker using GTK's FontDialogButton. Only the family name is saved.
 
+mod row;
+pub(crate) use row::*;
+
 use gtk4::{pango::FontDescription, prelude::*};
 use relm4::prelude::*;
 use wayle_config::ConfigProperty;
