@@ -4,15 +4,16 @@ use wayle_config::Config;
 
 use crate::pages::{
     helpers::{self, SectionSpec, page_spec},
-    nav::ChildEntry,
+    nav::LeafEntry,
 };
 
-pub(crate) fn entry(config: &Config) -> ChildEntry {
+pub(crate) fn entry(config: &Config) -> LeafEntry {
     let bar = &config.bar;
 
-    ChildEntry {
+    LeafEntry {
         id: "bar-dropdown",
         i18n_key: "settings-nav-bar-dropdown",
+        icon: "ld-panel-bottom-symbolic",
         spec: page_spec(
             "settings-page-bar-dropdown",
             vec![

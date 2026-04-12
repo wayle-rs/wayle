@@ -195,6 +195,16 @@ pub fn derive_commit_config_reload(input: TokenStream) -> TokenStream {
     derives::simple_field_walk(input, "CommitConfigReload", "commit_config_reload")
 }
 
+/// Bulk "reset to defaults" action. Drops the runtime layer on every
+/// property and forces a watcher notification even if the effective value
+/// didn't change. The naive path (reset + commit) deduplicates identical
+/// values, leaving subscribers (source badges, persistence) thinking
+/// nothing changed.
+#[proc_macro_derive(ClearAllRuntime, attributes(wayle))]
+pub fn derive_clear_all_runtime(input: TokenStream) -> TokenStream {
+    derives::simple_field_walk(input, "ClearAllRuntime", "clear_all_runtime")
+}
+
 /// Wires up an `mpsc::UnboundedSender<()>` to every field so any property
 /// change sends a signal. Used by `PersistenceWatcher` to know when to
 /// save, and by page-level watchers to refresh the settings UI.

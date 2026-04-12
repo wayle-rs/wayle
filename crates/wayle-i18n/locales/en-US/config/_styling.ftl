@@ -136,6 +136,21 @@ enum-wallust-palette-softlightcomp16 = Softlightcomp16
 enum-wallust-palette-ansidark = Ansidark
 enum-wallust-palette-ansidark16 = Ansidark16
 
+## WallustBackend variants
+enum-wallust-backend-full = Full
+enum-wallust-backend-resized = Resized
+enum-wallust-backend-wal = Wal
+enum-wallust-backend-thumb = Thumb
+enum-wallust-backend-fastresize = Fastresize
+enum-wallust-backend-kmeans = K-Means
+
+## WallustColorspace variants
+enum-wallust-colorspace-lab = Lab
+enum-wallust-colorspace-labmixed = Labmixed
+enum-wallust-colorspace-lch = Lch
+enum-wallust-colorspace-lchmixed = Lchmixed
+enum-wallust-colorspace-lchansi = Lchansi
+
 ## FontWeightClass variants
 enum-font-weight-class-normal = Normal
 enum-font-weight-class-medium = Medium

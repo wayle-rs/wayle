@@ -22,6 +22,10 @@
     color: var(--fg-default);
 }
 
+.toml-editor.toml-editor-lines-40 {
+    min-height: calc(30rem * var(--global-scale));
+}
+
 .toml-editor + button {
     margin-top: var(--space-sm);
 }

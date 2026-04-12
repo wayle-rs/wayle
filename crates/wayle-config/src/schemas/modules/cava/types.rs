@@ -211,7 +211,18 @@ pub enum CavaDirection {
 }
 
 /// Audio capture backend.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum CavaInput {
     /// PipeWire multimedia server.

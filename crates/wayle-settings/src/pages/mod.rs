@@ -3,6 +3,10 @@
 pub mod bar;
 pub mod general;
 pub mod helpers;
+pub mod modules;
 pub mod nav;
+pub mod notifications;
+pub mod osd;
 pub mod page;
-pub mod test_controls;
+pub mod styling;
+pub mod wallpaper;

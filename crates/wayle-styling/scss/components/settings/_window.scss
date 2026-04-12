@@ -4,3 +4,27 @@ window.settings-window {
     font-family: var(--font-sans);
     font-size: var(--text-base);
 }
+
+button.settings-close {
+    min-width: calc(1.5rem * var(--global-scale));
+    min-height: calc(1.5rem * var(--global-scale));
+    padding: var(--space-xs);
+    margin: var(--space-md);
+    border-radius: var(--rounding-element);
+    color: var(--fg-muted);
+}
+
+button.settings-close:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-default);
+}
+
+button.settings-close image {
+    -gtk-icon-size: var(--icon-md);
+}
+
+window.settings-window paned > separator {
+    min-width: var(--space-sm);
+    margin-left: calc(-1 * var(--space-sm));
+    background-color: transparent;
+}

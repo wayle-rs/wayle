@@ -144,7 +144,7 @@ fn bind_row(list_item: &gtk4::ListItem, id: &str, label_text: &str) {
     dot.set_css_classes(&["color-value-dot"]);
 
     match id {
-        AUTO_ID => dot.add_css_class("auto"),
+        AUTO_ID => dot.set_visible(false),
         TRANSPARENT_ID => dot.add_css_class("transparent"),
         CUSTOM_ID => dot.add_css_class("custom"),
         _ => dot.add_css_class(&format!("token-{id}")),

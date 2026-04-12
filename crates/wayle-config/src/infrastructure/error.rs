@@ -98,13 +98,6 @@ pub enum Error {
         source: std::io::Error,
     },
 
-    /// Theme file is not a TOML file.
-    #[error("theme file '{}' is not a toml file", path.display())]
-    ThemeNotToml {
-        /// Path of the theme file.
-        path: PathBuf,
-    },
-
     /// Theme file read failed.
     #[error("cannot read theme file '{}'", path.display())]
     ThemeRead {

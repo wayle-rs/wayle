@@ -8,6 +8,6 @@ mod traits;
 
 pub use config::{ConfigProperty, ValueSource};
 pub use traits::{
-    ApplyConfigLayer, ApplyRuntimeLayer, ClearRuntimeByPath, CommitConfigReload,
+    ApplyConfigLayer, ApplyRuntimeLayer, ClearAllRuntime, ClearRuntimeByPath, CommitConfigReload,
     ExtractRuntimeValues, ResetConfigLayer, ResetRuntimeLayer, SubscribeChanges,
 };

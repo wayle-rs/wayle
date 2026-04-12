@@ -1,4 +1,7 @@
-use std::sync::{Arc, RwLock};
+use std::{
+    io,
+    sync::{Arc, RwLock},
+};
 
 use tokio::fs;
 use tracing::{info, instrument, warn};
@@ -10,8 +13,8 @@ use super::{
     watcher::FileWatcher,
 };
 use crate::{
-    ApplyConfigLayer, ApplyRuntimeLayer, ClearRuntimeByPath, CommitConfigReload, Config,
-    ExtractRuntimeValues, infrastructure::themes::utils::load_themes,
+    ApplyConfigLayer, ApplyRuntimeLayer, ClearAllRuntime, ClearRuntimeByPath, CommitConfigReload,
+    Config, ExtractRuntimeValues, infrastructure::themes::utils::load_themes,
 };
 
 /// Reactive configuration service.
@@ -93,6 +96,35 @@ impl ConfigService {
     /// Reference to the config root.
     pub fn config(&self) -> &Config {
         &self.config
+    }
+
+    /// Drops every runtime override and deletes `runtime.toml` from disk.
+    ///
+    /// The in-memory reset happens first so subscribers see fresh values
+    /// immediately. The file removal is best-effort: if it fails (permission,
+    /// concurrent removal), a warning is logged and the error is returned so
+    /// callers can decide whether to surface it to the user.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `runtime.toml` exists but cannot be removed.
+    pub fn reset_all_runtime(&self) -> Result<(), io::Error> {
+        self.config.clear_all_runtime();
+
+        let runtime_path = ConfigPaths::runtime_config();
+
+        match std::fs::remove_file(&runtime_path) {
+            Ok(()) => Ok(()),
+            Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(()),
+            Err(err) => {
+                tracing::warn!(
+                    error = %err,
+                    path = %runtime_path.display(),
+                    "failed to remove runtime.toml"
+                );
+                Err(err)
+            }
+        }
     }
 
     /// Subscribes to secrets reload events.

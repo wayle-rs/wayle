@@ -48,8 +48,26 @@
     border: 2px dashed var(--border-subtle);
     border-radius: var(--rounding-container);
     padding: var(--space-sm);
-    border-spacing: calc(0.25rem * var(--global-scale));
     margin-right: var(--space-md);
+}
+
+.layout-zone-empty {
+    font-size: var(--text-sm);
+    font-style: italic;
+    color: var(--fg-subtle);
+    padding: var(--space-xs);
+}
+
+.layout-monitor-input,
+.layout-extends-input {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+}
+
+.layout-monitor-input text,
+.layout-extends-input text {
+    padding: var(--space-xs);
+    min-height: 0;
 }
 
 .module-chip {
@@ -60,6 +78,7 @@
     font-size: var(--text-sm);
     font-weight: var(--weight-medium);
     color: var(--fg-default);
+    margin-right: var(--space-sm);
 }
 
 button.chip-remove,
@@ -85,6 +104,7 @@ button.chip-add image {
     border: 1px solid var(--border-default);
     border-radius: var(--rounding-element);
     padding: var(--space-xs) var(--space-sm);
+    margin-right: var(--space-sm);
 }
 
 button.zone-add-btn {
@@ -123,7 +143,7 @@ button.zone-add-btn:hover {
     padding: var(--space-xl);
 }
 
-.bar-layout-control > button.flat {
+.bar-layout-control > button.ghost {
     font-size: var(--text-sm);
     color: var(--fg-muted);
     margin-top: var(--space-xs);

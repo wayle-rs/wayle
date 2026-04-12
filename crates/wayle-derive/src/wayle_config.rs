@@ -107,6 +107,7 @@ fn generate(parsed_struct: ItemStruct, args: MacroArgs) -> syn::Result<TokenStre
             wayle_derive::SubscribeChanges,
             wayle_derive::ResetConfigLayer,
             wayle_derive::ResetRuntimeLayer,
+            wayle_derive::ClearAllRuntime,
             wayle_derive::ClearRuntimeByPath,
             wayle_derive::CommitConfigReload,
         )]

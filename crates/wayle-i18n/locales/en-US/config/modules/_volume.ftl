@@ -48,7 +48,7 @@ settings-modules-volume-scroll-down = Scroll Down
     .description = Action on scroll down
 
 settings-modules-volume-format = Format
-    .description = Label template for volume display (e.g. "{percentage}%")
+    .description = Label template for volume display (e.g. {"{{"}percentage{"}}"} %)
 
 settings-modules-volume-left-click = Left Click
     .description = Action on left click

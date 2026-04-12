@@ -23,7 +23,18 @@ pub enum DisplayMode {
 }
 
 /// How workspace numbers are displayed.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum Numbering {
     /// Show actual Hyprland workspace IDs (1, 2, 3, 4, 5, 6...).
@@ -37,7 +48,18 @@ pub enum Numbering {
 }
 
 /// Where the urgent pulse animation is applied.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum UrgentMode {
     /// Pulse the entire workspace.

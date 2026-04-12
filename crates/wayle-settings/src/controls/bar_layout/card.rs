@@ -69,7 +69,7 @@ impl LayoutCard {
         }
     }
 
-    fn zone_mut(&mut self, zone: ZoneId) -> &mut Vec<BarItem> {
+    pub(super) fn zone_mut(&mut self, zone: ZoneId) -> &mut Vec<BarItem> {
         match zone {
             ZoneId::Left => &mut self.left,
             ZoneId::Center => &mut self.center,

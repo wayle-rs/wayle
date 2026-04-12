@@ -13,7 +13,7 @@ use tokio::sync::mpsc;
 use wayle_core::Property;
 
 use super::{
-    ApplyConfigLayer, ApplyRuntimeLayer, ClearRuntimeByPath, CommitConfigReload,
+    ApplyConfigLayer, ApplyRuntimeLayer, ClearAllRuntime, ClearRuntimeByPath, CommitConfigReload,
     ExtractRuntimeValues, ResetConfigLayer, ResetRuntimeLayer, SubscribeChanges,
 };
 use crate::diagnostic::Diagnostic;
@@ -339,6 +339,12 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ResetRuntimeLayer for ConfigP
         if let Ok(mut guard) = self.runtime.write() {
             *guard = None;
         }
+    }
+}
+
+impl<T: Clone + Send + Sync + PartialEq + 'static> ClearAllRuntime for ConfigProperty<T> {
+    fn clear_all_runtime(&self) {
+        self.clear_runtime();
     }
 }
 

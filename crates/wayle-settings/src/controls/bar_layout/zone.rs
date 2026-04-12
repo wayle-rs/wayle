@@ -1,6 +1,6 @@
 //! Zone types, chip widget builders, and drag-and-drop attachment.
 
-use std::fmt;
+use std::{fmt, str::FromStr};
 
 use gtk4::{gdk, prelude::*};
 use relm4::prelude::*;
@@ -32,7 +32,7 @@ impl fmt::Display for ZoneId {
     }
 }
 
-impl std::str::FromStr for ZoneId {
+impl FromStr for ZoneId {
     type Err = ();
 
     fn from_str(value: &str) -> Result<Self, Self::Err> {
@@ -95,7 +95,7 @@ pub(super) fn build_zone_row(
     rebuild_zone_chips(&chips_box, items, card_index, zone, custom_modules, sender);
     attach_drop_target(&chips_box, card_index, zone, sender);
 
-    let add_button = gtk4::Button::builder()
+    let add_button = gtk4::MenuButton::builder()
         .icon_name("ld-plus-symbolic")
         .tooltip_text(t("settings-layout-add-module"))
         .build();
@@ -274,8 +274,13 @@ fn build_add_button(
     zone: ZoneId,
     item_index: usize,
     sender: &FactorySender<super::card::LayoutCard>,
-) -> gtk4::Button {
-    let button = build_chip_button("ld-plus-symbolic", "chip-add");
+) -> gtk4::MenuButton {
+    let button = gtk4::MenuButton::builder()
+        .icon_name("ld-plus-symbolic")
+        .valign(gtk4::Align::Center)
+        .build();
+    button.add_css_class("chip-add");
+    button.set_cursor_from_name(Some("pointer"));
 
     super::module_picker::attach(
         &button,

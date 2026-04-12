@@ -17,8 +17,9 @@ pub use click_action::ClickAction;
 pub use diagnostic::Diagnostic;
 pub use enum_variants::{EnumVariant, EnumVariants};
 pub use property::{
-    ApplyConfigLayer, ApplyRuntimeLayer, ClearRuntimeByPath, CommitConfigReload, ConfigProperty,
-    ExtractRuntimeValues, ResetConfigLayer, ResetRuntimeLayer, SubscribeChanges, ValueSource,
+    ApplyConfigLayer, ApplyRuntimeLayer, ClearAllRuntime, ClearRuntimeByPath, CommitConfigReload,
+    ConfigProperty, ExtractRuntimeValues, ResetConfigLayer, ResetRuntimeLayer, SubscribeChanges,
+    ValueSource,
 };
 
 /// Configuration schema definitions.

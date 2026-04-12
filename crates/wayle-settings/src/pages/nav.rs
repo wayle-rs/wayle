@@ -3,25 +3,10 @@
 
 use super::helpers::PageSpec;
 
-/// Top-level sidebar item that navigates directly to a page.
+/// Sidebar item that navigates directly to a page.
 pub(crate) struct LeafEntry {
     pub id: &'static str,
     pub i18n_key: &'static str,
     pub icon: &'static str,
-    pub spec: PageSpec,
-}
-
-/// Top-level sidebar item that expands to show child pages.
-pub(crate) struct GroupEntry {
-    pub id: &'static str,
-    pub i18n_key: &'static str,
-    pub icon: &'static str,
-    pub children: Vec<ChildEntry>,
-}
-
-/// A page nested under a group in the sidebar.
-pub(crate) struct ChildEntry {
-    pub id: &'static str,
-    pub i18n_key: &'static str,
     pub spec: PageSpec,
 }

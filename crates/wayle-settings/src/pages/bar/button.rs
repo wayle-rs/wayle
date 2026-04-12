@@ -4,15 +4,16 @@ use wayle_config::Config;
 
 use crate::pages::{
     helpers::{self, SectionSpec, page_spec},
-    nav::ChildEntry,
+    nav::LeafEntry,
 };
 
-pub(crate) fn entry(config: &Config) -> ChildEntry {
+pub(crate) fn entry(config: &Config) -> LeafEntry {
     let bar = &config.bar;
 
-    ChildEntry {
+    LeafEntry {
         id: "bar-button",
         i18n_key: "settings-nav-bar-button",
+        icon: "ld-square-symbolic",
         spec: page_spec(
             "settings-page-bar-button",
             vec![
@@ -56,8 +57,10 @@ pub(crate) fn entry(config: &Config) -> ChildEntry {
                         helpers::enum_select(&bar.button_group_rounding),
                         helpers::spacing(&bar.button_group_padding),
                         helpers::spacing(&bar.button_group_module_gap),
+                        helpers::color_value(&bar.button_group_background),
                         helpers::enum_select(&bar.button_group_border_location),
                         helpers::number_u8(&bar.button_group_border_width),
+                        helpers::color_value(&bar.button_group_border_color),
                     ],
                 },
             ],

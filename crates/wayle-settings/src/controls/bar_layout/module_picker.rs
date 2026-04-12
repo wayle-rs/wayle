@@ -5,6 +5,7 @@ use std::rc::Rc;
 
 use gtk4::prelude::*;
 use relm4::Sender;
+use serde::{Deserialize, de::value::StrDeserializer};
 use wayle_config::{
     ConfigProperty,
     schemas::{bar::BarModule, modules::CustomModuleDefinition},
@@ -14,19 +15,14 @@ use wayle_i18n::t;
 use super::card::LayoutCardMsg;
 
 pub(super) fn attach(
-    button: &gtk4::Button,
+    button: &gtk4::MenuButton,
     custom_modules: ConfigProperty<Vec<CustomModuleDefinition>>,
     build_msg: impl Fn(BarModule) -> LayoutCardMsg + 'static,
     sender: Sender<LayoutCardMsg>,
 ) {
     let popover = gtk4::Popover::new();
-    popover.set_parent(button);
     popover.add_css_class("module-picker-popover");
-
-    let popover_cleanup = popover.clone();
-    button.connect_destroy(move |_button| {
-        popover_cleanup.unparent();
-    });
+    button.set_popover(Some(&popover));
 
     let content = gtk4::Box::builder()
         .orientation(gtk4::Orientation::Vertical)
@@ -75,10 +71,6 @@ pub(super) fn attach(
     let search_reset = search.clone();
     popover.connect_show(move |_popover| {
         search_reset.set_text("");
-    });
-
-    button.connect_clicked(move |_button| {
-        popover.popup();
     });
 }
 
@@ -133,11 +125,10 @@ fn populate_list(
         click.connect_released(move |gesture, _n_press, _x, _y| {
             gesture.set_state(gtk4::EventSequenceState::Claimed);
 
-            let Ok(json) = serde_json::to_string(&module_name) else {
-                return;
-            };
+            let deserializer: StrDeserializer<'_, serde::de::value::Error> =
+                StrDeserializer::new(&module_name);
 
-            if let Ok(module) = serde_json::from_str::<BarModule>(&json) {
+            if let Ok(module) = BarModule::deserialize(deserializer) {
                 let _ = click_sender.send(click_build(module));
                 click_popover.popdown();
             }

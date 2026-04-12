@@ -1,0 +1,74 @@
+button.theme-preset-button {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--rounding-element);
+    background-color: var(--bg-elevated);
+    border: 1px solid var(--border-subtle);
+    color: var(--fg-default);
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+}
+
+button.theme-preset-button:hover {
+    background-color: var(--bg-hover);
+    border-color: var(--border-default);
+}
+
+image.theme-preset-button-icon {
+    -gtk-icon-size: var(--icon-sm);
+    margin-right: var(--space-xs);
+    color: var(--accent);
+}
+
+.theme-preset-button-label {
+    margin-right: var(--space-xs);
+}
+
+image.theme-preset-button-chevron {
+    -gtk-icon-size: var(--icon-xs);
+    color: var(--fg-muted);
+}
+
+.theme-preset-popover contents {
+    padding: var(--space-xs);
+}
+
+.theme-preset-scroll {
+    min-width: calc(18rem * var(--global-scale));
+}
+
+.theme-preset-list {
+    background-color: transparent;
+}
+
+button.theme-preset-entry {
+    padding: var(--space-sm);
+    border-radius: var(--rounding-element);
+    background-color: transparent;
+}
+
+button.theme-preset-entry:hover {
+    background-color: var(--bg-hover);
+}
+
+.theme-preset-row {
+    min-width: calc(16rem * var(--global-scale));
+}
+
+.theme-preset-swatches {
+    margin-right: var(--space-sm);
+}
+
+.theme-preset-swatch {
+    min-width: calc(0.5rem * var(--global-scale));
+    min-height: calc(0.5rem * var(--global-scale));
+    border-radius: calc(var(--rounding-element) * 0.5);
+    margin-right: calc(0.25rem * var(--global-scale));
+    border: 1px solid var(--border-subtle);
+}
+
+.theme-preset-name {
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--fg-default);
+    text-transform: capitalize;
+}

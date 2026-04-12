@@ -6,17 +6,12 @@ pub mod general;
 
 use wayle_config::Config;
 
-use super::nav::GroupEntry;
+use super::nav::LeafEntry;
 
-pub(crate) fn entry(config: &Config) -> GroupEntry {
-    GroupEntry {
-        id: "bar",
-        i18n_key: "settings-nav-bar",
-        icon: "ld-layout-dashboard-symbolic",
-        children: vec![
-            general::entry(config),
-            button::entry(config),
-            dropdown::entry(config),
-        ],
-    }
+pub(crate) fn entries(config: &Config) -> Vec<LeafEntry> {
+    vec![
+        general::entry(config),
+        button::entry(config),
+        dropdown::entry(config),
+    ]
 }

@@ -15,6 +15,7 @@ pub mod monitor_wallpaper;
 pub mod number;
 pub mod slider;
 pub mod text;
+pub mod theme_selector;
 pub mod toggle;
 pub mod toml_editor;
 

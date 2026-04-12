@@ -168,16 +168,18 @@ impl BarLayoutControl {
 
     fn handle_drop(&mut self, from: DragPayload, to: DropLocation) {
         let mut guard = self.cards.guard();
+        let same_card = from.card_index == to.card_index;
 
-        let Some(source_card) = guard.get_mut(from.card_index) else {
+        if guard.get(from.card_index).is_none() {
             return;
-        };
+        }
 
-        let source_zone = match from.zone {
-            zone::ZoneId::Left => &mut source_card.left,
-            zone::ZoneId::Center => &mut source_card.center,
-            zone::ZoneId::Right => &mut source_card.right,
-        };
+        if !same_card && guard.get(to.card_index).is_none() {
+            return;
+        }
+
+        let source_card = &mut guard[from.card_index];
+        let source_zone = source_card.zone_mut(from.zone);
 
         if from.item_index >= source_zone.len() {
             return;
@@ -185,31 +187,23 @@ impl BarLayoutControl {
 
         let item = source_zone.remove(from.item_index);
 
-        let same_card_zone = from.card_index == to.card_index && from.zone == to.zone;
+        if same_card {
+            let same_zone = from.zone == to.zone;
+            let mut target_pos = to.position;
 
-        let mut target_pos = to.position;
+            if same_zone && from.item_index < target_pos {
+                target_pos = target_pos.saturating_sub(1);
+            }
 
-        if same_card_zone && from.item_index < target_pos {
-            target_pos = target_pos.saturating_sub(1);
-        }
-
-        let target_card = if from.card_index == to.card_index {
-            source_card
+            let target_zone = source_card.zone_mut(to.zone);
+            let position = target_pos.min(target_zone.len());
+            target_zone.insert(position, item);
         } else {
-            let Some(target) = guard.get_mut(to.card_index) else {
-                return;
-            };
-            target
-        };
-
-        let target_zone = match to.zone {
-            zone::ZoneId::Left => &mut target_card.left,
-            zone::ZoneId::Center => &mut target_card.center,
-            zone::ZoneId::Right => &mut target_card.right,
-        };
-
-        let position = target_pos.min(target_zone.len());
-        target_zone.insert(position, item);
+            let target_card = &mut guard[to.card_index];
+            let target_zone = target_card.zone_mut(to.zone);
+            let position = to.position.min(target_zone.len());
+            target_zone.insert(position, item);
+        }
     }
 
     fn rebuild_cards(&mut self) {

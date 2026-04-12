@@ -13,17 +13,22 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
     LeafEntry {
         id: "general",
         i18n_key: "settings-nav-general",
-        icon: "ld-palette-symbolic",
+        icon: "ld-settings-symbolic",
         spec: helpers::page_spec(
             "settings-page-general",
-            vec![SectionSpec {
-                title_key: "settings-section-layout",
-                items: vec![
-                    helpers::font(&general.font_sans),
-                    helpers::font(&general.font_mono),
-                    helpers::toggle(&general.tearing_mode),
-                ],
-            }],
+            vec![
+                SectionSpec {
+                    title_key: "settings-section-fonts",
+                    items: vec![
+                        helpers::font(&general.font_sans),
+                        helpers::font(&general.font_mono),
+                    ],
+                },
+                SectionSpec {
+                    title_key: "settings-section-display",
+                    items: vec![helpers::toggle(&general.tearing_mode)],
+                },
+            ],
         ),
     }
 }

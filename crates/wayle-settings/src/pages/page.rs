@@ -5,7 +5,7 @@ use gtk4::prelude::*;
 use relm4::prelude::*;
 
 use super::helpers::{self, Keepalive, PageSpec};
-use crate::row::{SettingRow, SettingRowMsg};
+use crate::row::SettingRow;
 
 #[allow(dead_code)]
 pub(crate) struct SettingsPage {
@@ -13,15 +13,10 @@ pub(crate) struct SettingsPage {
     keepalives: Vec<Keepalive>,
 }
 
-#[derive(Debug)]
-pub(crate) enum SettingsPageMsg {
-    Refresh,
-}
-
 #[relm4::component(pub(crate))]
 impl SimpleComponent for SettingsPage {
     type Init = PageSpec;
-    type Input = SettingsPageMsg;
+    type Input = ();
     type Output = ();
 
     view! {
@@ -54,13 +49,5 @@ impl SimpleComponent for SettingsPage {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
-        match msg {
-            SettingsPageMsg::Refresh => {
-                for row in &self.rows {
-                    row.emit(SettingRowMsg::Refresh);
-                }
-            }
-        }
-    }
+    fn update(&mut self, _msg: Self::Input, _sender: ComponentSender<Self>) {}
 }

@@ -51,7 +51,7 @@ settings-modules-battery-scroll-down = Scroll Down
     .description = Shell command on scroll down
 
 settings-modules-battery-format = Format
-    .description = Label template for battery display (e.g. "{percentage}%")
+    .description = Label template for battery display (e.g. {"{{"}percentage{"}}"} %)
 
 settings-modules-battery-left-click = Left Click
     .description = Action on left click

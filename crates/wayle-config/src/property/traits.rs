@@ -96,6 +96,14 @@ pub trait CommitConfigReload {
     fn commit_config_reload(&self);
 }
 
+/// Drops every runtime override in the tree, notifying watchers even when
+/// the effective value is unchanged.
+pub trait ClearAllRuntime {
+    /// Clears the runtime layer on every property and forces a change
+    /// notification for each one.
+    fn clear_all_runtime(&self);
+}
+
 /// Clears the runtime override at a specific path.
 ///
 /// Used by CLI reset commands to remove runtime overrides by string path.

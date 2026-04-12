@@ -41,14 +41,18 @@ pub(crate) fn spawn(
                 () = &mut shutdown_fut => break,
 
                 Some(_) = layout_stream.next() => {
-                    let layout = build_layout(&config, &ipc, &connector)
-                        .unwrap_or_default();
+                    let layout = build_layout(&config, &ipc, &connector).unwrap_or_else(|| {
+                        warn!(connector = %connector, "no layout matched, sending empty");
+                        BarLayout::default()
+                    });
                     let _ = out.send(BarCmd::LayoutLoaded(layout));
                 }
 
                 Some(_) = hidden_stream.next() => {
-                    let layout = build_layout(&config, &ipc, &connector)
-                        .unwrap_or_default();
+                    let layout = build_layout(&config, &ipc, &connector).unwrap_or_else(|| {
+                        warn!(connector = %connector, "no layout matched, sending empty");
+                        BarLayout::default()
+                    });
                     let _ = out.send(BarCmd::LayoutLoaded(layout));
                 }
             }

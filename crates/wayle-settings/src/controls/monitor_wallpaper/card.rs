@@ -3,6 +3,7 @@
 
 use gtk4::{gio, prelude::*};
 use relm4::{factory::FactoryView, prelude::*};
+use serde::{Deserialize, de::value::StrDeserializer};
 use wayle_config::{
     EnumVariants,
     schemas::wallpaper::{FitMode, MonitorWallpaperConfig},
@@ -58,25 +59,20 @@ fn fit_mode_labels() -> Vec<String> {
 }
 
 fn fit_mode_index(mode: &FitMode) -> u32 {
-    let Ok(serialized) = serde_json::to_string(mode) else {
-        return 0;
-    };
-
-    let mode_value = serialized.trim_matches('"');
-
     FitMode::variants()
         .iter()
-        .position(|variant| variant.value == mode_value)
+        .position(|variant| fit_mode_from_value(variant.value).as_ref() == Some(mode))
         .unwrap_or(0) as u32
 }
 
 fn fit_mode_from_index(index: u32) -> Option<FitMode> {
     let variant = FitMode::variants().get(index as usize)?;
-    let Ok(json) = serde_json::to_string(variant.value) else {
-        return None;
-    };
+    fit_mode_from_value(variant.value)
+}
 
-    serde_json::from_str(&json).ok()
+fn fit_mode_from_value(value: &str) -> Option<FitMode> {
+    let deserializer: StrDeserializer<'_, serde::de::value::Error> = StrDeserializer::new(value);
+    FitMode::deserialize(deserializer).ok()
 }
 
 #[relm4::factory(pub(super))]
@@ -135,7 +131,7 @@ impl FactoryComponent for MonitorCard {
                 #[name = "wallpaper_entry"]
                 gtk4::Entry {
                     add_css_class: "monitor-wallpaper-entry",
-                    set_placeholder_text: Some("/path/to/wallpaper.png"),
+                    set_placeholder_text: Some(&t("settings-wallpaper-path-placeholder")),
                     set_hexpand: true,
                     connect_changed => MonitorCardMsg::WallpaperChanged,
                 },

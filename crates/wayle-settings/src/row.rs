@@ -8,12 +8,27 @@ use wayle_i18n::{t, t_attr};
 
 use crate::property_handle::PropertyHandle;
 
+const DESCRIPTION_MAX_CHARS: i32 = 60;
+const DESCRIPTION_TOOLTIP_THRESHOLD: usize = 50;
+
+/// Row behavior variants.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RowBehavior {
+    /// Standard setting: shows source badge and reset button when a runtime
+    /// override is present.
+    Setting,
+    /// One-shot action (e.g. "Apply theme preset") with no value to track.
+    /// Source badge and reset button are hidden.
+    Action,
+}
+
 pub struct SettingRowInit {
     pub i18n_key: &'static str,
     pub handle: PropertyHandle,
     pub control_widget: Option<gtk4::Widget>,
     pub full_width: bool,
     pub dirty_badge: Option<gtk4::Label>,
+    pub behavior: RowBehavior,
 }
 
 pub struct SettingRow {
@@ -24,6 +39,7 @@ pub struct SettingRow {
     source_label: String,
     source_tooltip: String,
     config_matches_default: bool,
+    behavior: RowBehavior,
 }
 
 #[derive(Debug)]
@@ -34,14 +50,17 @@ pub enum SettingRowMsg {
 
 impl SettingRow {
     fn has_runtime_override(&self) -> bool {
-        matches!(
-            self.source,
-            ValueSource::RuntimeOnly | ValueSource::Overridden
-        )
+        self.behavior == RowBehavior::Setting
+            && matches!(
+                self.source,
+                ValueSource::RuntimeOnly | ValueSource::Overridden
+            )
     }
 
     fn has_source_badge(&self) -> bool {
-        self.source != ValueSource::Default && !self.config_matches_default
+        self.behavior == RowBehavior::Setting
+            && self.source != ValueSource::Default
+            && !self.config_matches_default
     }
 
     fn source_css_class(&self) -> &'static str {
@@ -127,10 +146,19 @@ impl SimpleComponent for SettingRow {
                 gtk4::Label {
                     set_halign: gtk4::Align::Start,
                     add_css_class: "setting-description",
+                    set_ellipsize: gtk4::pango::EllipsizeMode::End,
+                    set_max_width_chars: DESCRIPTION_MAX_CHARS,
+                    set_single_line_mode: true,
                     #[watch]
                     set_label: &model.description,
                     #[watch]
                     set_visible: !model.description.is_empty(),
+                    #[watch]
+                    set_tooltip_text: if model.description.len() > DESCRIPTION_TOOLTIP_THRESHOLD {
+                        Some(&model.description)
+                    } else {
+                        None
+                    },
                 },
             },
 
@@ -172,6 +200,7 @@ impl SimpleComponent for SettingRow {
             source: ValueSource::Default,
             source_label: String::new(),
             source_tooltip: String::new(),
+            behavior: init.behavior,
             config_matches_default: true,
         };
 

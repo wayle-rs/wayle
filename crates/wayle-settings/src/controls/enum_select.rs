@@ -2,7 +2,7 @@
 
 use gtk4::prelude::*;
 use relm4::prelude::*;
-use serde::{Deserialize, Serialize};
+use serde::{Deserialize, de::value::StrDeserializer};
 use wayle_config::{ConfigProperty, EnumVariant, EnumVariants};
 use wayle_i18n::t;
 
@@ -23,14 +23,7 @@ pub(crate) enum EnumSelectMsg {
 
 impl<E> SimpleComponent for EnumSelectControl<E>
 where
-    E: EnumVariants
-        + Clone
-        + Send
-        + Sync
-        + PartialEq
-        + Serialize
-        + for<'de> Deserialize<'de>
-        + 'static,
+    E: EnumVariants + Clone + Send + Sync + PartialEq + for<'de> Deserialize<'de> + 'static,
 {
     type Init = ConfigProperty<E>;
     type Input = EnumSelectMsg;
@@ -130,17 +123,17 @@ where
     }
 }
 
-fn variant_index_of<E: Serialize>(current: &E, variants: &[EnumVariant]) -> u32 {
-    let serialized = serde_json::to_string(current).unwrap_or_default();
-    let current_value = serialized.trim_matches('"');
-
+fn variant_index_of<E>(current: &E, variants: &[EnumVariant]) -> u32
+where
+    E: for<'de> Deserialize<'de> + PartialEq,
+{
     variants
         .iter()
-        .position(|variant| variant.value == current_value)
+        .position(|variant| enum_from_serde_value::<E>(variant.value).as_ref() == Some(current))
         .unwrap_or(0) as u32
 }
 
 fn enum_from_serde_value<E: for<'de> Deserialize<'de>>(value: &str) -> Option<E> {
-    let json = format!("\"{value}\"");
-    serde_json::from_str(&json).ok()
+    let deserializer: StrDeserializer<'_, serde::de::value::Error> = StrDeserializer::new(value);
+    E::deserialize(deserializer).ok()
 }
