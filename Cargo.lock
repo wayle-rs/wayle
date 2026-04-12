@@ -625,6 +625,41 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f27ae1dd37df86211c42e150270f82743308803d90a6f6e6651cd730d5e1732f"
 
 [[package]]
+name = "darling"
+version = "0.20.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc7f46116c46ff9ab3eb1597a45688b6715c6e628b5c133e288e709a29bcb4ee"
+dependencies = [
+ "darling_core",
+ "darling_macro",
+]
+
+[[package]]
+name = "darling_core"
+version = "0.20.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0d00b9596d185e565c2207a0b01f8bd1a135483d02d9b7b0a54b11da8d53412e"
+dependencies = [
+ "fnv",
+ "ident_case",
+ "proc-macro2",
+ "quote",
+ "strsim",
+ "syn",
+]
+
+[[package]]
+name = "darling_macro"
+version = "0.20.11"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fc34b93ccb385b40dc71c6fceac4b2ad23662c7eeb248cf10d529b7e055b6ead"
+dependencies = [
+ "darling_core",
+ "quote",
+ "syn",
+]
+
+[[package]]
 name = "data-url"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1811,6 +1846,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "ident_case"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b9e0384b61958566e926dc50660321d12159025e767c18e043daf26b70104c39"
+
+[[package]]
 name = "idna"
 version = "1.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2329,6 +2370,29 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "071dfc062690e90b734c0b2273ce72ad0ffa95f0c74596bc250dcfd960262841"
 dependencies = [
  "autocfg",
+]
+
+[[package]]
+name = "nvml-wrapper"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0c9bff0aa1d48904a1385ea2a8b97576fbdcbc9a3cfccd0d31fe978e1c4038c5"
+dependencies = [
+ "bitflags 2.10.0",
+ "libloading",
+ "nvml-wrapper-sys",
+ "static_assertions",
+ "thiserror 1.0.69",
+ "wrapcenum-derive",
+]
+
+[[package]]
+name = "nvml-wrapper-sys"
+version = "0.8.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "698d45156f28781a4e79652b6ebe2eaa0589057d588d3aec1333f6466f13fcb5"
+dependencies = [
+ "libloading",
 ]
 
 [[package]]
@@ -3485,6 +3549,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6ce2be8dc25455e1f91df71bfa12ad37d7af1092ae736f3a6cd0e37bc7810596"
 
 [[package]]
+name = "static_assertions"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2eb9349b6444b326872e140eb1cf5e7c522154d69e7a0ffb0fb81c06b37543f"
+
+[[package]]
 name = "strict-num"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4447,7 +4517,7 @@ dependencies = [
  "wayle-bluetooth",
  "wayle-cava",
  "wayle-config",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-hyprland",
  "wayle-icons",
  "wayle-ipc",
@@ -4479,7 +4549,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
  "zbus",
 ]
@@ -4499,7 +4569,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
  "zbus",
 ]
@@ -4518,7 +4588,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
  "zbus",
 ]
@@ -4537,7 +4607,7 @@ dependencies = [
  "tokio-util",
  "tracing",
  "udev",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
  "zbus",
 ]
@@ -4557,7 +4627,7 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
 ]
 
@@ -4579,8 +4649,21 @@ dependencies = [
  "tokio-stream",
  "toml 0.9.11+spec-1.1.0",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-derive",
+]
+
+[[package]]
+name = "wayle-core"
+version = "0.1.2"
+dependencies = [
+ "futures",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-stream",
+ "tracing",
+ "zbus",
 ]
 
 [[package]]
@@ -4627,7 +4710,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
 ]
 
@@ -4692,7 +4775,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
  "wildcard",
  "zbus",
@@ -4714,7 +4797,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
  "zbus",
 ]
@@ -4738,7 +4821,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
  "wildcard",
  "zbus",
@@ -4759,7 +4842,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
  "zbus",
 ]
@@ -4799,7 +4882,7 @@ dependencies = [
  "wayle-brightness",
  "wayle-cava",
  "wayle-config",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-hyprland",
  "wayle-icons",
  "wayle-idle-inhibit",
@@ -4836,17 +4919,16 @@ dependencies = [
 [[package]]
 name = "wayle-sysinfo"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "457d314fb55348d1f330217e158ad7892f13e6a5c3b37f4f118915615f0b6dda"
 dependencies = [
  "derive_more",
  "futures",
+ "nvml-wrapper",
  "sysinfo",
  "thiserror 2.0.18",
  "tokio",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2",
 ]
 
 [[package]]
@@ -4868,7 +4950,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
  "zbus",
 ]
@@ -4896,7 +4978,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
  "zbus",
 ]
@@ -4917,7 +4999,7 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
  "wayle-traits",
 ]
 
@@ -4935,7 +5017,7 @@ dependencies = [
  "tokio-util",
  "tracing",
  "wayle-config",
- "wayle-core",
+ "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
 ]
 
 [[package]]
@@ -5421,6 +5503,18 @@ name = "wit-bindgen"
 version = "0.51.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d7249219f66ced02969388cf2bb044a09756a083d0fab1e566056b04d9fbcaa5"
+
+[[package]]
+name = "wrapcenum-derive"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a76ff259533532054cfbaefb115c613203c73707017459206380f03b3b3f266e"
+dependencies = [
+ "darling",
+ "proc-macro2",
+ "quote",
+ "syn",
+]
 
 [[package]]
 name = "writeable"
