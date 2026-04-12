@@ -6,7 +6,7 @@ use wayle_config::{
 };
 
 use crate::{
-    controls::{
+    editors::{
         bar_layout::{BarLayoutControl, BarLayoutInit},
         monitor_wallpaper::MonitorWallpaperControl,
     },

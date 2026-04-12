@@ -8,7 +8,7 @@ use wayle_config::{
 };
 
 use crate::{
-    controls::theme_selector::{ThemeSelectorControl, ThemeSelectorInit},
+    editors::theme_selector::{ThemeSelectorControl, ThemeSelectorInit},
     pages::helpers::types::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,

@@ -5,7 +5,7 @@ use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 
 use super::make_dirty_badge;
 use crate::{
-    controls::toml_editor::{TomlEditorControl, TomlEditorInit, helpers::serialize_with_key},
+    editors::toml_editor::{TomlEditorControl, TomlEditorInit, helpers::serialize_with_key},
     pages::helpers::types::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,

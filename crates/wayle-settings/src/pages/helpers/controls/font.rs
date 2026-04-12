@@ -3,7 +3,7 @@ use relm4::prelude::*;
 use wayle_config::ConfigProperty;
 
 use crate::{
-    controls::font::FontControl, pages::helpers::types::SettingSpec,
+    editors::font::FontControl, pages::helpers::types::SettingSpec,
     property_handle::PropertyHandle, row::RowBehavior,
 };
 

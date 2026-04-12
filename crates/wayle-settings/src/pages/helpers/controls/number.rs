@@ -5,7 +5,7 @@ use relm4::prelude::*;
 use wayle_config::{ConfigProperty, schemas::styling::Spacing};
 
 use crate::{
-    controls::number::{NumberControl, NumberInit},
+    editors::number::{NumberControl, NumberInit},
     pages::helpers::types::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,

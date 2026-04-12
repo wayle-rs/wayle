@@ -4,7 +4,7 @@ use wayle_config::ConfigProperty;
 
 use super::make_dirty_badge;
 use crate::{
-    controls::file_picker::{FilePickerControl, FilePickerInit},
+    editors::file_picker::{FilePickerControl, FilePickerInit},
     pages::helpers::types::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,

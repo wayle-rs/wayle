@@ -1,29 +1,28 @@
 //! Top-level settings window. Owns the page stack, sidebar, and CSS provider.
 
+mod css;
+mod watchers;
+
 use std::sync::Arc;
 
-use gtk4::{
-    CssProvider, STYLE_PROVIDER_PRIORITY_USER, StackTransitionType, gdk::Display, prelude::*,
-    style_context_add_provider_for_display,
-};
+use gtk4::{CssProvider, StackTransitionType, prelude::*};
 use relm4::prelude::*;
 use tracing::{info, warn};
 use wayle_config::{Config, ConfigService};
 use wayle_i18n::t;
 use wayle_icons::IconRegistry;
-use wayle_styling::{STATIC_CSS, theme_css};
 use wayle_widgets::primitives::confirm_modal::{
     ConfirmModal, ConfirmModalConfig, ConfirmModalMsg, ConfirmModalOutput, ConfirmStyle, ModalIcon,
 };
 
+use self::css::{build_css, load_css};
 use crate::{
-    controls::toml_editor::update_wayle_scheme,
+    editors::toml_editor::update_wayle_scheme,
     pages::{
         bar, general, modules, nav::LeafEntry, notifications, osd, page::SettingsPage, styling,
         wallpaper,
     },
     sidebar::{NavItem, NavSection, Sidebar, SidebarInit, SidebarOutput},
-    watchers,
 };
 
 const DEFAULT_SIDEBAR_WIDTH: i32 = 220;
@@ -263,21 +262,6 @@ fn leaf_nav(entry: &LeafEntry) -> NavItem {
     }
 }
 
-fn load_css(config_service: &ConfigService) -> CssProvider {
-    let Some(display) = Display::default() else {
-        warn!("no display available, skipping CSS load");
-        return CssProvider::new();
-    };
-
-    let provider = CssProvider::new();
-    let css = build_css(config_service);
-
-    provider.load_from_string(&css);
-    style_context_add_provider_for_display(&display, &provider, STYLE_PROVIDER_PRIORITY_USER);
-
-    provider
-}
-
 fn build_content_overlay(stack: &gtk4::Stack, window: &gtk4::Window) -> gtk4::Overlay {
     let close_button = gtk4::Button::from_icon_name("ld-x-symbolic");
     close_button.add_css_class("settings-close");
@@ -294,14 +278,6 @@ fn build_content_overlay(stack: &gtk4::Stack, window: &gtk4::Window) -> gtk4::Ov
     overlay.add_overlay(&close_button);
 
     overlay
-}
-
-fn build_css(config_service: &ConfigService) -> String {
-    let config = config_service.config();
-    let palette = config.styling.palette();
-    let theme = theme_css(&palette, &config.general, &config.bar, &config.styling);
-
-    format!("{STATIC_CSS}\n{theme}")
 }
 
 fn setup_paned_clamp(paned: &gtk4::Paned, config: &Config) {

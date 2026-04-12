@@ -12,12 +12,11 @@ use tracing_subscriber::EnvFilter;
 use wayle_config::{ConfigService, PersistenceWatcher};
 
 mod app;
-mod controls;
+mod editors;
 mod pages;
 mod property_handle;
 mod row;
 mod sidebar;
-mod watchers;
 
 fn main() {
     tracing_subscriber::fmt()

@@ -6,7 +6,7 @@ use wayle_config::{
 };
 
 use crate::{
-    controls::slider::{SliderControl, SliderInit},
+    editors::slider::{SliderControl, SliderInit},
     pages::helpers::types::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,

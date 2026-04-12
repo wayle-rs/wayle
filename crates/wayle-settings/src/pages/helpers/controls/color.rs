@@ -6,7 +6,7 @@ use wayle_config::{
 };
 
 use crate::{
-    controls::{color::ColorControl, color_value::ColorValueControl},
+    editors::{color::ColorControl, color_value::ColorValueControl},
     pages::helpers::types::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,
