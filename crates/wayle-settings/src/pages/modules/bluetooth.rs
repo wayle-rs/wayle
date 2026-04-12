@@ -1,11 +1,11 @@
 //! Bluetooth module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{text::{text}};
+use crate::pages::spec::{SectionSpec, page_spec};
+use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, BarButtonFields, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.bluetooth;
@@ -37,15 +37,15 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        helpers::text(&m.disabled_icon),
-                        helpers::text(&m.disconnected_icon),
-                        helpers::text(&m.connected_icon),
-                        helpers::text(&m.searching_icon),
+                        text(&m.disabled_icon),
+                        text(&m.disconnected_icon),
+                        text(&m.connected_icon),
+                        text(&m.searching_icon),
                     ],
                 },
-                helpers::bar_display_section(&fields),
-                helpers::colors_section(&fields),
-                helpers::actions_section(&fields),
+                bar_display_section(&fields),
+                colors_section(&fields),
+                actions_section(&fields),
             ],
         ),
     }

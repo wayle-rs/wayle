@@ -4,7 +4,7 @@ use gtk4::prelude::*;
 use relm4::prelude::*;
 use wayle_i18n::{t, t_attr};
 
-use super::types::{Keepalive, SectionSpec};
+use super::spec::{Keepalive, SectionSpec};
 use crate::row::{SettingRow, SettingRowInit};
 
 pub(crate) fn build_page_header(title_key: &str) -> gtk4::Box {

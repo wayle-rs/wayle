@@ -1,11 +1,11 @@
 //! Clock module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{toggle::{toggle}, text::{text}};
+use crate::pages::spec::{SectionSpec, page_spec};
+use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, BarButtonFields, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.clock;
@@ -36,15 +36,15 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
             vec![
                 SectionSpec {
                     title_key: "settings-section-general",
-                    items: vec![helpers::text(&m.format), helpers::text(&m.icon_name)],
+                    items: vec![text(&m.format), text(&m.icon_name)],
                 },
                 SectionSpec {
                     title_key: "settings-section-dropdown",
-                    items: vec![helpers::toggle(&m.dropdown_show_seconds)],
+                    items: vec![toggle(&m.dropdown_show_seconds)],
                 },
-                helpers::bar_display_section(&fields),
-                helpers::colors_section(&fields),
-                helpers::actions_section(&fields),
+                bar_display_section(&fields),
+                colors_section(&fields),
+                actions_section(&fields),
             ],
         ),
     }

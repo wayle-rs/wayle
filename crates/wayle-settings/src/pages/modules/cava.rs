@@ -1,14 +1,13 @@
 //! Cava module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{color_value::{color_value}, enum_select::{enum_select}, toggle::{toggle}, slider::{normalized}, number::{number_u32, number_newtype, spacing, number_f64}, text::{text_like, text}};
+use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::{
     Config,
     schemas::modules::{CavaBarCount, CavaFramerate, FrequencyHz},
 };
 
-use crate::pages::{
-    helpers::{self, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.cava;
@@ -23,7 +22,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        helpers::number_newtype(
+                        number_newtype(
                             &m.bars,
                             1.0,
                             256.0,
@@ -32,7 +31,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             |v: &CavaBarCount| v.value() as f64,
                             |v| CavaBarCount::new(v as u16),
                         ),
-                        helpers::number_newtype(
+                        number_newtype(
                             &m.framerate,
                             1.0,
                             360.0,
@@ -41,11 +40,11 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             |v: &CavaFramerate| v.value() as f64,
                             |v| CavaFramerate::new(v as u32),
                         ),
-                        helpers::toggle(&m.stereo),
-                        helpers::normalized(&m.noise_reduction),
-                        helpers::number_f64(&m.monstercat, 0.0, 10.0, 0.1, 1),
-                        helpers::number_u32(&m.waves),
-                        helpers::number_newtype(
+                        toggle(&m.stereo),
+                        normalized(&m.noise_reduction),
+                        number_f64(&m.monstercat, 0.0, 10.0, 0.1, 1),
+                        number_u32(&m.waves),
+                        number_newtype(
                             &m.low_cutoff,
                             1.0,
                             50000.0,
@@ -54,7 +53,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             |v: &FrequencyHz| v.value() as f64,
                             |v| FrequencyHz::new(v as u32),
                         ),
-                        helpers::number_newtype(
+                        number_newtype(
                             &m.high_cutoff,
                             1.0,
                             50000.0,
@@ -63,35 +62,35 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             |v: &FrequencyHz| v.value() as f64,
                             |v| FrequencyHz::new(v as u32),
                         ),
-                        helpers::enum_select(&m.input),
-                        helpers::text(&m.source),
-                        helpers::enum_select(&m.style),
-                        helpers::enum_select(&m.direction),
-                        helpers::number_u32(&m.bar_width),
-                        helpers::number_u32(&m.bar_gap),
-                        helpers::spacing(&m.internal_padding),
+                        enum_select(&m.input),
+                        text(&m.source),
+                        enum_select(&m.style),
+                        enum_select(&m.direction),
+                        number_u32(&m.bar_width),
+                        number_u32(&m.bar_gap),
+                        spacing(&m.internal_padding),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-bar-display",
-                    items: vec![helpers::toggle(&m.border_show)],
+                    items: vec![toggle(&m.border_show)],
                 },
                 SectionSpec {
                     title_key: "settings-section-colors",
                     items: vec![
-                        helpers::color_value(&m.color),
-                        helpers::color_value(&m.button_bg_color),
-                        helpers::color_value(&m.border_color),
+                        color_value(&m.color),
+                        color_value(&m.button_bg_color),
+                        color_value(&m.border_color),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-actions",
                     items: vec![
-                        helpers::text_like(&m.left_click),
-                        helpers::text_like(&m.right_click),
-                        helpers::text_like(&m.middle_click),
-                        helpers::text_like(&m.scroll_up),
-                        helpers::text_like(&m.scroll_down),
+                        text_like(&m.left_click),
+                        text_like(&m.right_click),
+                        text_like(&m.middle_click),
+                        text_like(&m.scroll_up),
+                        text_like(&m.scroll_down),
                     ],
                 },
             ],

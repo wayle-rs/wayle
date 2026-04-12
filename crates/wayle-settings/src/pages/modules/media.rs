@@ -1,11 +1,11 @@
 //! Media module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{enum_select::{enum_select}, toml_editor::{toml_editor}, text::{text}};
+use crate::pages::spec::{SectionSpec, page_spec};
+use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, BarButtonFields, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.media;
@@ -37,30 +37,30 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        helpers::enum_select(&m.icon_type),
-                        helpers::text(&m.format),
-                        helpers::text(&m.icon_name),
-                        helpers::text(&m.spinning_disc_icon),
-                        helpers::toml_editor(
+                        enum_select(&m.icon_type),
+                        text(&m.format),
+                        text(&m.icon_name),
+                        text(&m.spinning_disc_icon),
+                        toml_editor(
                             &m.player_icons,
                             "player-icons",
                             &config.styling.palette.bg,
                         ),
-                        helpers::toml_editor(
+                        toml_editor(
                             &m.players_ignored,
                             "players-ignored",
                             &config.styling.palette.bg,
                         ),
-                        helpers::toml_editor(
+                        toml_editor(
                             &m.player_priority,
                             "player-priority",
                             &config.styling.palette.bg,
                         ),
                     ],
                 },
-                helpers::bar_display_section(&fields),
-                helpers::colors_section(&fields),
-                helpers::actions_section(&fields),
+                bar_display_section(&fields),
+                colors_section(&fields),
+                actions_section(&fields),
             ],
         ),
     }

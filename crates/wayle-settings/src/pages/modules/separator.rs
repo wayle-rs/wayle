@@ -1,11 +1,10 @@
 //! Separator module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{color_value::{color_value}, number::{number_u32, spacing}};
+use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.separator;
@@ -19,11 +18,11 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
             vec![
                 SectionSpec {
                     title_key: "settings-section-general",
-                    items: vec![helpers::number_u32(&m.size), helpers::spacing(&m.length)],
+                    items: vec![number_u32(&m.size), spacing(&m.length)],
                 },
                 SectionSpec {
                     title_key: "settings-section-colors",
-                    items: vec![helpers::color_value(&m.color)],
+                    items: vec![color_value(&m.color)],
                 },
             ],
         ),

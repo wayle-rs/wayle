@@ -1,7 +1,7 @@
 //! Nav entry types that bundle a page's sidebar metadata with its content.
 //! Each page module exports an `entry()` function returning one of these.
 
-use super::helpers::PageSpec;
+use super::spec::PageSpec;
 
 /// Sidebar item that navigates directly to a page.
 pub(crate) struct LeafEntry {

@@ -1,11 +1,11 @@
 //! Network module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{toml_editor::{toml_editor}, text::{text}};
+use crate::pages::spec::{SectionSpec, page_spec};
+use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, BarButtonFields, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.network;
@@ -37,23 +37,23 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        helpers::text(&m.wifi_disabled_icon),
-                        helpers::text(&m.wifi_acquiring_icon),
-                        helpers::text(&m.wifi_offline_icon),
-                        helpers::text(&m.wifi_connected_icon),
-                        helpers::text(&m.wired_connected_icon),
-                        helpers::text(&m.wired_acquiring_icon),
-                        helpers::text(&m.wired_disconnected_icon),
-                        helpers::toml_editor(
+                        text(&m.wifi_disabled_icon),
+                        text(&m.wifi_acquiring_icon),
+                        text(&m.wifi_offline_icon),
+                        text(&m.wifi_connected_icon),
+                        text(&m.wired_connected_icon),
+                        text(&m.wired_acquiring_icon),
+                        text(&m.wired_disconnected_icon),
+                        toml_editor(
                             &m.wifi_signal_icons,
                             "wifi-signal-icons",
                             &config.styling.palette.bg,
                         ),
                     ],
                 },
-                helpers::bar_display_section(&fields),
-                helpers::colors_section(&fields),
-                helpers::actions_section(&fields),
+                bar_display_section(&fields),
+                colors_section(&fields),
+                actions_section(&fields),
             ],
         ),
     }

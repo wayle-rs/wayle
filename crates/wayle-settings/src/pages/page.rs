@@ -4,7 +4,10 @@
 use gtk4::prelude::*;
 use relm4::prelude::*;
 
-use super::helpers::{self, Keepalive, PageSpec};
+use crate::pages::{
+    layout::{build_page_header, build_sections},
+    spec::{Keepalive, PageSpec},
+};
 use crate::row::SettingRow;
 
 #[allow(dead_code)]
@@ -40,9 +43,9 @@ impl SimpleComponent for SettingsPage {
         let widgets = view_output!();
         let content = &widgets.content;
 
-        content.append(&helpers::build_page_header(spec.header_key));
+        content.append(&build_page_header(spec.header_key));
 
-        let (rows, keepalives) = helpers::build_sections(content, spec.sections);
+        let (rows, keepalives) = build_sections(content, spec.sections);
 
         let model = Self { rows, keepalives };
 

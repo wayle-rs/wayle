@@ -1,11 +1,11 @@
 //! Volume module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{enum_select::{enum_select}, toml_editor::{toml_editor}, text::{text}};
+use crate::pages::spec::{SectionSpec, page_spec};
+use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, BarButtonFields, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.volume;
@@ -37,14 +37,14 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        helpers::text(&m.icon_muted),
-                        helpers::text(&m.format),
-                        helpers::toml_editor(
+                        text(&m.icon_muted),
+                        text(&m.format),
+                        toml_editor(
                             &m.level_icons,
                             "level-icons",
                             &config.styling.palette.bg,
                         ),
-                        helpers::toml_editor(
+                        toml_editor(
                             &m.thresholds,
                             "thresholds",
                             &config.styling.palette.bg,
@@ -53,11 +53,11 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 },
                 SectionSpec {
                     title_key: "settings-section-dropdown",
-                    items: vec![helpers::enum_select(&m.dropdown_app_icons)],
+                    items: vec![enum_select(&m.dropdown_app_icons)],
                 },
-                helpers::bar_display_section(&fields),
-                helpers::colors_section(&fields),
-                helpers::actions_section(&fields),
+                bar_display_section(&fields),
+                colors_section(&fields),
+                actions_section(&fields),
             ],
         ),
     }

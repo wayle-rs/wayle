@@ -6,7 +6,7 @@ use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 use crate::editors::make_dirty_badge;
 use crate::{
     editors::toml_editor::{TomlEditorControl, TomlEditorInit, helpers::serialize_with_key},
-    pages::helpers::types::SettingSpec,
+    pages::spec::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,
 };

@@ -2,11 +2,13 @@
 
 pub mod bar;
 pub mod general;
-pub mod helpers;
+pub mod layout;
 pub mod modules;
 pub mod nav;
 pub mod notifications;
 pub mod osd;
 pub mod page;
+pub mod sections;
+pub mod spec;
 pub mod styling;
 pub mod wallpaper;

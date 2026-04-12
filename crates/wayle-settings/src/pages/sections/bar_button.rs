@@ -6,7 +6,7 @@ use crate::editors::{
     color_value::color_value, number::number_u32, text::text_like, toggle::toggle,
 };
 
-use super::types::SectionSpec;
+use crate::pages::spec::SectionSpec;
 
 pub(crate) struct BarButtonFields<'a> {
     pub icon_show: &'a ConfigProperty<bool>,

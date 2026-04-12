@@ -1,11 +1,10 @@
 //! OSD settings page: display options for on-screen indicators.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{enum_select::{enum_select}, toggle::{toggle}, number::{number_u32, spacing}, text::{text_like}};
+use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
-use super::{
-    helpers::{self, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let osd = &config.osd;
@@ -19,12 +18,12 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
             vec![SectionSpec {
                 title_key: "settings-section-display",
                 items: vec![
-                    helpers::toggle(&osd.enabled),
-                    helpers::enum_select(&osd.position),
-                    helpers::number_u32(&osd.duration),
-                    helpers::text_like(&osd.monitor),
-                    helpers::spacing(&osd.margin),
-                    helpers::toggle(&osd.border),
+                    toggle(&osd.enabled),
+                    enum_select(&osd.position),
+                    number_u32(&osd.duration),
+                    text_like(&osd.monitor),
+                    spacing(&osd.margin),
+                    toggle(&osd.border),
                 ],
             }],
         ),

@@ -1,11 +1,10 @@
 //! Notifications settings page: popup display, positioning, and filtering.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{enum_select::{enum_select}, toggle::{toggle}, toml_editor::{toml_editor}, number::{number_u32, spacing}, text::{text_like}};
+use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
-use super::{
-    helpers::{self, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let notif = &config.modules.notification;
@@ -20,30 +19,30 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-popup-display",
                     items: vec![
-                        helpers::enum_select(&notif.popup_position),
-                        helpers::number_u32(&notif.popup_max_visible),
-                        helpers::enum_select(&notif.popup_stacking_order),
-                        helpers::number_u32(&notif.popup_duration),
-                        helpers::toggle(&notif.popup_hover_pause),
-                        helpers::toggle(&notif.popup_shadow),
-                        helpers::enum_select(&notif.popup_close_behavior),
-                        helpers::enum_select(&notif.popup_urgency_bar),
+                        enum_select(&notif.popup_position),
+                        number_u32(&notif.popup_max_visible),
+                        enum_select(&notif.popup_stacking_order),
+                        number_u32(&notif.popup_duration),
+                        toggle(&notif.popup_hover_pause),
+                        toggle(&notif.popup_shadow),
+                        enum_select(&notif.popup_close_behavior),
+                        enum_select(&notif.popup_urgency_bar),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-positioning",
                     items: vec![
-                        helpers::text_like(&notif.popup_monitor),
-                        helpers::spacing(&notif.popup_margin_x),
-                        helpers::spacing(&notif.popup_margin_y),
-                        helpers::spacing(&notif.popup_gap),
+                        text_like(&notif.popup_monitor),
+                        spacing(&notif.popup_margin_x),
+                        spacing(&notif.popup_margin_y),
+                        spacing(&notif.popup_gap),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-filtering",
                     items: vec![
-                        helpers::enum_select(&notif.icon_source),
-                        helpers::toml_editor(
+                        enum_select(&notif.icon_source),
+                        toml_editor(
                             &notif.blocklist,
                             "blocklist",
                             &config.styling.palette.bg,

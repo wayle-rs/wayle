@@ -3,7 +3,7 @@ use relm4::prelude::*;
 use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 
 use crate::{
-    editors::color::ColorControl, pages::helpers::types::SettingSpec,
+    editors::color::ColorControl, pages::spec::SettingSpec,
     property_handle::PropertyHandle, row::RowBehavior,
 };
 

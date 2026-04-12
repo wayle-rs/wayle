@@ -1,14 +1,13 @@
 //! Custom modules settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{toml_editor::{toml_editor_sized}};
+use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
-    let mut editor = helpers::toml_editor_sized(
+    let mut editor = toml_editor_sized(
         &config.modules.custom,
         "custom",
         40,

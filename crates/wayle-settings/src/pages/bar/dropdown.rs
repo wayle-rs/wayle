@@ -1,11 +1,10 @@
 //! Bar dropdown settings: behavior toggles and appearance.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{toggle::{toggle}, slider::{percentage}};
+use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let bar = &config.bar;
@@ -20,14 +19,14 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-behavior",
                     items: vec![
-                        helpers::toggle(&bar.dropdown_shadow),
-                        helpers::toggle(&bar.dropdown_autohide),
-                        helpers::toggle(&bar.dropdown_freeze_label),
+                        toggle(&bar.dropdown_shadow),
+                        toggle(&bar.dropdown_autohide),
+                        toggle(&bar.dropdown_freeze_label),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-appearance",
-                    items: vec![helpers::percentage(&bar.dropdown_opacity)],
+                    items: vec![percentage(&bar.dropdown_opacity)],
                 },
             ],
         ),

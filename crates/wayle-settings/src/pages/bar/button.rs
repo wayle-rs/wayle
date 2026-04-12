@@ -1,11 +1,10 @@
 //! Bar button settings: style, icons, labels, borders, and button groups.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{color_value::{color_value}, enum_select::{enum_select}, slider::{scale, percentage}, number::{number_u8, spacing}};
+use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let bar = &config.bar;
@@ -20,47 +19,47 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-style",
                     items: vec![
-                        helpers::enum_select(&bar.button_variant),
-                        helpers::percentage(&bar.button_opacity),
-                        helpers::percentage(&bar.button_bg_opacity),
-                        helpers::enum_select(&bar.button_rounding),
-                        helpers::scale(&bar.button_gap),
-                        helpers::enum_select(&bar.button_icon_position),
+                        enum_select(&bar.button_variant),
+                        percentage(&bar.button_opacity),
+                        percentage(&bar.button_bg_opacity),
+                        enum_select(&bar.button_rounding),
+                        scale(&bar.button_gap),
+                        enum_select(&bar.button_icon_position),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-icons",
                     items: vec![
-                        helpers::scale(&bar.button_icon_size),
-                        helpers::scale(&bar.button_icon_padding),
+                        scale(&bar.button_icon_size),
+                        scale(&bar.button_icon_padding),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-labels",
                     items: vec![
-                        helpers::scale(&bar.button_label_size),
-                        helpers::enum_select(&bar.button_label_weight),
-                        helpers::scale(&bar.button_label_padding),
+                        scale(&bar.button_label_size),
+                        enum_select(&bar.button_label_weight),
+                        scale(&bar.button_label_padding),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-border",
                     items: vec![
-                        helpers::enum_select(&bar.button_border_location),
-                        helpers::number_u8(&bar.button_border_width),
+                        enum_select(&bar.button_border_location),
+                        number_u8(&bar.button_border_width),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-group",
                     items: vec![
-                        helpers::percentage(&bar.button_group_opacity),
-                        helpers::enum_select(&bar.button_group_rounding),
-                        helpers::spacing(&bar.button_group_padding),
-                        helpers::spacing(&bar.button_group_module_gap),
-                        helpers::color_value(&bar.button_group_background),
-                        helpers::enum_select(&bar.button_group_border_location),
-                        helpers::number_u8(&bar.button_group_border_width),
-                        helpers::color_value(&bar.button_group_border_color),
+                        percentage(&bar.button_group_opacity),
+                        enum_select(&bar.button_group_rounding),
+                        spacing(&bar.button_group_padding),
+                        spacing(&bar.button_group_module_gap),
+                        color_value(&bar.button_group_background),
+                        enum_select(&bar.button_group_border_location),
+                        number_u8(&bar.button_group_border_width),
+                        color_value(&bar.button_group_border_color),
                     ],
                 },
             ],

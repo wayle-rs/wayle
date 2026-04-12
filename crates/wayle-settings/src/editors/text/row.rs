@@ -5,7 +5,7 @@ use wayle_config::ConfigProperty;
 use crate::editors::make_dirty_badge;
 use crate::{
     editors::text::{TextControl, TextInit, TextLike},
-    pages::helpers::types::SettingSpec,
+    pages::spec::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,
 };

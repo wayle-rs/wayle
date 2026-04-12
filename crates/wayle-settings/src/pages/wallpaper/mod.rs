@@ -1,14 +1,13 @@
 //! Wallpaper settings page: engine, transitions, cycling, and per-monitor config.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{enum_select::{enum_select}, toggle::{toggle}, file_picker::{file_path}, number::{number_newtype}, monitor_wallpaper::{monitor_wallpaper}};
+use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::{
     Config,
     schemas::wallpaper::{CyclingInterval, TransitionDuration, TransitionFps},
 };
 
-use super::{
-    helpers::{self, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let wp = &config.wallpaper;
@@ -22,13 +21,13 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
             vec![
                 SectionSpec {
                     title_key: "settings-section-engine",
-                    items: vec![helpers::toggle(&wp.engine_enabled)],
+                    items: vec![toggle(&wp.engine_enabled)],
                 },
                 SectionSpec {
                     title_key: "settings-section-transition",
                     items: vec![
-                        helpers::enum_select(&wp.transition_type),
-                        helpers::number_newtype(
+                        enum_select(&wp.transition_type),
+                        number_newtype(
                             &wp.transition_duration,
                             0.0,
                             30.0,
@@ -37,7 +36,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             |v: &TransitionDuration| v.value() as f64,
                             |v| TransitionDuration::new(v as f32),
                         ),
-                        helpers::number_newtype(
+                        number_newtype(
                             &wp.transition_fps,
                             1.0,
                             360.0,
@@ -51,10 +50,10 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-cycling",
                     items: vec![
-                        helpers::toggle(&wp.cycling_enabled),
-                        helpers::file_path(&wp.cycling_directory),
-                        helpers::enum_select(&wp.cycling_mode),
-                        helpers::number_newtype(
+                        toggle(&wp.cycling_enabled),
+                        file_path(&wp.cycling_directory),
+                        enum_select(&wp.cycling_mode),
+                        number_newtype(
                             &wp.cycling_interval_mins,
                             1.0,
                             1440.0,
@@ -63,12 +62,12 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             |v: &CyclingInterval| v.value() as f64,
                             |v| CyclingInterval::new(v as u64),
                         ),
-                        helpers::toggle(&wp.cycling_same_image),
+                        toggle(&wp.cycling_same_image),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-display",
-                    items: vec![helpers::monitor_wallpaper(&wp.monitors)],
+                    items: vec![monitor_wallpaper(&wp.monitors)],
                 },
             ],
         ),

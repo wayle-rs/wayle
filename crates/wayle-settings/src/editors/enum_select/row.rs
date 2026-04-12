@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use wayle_config::{ConfigProperty, EnumVariants};
 
 use crate::{
-    editors::enum_select::EnumSelectControl, pages::helpers::types::SettingSpec,
+    editors::enum_select::EnumSelectControl, pages::spec::SettingSpec,
     property_handle::PropertyHandle, row::RowBehavior,
 };
 

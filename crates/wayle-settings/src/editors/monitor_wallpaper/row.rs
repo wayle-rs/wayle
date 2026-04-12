@@ -3,7 +3,7 @@ use relm4::prelude::*;
 use wayle_config::{ConfigProperty, schemas::wallpaper::MonitorWallpaperConfig};
 
 use crate::{
-    editors::monitor_wallpaper::MonitorWallpaperControl, pages::helpers::types::SettingSpec,
+    editors::monitor_wallpaper::MonitorWallpaperControl, pages::spec::SettingSpec,
     property_handle::PropertyHandle, row::RowBehavior,
 };
 

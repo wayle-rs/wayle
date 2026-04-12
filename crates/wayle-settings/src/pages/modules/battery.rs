@@ -1,11 +1,11 @@
 //! Battery module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{toml_editor::{toml_editor}, text::{text}};
+use crate::pages::spec::{SectionSpec, page_spec};
+use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, BarButtonFields, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.battery;
@@ -37,24 +37,24 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        helpers::text(&m.charging_icon),
-                        helpers::text(&m.alert_icon),
-                        helpers::text(&m.format),
-                        helpers::toml_editor(
+                        text(&m.charging_icon),
+                        text(&m.alert_icon),
+                        text(&m.format),
+                        toml_editor(
                             &m.level_icons,
                             "level-icons",
                             &config.styling.palette.bg,
                         ),
-                        helpers::toml_editor(
+                        toml_editor(
                             &m.thresholds,
                             "thresholds",
                             &config.styling.palette.bg,
                         ),
                     ],
                 },
-                helpers::bar_display_section(&fields),
-                helpers::colors_section(&fields),
-                helpers::actions_section(&fields),
+                bar_display_section(&fields),
+                colors_section(&fields),
+                actions_section(&fields),
             ],
         ),
     }

@@ -3,7 +3,7 @@ use relm4::prelude::*;
 use wayle_config::ConfigProperty;
 
 use crate::{
-    editors::toggle::ToggleControl, pages::helpers::types::SettingSpec,
+    editors::toggle::ToggleControl, pages::spec::SettingSpec,
     property_handle::PropertyHandle, row::RowBehavior,
 };
 

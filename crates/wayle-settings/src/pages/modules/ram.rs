@@ -1,11 +1,11 @@
 //! RAM module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{toml_editor::{toml_editor}, number::{number_u64}, text::{text}};
+use crate::pages::spec::{SectionSpec, page_spec};
+use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, BarButtonFields, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.ram;
@@ -37,19 +37,19 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        helpers::number_u64(&m.poll_interval_ms),
-                        helpers::text(&m.format),
-                        helpers::text(&m.icon_name),
-                        helpers::toml_editor(
+                        number_u64(&m.poll_interval_ms),
+                        text(&m.format),
+                        text(&m.icon_name),
+                        toml_editor(
                             &m.thresholds,
                             "thresholds",
                             &config.styling.palette.bg,
                         ),
                     ],
                 },
-                helpers::bar_display_section(&fields),
-                helpers::colors_section(&fields),
-                helpers::actions_section(&fields),
+                bar_display_section(&fields),
+                colors_section(&fields),
+                actions_section(&fields),
             ],
         ),
     }

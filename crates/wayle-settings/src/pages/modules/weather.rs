@@ -1,11 +1,11 @@
 //! Weather module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{enum_select::{enum_select}, number::{number_u32}, text::{text_like, text}};
+use crate::pages::spec::{SectionSpec, page_spec};
+use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, BarButtonFields, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.weather;
@@ -37,25 +37,25 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        helpers::enum_select(&m.provider),
-                        helpers::text(&m.location),
-                        helpers::enum_select(&m.units),
-                        helpers::text(&m.format),
-                        helpers::enum_select(&m.time_format),
-                        helpers::number_u32(&m.refresh_interval_seconds),
-                        helpers::text(&m.icon_name),
+                        enum_select(&m.provider),
+                        text(&m.location),
+                        enum_select(&m.units),
+                        text(&m.format),
+                        enum_select(&m.time_format),
+                        number_u32(&m.refresh_interval_seconds),
+                        text(&m.icon_name),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-api-keys",
                     items: vec![
-                        helpers::text_like(&m.visual_crossing_key),
-                        helpers::text_like(&m.weatherapi_key),
+                        text_like(&m.visual_crossing_key),
+                        text_like(&m.weatherapi_key),
                     ],
                 },
-                helpers::bar_display_section(&fields),
-                helpers::colors_section(&fields),
-                helpers::actions_section(&fields),
+                bar_display_section(&fields),
+                colors_section(&fields),
+                actions_section(&fields),
             ],
         ),
     }

@@ -7,7 +7,7 @@ use wayle_config::{
 
 use crate::{
     editors::bar_layout::{BarLayoutControl, BarLayoutInit},
-    pages::helpers::types::SettingSpec,
+    pages::spec::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,
 };

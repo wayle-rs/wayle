@@ -6,7 +6,7 @@ use wayle_config::{ConfigProperty, schemas::styling::Spacing};
 
 use crate::{
     editors::number::{NumberControl, NumberInit},
-    pages::helpers::types::SettingSpec,
+    pages::spec::SettingSpec,
     property_handle::PropertyHandle,
     row::RowBehavior,
 };

@@ -1,11 +1,11 @@
 //! Hyprsunset module settings.
 
+use crate::pages::nav::LeafEntry;
+use crate::editors::{number::{number_u32}, text::{text}};
+use crate::pages::spec::{SectionSpec, page_spec};
+use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
-use crate::pages::{
-    helpers::{self, BarButtonFields, SectionSpec, page_spec},
-    nav::LeafEntry,
-};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.hyprsunset;
@@ -37,16 +37,16 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        helpers::text(&m.format),
-                        helpers::number_u32(&m.temperature),
-                        helpers::number_u32(&m.gamma),
-                        helpers::text(&m.icon_off),
-                        helpers::text(&m.icon_on),
+                        text(&m.format),
+                        number_u32(&m.temperature),
+                        number_u32(&m.gamma),
+                        text(&m.icon_off),
+                        text(&m.icon_on),
                     ],
                 },
-                helpers::bar_display_section(&fields),
-                helpers::colors_section(&fields),
-                helpers::actions_section(&fields),
+                bar_display_section(&fields),
+                colors_section(&fields),
+                actions_section(&fields),
             ],
         ),
     }
