@@ -1,18 +1,19 @@
 //! Dropdown for ColorValue config properties. Shows grouped token options
 //! with color dots, plus Auto, Transparent, and Custom (with ColorDialogButton).
 
-mod helpers;
+mod conversion;
+mod dropdown;
+mod tokens;
 
 mod row;
-use helpers::{
-    CUSTOM_ID, ColorItem, HEADER_ID, build_items, find_index, hex_to_rgba, rgba_to_hex,
-    setup_dropdown_factory,
-};
+use conversion::{hex_to_rgba, rgba_to_hex};
+use dropdown::setup_dropdown_factory;
 use relm4::{
-    gtk::{Expression, prelude::*},
+    gtk::{Expression, glib::SignalHandlerId, prelude::*},
     prelude::*,
 };
-pub(crate) use row::*;
+pub(crate) use row::color_value;
+use tokens::{CUSTOM_ID, ColorItem, HEADER_ID, build_items, find_index};
 use wayle_config::{
     ConfigProperty,
     schemas::styling::{ColorValue, HexColor},
@@ -23,9 +24,9 @@ use super::spawn_property_watcher;
 pub(crate) struct ColorValueControl {
     property: ConfigProperty<ColorValue>,
     dropdown: gtk::DropDown,
-    dropdown_handler: gtk::glib::SignalHandlerId,
+    dropdown_handler: SignalHandlerId,
     color_button: gtk::ColorDialogButton,
-    color_button_handler: gtk::glib::SignalHandlerId,
+    color_button_handler: SignalHandlerId,
     items: Vec<ColorItem>,
 }
 
@@ -37,13 +38,13 @@ pub(crate) enum ColorValueMsg {
 }
 
 impl ColorValueControl {
-    fn handle_dropdown_selected(&mut self, index: u32) -> bool {
+    fn handle_dropdown_selected(&mut self, index: u32) {
         let Some(item) = self.items.get(index as usize) else {
-            return false;
+            return;
         };
 
         if item.id == HEADER_ID {
-            return false;
+            return;
         }
 
         if item.id == CUSTOM_ID {
@@ -52,8 +53,6 @@ impl ColorValueControl {
             self.color_button.set_visible(false);
             self.property.set(item.value.clone());
         }
-
-        true
     }
 
     fn select_custom(&mut self) {
@@ -72,16 +71,15 @@ impl ColorValueControl {
         self.color_button.unblock_signal(&self.color_button_handler);
     }
 
-    fn handle_color_button_changed(&mut self) -> bool {
+    fn handle_color_button_changed(&mut self) {
         let rgba = self.color_button.rgba();
         let hex_str = rgba_to_hex(&rgba);
 
         let Ok(hex) = HexColor::new(&hex_str) else {
-            return false;
+            return;
         };
 
         self.property.set(ColorValue::Custom(hex));
-        true
     }
 
     fn refresh_from_property(&mut self) {
@@ -136,7 +134,7 @@ impl SimpleComponent for ColorValueControl {
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&property, move || {
-            let _ = input_sender.send(ColorValueMsg::Refresh);
+            input_sender.send(ColorValueMsg::Refresh).is_ok()
         });
 
         root.append(&color_button);
@@ -156,10 +154,8 @@ impl SimpleComponent for ColorValueControl {
 
     fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
-            ColorValueMsg::DropdownSelected(index) => if self.handle_dropdown_selected(index) {},
-
-            ColorValueMsg::ColorButtonChanged => if self.handle_color_button_changed() {},
-
+            ColorValueMsg::DropdownSelected(index) => self.handle_dropdown_selected(index),
+            ColorValueMsg::ColorButtonChanged => self.handle_color_button_changed(),
             ColorValueMsg::Refresh => self.refresh_from_property(),
         }
     }
@@ -169,7 +165,7 @@ fn build_dropdown(
     items: &[ColorItem],
     current_index: u32,
     sender: &ComponentSender<ColorValueControl>,
-) -> (gtk::DropDown, gtk::glib::SignalHandlerId) {
+) -> (gtk::DropDown, SignalHandlerId) {
     let labels: Vec<String> = items
         .iter()
         .map(|color_item| color_item.label.to_string())
@@ -202,7 +198,7 @@ fn build_dropdown(
 fn build_color_button(
     current: &ColorValue,
     sender: &ComponentSender<ColorValueControl>,
-) -> (gtk::ColorDialogButton, gtk::glib::SignalHandlerId) {
+) -> (gtk::ColorDialogButton, SignalHandlerId) {
     let dialog = gtk::ColorDialog::new();
     let button = gtk::ColorDialogButton::new(Some(dialog));
     button.set_cursor_from_name(Some("pointer"));

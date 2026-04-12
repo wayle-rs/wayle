@@ -4,7 +4,10 @@
 use std::rc::Rc;
 
 use relm4::{Sender, gtk, gtk::prelude::*};
-use serde::{Deserialize, de::value::StrDeserializer};
+use serde::{
+    Deserialize,
+    de::value::{Error as SerdeValueError, StrDeserializer},
+};
 use wayle_config::{
     ConfigProperty,
     schemas::{bar::BarModule, modules::CustomModuleDefinition},
@@ -124,7 +127,7 @@ fn populate_list(
         click.connect_released(move |gesture, _n_press, _x, _y| {
             gesture.set_state(gtk::EventSequenceState::Claimed);
 
-            let deserializer: StrDeserializer<'_, serde::de::value::Error> =
+            let deserializer: StrDeserializer<'_, SerdeValueError> =
                 StrDeserializer::new(&module_name);
 
             if let Ok(module) = BarModule::deserialize(deserializer) {

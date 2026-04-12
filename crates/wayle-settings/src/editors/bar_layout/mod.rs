@@ -4,12 +4,11 @@
 mod card;
 mod module_picker;
 mod row;
-pub(crate) use row::*;
-
 pub(super) mod zone;
 
 use card::{LayoutCard, LayoutCardInit, LayoutCardOutput};
 use relm4::{gtk, gtk::prelude::*, prelude::*};
+pub(crate) use row::bar_layout;
 use wayle_config::{
     ConfigProperty,
     schemas::{bar::BarLayout, modules::CustomModuleDefinition},
@@ -20,8 +19,8 @@ use zone::{DragPayload, DropLocation};
 use super::spawn_property_watcher;
 
 pub(crate) struct BarLayoutInit {
-    pub property: ConfigProperty<Vec<BarLayout>>,
-    pub custom_modules: ConfigProperty<Vec<CustomModuleDefinition>>,
+    pub(crate) property: ConfigProperty<Vec<BarLayout>>,
+    pub(crate) custom_modules: ConfigProperty<Vec<CustomModuleDefinition>>,
 }
 
 pub(crate) struct BarLayoutControl {
@@ -104,7 +103,7 @@ impl SimpleComponent for BarLayoutControl {
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&init.property, move || {
-            let _ = input_sender.send(BarLayoutMsg::Refresh);
+            input_sender.send(BarLayoutMsg::Refresh).is_ok()
         });
 
         root.append(&card_list);

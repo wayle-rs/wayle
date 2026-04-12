@@ -1,7 +1,12 @@
 //! Single monitor layout card. Shows monitor name, extends dropdown,
 //! show/hide toggle, and three module zones (left, center, right).
 
-use relm4::{factory::FactoryView, gtk, gtk::prelude::*, prelude::*};
+use relm4::{
+    factory::FactoryView,
+    gtk,
+    gtk::{glib, prelude::*},
+    prelude::*,
+};
 use wayle_config::{
     ConfigProperty,
     schemas::{
@@ -16,10 +21,10 @@ use super::zone::{self, DragPayload, DropLocation, ZoneId};
 pub(super) struct LayoutCard {
     monitor: String,
     extends: Option<String>,
-    pub show: bool,
-    pub left: Vec<BarItem>,
-    pub center: Vec<BarItem>,
-    pub right: Vec<BarItem>,
+    pub(super) show: bool,
+    pub(super) left: Vec<BarItem>,
+    pub(super) center: Vec<BarItem>,
+    pub(super) right: Vec<BarItem>,
 
     custom_modules: ConfigProperty<Vec<CustomModuleDefinition>>,
     index: DynamicIndex,
@@ -32,8 +37,8 @@ pub(super) struct LayoutCard {
 }
 
 pub(super) struct LayoutCardInit {
-    pub layout: BarLayout,
-    pub custom_modules: ConfigProperty<Vec<CustomModuleDefinition>>,
+    pub(crate) layout: BarLayout,
+    pub(crate) custom_modules: ConfigProperty<Vec<CustomModuleDefinition>>,
 }
 
 #[derive(Debug)]
@@ -57,7 +62,7 @@ pub(super) enum LayoutCardOutput {
 }
 
 impl LayoutCard {
-    pub fn to_layout(&self) -> BarLayout {
+    pub(crate) fn to_layout(&self) -> BarLayout {
         BarLayout {
             monitor: self.monitor.clone(),
             extends: self.extends.clone(),
@@ -206,7 +211,7 @@ impl FactoryComponent for LayoutCard {
                     set_cursor_from_name: Some("pointer"),
                     connect_state_set[sender] => move |_switch, active| {
                         sender.input(LayoutCardMsg::ShowToggled(active));
-                        gtk::glib::Propagation::Proceed
+                        glib::Propagation::Proceed
                     },
                 },
 
@@ -275,86 +280,131 @@ impl FactoryComponent for LayoutCard {
     }
 
     fn update(&mut self, msg: Self::Input, sender: FactorySender<Self>) {
-        match msg {
-            LayoutCardMsg::MonitorChanged => {
-                self.monitor = self.monitor_entry.text().to_string();
-                let _ = sender.output(LayoutCardOutput::Changed);
-            }
-
-            LayoutCardMsg::ExtendsChanged => {
-                let text = self.extends_entry.text().to_string();
-                self.extends = if text.is_empty() { None } else { Some(text) };
-                let _ = sender.output(LayoutCardOutput::Changed);
-            }
-
+        let changed = match msg {
+            LayoutCardMsg::MonitorChanged => self.on_monitor_changed(),
+            LayoutCardMsg::ExtendsChanged => self.on_extends_changed(),
             LayoutCardMsg::GroupNameChanged(zone, group_index, name) => {
-                let items = self.zone_mut(zone);
-
-                if let Some(BarItem::Group(group)) = items.get_mut(group_index) {
-                    group.name = name;
-                    let _ = sender.output(LayoutCardOutput::Changed);
-                }
+                self.on_group_name_changed(zone, group_index, name)
             }
-
-            LayoutCardMsg::ShowToggled(active) => {
-                self.show = active;
-                self.rebuild_body(&sender);
-                let _ = sender.output(LayoutCardOutput::Changed);
-            }
-
-            LayoutCardMsg::AddModule(zone, module) => {
-                let item = BarItem::Module(ModuleRef::Plain(module));
-                self.zone_mut(zone).push(item);
-                self.rebuild_zone(zone, &sender);
-                let _ = sender.output(LayoutCardOutput::Changed);
-            }
-
-            LayoutCardMsg::AddGroup(zone) => {
-                let group = BarGroup {
-                    name: t("settings-layout-default-group"),
-                    modules: Vec::new(),
-                };
-                self.zone_mut(zone).push(BarItem::Group(group));
-                self.rebuild_zone(zone, &sender);
-                let _ = sender.output(LayoutCardOutput::Changed);
-            }
-
+            LayoutCardMsg::ShowToggled(active) => self.on_show_toggled(active, &sender),
+            LayoutCardMsg::AddModule(zone, module) => self.on_add_module(zone, module, &sender),
+            LayoutCardMsg::AddGroup(zone) => self.on_add_group(zone, &sender),
             LayoutCardMsg::RemoveItem(zone, item_index) => {
-                let items = self.zone_mut(zone);
-
-                if item_index < items.len() {
-                    items.remove(item_index);
-                    self.rebuild_zone(zone, &sender);
-                    let _ = sender.output(LayoutCardOutput::Changed);
-                }
+                self.on_remove_item(zone, item_index, &sender)
             }
-
             LayoutCardMsg::RemoveGroupModule(zone, group_index, module_index) => {
-                let items = self.zone_mut(zone);
-
-                if let Some(BarItem::Group(group)) = items.get_mut(group_index)
-                    && module_index < group.modules.len()
-                {
-                    group.modules.remove(module_index);
-
-                    if group.modules.is_empty() {
-                        items.remove(group_index);
-                    }
-
-                    self.rebuild_zone(zone, &sender);
-                    let _ = sender.output(LayoutCardOutput::Changed);
-                }
+                self.on_remove_group_module(zone, group_index, module_index, &sender)
             }
-
             LayoutCardMsg::AddModuleToGroup(zone, group_index, module) => {
-                let items = self.zone_mut(zone);
-
-                if let Some(BarItem::Group(group)) = items.get_mut(group_index) {
-                    group.modules.push(ModuleRef::Plain(module));
-                    self.rebuild_zone(zone, &sender);
-                    let _ = sender.output(LayoutCardOutput::Changed);
-                }
+                self.on_add_module_to_group(zone, group_index, module, &sender)
             }
+        };
+
+        if changed {
+            let _ = sender.output(LayoutCardOutput::Changed);
         }
+    }
+}
+
+impl LayoutCard {
+    fn on_monitor_changed(&mut self) -> bool {
+        self.monitor = self.monitor_entry.text().to_string();
+        true
+    }
+
+    fn on_extends_changed(&mut self) -> bool {
+        let text = self.extends_entry.text().to_string();
+        self.extends = if text.is_empty() { None } else { Some(text) };
+        true
+    }
+
+    fn on_group_name_changed(&mut self, zone: ZoneId, group_index: usize, name: String) -> bool {
+        let items = self.zone_mut(zone);
+        let Some(BarItem::Group(group)) = items.get_mut(group_index) else {
+            return false;
+        };
+        group.name = name;
+        true
+    }
+
+    fn on_show_toggled(&mut self, active: bool, sender: &FactorySender<Self>) -> bool {
+        self.show = active;
+        self.rebuild_body(sender);
+        true
+    }
+
+    fn on_add_module(
+        &mut self,
+        zone: ZoneId,
+        module: BarModule,
+        sender: &FactorySender<Self>,
+    ) -> bool {
+        let item = BarItem::Module(ModuleRef::Plain(module));
+        self.zone_mut(zone).push(item);
+        self.rebuild_zone(zone, sender);
+        true
+    }
+
+    fn on_add_group(&mut self, zone: ZoneId, sender: &FactorySender<Self>) -> bool {
+        let group = BarGroup {
+            name: t("settings-layout-default-group"),
+            modules: Vec::new(),
+        };
+        self.zone_mut(zone).push(BarItem::Group(group));
+        self.rebuild_zone(zone, sender);
+        true
+    }
+
+    fn on_remove_item(
+        &mut self,
+        zone: ZoneId,
+        item_index: usize,
+        sender: &FactorySender<Self>,
+    ) -> bool {
+        let items = self.zone_mut(zone);
+        if item_index >= items.len() {
+            return false;
+        }
+        items.remove(item_index);
+        self.rebuild_zone(zone, sender);
+        true
+    }
+
+    fn on_remove_group_module(
+        &mut self,
+        zone: ZoneId,
+        group_index: usize,
+        module_index: usize,
+        sender: &FactorySender<Self>,
+    ) -> bool {
+        let items = self.zone_mut(zone);
+        let Some(BarItem::Group(group)) = items.get_mut(group_index) else {
+            return false;
+        };
+        if module_index >= group.modules.len() {
+            return false;
+        }
+        group.modules.remove(module_index);
+        if group.modules.is_empty() {
+            items.remove(group_index);
+        }
+        self.rebuild_zone(zone, sender);
+        true
+    }
+
+    fn on_add_module_to_group(
+        &mut self,
+        zone: ZoneId,
+        group_index: usize,
+        module: BarModule,
+        sender: &FactorySender<Self>,
+    ) -> bool {
+        let items = self.zone_mut(zone);
+        let Some(BarItem::Group(group)) = items.get_mut(group_index) else {
+            return false;
+        };
+        group.modules.push(ModuleRef::Plain(module));
+        self.rebuild_zone(zone, sender);
+        true
     }
 }

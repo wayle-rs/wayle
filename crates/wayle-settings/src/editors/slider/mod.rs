@@ -8,7 +8,7 @@ use relm4::{
     gtk::{glib, prelude::*},
     prelude::*,
 };
-pub(crate) use row::*;
+pub(crate) use row::{normalized, percentage, scale, signed_normalized};
 use wayle_config::ConfigProperty;
 use wayle_widgets::primitives::slider::DebouncedSlider;
 
@@ -21,12 +21,12 @@ pub(crate) struct SliderControl<T: Clone + Send + Sync + PartialEq + 'static> {
 }
 
 pub(crate) struct SliderInit<T: Clone + Send + Sync + PartialEq + 'static> {
-    pub property: ConfigProperty<T>,
-    pub range_min: f64,
-    pub range_max: f64,
-    pub to_slider: fn(&T) -> f64,
-    pub from_slider: fn(f64) -> T,
-    pub format_label: fn(f64) -> String,
+    pub(crate) property: ConfigProperty<T>,
+    pub(crate) range_min: f64,
+    pub(crate) range_max: f64,
+    pub(crate) to_slider: fn(&T) -> f64,
+    pub(crate) from_slider: fn(f64) -> T,
+    pub(crate) format_label: fn(f64) -> String,
 }
 
 #[derive(Debug)]
@@ -77,7 +77,7 @@ where
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&init.property, move || {
-            let _ = input_sender.send(SliderMsg::Refresh);
+            input_sender.send(SliderMsg::Refresh).is_ok()
         });
 
         root.append(&slider);

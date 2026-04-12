@@ -6,6 +6,7 @@ use crate::{
     property_handle::PropertyHandle, row::RowBehavior,
 };
 
+/// Row for a `ColorValue` property, letting the user pick between auto, transparent, a palette token, or a custom hex color.
 pub(crate) fn color_value(property: &ConfigProperty<ColorValue>) -> SettingRowInit {
     let controller = ColorValueControl::builder()
         .launch(property.clone())

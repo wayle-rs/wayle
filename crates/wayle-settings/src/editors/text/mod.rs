@@ -1,8 +1,12 @@
 //! Text entry for string-like config properties. Commits on Enter.
 
 mod row;
-use relm4::{gtk, gtk::prelude::*, prelude::*};
-pub(crate) use row::*;
+use relm4::{
+    gtk,
+    gtk::{glib::SignalHandlerId, prelude::*},
+    prelude::*,
+};
+pub(crate) use row::{text, text_like};
 use wayle_config::{
     ClickAction, ConfigProperty,
     schemas::{modules::PopupMonitor, osd::OsdMonitor},
@@ -87,13 +91,13 @@ impl TextLike for ClickAction {
 pub(crate) struct TextControl<T: TextLike> {
     property: ConfigProperty<T>,
     entry: gtk::Entry,
-    activate_id: gtk::glib::SignalHandlerId,
-    changed_id: gtk::glib::SignalHandlerId,
+    activate_id: SignalHandlerId,
+    changed_id: SignalHandlerId,
 }
 
 pub(crate) struct TextInit<T: TextLike> {
-    pub property: ConfigProperty<T>,
-    pub dirty_badge: gtk::Label,
+    pub(crate) property: ConfigProperty<T>,
+    pub(crate) dirty_badge: gtk::Label,
 }
 
 #[derive(Debug)]
@@ -141,7 +145,7 @@ impl<T: TextLike> SimpleComponent for TextControl<T> {
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&init.property, move || {
-            let _ = input_sender.send(TextMsg::Refresh);
+            input_sender.send(TextMsg::Refresh).is_ok()
         });
 
         root.append(&entry);

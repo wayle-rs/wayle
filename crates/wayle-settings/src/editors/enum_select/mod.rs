@@ -1,9 +1,16 @@
 //! Dropdown control for config enums that derive `EnumVariants`.
 
 mod row;
-use relm4::{gtk, gtk::prelude::*, prelude::*};
-pub(crate) use row::*;
-use serde::{Deserialize, de::value::StrDeserializer};
+use relm4::{
+    gtk,
+    gtk::{glib::SignalHandlerId, prelude::*},
+    prelude::*,
+};
+pub(crate) use row::enum_select;
+use serde::{
+    Deserialize,
+    de::value::{Error as SerdeValueError, StrDeserializer},
+};
 use wayle_config::{ConfigProperty, EnumVariant, EnumVariants};
 use wayle_i18n::t;
 
@@ -13,7 +20,7 @@ pub(crate) struct EnumSelectControl<E: Clone + Send + Sync + PartialEq + 'static
     property: ConfigProperty<E>,
     selected: u32,
     dropdown: gtk::DropDown,
-    handler_id: gtk::glib::SignalHandlerId,
+    handler_id: SignalHandlerId,
 }
 
 #[derive(Debug)]
@@ -83,7 +90,7 @@ where
 
         let watcher_sender = sender.input_sender().clone();
         spawn_property_watcher(&property, move || {
-            let _ = watcher_sender.send(EnumSelectMsg::Refresh);
+            watcher_sender.send(EnumSelectMsg::Refresh).is_ok()
         });
 
         root.append(&dropdown);
@@ -133,6 +140,6 @@ where
 }
 
 fn enum_from_serde_value<E: for<'de> Deserialize<'de>>(value: &str) -> Option<E> {
-    let deserializer: StrDeserializer<'_, serde::de::value::Error> = StrDeserializer::new(value);
+    let deserializer: StrDeserializer<'_, SerdeValueError> = StrDeserializer::new(value);
     E::deserialize(deserializer).ok()
 }

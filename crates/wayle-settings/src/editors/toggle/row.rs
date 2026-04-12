@@ -6,6 +6,7 @@ use crate::{
     row::RowBehavior,
 };
 
+/// Row with a switch bound to a boolean property.
 pub(crate) fn toggle(property: &ConfigProperty<bool>) -> SettingRowInit {
     let controller = ToggleControl::builder().launch(property.clone()).detach();
     let widget = controller.widget().clone();

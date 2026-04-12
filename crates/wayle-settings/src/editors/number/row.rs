@@ -12,6 +12,7 @@ use crate::{
 
 const U64_DISPLAY_MAX: f64 = 1_000_000.0;
 
+/// Row with a numeric spin bound to a `Spacing` property, stepping in 0.5 pixel increments up to 500.
 pub(crate) fn spacing(property: &ConfigProperty<Spacing>) -> SettingRowInit {
     let controller = NumberControl::builder()
         .launch(NumberInit {
@@ -38,6 +39,7 @@ pub(crate) fn spacing(property: &ConfigProperty<Spacing>) -> SettingRowInit {
     }
 }
 
+/// Row with an integer spin covering the full `u8` range.
 pub(crate) fn number_u8(property: &ConfigProperty<u8>) -> SettingRowInit {
     let controller = NumberControl::builder()
         .launch(NumberInit {
@@ -64,6 +66,7 @@ pub(crate) fn number_u8(property: &ConfigProperty<u8>) -> SettingRowInit {
     }
 }
 
+/// Row with an integer spin covering the full `u32` range.
 pub(crate) fn number_u32(property: &ConfigProperty<u32>) -> SettingRowInit {
     let controller = NumberControl::builder()
         .launch(NumberInit {
@@ -94,6 +97,7 @@ pub(crate) fn number_u32(property: &ConfigProperty<u32>) -> SettingRowInit {
     }
 }
 
+/// Row with an integer spin for a `u64` property, capped at one million for UI precision.
 pub(crate) fn number_u64(property: &ConfigProperty<u64>) -> SettingRowInit {
     let controller = NumberControl::builder()
         .launch(NumberInit {
@@ -120,6 +124,7 @@ pub(crate) fn number_u64(property: &ConfigProperty<u64>) -> SettingRowInit {
     }
 }
 
+/// Row with a numeric spin for an `f64` property, using caller-supplied range, step, and decimal digits.
 pub(crate) fn number_f64(
     property: &ConfigProperty<f64>,
     range_min: f64,
@@ -152,6 +157,7 @@ pub(crate) fn number_f64(
     }
 }
 
+/// Row with a numeric spin for any newtype around a numeric value, using caller-supplied conversions and range.
 pub(crate) fn number_newtype<T>(
     property: &ConfigProperty<T>,
     range_min: f64,

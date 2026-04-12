@@ -8,20 +8,20 @@ use crate::{
 };
 
 pub(crate) struct BarButtonFields<'a> {
-    pub icon_show: &'a ConfigProperty<bool>,
-    pub label_show: &'a ConfigProperty<bool>,
-    pub label_max_length: &'a ConfigProperty<u32>,
-    pub border_show: &'a ConfigProperty<bool>,
-    pub icon_color: &'a ConfigProperty<ColorValue>,
-    pub icon_bg_color: &'a ConfigProperty<ColorValue>,
-    pub label_color: &'a ConfigProperty<ColorValue>,
-    pub button_bg_color: &'a ConfigProperty<ColorValue>,
-    pub border_color: &'a ConfigProperty<ColorValue>,
-    pub left_click: &'a ConfigProperty<ClickAction>,
-    pub right_click: &'a ConfigProperty<ClickAction>,
-    pub middle_click: &'a ConfigProperty<ClickAction>,
-    pub scroll_up: &'a ConfigProperty<ClickAction>,
-    pub scroll_down: &'a ConfigProperty<ClickAction>,
+    pub(crate) icon_show: &'a ConfigProperty<bool>,
+    pub(crate) label_show: &'a ConfigProperty<bool>,
+    pub(crate) label_max_length: &'a ConfigProperty<u32>,
+    pub(crate) border_show: &'a ConfigProperty<bool>,
+    pub(crate) icon_color: &'a ConfigProperty<ColorValue>,
+    pub(crate) icon_bg_color: &'a ConfigProperty<ColorValue>,
+    pub(crate) label_color: &'a ConfigProperty<ColorValue>,
+    pub(crate) button_bg_color: &'a ConfigProperty<ColorValue>,
+    pub(crate) border_color: &'a ConfigProperty<ColorValue>,
+    pub(crate) left_click: &'a ConfigProperty<ClickAction>,
+    pub(crate) right_click: &'a ConfigProperty<ClickAction>,
+    pub(crate) middle_click: &'a ConfigProperty<ClickAction>,
+    pub(crate) scroll_up: &'a ConfigProperty<ClickAction>,
+    pub(crate) scroll_down: &'a ConfigProperty<ClickAction>,
 }
 
 pub(crate) fn bar_display_section(fields: &BarButtonFields) -> SectionSpec {

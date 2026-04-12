@@ -12,6 +12,7 @@ use crate::{
     row::RowBehavior,
 };
 
+/// Full-width row with a TOML source editor for any serializable property, keyed under the given table name. Shows a dirty badge since edits apply on explicit save.
 pub(crate) fn toml_editor<T>(
     property: &ConfigProperty<T>,
     key: &'static str,
@@ -23,6 +24,7 @@ where
     toml_editor_sized(property, key, 0, palette_bg)
 }
 
+/// Full-width TOML editor row with a minimum visible line count, for properties whose default size would be too short to edit comfortably.
 pub(crate) fn toml_editor_sized<T>(
     property: &ConfigProperty<T>,
     key: &'static str,

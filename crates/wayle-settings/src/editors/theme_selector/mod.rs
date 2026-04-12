@@ -12,7 +12,7 @@ use relm4::{
     },
     prelude::*,
 };
-pub(crate) use row::*;
+pub(crate) use row::theme_selector;
 use tracing::warn;
 use wayle_config::{
     ConfigProperty,
@@ -40,8 +40,8 @@ pub(crate) struct ThemeSelectorControl {
 }
 
 pub(crate) struct ThemeSelectorInit {
-    pub available: ConfigProperty<Vec<ThemeEntry>>,
-    pub palette: PaletteConfig,
+    pub(crate) available: ConfigProperty<Vec<ThemeEntry>>,
+    pub(crate) palette: PaletteConfig,
 }
 
 #[derive(Debug)]
@@ -115,7 +115,7 @@ impl SimpleComponent for ThemeSelectorControl {
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&init.available, move || {
-            let _ = input_sender.send(ThemeSelectorMsg::RebuildList);
+            input_sender.send(ThemeSelectorMsg::RebuildList).is_ok()
         });
 
         let popover_cleanup = popover.clone();
@@ -271,7 +271,8 @@ fn rebuild_all_css(hexes: &BTreeSet<String>) -> String {
 
     for hex in hexes {
         out.push_str(&format!(
-            "box.theme-preset-swatch.swatch-{hex} {{ background-color: #{hex}; background-image: none; }}\n"
+            "box.theme-preset-swatch.swatch-{hex} {{ \
+             background-color: #{hex}; background-image: none; }}\n"
         ));
     }
 

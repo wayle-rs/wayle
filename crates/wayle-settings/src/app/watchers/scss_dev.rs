@@ -19,7 +19,7 @@ use crate::app::{SettingsApp, SettingsAppMsg};
 
 const DEBOUNCE_DURATION: Duration = Duration::from_millis(100);
 
-pub fn spawn(sender: &ComponentSender<SettingsApp>, config_service: &Arc<ConfigService>) {
+pub(crate) fn spawn(sender: &ComponentSender<SettingsApp>, config_service: &Arc<ConfigService>) {
     if env::var("WAYLE_DEV").is_err() {
         return;
     }
@@ -48,10 +48,18 @@ pub fn spawn(sender: &ComponentSender<SettingsApp>, config_service: &Arc<ConfigS
     info!(path = %scss_path.display(), "SCSS dev watcher started");
 
     let watcher = Arc::new(watcher);
-    let input_sender = sender.input_sender().clone();
     let config_service = Arc::clone(config_service);
+    let input_sender = sender.input_sender().clone();
 
-    tokio::spawn(run_event_loop(watcher, rx, input_sender, config_service));
+    sender.command(move |_out, shutdown| async move {
+        let shutdown_fut = shutdown.wait();
+        tokio::pin!(shutdown_fut);
+
+        tokio::select! {
+            _ = &mut shutdown_fut => {}
+            () = run_event_loop(watcher, rx, input_sender, config_service) => {}
+        }
+    });
 }
 
 fn should_reload(event: &Event) -> bool {

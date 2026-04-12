@@ -6,6 +6,7 @@ use crate::{
     row::RowBehavior,
 };
 
+/// Row with a color swatch and picker bound to a hex color property.
 pub(crate) fn color(property: &ConfigProperty<HexColor>) -> SettingRowInit {
     let controller = ColorControl::builder().launch(property.clone()).detach();
     let widget = controller.widget().clone();

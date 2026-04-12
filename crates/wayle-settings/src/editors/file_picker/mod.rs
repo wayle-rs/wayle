@@ -2,10 +2,10 @@
 
 mod row;
 use relm4::{
-    gtk::{gio, prelude::*},
+    gtk::{gio, glib::SignalHandlerId, prelude::*},
     prelude::*,
 };
-pub(crate) use row::*;
+pub(crate) use row::file_path;
 use wayle_config::ConfigProperty;
 
 use super::spawn_property_watcher;
@@ -13,14 +13,14 @@ use super::spawn_property_watcher;
 pub(crate) struct FilePickerControl {
     property: ConfigProperty<String>,
     entry: gtk::Entry,
-    activate_id: gtk::glib::SignalHandlerId,
-    changed_id: gtk::glib::SignalHandlerId,
+    activate_id: SignalHandlerId,
+    changed_id: SignalHandlerId,
     dirty_badge: gtk::Label,
 }
 
 pub(crate) struct FilePickerInit {
-    pub property: ConfigProperty<String>,
-    pub dirty_badge: gtk::Label,
+    pub(crate) property: ConfigProperty<String>,
+    pub(crate) dirty_badge: gtk::Label,
 }
 
 #[derive(Debug)]
@@ -83,7 +83,7 @@ impl SimpleComponent for FilePickerControl {
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&init.property, move || {
-            let _ = input_sender.send(FilePickerMsg::Refresh);
+            input_sender.send(FilePickerMsg::Refresh).is_ok()
         });
 
         root.append(&entry);

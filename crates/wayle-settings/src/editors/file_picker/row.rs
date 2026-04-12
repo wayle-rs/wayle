@@ -11,6 +11,7 @@ use crate::{
     row::RowBehavior,
 };
 
+/// Row with a path entry and file chooser button bound to a string property. Shows a dirty badge since typed paths aren't committed until Enter.
 pub(crate) fn file_path(property: &ConfigProperty<String>) -> SettingRowInit {
     let badge = make_dirty_badge();
 

@@ -7,6 +7,7 @@ use crate::{
     property_handle::PropertyHandle, row::RowBehavior,
 };
 
+/// Row with a dropdown populated from the property type's `EnumVariants` impl.
 pub(crate) fn enum_select<E>(property: &ConfigProperty<E>) -> SettingRowInit
 where
     E: EnumVariants

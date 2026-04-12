@@ -3,10 +3,9 @@
 
 use super::spec::PageSpec;
 
-/// Sidebar item that navigates directly to a page.
 pub(crate) struct LeafEntry {
-    pub id: &'static str,
-    pub i18n_key: &'static str,
-    pub icon: &'static str,
-    pub spec: PageSpec,
+    pub(crate) id: &'static str,
+    pub(crate) i18n_key: &'static str,
+    pub(crate) icon: &'static str,
+    pub(crate) spec: PageSpec,
 }

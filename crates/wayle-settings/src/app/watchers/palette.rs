@@ -8,7 +8,7 @@ use wayle_wallpaper::WallpaperProxy;
 
 use crate::app::{SettingsApp, SettingsAppCmd};
 
-pub fn spawn(sender: &ComponentSender<SettingsApp>) {
+pub(crate) fn spawn(sender: &ComponentSender<SettingsApp>) {
     sender.command(|out, shutdown| async move {
         let Ok(connection) = zbus::Connection::session().await else {
             warn!("no D-Bus session, palette watcher disabled");

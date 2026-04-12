@@ -1,8 +1,8 @@
 //! Bar settings pages: layout and appearance, per-button styling, and dropdown behavior.
 
-pub mod button;
-pub mod dropdown;
-pub mod general;
+pub(crate) mod button;
+pub(crate) mod dropdown;
+pub(crate) mod general;
 
 use wayle_config::Config;
 

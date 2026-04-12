@@ -13,6 +13,7 @@ use crate::{
     row::RowBehavior,
 };
 
+/// Row rendering the available theme presets as a gallery that applies a preset on click. Uses action behavior, so source and reset UI are suppressed.
 pub(crate) fn theme_selector(
     available: &ConfigProperty<Vec<ThemeEntry>>,
     palette: &PaletteConfig,

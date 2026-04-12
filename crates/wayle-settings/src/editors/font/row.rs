@@ -6,6 +6,7 @@ use crate::{
     row::RowBehavior,
 };
 
+/// Row with a font chooser bound to a font-name string property.
 pub(crate) fn font(property: &ConfigProperty<String>) -> SettingRowInit {
     let controller = FontControl::builder().launch(property.clone()).detach();
     let widget = controller.widget().clone();

@@ -6,7 +6,10 @@ use relm4::{
     gtk::{gio, prelude::*},
     prelude::*,
 };
-use serde::{Deserialize, de::value::StrDeserializer};
+use serde::{
+    Deserialize,
+    de::value::{Error as SerdeValueError, StrDeserializer},
+};
 use wayle_config::{
     EnumVariants,
     schemas::wallpaper::{FitMode, MonitorWallpaperConfig},
@@ -37,7 +40,7 @@ pub(super) enum MonitorCardOutput {
 }
 
 impl MonitorCard {
-    pub fn to_config(&self) -> MonitorWallpaperConfig {
+    pub(crate) fn to_config(&self) -> MonitorWallpaperConfig {
         MonitorWallpaperConfig {
             name: self.name.clone(),
             fit_mode: self.fit_mode,
@@ -74,7 +77,7 @@ fn fit_mode_from_index(index: u32) -> Option<FitMode> {
 }
 
 fn fit_mode_from_value(value: &str) -> Option<FitMode> {
-    let deserializer: StrDeserializer<'_, serde::de::value::Error> = StrDeserializer::new(value);
+    let deserializer: StrDeserializer<'_, SerdeValueError> = StrDeserializer::new(value);
     FitMode::deserialize(deserializer).ok()
 }
 

@@ -3,8 +3,12 @@
 mod row;
 use std::sync::Arc;
 
-use relm4::{gtk, gtk::prelude::*, prelude::*};
-pub(crate) use row::*;
+use relm4::{
+    gtk,
+    gtk::{glib::SignalHandlerId, prelude::*},
+    prelude::*,
+};
+pub(crate) use row::{number_f64, number_newtype, number_u8, number_u32, number_u64, spacing};
 use wayle_config::ConfigProperty;
 
 use super::spawn_property_watcher;
@@ -12,18 +16,18 @@ use super::spawn_property_watcher;
 pub(crate) struct NumberControl<T: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<T>,
     spin: gtk::SpinButton,
-    handler_id: gtk::glib::SignalHandlerId,
+    handler_id: SignalHandlerId,
     to_f64: fn(&T) -> f64,
 }
 
 pub(crate) struct NumberInit<T: Clone + Send + Sync + PartialEq + 'static> {
-    pub property: ConfigProperty<T>,
-    pub range_min: f64,
-    pub range_max: f64,
-    pub step: f64,
-    pub digits: u32,
-    pub to_f64: fn(&T) -> f64,
-    pub from_f64: fn(f64) -> T,
+    pub(crate) property: ConfigProperty<T>,
+    pub(crate) range_min: f64,
+    pub(crate) range_max: f64,
+    pub(crate) step: f64,
+    pub(crate) digits: u32,
+    pub(crate) to_f64: fn(&T) -> f64,
+    pub(crate) from_f64: fn(f64) -> T,
 }
 
 #[derive(Debug)]
@@ -74,7 +78,7 @@ where
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&init.property, move || {
-            let _ = input_sender.send(NumberMsg::Refresh);
+            input_sender.send(NumberMsg::Refresh).is_ok()
         });
 
         root.append(&spin);

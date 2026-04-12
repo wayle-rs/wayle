@@ -6,7 +6,7 @@ mod card;
 mod row;
 use card::{MonitorCard, MonitorCardOutput};
 use relm4::{gtk, gtk::prelude::*, prelude::*};
-pub(crate) use row::*;
+pub(crate) use row::monitor_wallpaper;
 use wayle_config::{
     ConfigProperty,
     schemas::wallpaper::{FitMode, MonitorWallpaperConfig},
@@ -89,7 +89,7 @@ impl SimpleComponent for MonitorWallpaperControl {
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&property, move || {
-            let _ = input_sender.send(MonitorWallpaperMsg::Refresh);
+            input_sender.send(MonitorWallpaperMsg::Refresh).is_ok()
         });
 
         root.append(&card_list);

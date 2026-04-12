@@ -1,122 +1,40 @@
 //! TOML source editor for complex config values (maps, lists, thresholds).
 
-mod row;
-pub(crate) use row::*;
-
 pub(crate) mod helpers;
-
-use std::{env, fs, path::PathBuf, sync::Mutex};
+mod row;
 
 use helpers::{deserialize_with_key, serialize_with_key};
-use relm4::{gtk, gtk::prelude::*, prelude::*};
+use relm4::{
+    gtk,
+    gtk::{glib, prelude::*},
+    prelude::*,
+};
+pub(crate) use row::{toml_editor, toml_editor_sized};
 use serde::{Deserialize, Serialize};
 use sourceview5::prelude::*;
-use tracing::warn;
-use wayle_config::{
-    ConfigProperty,
-    schemas::styling::{HexColor, PaletteConfig},
-};
+use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 use wayle_i18n::t;
 
 use super::spawn_property_watcher;
-
-const SCHEME_ID: &str = "wayle";
-const SCHEME_FILENAME: &str = "wayle.xml";
+use crate::app::sourceview_scheme::SCHEME_ID;
 
 pub(crate) struct TomlEditorControl<
     T: Clone + Send + Sync + PartialEq + Serialize + for<'de> Deserialize<'de> + 'static,
 > {
     property: ConfigProperty<T>,
     buffer: sourceview5::Buffer,
-    changed_id: gtk::glib::SignalHandlerId,
+    changed_id: glib::SignalHandlerId,
     scrolled: gtk::ScrolledWindow,
     dirty_badge: gtk::Label,
     key: &'static str,
 }
 
 pub(crate) struct TomlEditorInit<T: Clone + Send + Sync + PartialEq + 'static> {
-    pub property: ConfigProperty<T>,
-    pub key: &'static str,
-    pub dirty_badge: gtk::Label,
-    pub min_lines: Option<u32>,
-    pub palette_bg: ConfigProperty<HexColor>,
-}
-
-static SCHEME_DIR_REGISTERED: Mutex<bool> = Mutex::new(false);
-
-fn scheme_dir() -> PathBuf {
-    if let Some(runtime_dir) = env::var_os("XDG_RUNTIME_DIR") {
-        return PathBuf::from(runtime_dir).join("wayle-sourceview");
-    }
-
-    let user = env::var("USER").unwrap_or_else(|_| String::from("unknown"));
-    env::temp_dir().join(format!("wayle-sourceview-{user}"))
-}
-
-pub(crate) fn update_wayle_scheme(palette: &PaletteConfig) {
-    let dir = scheme_dir();
-
-    if let Err(err) = fs::create_dir_all(&dir) {
-        warn!(error = %err, "failed to create scheme directory");
-        return;
-    }
-
-    if let Err(err) = fs::write(dir.join(SCHEME_FILENAME), build_scheme_xml(palette)) {
-        warn!(error = %err, "failed to write scheme file");
-        return;
-    }
-
-    let manager = sourceview5::StyleSchemeManager::default();
-
-    let mut registered = SCHEME_DIR_REGISTERED
-        .lock()
-        .unwrap_or_else(|err| err.into_inner());
-
-    if !*registered {
-        let Some(dir_str) = dir.to_str() else {
-            warn!(path = %dir.display(), "scheme directory path is not valid UTF-8");
-            return;
-        };
-        manager.append_search_path(dir_str);
-        *registered = true;
-    }
-
-    manager.force_rescan();
-}
-
-fn build_scheme_xml(palette: &PaletteConfig) -> String {
-    let bg = palette.bg.get();
-    let surface = palette.surface.get();
-    let fg = palette.fg.get();
-    let fg_muted = palette.fg_muted.get();
-    let primary = palette.primary.get();
-    let red = palette.red.get();
-    let green = palette.green.get();
-    let yellow = palette.yellow.get();
-    let blue = palette.blue.get();
-
-    format!(
-        r#"<?xml version="1.0" encoding="UTF-8"?>
-<style-scheme id="{SCHEME_ID}" name="Wayle" version="1.0">
-  <style name="text" foreground="{fg}" background="{bg}"/>
-  <style name="cursor" foreground="{primary}"/>
-  <style name="selection" foreground="{fg}" background="{surface}"/>
-  <style name="current-line" background="{surface}"/>
-  <style name="line-numbers" foreground="{fg_muted}" background="{bg}"/>
-  <style name="bracket-match" foreground="{primary}" bold="true"/>
-
-  <style name="def:keyword" foreground="{blue}" bold="true"/>
-  <style name="def:string" foreground="{green}"/>
-  <style name="def:number" foreground="{primary}"/>
-  <style name="def:boolean" foreground="{primary}"/>
-  <style name="def:comment" foreground="{fg_muted}" italic="true"/>
-  <style name="def:type" foreground="{yellow}"/>
-  <style name="def:constant" foreground="{primary}"/>
-  <style name="def:identifier" foreground="{fg}"/>
-  <style name="def:special-char" foreground="{red}"/>
-  <style name="def:heading" foreground="{blue}" bold="true"/>
-</style-scheme>"#
-    )
+    pub(crate) property: ConfigProperty<T>,
+    pub(crate) key: &'static str,
+    pub(crate) dirty_badge: gtk::Label,
+    pub(crate) min_lines: Option<u32>,
+    pub(crate) palette_bg: ConfigProperty<HexColor>,
 }
 
 #[derive(Debug)]
@@ -207,12 +125,12 @@ where
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&init.property, move || {
-            let _ = input_sender.send(TomlEditorMsg::Refresh);
+            input_sender.send(TomlEditorMsg::Refresh).is_ok()
         });
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&init.palette_bg, move || {
-            let _ = input_sender.send(TomlEditorMsg::ReapplyScheme);
+            input_sender.send(TomlEditorMsg::ReapplyScheme).is_ok()
         });
 
         root.append(&scrolled);
@@ -260,7 +178,7 @@ where
             TomlEditorMsg::ReapplyScheme => {
                 let buffer = self.buffer.clone();
 
-                gtk::glib::idle_add_local_once(move || {
+                glib::idle_add_local_once(move || {
                     let manager = sourceview5::StyleSchemeManager::default();
 
                     if let Some(scheme) = manager.scheme(SCHEME_ID) {

@@ -2,10 +2,10 @@
 
 mod row;
 use relm4::{
-    gtk::{pango::FontDescription, prelude::*},
+    gtk::{glib::SignalHandlerId, pango::FontDescription, prelude::*},
     prelude::*,
 };
-pub(crate) use row::*;
+pub(crate) use row::font;
 use wayle_config::ConfigProperty;
 
 use super::spawn_property_watcher;
@@ -13,7 +13,7 @@ use super::spawn_property_watcher;
 pub(crate) struct FontControl {
     property: ConfigProperty<String>,
     button: gtk::FontDialogButton,
-    handler_id: gtk::glib::SignalHandlerId,
+    handler_id: SignalHandlerId,
 }
 
 #[derive(Debug)]
@@ -62,7 +62,7 @@ impl SimpleComponent for FontControl {
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&property, move || {
-            let _ = input_sender.send(FontMsg::Refresh);
+            input_sender.send(FontMsg::Refresh).is_ok()
         });
 
         root.append(&button);

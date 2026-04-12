@@ -2,10 +2,10 @@
 
 mod row;
 use relm4::{
-    gtk::{gdk, prelude::*},
+    gtk::{gdk, glib::SignalHandlerId, prelude::*},
     prelude::*,
 };
-pub(crate) use row::*;
+pub(crate) use row::color;
 use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 
 use super::spawn_property_watcher;
@@ -13,7 +13,7 @@ use super::spawn_property_watcher;
 pub(crate) struct ColorControl {
     property: ConfigProperty<HexColor>,
     button: gtk::ColorDialogButton,
-    handler_id: gtk::glib::SignalHandlerId,
+    handler_id: SignalHandlerId,
 }
 
 #[derive(Debug)]
@@ -60,7 +60,7 @@ impl SimpleComponent for ColorControl {
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&property, move || {
-            let _ = input_sender.send(ColorMsg::Refresh);
+            input_sender.send(ColorMsg::Refresh).is_ok()
         });
 
         root.append(&button);

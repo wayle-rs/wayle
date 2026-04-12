@@ -6,6 +6,7 @@ use crate::{
     property_handle::PropertyHandle, row::RowBehavior,
 };
 
+/// Full-width row for assigning a wallpaper to each monitor.
 pub(crate) fn monitor_wallpaper(
     property: &ConfigProperty<Vec<MonitorWallpaperConfig>>,
 ) -> SettingRowInit {

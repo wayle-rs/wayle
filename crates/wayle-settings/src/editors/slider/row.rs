@@ -11,6 +11,7 @@ use crate::{
     row::RowBehavior,
 };
 
+/// Row with a 0 to 100 slider formatted as a percentage.
 pub(crate) fn percentage(property: &ConfigProperty<Percentage>) -> SettingRowInit {
     let controller = SliderControl::builder()
         .launch(SliderInit {
@@ -36,6 +37,7 @@ pub(crate) fn percentage(property: &ConfigProperty<Percentage>) -> SettingRowIni
     }
 }
 
+/// Row with a slider over the `ScaleFactor` range, labeled with a multiplier like `1.25x`.
 pub(crate) fn scale(property: &ConfigProperty<ScaleFactor>) -> SettingRowInit {
     let controller = SliderControl::builder()
         .launch(SliderInit {
@@ -61,6 +63,7 @@ pub(crate) fn scale(property: &ConfigProperty<ScaleFactor>) -> SettingRowInit {
     }
 }
 
+/// Row with a slider over the 0.0 to 1.0 range for a `NormalizedF64` property.
 pub(crate) fn normalized(property: &ConfigProperty<NormalizedF64>) -> SettingRowInit {
     let controller = SliderControl::builder()
         .launch(SliderInit {
@@ -86,6 +89,7 @@ pub(crate) fn normalized(property: &ConfigProperty<NormalizedF64>) -> SettingRow
     }
 }
 
+/// Row with a slider over the -1.0 to 1.0 range for a `SignedNormalizedF64` property.
 pub(crate) fn signed_normalized(property: &ConfigProperty<SignedNormalizedF64>) -> SettingRowInit {
     let controller = SliderControl::builder()
         .launch(SliderInit {

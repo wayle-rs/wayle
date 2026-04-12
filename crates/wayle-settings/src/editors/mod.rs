@@ -2,36 +2,47 @@
 //! text entry, color picker, file picker, and TOML editor.
 //! Each owns its `ConfigProperty` and writes back on user interaction.
 
+pub(crate) mod bar_layout;
+pub(crate) mod color;
+pub(crate) mod color_value;
+pub(crate) mod enum_select;
+pub(crate) mod file_picker;
+pub(crate) mod font;
+pub(crate) mod monitor_wallpaper;
+pub(crate) mod number;
+pub(crate) mod slider;
+pub(crate) mod text;
+pub(crate) mod theme_selector;
+pub(crate) mod toggle;
+pub(crate) mod toml_editor;
+
 use futures::StreamExt;
-use relm4::{gtk, gtk::prelude::*};
+use relm4::{
+    gtk,
+    gtk::{glib, prelude::*},
+};
 use wayle_config::ConfigProperty;
 use wayle_i18n::t;
 
-pub mod bar_layout;
-pub mod color;
-pub mod color_value;
-pub mod enum_select;
-pub mod file_picker;
-pub mod font;
-pub mod monitor_wallpaper;
-pub mod number;
-pub mod slider;
-pub mod text;
-pub mod theme_selector;
-pub mod toggle;
-pub mod toml_editor;
-
+/// Invokes `callback` on every property change after the initial emission.
+///
+/// `ConfigProperty::watch` sends a snapshot on subscribe; we swallow it so
+/// editors don't re-emit `Refresh` during init. When `callback` returns
+/// `false` the subscription is dropped, so the watch doesn't outlive the
+/// owning component.
 pub(super) fn spawn_property_watcher<T: Clone + Send + Sync + PartialEq + 'static>(
     property: &ConfigProperty<T>,
-    callback: impl Fn() + 'static,
+    callback: impl Fn() -> bool + 'static,
 ) {
     let mut stream = property.watch();
 
-    gtk::glib::spawn_future_local(async move {
+    glib::spawn_future_local(async move {
         stream.next().await;
 
         while stream.next().await.is_some() {
-            callback();
+            if !callback() {
+                break;
+            }
         }
     });
 }

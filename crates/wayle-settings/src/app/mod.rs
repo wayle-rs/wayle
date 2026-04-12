@@ -1,6 +1,7 @@
 //! Top-level settings window. Owns the page stack, sidebar, and CSS provider.
 
 mod css;
+pub(crate) mod sourceview_scheme;
 mod watchers;
 
 use std::sync::Arc;
@@ -17,9 +18,11 @@ use wayle_widgets::primitives::confirm_modal::{
     ConfirmModal, ConfirmModalConfig, ConfirmModalMsg, ConfirmModalOutput, ConfirmStyle, ModalIcon,
 };
 
-use self::css::{build_css, load_css};
+use self::{
+    css::{build_css, load_css},
+    sourceview_scheme::update_wayle_scheme,
+};
 use crate::{
-    editors::toml_editor::update_wayle_scheme,
     pages::{
         bar, general, modules, nav::LeafEntry, notifications, osd, page::SettingsPage, styling,
         wallpaper,
@@ -32,7 +35,7 @@ const MAX_SIDEBAR_REM: f64 = 25.0;
 const BASE_PX_PER_REM: f64 = 16.0;
 
 #[allow(dead_code)]
-pub struct SettingsApp {
+pub(crate) struct SettingsApp {
     config_service: Arc<ConfigService>,
     css_provider: CssProvider,
     stack: gtk::Stack,
@@ -42,7 +45,7 @@ pub struct SettingsApp {
 }
 
 #[derive(Debug)]
-pub enum SettingsAppMsg {
+pub(crate) enum SettingsAppMsg {
     ReloadCss,
     DevCssRecompiled(String),
     PageSelected(&'static str),
@@ -53,11 +56,11 @@ pub enum SettingsAppMsg {
 }
 
 #[derive(Debug)]
-pub enum SettingsAppCmd {
+pub(crate) enum SettingsAppCmd {
     CssReloadNeeded,
 }
 
-#[relm4::component(pub)]
+#[relm4::component(pub(crate))]
 impl Component for SettingsApp {
     type Init = Arc<ConfigService>;
     type Input = SettingsAppMsg;

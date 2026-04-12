@@ -1,24 +1,28 @@
 //! GTK Switch bound to a boolean config property.
 
 mod row;
-use relm4::{gtk, gtk::prelude::*, prelude::*};
-pub(crate) use row::*;
+use relm4::{
+    gtk,
+    gtk::{glib, prelude::*},
+    prelude::*,
+};
+pub(crate) use row::toggle;
 use wayle_config::ConfigProperty;
 
 use super::spawn_property_watcher;
 
-pub struct ToggleControl {
+pub(crate) struct ToggleControl {
     property: ConfigProperty<bool>,
     active: bool,
 }
 
 #[derive(Debug)]
-pub enum ToggleMsg {
+pub(crate) enum ToggleMsg {
     Toggled(bool),
     Refresh,
 }
 
-#[relm4::component(pub)]
+#[relm4::component(pub(crate))]
 impl SimpleComponent for ToggleControl {
     type Init = ConfigProperty<bool>;
     type Input = ToggleMsg;
@@ -37,7 +41,7 @@ impl SimpleComponent for ToggleControl {
             connect_state_set[sender] => move |switch, active| {
                 let _ = sender.input_sender().send(ToggleMsg::Toggled(active));
                 switch.set_state(active);
-                gtk::glib::Propagation::Stop
+                glib::Propagation::Stop
             } @toggle_handler,
         }
     }
@@ -51,7 +55,7 @@ impl SimpleComponent for ToggleControl {
 
         let input_sender = sender.input_sender().clone();
         spawn_property_watcher(&property, move || {
-            let _ = input_sender.send(ToggleMsg::Refresh);
+            input_sender.send(ToggleMsg::Refresh).is_ok()
         });
 
         let model = Self { property, active };

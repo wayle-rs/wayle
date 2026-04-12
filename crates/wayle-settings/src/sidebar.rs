@@ -8,26 +8,22 @@ use std::collections::{HashMap, HashSet};
 use relm4::{gtk, gtk::prelude::*, prelude::*};
 use wayle_i18n::t;
 
-/// A nav entry that navigates directly to a page.
-pub struct NavItem {
-    pub id: &'static str,
-    pub i18n_key: &'static str,
-    pub icon: &'static str,
+pub(crate) struct NavItem {
+    pub(crate) id: &'static str,
+    pub(crate) i18n_key: &'static str,
+    pub(crate) icon: &'static str,
 }
 
-/// A labeled group of nav items, e.g. "Appearance".
-pub struct NavSection {
-    pub i18n_key: &'static str,
-    pub items: Vec<NavItem>,
+pub(crate) struct NavSection {
+    pub(crate) i18n_key: &'static str,
+    pub(crate) items: Vec<NavItem>,
 }
 
-/// Init data for the sidebar.
-pub struct SidebarInit {
-    pub sections: Vec<NavSection>,
+pub(crate) struct SidebarInit {
+    pub(crate) sections: Vec<NavSection>,
 }
 
-/// Sidebar component. Manages active highlight and section collapse state.
-pub struct Sidebar {
+pub(crate) struct Sidebar {
     active_id: &'static str,
     collapsed: HashSet<&'static str>,
     nav_buttons: HashMap<&'static str, gtk::Button>,
@@ -36,19 +32,19 @@ pub struct Sidebar {
 }
 
 #[derive(Debug)]
-pub enum SidebarMsg {
+pub(crate) enum SidebarMsg {
     Navigate(&'static str),
     ToggleSection(&'static str),
     ResetAllRequested,
 }
 
 #[derive(Debug)]
-pub enum SidebarOutput {
+pub(crate) enum SidebarOutput {
     PageSelected(&'static str),
     ResetAllRequested,
 }
 
-#[relm4::component(pub)]
+#[relm4::component(pub(crate))]
 impl SimpleComponent for Sidebar {
     type Init = SidebarInit;
     type Input = SidebarMsg;

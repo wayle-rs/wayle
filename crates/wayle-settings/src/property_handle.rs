@@ -4,11 +4,11 @@
 
 use std::sync::Arc;
 
-use futures::StreamExt;
-use relm4::gtk::glib;
 use wayle_config::{ConfigProperty, ValueSource};
 
-pub(crate) type WatchCallback = Box<dyn FnOnce(Box<dyn Fn() + 'static>)>;
+use crate::editors::spawn_property_watcher;
+
+pub(crate) type WatchCallback = Box<dyn FnOnce(Box<dyn Fn() -> bool + 'static>)>;
 
 pub(crate) struct PropertyHandle {
     pub(crate) source: Box<dyn Fn() -> ValueSource>,
@@ -46,15 +46,7 @@ impl PropertyHandle {
             default_display: Box::new(move || default_display_fn(default_prop.default())),
 
             watch_changes: Some(Box::new(move |callback| {
-                let mut stream = watch_prop.watch();
-
-                glib::spawn_future_local(async move {
-                    stream.next().await;
-
-                    while stream.next().await.is_some() {
-                        callback();
-                    }
-                });
+                spawn_property_watcher(&watch_prop, callback);
             })),
         }
     }

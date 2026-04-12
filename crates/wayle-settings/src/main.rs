@@ -5,18 +5,18 @@
 //! up changes via its file watcher. Closes cleanly when the window
 //! is dismissed, freeing all RAM.
 
-use std::process;
-
-use tokio::runtime::Runtime;
-use tracing_subscriber::EnvFilter;
-use wayle_config::{ConfigService, PersistenceWatcher};
-
 mod app;
 mod editors;
 mod pages;
 mod property_handle;
 mod row;
 mod sidebar;
+
+use std::process;
+
+use tokio::runtime::Runtime;
+use tracing_subscriber::EnvFilter;
+use wayle_config::{ConfigService, PersistenceWatcher};
 
 fn main() {
     tracing_subscriber::fmt()

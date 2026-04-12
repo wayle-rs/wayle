@@ -1,23 +1,29 @@
 //! One row per config field. Shows label, source badge, reset button,
 //! and a control slot for the widget.
 
-use relm4::{gtk, gtk::prelude::*, prelude::*};
+use relm4::{
+    gtk,
+    gtk::{pango, prelude::*},
+    prelude::*,
+};
 use wayle_config::ValueSource;
 use wayle_i18n::{t, t_attr};
 
-use crate::{pages::spec::SettingRowInit, property_handle::PropertyHandle};
+use crate::{
+    pages::spec::{Keepalive, SettingRowInit},
+    property_handle::PropertyHandle,
+};
 
 const DESCRIPTION_MAX_CHARS: i32 = 60;
 const DESCRIPTION_TOOLTIP_THRESHOLD: usize = 50;
 
-/// Row behavior variants.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum RowBehavior {
-    /// Standard setting: shows source badge and reset button when a runtime
-    /// override is present.
+    /// Bound to a config value. Shows the source badge and reset button
+    /// when a runtime override is present.
     Setting,
-    /// One-shot action (e.g. "Apply theme preset") with no value to track.
-    /// Source badge and reset button are hidden.
+    /// One-shot trigger with no value to track, like "Apply theme preset".
+    /// No source badge, no reset.
     Action,
 }
 
@@ -31,7 +37,7 @@ pub(crate) struct SettingRow {
     config_matches_default: bool,
     behavior: RowBehavior,
     #[allow(dead_code)]
-    keepalive: crate::pages::spec::Keepalive,
+    keepalive: Keepalive,
 }
 
 #[derive(Debug)]
@@ -92,7 +98,7 @@ impl SimpleComponent for SettingRow {
                 gtk::Label {
                     set_halign: gtk::Align::Start,
                     add_css_class: "setting-description",
-                    set_ellipsize: gtk::pango::EllipsizeMode::End,
+                    set_ellipsize: pango::EllipsizeMode::End,
                     set_max_width_chars: DESCRIPTION_MAX_CHARS,
                     set_single_line_mode: true,
                     #[watch]
@@ -171,7 +177,7 @@ impl SimpleComponent for SettingRow {
         if let Some(watch) = watcher {
             let sender = sender.input_sender().clone();
             watch(Box::new(move || {
-                let _ = sender.send(SettingRowMsg::Refresh);
+                sender.send(SettingRowMsg::Refresh).is_ok()
             }));
         }
 

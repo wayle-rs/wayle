@@ -10,7 +10,7 @@ use wayle_config::{ConfigService, SubscribeChanges, schemas::styling::ThemeProvi
 
 use crate::app::{SettingsApp, SettingsAppCmd};
 
-pub fn spawn(sender: &ComponentSender<SettingsApp>, config_service: &Arc<ConfigService>) {
+pub(crate) fn spawn(sender: &ComponentSender<SettingsApp>, config_service: &Arc<ConfigService>) {
     let config = config_service.config();
 
     watch_property(sender, config.styling.scale.watch());
