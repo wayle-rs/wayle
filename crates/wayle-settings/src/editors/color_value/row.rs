@@ -1,20 +1,19 @@
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk::prelude::*, prelude::*};
 use wayle_config::{ConfigProperty, schemas::styling::ColorValue};
 
 use crate::{
-    editors::color_value::ColorValueControl, pages::spec::SettingSpec,
+    editors::color_value::ColorValueControl, pages::spec::SettingRowInit,
     property_handle::PropertyHandle, row::RowBehavior,
 };
 
-pub(crate) fn color_value(property: &ConfigProperty<ColorValue>) -> SettingSpec {
+pub(crate) fn color_value(property: &ConfigProperty<ColorValue>) -> SettingRowInit {
     let controller = ColorValueControl::builder()
         .launch(property.clone())
         .detach();
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| match value {
             ColorValue::Auto => "auto".to_owned(),

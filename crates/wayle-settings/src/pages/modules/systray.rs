@@ -1,10 +1,17 @@
 //! System tray module settings.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{color_value::{color_value}, toggle::{toggle}, toml_editor::{toml_editor}, slider::{scale}, number::{spacing}};
-use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
+use crate::{
+    editors::{
+        color_value::color_value, number::spacing, slider::scale, toggle::toggle,
+        toml_editor::toml_editor,
+    },
+    pages::{
+        nav::LeafEntry,
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.systray;

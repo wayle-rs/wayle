@@ -7,9 +7,8 @@ pub(crate) mod helpers;
 
 use std::{env, fs, path::PathBuf, sync::Mutex};
 
-use gtk4::prelude::*;
 use helpers::{deserialize_with_key, serialize_with_key};
-use relm4::prelude::*;
+use relm4::{gtk, gtk::prelude::*, prelude::*};
 use serde::{Deserialize, Serialize};
 use sourceview5::prelude::*;
 use tracing::warn;
@@ -19,7 +18,7 @@ use wayle_config::{
 };
 use wayle_i18n::t;
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 const SCHEME_ID: &str = "wayle";
 const SCHEME_FILENAME: &str = "wayle.xml";
@@ -29,16 +28,16 @@ pub(crate) struct TomlEditorControl<
 > {
     property: ConfigProperty<T>,
     buffer: sourceview5::Buffer,
-    changed_id: gtk4::glib::SignalHandlerId,
-    scrolled: gtk4::ScrolledWindow,
-    dirty_badge: gtk4::Label,
+    changed_id: gtk::glib::SignalHandlerId,
+    scrolled: gtk::ScrolledWindow,
+    dirty_badge: gtk::Label,
     key: &'static str,
 }
 
 pub(crate) struct TomlEditorInit<T: Clone + Send + Sync + PartialEq + 'static> {
     pub property: ConfigProperty<T>,
     pub key: &'static str,
-    pub dirty_badge: gtk4::Label,
+    pub dirty_badge: gtk::Label,
     pub min_lines: Option<u32>,
     pub palette_bg: ConfigProperty<HexColor>,
 }
@@ -133,13 +132,13 @@ where
 {
     type Init = TomlEditorInit<T>;
     type Input = TomlEditorMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
-            .orientation(gtk4::Orientation::Vertical)
+        gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
             .hexpand(true)
             .vexpand(true)
             .build()
@@ -158,7 +157,7 @@ where
             .scheme(SCHEME_ID)
             .or_else(|| scheme_manager.scheme("Adwaita-dark"));
 
-        let buffer = sourceview5::Buffer::new(None::<&gtk4::TextTagTable>);
+        let buffer = sourceview5::Buffer::new(None::<&gtk::TextTagTable>);
 
         if let Some(lang) = &language {
             buffer.set_language(Some(lang));
@@ -176,9 +175,9 @@ where
         view.set_show_line_numbers(true);
         view.set_tab_width(2);
         view.set_auto_indent(true);
-        view.set_wrap_mode(gtk4::WrapMode::WordChar);
+        view.set_wrap_mode(gtk::WrapMode::WordChar);
 
-        let scrolled = gtk4::ScrolledWindow::builder()
+        let scrolled = gtk::ScrolledWindow::builder()
             .child(&view)
             .vexpand(true)
             .build();
@@ -193,9 +192,9 @@ where
             dirty_badge.set_visible(true);
         });
 
-        let save_button = gtk4::Button::builder()
+        let save_button = gtk::Button::builder()
             .label(t("settings-apply"))
-            .halign(gtk4::Align::End)
+            .halign(gtk::Align::End)
             .build();
 
         save_button.add_css_class("primary");
@@ -231,7 +230,7 @@ where
         ComponentParts { model, widgets: () }
     }
 
-    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>) {
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
             TomlEditorMsg::Save => {
                 let start = self.buffer.start_iter();
@@ -243,7 +242,6 @@ where
                         self.scrolled.remove_css_class("error");
                         self.property.set(value);
                         self.dirty_badge.set_visible(false);
-                        let _ = sender.output(ControlOutput::ValueChanged);
                     }
                     None => {
                         self.scrolled.add_css_class("error");
@@ -262,7 +260,7 @@ where
             TomlEditorMsg::ReapplyScheme => {
                 let buffer = self.buffer.clone();
 
-                gtk4::glib::idle_add_local_once(move || {
+                gtk::glib::idle_add_local_once(move || {
                     let manager = sourceview5::StyleSchemeManager::default();
 
                     if let Some(scheme) = manager.scheme(SCHEME_ID) {

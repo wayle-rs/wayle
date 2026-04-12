@@ -1,11 +1,17 @@
 //! Notification module settings.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{toml_editor::{toml_editor}, text::{text}};
-use crate::pages::spec::{SectionSpec, page_spec};
-use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
+use crate::{
+    editors::{text::text, toml_editor::toml_editor},
+    pages::{
+        nav::LeafEntry,
+        sections::bar_button::{
+            BarButtonFields, actions_section, bar_display_section, colors_section,
+        },
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.notification;
@@ -40,11 +46,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                         text(&m.icon_name),
                         text(&m.icon_unread),
                         text(&m.icon_dnd),
-                        toml_editor(
-                            &m.thresholds,
-                            "thresholds",
-                            &config.styling.palette.bg,
-                        ),
+                        toml_editor(&m.thresholds, "thresholds", &config.styling.palette.bg),
                     ],
                 },
                 bar_display_section(&fields),

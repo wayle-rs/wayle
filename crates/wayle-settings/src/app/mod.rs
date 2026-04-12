@@ -5,8 +5,10 @@ mod watchers;
 
 use std::sync::Arc;
 
-use gtk4::{CssProvider, StackTransitionType, prelude::*};
-use relm4::prelude::*;
+use relm4::{
+    gtk::{CssProvider, StackTransitionType, prelude::*},
+    prelude::*,
+};
 use tracing::{info, warn};
 use wayle_config::{Config, ConfigService};
 use wayle_i18n::t;
@@ -33,7 +35,7 @@ const BASE_PX_PER_REM: f64 = 16.0;
 pub struct SettingsApp {
     config_service: Arc<ConfigService>,
     css_provider: CssProvider,
-    stack: gtk4::Stack,
+    stack: gtk::Stack,
     pages: Vec<Controller<SettingsPage>>,
     sidebar: Controller<Sidebar>,
     confirm_modal: Controller<ConfirmModal>,
@@ -63,14 +65,14 @@ impl Component for SettingsApp {
     type CommandOutput = SettingsAppCmd;
 
     view! {
-        gtk4::Window {
+        gtk::Window {
             set_title: Some(&t("settings-title")),
             add_css_class: "settings-window",
             set_default_size: (900, 650),
 
             #[name = "paned"]
-            gtk4::Paned {
-                set_orientation: gtk4::Orientation::Horizontal,
+            gtk::Paned {
+                set_orientation: gtk::Orientation::Horizontal,
                 set_position: DEFAULT_SIDEBAR_WIDTH,
                 set_shrink_start_child: false,
                 set_shrink_end_child: false,
@@ -176,7 +178,7 @@ fn build_pages(
     sender: &ComponentSender<SettingsApp>,
 ) -> (
     Controller<Sidebar>,
-    gtk4::Stack,
+    gtk::Stack,
     Vec<Controller<SettingsPage>>,
 ) {
     let theme_entry = styling::entry(config);
@@ -220,7 +222,7 @@ fn build_pages(
             SidebarOutput::ResetAllRequested => SettingsAppMsg::ConfirmResetAll,
         });
 
-    let stack = gtk4::Stack::new();
+    let stack = gtk::Stack::new();
     stack.set_transition_type(StackTransitionType::Crossfade);
     stack.set_hexpand(true);
     stack.set_vexpand(true);
@@ -262,25 +264,25 @@ fn leaf_nav(entry: &LeafEntry) -> NavItem {
     }
 }
 
-fn build_content_overlay(stack: &gtk4::Stack, window: &gtk4::Window) -> gtk4::Overlay {
-    let close_button = gtk4::Button::from_icon_name("ld-x-symbolic");
+fn build_content_overlay(stack: &gtk::Stack, window: &gtk::Window) -> gtk::Overlay {
+    let close_button = gtk::Button::from_icon_name("ld-x-symbolic");
     close_button.add_css_class("settings-close");
     close_button.set_cursor_from_name(Some("pointer"));
-    close_button.set_valign(gtk4::Align::Start);
-    close_button.set_halign(gtk4::Align::End);
+    close_button.set_valign(gtk::Align::Start);
+    close_button.set_halign(gtk::Align::End);
     close_button.set_tooltip_text(Some(&t("settings-close")));
 
     let window_ref = window.clone();
     close_button.connect_clicked(move |_| window_ref.close());
 
-    let overlay = gtk4::Overlay::new();
+    let overlay = gtk::Overlay::new();
     overlay.set_child(Some(stack));
     overlay.add_overlay(&close_button);
 
     overlay
 }
 
-fn setup_paned_clamp(paned: &gtk4::Paned, config: &Config) {
+fn setup_paned_clamp(paned: &gtk::Paned, config: &Config) {
     let scale_property = config.styling.scale.clone();
 
     paned.connect_position_notify(move |paned| {

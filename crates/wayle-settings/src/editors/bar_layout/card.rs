@@ -1,8 +1,7 @@
 //! Single monitor layout card. Shows monitor name, extends dropdown,
 //! show/hide toggle, and three module zones (left, center, right).
 
-use gtk4::prelude::*;
-use relm4::{factory::FactoryView, prelude::*};
+use relm4::{factory::FactoryView, gtk, gtk::prelude::*, prelude::*};
 use wayle_config::{
     ConfigProperty,
     schemas::{
@@ -24,12 +23,12 @@ pub(super) struct LayoutCard {
 
     custom_modules: ConfigProperty<Vec<CustomModuleDefinition>>,
     index: DynamicIndex,
-    monitor_entry: gtk4::Entry,
-    extends_entry: gtk4::Entry,
-    body: gtk4::Box,
-    left_flow: gtk4::Box,
-    center_flow: gtk4::Box,
-    right_flow: gtk4::Box,
+    monitor_entry: gtk::Entry,
+    extends_entry: gtk::Entry,
+    body: gtk::Box,
+    left_flow: gtk::Box,
+    center_flow: gtk::Box,
+    right_flow: gtk::Box,
 }
 
 pub(super) struct LayoutCardInit {
@@ -77,7 +76,7 @@ impl LayoutCard {
         }
     }
 
-    fn zone_flow(&self, zone: ZoneId) -> &gtk4::Box {
+    fn zone_flow(&self, zone: ZoneId) -> &gtk::Box {
         match zone {
             ZoneId::Left => &self.left_flow,
             ZoneId::Center => &self.center_flow,
@@ -110,7 +109,7 @@ impl LayoutCard {
         }
 
         if !self.show {
-            let hidden_label = gtk4::Label::new(Some(&t("settings-layout-hidden")));
+            let hidden_label = gtk::Label::new(Some(&t("settings-layout-hidden")));
             hidden_label.add_css_class("layout-hidden-label");
             self.body.append(&hidden_label);
             return;
@@ -156,39 +155,39 @@ impl FactoryComponent for LayoutCard {
     type Input = LayoutCardMsg;
     type Output = LayoutCardOutput;
     type CommandOutput = ();
-    type ParentWidget = gtk4::Box;
+    type ParentWidget = gtk::Box;
 
     view! {
         #[root]
-        gtk4::Box {
+        gtk::Box {
             add_css_class: "layout-card",
-            set_orientation: gtk4::Orientation::Vertical,
+            set_orientation: gtk::Orientation::Vertical,
 
             #[name = "header"]
-            gtk4::Box {
+            gtk::Box {
                 add_css_class: "layout-card-header",
-                set_orientation: gtk4::Orientation::Horizontal,
+                set_orientation: gtk::Orientation::Horizontal,
 
-                gtk4::Label {
+                gtk::Label {
                     add_css_class: "layout-extends-label",
                     set_label: &t("settings-layout-monitor-label"),
                 },
 
                 #[name = "monitor_entry"]
-                gtk4::Entry {
+                gtk::Entry {
                     add_css_class: "layout-monitor-input",
                     set_placeholder_text: Some("DP-1"),
                     set_hexpand: false,
                     connect_changed => LayoutCardMsg::MonitorChanged,
                 },
 
-                gtk4::Label {
+                gtk::Label {
                     add_css_class: "layout-extends-label",
                     set_label: &t("settings-layout-extends-label"),
                 },
 
                 #[name = "extends_entry"]
-                gtk4::Entry {
+                gtk::Entry {
                     add_css_class: "layout-extends-input",
                     set_placeholder_text: Some(&t("settings-layout-extends-none")),
                     set_hexpand: false,
@@ -196,27 +195,27 @@ impl FactoryComponent for LayoutCard {
                 },
 
                 #[name = "header_spacer"]
-                gtk4::Box {
+                gtk::Box {
                     set_hexpand: true,
                 },
 
                 #[name = "show_switch"]
-                gtk4::Switch {
+                gtk::Switch {
                     add_css_class: "layout-show-toggle",
-                    set_valign: gtk4::Align::Center,
+                    set_valign: gtk::Align::Center,
                     set_cursor_from_name: Some("pointer"),
                     connect_state_set[sender] => move |_switch, active| {
                         sender.input(LayoutCardMsg::ShowToggled(active));
-                        gtk4::glib::Propagation::Proceed
+                        gtk::glib::Propagation::Proceed
                     },
                 },
 
                 #[name = "delete_button"]
-                gtk4::Button {
+                gtk::Button {
                     add_css_class: "ghost-icon",
                     set_icon_name: "ld-trash-2-symbolic",
                     set_cursor_from_name: Some("pointer"),
-                    set_valign: gtk4::Align::Center,
+                    set_valign: gtk::Align::Center,
                     connect_clicked[sender, index] => move |_button| {
                         let _ = sender.output(LayoutCardOutput::Remove(index.clone()));
                     },
@@ -224,9 +223,9 @@ impl FactoryComponent for LayoutCard {
             },
 
             #[name = "body"]
-            gtk4::Box {
+            gtk::Box {
                 add_css_class: "layout-card-body",
-                set_orientation: gtk4::Orientation::Vertical,
+                set_orientation: gtk::Orientation::Vertical,
             },
         }
     }
@@ -242,12 +241,12 @@ impl FactoryComponent for LayoutCard {
 
             custom_modules: init.custom_modules,
             index: index.clone(),
-            monitor_entry: gtk4::Entry::new(),
-            extends_entry: gtk4::Entry::new(),
-            body: gtk4::Box::new(gtk4::Orientation::Vertical, 0),
-            left_flow: gtk4::Box::new(gtk4::Orientation::Horizontal, 0),
-            center_flow: gtk4::Box::new(gtk4::Orientation::Horizontal, 0),
-            right_flow: gtk4::Box::new(gtk4::Orientation::Horizontal, 0),
+            monitor_entry: gtk::Entry::new(),
+            extends_entry: gtk::Entry::new(),
+            body: gtk::Box::new(gtk::Orientation::Vertical, 0),
+            left_flow: gtk::Box::new(gtk::Orientation::Horizontal, 0),
+            center_flow: gtk::Box::new(gtk::Orientation::Horizontal, 0),
+            right_flow: gtk::Box::new(gtk::Orientation::Horizontal, 0),
         }
     }
 

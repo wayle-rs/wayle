@@ -1,10 +1,18 @@
 //! Power module settings.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{color_value::{color_value}, toggle::{toggle}, text::{text_like, text}};
-use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
+use crate::{
+    editors::{
+        color_value::color_value,
+        text::{text, text_like},
+        toggle::toggle,
+    },
+    pages::{
+        nav::LeafEntry,
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.power;

@@ -4,27 +4,28 @@
 mod helpers;
 
 mod row;
-pub(crate) use row::*;
-
-use gtk4::{Expression, prelude::*};
 use helpers::{
     CUSTOM_ID, ColorItem, HEADER_ID, build_items, find_index, hex_to_rgba, rgba_to_hex,
     setup_dropdown_factory,
 };
-use relm4::prelude::*;
+use relm4::{
+    gtk::{Expression, prelude::*},
+    prelude::*,
+};
+pub(crate) use row::*;
 use wayle_config::{
     ConfigProperty,
     schemas::styling::{ColorValue, HexColor},
 };
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 pub(crate) struct ColorValueControl {
     property: ConfigProperty<ColorValue>,
-    dropdown: gtk4::DropDown,
-    dropdown_handler: gtk4::glib::SignalHandlerId,
-    color_button: gtk4::ColorDialogButton,
-    color_button_handler: gtk4::glib::SignalHandlerId,
+    dropdown: gtk::DropDown,
+    dropdown_handler: gtk::glib::SignalHandlerId,
+    color_button: gtk::ColorDialogButton,
+    color_button_handler: gtk::glib::SignalHandlerId,
     items: Vec<ColorItem>,
 }
 
@@ -107,14 +108,14 @@ impl ColorValueControl {
 impl SimpleComponent for ColorValueControl {
     type Init = ConfigProperty<ColorValue>;
     type Input = ColorValueMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
+        gtk::Box::builder()
             .hexpand(false)
-            .valign(gtk4::Align::Center)
+            .valign(gtk::Align::Center)
             .build()
     }
 
@@ -153,19 +154,11 @@ impl SimpleComponent for ColorValueControl {
         ComponentParts { model, widgets: () }
     }
 
-    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>) {
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
-            ColorValueMsg::DropdownSelected(index) => {
-                if self.handle_dropdown_selected(index) {
-                    let _ = sender.output(ControlOutput::ValueChanged);
-                }
-            }
+            ColorValueMsg::DropdownSelected(index) => if self.handle_dropdown_selected(index) {},
 
-            ColorValueMsg::ColorButtonChanged => {
-                if self.handle_color_button_changed() {
-                    let _ = sender.output(ControlOutput::ValueChanged);
-                }
-            }
+            ColorValueMsg::ColorButtonChanged => if self.handle_color_button_changed() {},
 
             ColorValueMsg::Refresh => self.refresh_from_property(),
         }
@@ -176,15 +169,15 @@ fn build_dropdown(
     items: &[ColorItem],
     current_index: u32,
     sender: &ComponentSender<ColorValueControl>,
-) -> (gtk4::DropDown, gtk4::glib::SignalHandlerId) {
+) -> (gtk::DropDown, gtk::glib::SignalHandlerId) {
     let labels: Vec<String> = items
         .iter()
         .map(|color_item| color_item.label.to_string())
         .collect();
 
-    let string_list = gtk4::StringList::new(&labels.iter().map(String::as_str).collect::<Vec<_>>());
+    let string_list = gtk::StringList::new(&labels.iter().map(String::as_str).collect::<Vec<_>>());
 
-    let dropdown = gtk4::DropDown::new(Some(string_list), Expression::NONE);
+    let dropdown = gtk::DropDown::new(Some(string_list), Expression::NONE);
     dropdown.set_selected(current_index);
     dropdown.set_cursor_from_name(Some("pointer"));
     dropdown.add_css_class("color-value-dropdown");
@@ -193,9 +186,9 @@ fn build_dropdown(
 
     if let Some(popover) = dropdown
         .last_child()
-        .and_then(|child| child.downcast::<gtk4::Popover>().ok())
+        .and_then(|child| child.downcast::<gtk::Popover>().ok())
     {
-        popover.set_halign(gtk4::Align::Center);
+        popover.set_halign(gtk::Align::Center);
     }
 
     let input_sender = sender.input_sender().clone();
@@ -209,14 +202,14 @@ fn build_dropdown(
 fn build_color_button(
     current: &ColorValue,
     sender: &ComponentSender<ColorValueControl>,
-) -> (gtk4::ColorDialogButton, gtk4::glib::SignalHandlerId) {
-    let dialog = gtk4::ColorDialog::new();
-    let button = gtk4::ColorDialogButton::new(Some(dialog));
+) -> (gtk::ColorDialogButton, gtk::glib::SignalHandlerId) {
+    let dialog = gtk::ColorDialog::new();
+    let button = gtk::ColorDialogButton::new(Some(dialog));
     button.set_cursor_from_name(Some("pointer"));
 
     button.add_css_class("color-value-swatch");
     button.set_vexpand(false);
-    button.set_valign(gtk4::Align::Center);
+    button.set_valign(gtk::Align::Center);
 
     let is_custom = matches!(current, ColorValue::Custom(_));
     button.set_visible(is_custom);

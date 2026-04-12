@@ -1,10 +1,20 @@
 //! Bar general settings: layout, appearance, spacing, and border.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{color_value::{color_value}, enum_select::{enum_select}, slider::{scale, percentage}, number::{number_u8, spacing}, bar_layout::{bar_layout}};
-use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
+use crate::{
+    editors::{
+        bar_layout::bar_layout,
+        color_value::color_value,
+        enum_select::enum_select,
+        number::{number_u8, spacing},
+        slider::{percentage, scale},
+    },
+    pages::{
+        nav::LeafEntry,
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let bar = &config.bar;

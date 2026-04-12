@@ -9,8 +9,7 @@ pub(crate) use row::*;
 pub(super) mod zone;
 
 use card::{LayoutCard, LayoutCardInit, LayoutCardOutput};
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk, gtk::prelude::*, prelude::*};
 use wayle_config::{
     ConfigProperty,
     schemas::{bar::BarLayout, modules::CustomModuleDefinition},
@@ -18,7 +17,7 @@ use wayle_config::{
 use wayle_i18n::t;
 use zone::{DragPayload, DropLocation};
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 pub(crate) struct BarLayoutInit {
     pub property: ConfigProperty<Vec<BarLayout>>,
@@ -43,13 +42,13 @@ pub(crate) enum BarLayoutMsg {
 impl SimpleComponent for BarLayoutControl {
     type Init = BarLayoutInit;
     type Input = BarLayoutMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
-            .orientation(gtk4::Orientation::Vertical)
+        gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
             .hexpand(true)
             .build()
     }
@@ -61,8 +60,8 @@ impl SimpleComponent for BarLayoutControl {
     ) -> ComponentParts<Self> {
         root.add_css_class("bar-layout-control");
 
-        let card_list = gtk4::Box::builder()
-            .orientation(gtk4::Orientation::Vertical)
+        let card_list = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
             .build();
         card_list.add_css_class("bar-layout-list");
 
@@ -84,15 +83,15 @@ impl SimpleComponent for BarLayoutControl {
             }
         }
 
-        let add_icon = gtk4::Image::from_icon_name("ld-plus-symbolic");
-        let add_label = gtk4::Label::new(Some(&t("settings-layout-add")));
-        let add_content = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
+        let add_icon = gtk::Image::from_icon_name("ld-plus-symbolic");
+        let add_label = gtk::Label::new(Some(&t("settings-layout-add")));
+        let add_content = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         add_content.append(&add_icon);
         add_content.append(&add_label);
 
-        let add_button = gtk4::Button::builder()
+        let add_button = gtk::Button::builder()
             .child(&add_content)
-            .halign(gtk4::Align::Start)
+            .halign(gtk::Align::Start)
             .build();
 
         add_button.add_css_class("ghost");
@@ -162,11 +161,10 @@ impl SimpleComponent for BarLayoutControl {
 }
 
 impl BarLayoutControl {
-    fn commit(&self, sender: &ComponentSender<Self>) {
+    fn commit(&self, _sender: &ComponentSender<Self>) {
         let layouts: Vec<BarLayout> = self.cards.iter().map(|card| card.to_layout()).collect();
 
         self.property.set(layouts);
-        let _ = sender.output(ControlOutput::ValueChanged);
     }
 
     fn handle_drop(&mut self, from: DragPayload, to: DropLocation) {

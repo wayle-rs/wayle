@@ -1,13 +1,24 @@
 //! Cava module settings.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{color_value::{color_value}, enum_select::{enum_select}, toggle::{toggle}, slider::{normalized}, number::{number_u32, number_newtype, spacing, number_f64}, text::{text_like, text}};
-use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::{
     Config,
     schemas::modules::{CavaBarCount, CavaFramerate, FrequencyHz},
 };
 
+use crate::{
+    editors::{
+        color_value::color_value,
+        enum_select::enum_select,
+        number::{number_f64, number_newtype, number_u32, spacing},
+        slider::normalized,
+        text::{text, text_like},
+        toggle::toggle,
+    },
+    pages::{
+        nav::LeafEntry,
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.cava;

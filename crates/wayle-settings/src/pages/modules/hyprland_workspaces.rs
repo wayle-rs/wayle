@@ -1,10 +1,22 @@
 //! Hyprland workspaces module settings.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{color_value::{color_value}, enum_select::{enum_select}, toggle::{toggle}, toml_editor::{toml_editor}, slider::{scale}, number::{number_u8, spacing}, text::{text}};
-use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
+use crate::{
+    editors::{
+        color_value::color_value,
+        enum_select::enum_select,
+        number::{number_u8, spacing},
+        slider::scale,
+        text::text,
+        toggle::toggle,
+        toml_editor::toml_editor,
+    },
+    pages::{
+        nav::LeafEntry,
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.hyprland_workspaces;
@@ -53,10 +65,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 },
                 SectionSpec {
                     title_key: "settings-section-urgent",
-                    items: vec![
-                        toggle(&m.urgent_show),
-                        enum_select(&m.urgent_mode),
-                    ],
+                    items: vec![toggle(&m.urgent_show), enum_select(&m.urgent_mode)],
                 },
                 SectionSpec {
                     title_key: "settings-section-mappings",
@@ -66,11 +75,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             "workspace-map",
                             &config.styling.palette.bg,
                         ),
-                        toml_editor(
-                            &m.app_icon_map,
-                            "app-icon-map",
-                            &config.styling.palette.bg,
-                        ),
+                        toml_editor(&m.app_icon_map, "app-icon-map", &config.styling.palette.bg),
                         toml_editor(
                             &m.workspace_ignore,
                             "workspace-ignore",

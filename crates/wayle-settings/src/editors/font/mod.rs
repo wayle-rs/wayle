@@ -1,18 +1,19 @@
 //! Font picker using GTK's FontDialogButton. Only the family name is saved.
 
 mod row;
+use relm4::{
+    gtk::{pango::FontDescription, prelude::*},
+    prelude::*,
+};
 pub(crate) use row::*;
-
-use gtk4::{pango::FontDescription, prelude::*};
-use relm4::prelude::*;
 use wayle_config::ConfigProperty;
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 pub(crate) struct FontControl {
     property: ConfigProperty<String>,
-    button: gtk4::FontDialogButton,
-    handler_id: gtk4::glib::SignalHandlerId,
+    button: gtk::FontDialogButton,
+    handler_id: gtk::glib::SignalHandlerId,
 }
 
 #[derive(Debug)]
@@ -23,14 +24,14 @@ pub(crate) enum FontMsg {
 impl SimpleComponent for FontControl {
     type Init = ConfigProperty<String>;
     type Input = FontMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
+        gtk::Box::builder()
             .hexpand(false)
-            .valign(gtk4::Align::Center)
+            .valign(gtk::Align::Center)
             .build()
     }
 
@@ -39,17 +40,16 @@ impl SimpleComponent for FontControl {
         root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let dialog = gtk4::FontDialog::new();
-        let button = gtk4::FontDialogButton::new(Some(dialog));
+        let dialog = gtk::FontDialog::new();
+        let button = gtk::FontDialogButton::new(Some(dialog));
         button.set_cursor_from_name(Some("pointer"));
 
         let current_font = FontDescription::from_string(&property.get());
         button.set_font_desc(&current_font);
 
         let prop = property.clone();
-        let output_sender = sender.output_sender().clone();
 
-        let handler_id = button.connect_font_desc_notify(move |btn: &gtk4::FontDialogButton| {
+        let handler_id = button.connect_font_desc_notify(move |btn: &gtk::FontDialogButton| {
             let Some(font_desc) = btn.font_desc() else {
                 return;
             };
@@ -58,7 +58,6 @@ impl SimpleComponent for FontControl {
             };
 
             prop.set(family.to_string());
-            let _ = output_sender.send(ControlOutput::ValueChanged);
         });
 
         let input_sender = sender.input_sender().clone();

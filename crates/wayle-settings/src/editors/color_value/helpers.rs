@@ -1,7 +1,10 @@
 //! Color dropdown data: item construction, token metadata, factory setup,
 //! and color conversion utilities.
 
-use gtk4::{gdk, prelude::*};
+use relm4::{
+    gtk,
+    gtk::{gdk, prelude::*},
+};
 use wayle_config::schemas::styling::{ColorValue, CssToken};
 use wayle_i18n::t;
 
@@ -47,16 +50,16 @@ fn find_by_id(items: &[ColorItem], target: &str) -> u32 {
         .unwrap_or(0) as u32
 }
 
-pub(super) fn setup_dropdown_factory(dropdown: &gtk4::DropDown, items: &[ColorItem]) {
+pub(super) fn setup_dropdown_factory(dropdown: &gtk::DropDown, items: &[ColorItem]) {
     let item_data: Vec<(&'static str, String)> = items
         .iter()
         .map(|color_item| (color_item.id, color_item.label.clone()))
         .collect();
 
-    let factory = gtk4::SignalListItemFactory::new();
+    let factory = gtk::SignalListItemFactory::new();
 
     factory.connect_setup(|_factory, list_item| {
-        let Some(list_item) = list_item.downcast_ref::<gtk4::ListItem>() else {
+        let Some(list_item) = list_item.downcast_ref::<gtk::ListItem>() else {
             return;
         };
 
@@ -66,7 +69,7 @@ pub(super) fn setup_dropdown_factory(dropdown: &gtk4::DropDown, items: &[ColorIt
     let data = item_data;
 
     factory.connect_bind(move |_factory, list_item| {
-        let Some(list_item) = list_item.downcast_ref::<gtk4::ListItem>() else {
+        let Some(list_item) = list_item.downcast_ref::<gtk::ListItem>() else {
             return;
         };
 
@@ -82,21 +85,21 @@ pub(super) fn setup_dropdown_factory(dropdown: &gtk4::DropDown, items: &[ColorIt
     dropdown.set_factory(Some(&factory));
 }
 
-fn build_row_template() -> gtk4::Box {
-    let row = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Horizontal)
+fn build_row_template() -> gtk::Box {
+    let row = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
         .build();
     row.add_css_class("color-value-row");
 
-    let dot = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
+    let dot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
     dot.add_css_class("color-value-dot");
     dot.set_vexpand(false);
     dot.set_hexpand(false);
-    dot.set_valign(gtk4::Align::Center);
-    dot.set_halign(gtk4::Align::Center);
+    dot.set_valign(gtk::Align::Center);
+    dot.set_halign(gtk::Align::Center);
 
-    let label = gtk4::Label::builder()
-        .halign(gtk4::Align::Start)
+    let label = gtk::Label::builder()
+        .halign(gtk::Align::Start)
         .hexpand(true)
         .build();
     label.add_css_class("color-value-label");
@@ -107,12 +110,12 @@ fn build_row_template() -> gtk4::Box {
     row
 }
 
-fn bind_row(list_item: &gtk4::ListItem, id: &str, label_text: &str) {
+fn bind_row(list_item: &gtk::ListItem, id: &str, label_text: &str) {
     let Some(child) = list_item.child() else {
         return;
     };
 
-    let Some(row) = child.downcast_ref::<gtk4::Box>() else {
+    let Some(row) = child.downcast_ref::<gtk::Box>() else {
         return;
     };
 
@@ -124,7 +127,7 @@ fn bind_row(list_item: &gtk4::ListItem, id: &str, label_text: &str) {
         return;
     };
 
-    let Some(label) = label_widget.downcast_ref::<gtk4::Label>() else {
+    let Some(label) = label_widget.downcast_ref::<gtk::Label>() else {
         return;
     };
 

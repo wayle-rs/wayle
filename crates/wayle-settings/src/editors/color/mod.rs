@@ -1,18 +1,19 @@
 //! Color picker for HexColor config properties using GTK's ColorDialog.
 
 mod row;
+use relm4::{
+    gtk::{gdk, prelude::*},
+    prelude::*,
+};
 pub(crate) use row::*;
-
-use gtk4::{gdk, prelude::*};
-use relm4::prelude::*;
 use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 pub(crate) struct ColorControl {
     property: ConfigProperty<HexColor>,
-    button: gtk4::ColorDialogButton,
-    handler_id: gtk4::glib::SignalHandlerId,
+    button: gtk::ColorDialogButton,
+    handler_id: gtk::glib::SignalHandlerId,
 }
 
 #[derive(Debug)]
@@ -23,14 +24,14 @@ pub(crate) enum ColorMsg {
 impl SimpleComponent for ColorControl {
     type Init = ConfigProperty<HexColor>;
     type Input = ColorMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
+        gtk::Box::builder()
             .hexpand(false)
-            .valign(gtk4::Align::Center)
+            .valign(gtk::Align::Center)
             .build()
     }
 
@@ -39,23 +40,21 @@ impl SimpleComponent for ColorControl {
         root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let dialog = gtk4::ColorDialog::new();
-        let button = gtk4::ColorDialogButton::new(Some(dialog));
+        let dialog = gtk::ColorDialog::new();
+        let button = gtk::ColorDialogButton::new(Some(dialog));
         button.set_cursor_from_name(Some("pointer"));
 
         let current = hex_to_rgba(&property.get());
         button.set_rgba(&current);
 
         let prop = property.clone();
-        let output_sender = sender.output_sender().clone();
 
-        let handler_id = button.connect_rgba_notify(move |button: &gtk4::ColorDialogButton| {
+        let handler_id = button.connect_rgba_notify(move |button: &gtk::ColorDialogButton| {
             let rgba = button.rgba();
             let hex = rgba_to_hex(&rgba);
 
             if let Ok(color) = HexColor::new(&hex) {
                 prop.set(color);
-                let _ = output_sender.send(ControlOutput::ValueChanged);
             }
         });
 

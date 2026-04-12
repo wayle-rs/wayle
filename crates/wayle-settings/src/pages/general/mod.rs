@@ -1,10 +1,14 @@
 //! General settings page: fonts and display options.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{toggle::{toggle}, font::{font}};
-use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
+use crate::{
+    editors::{font::font, toggle::toggle},
+    pages::{
+        nav::LeafEntry,
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let general = &config.general;
@@ -18,10 +22,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
             vec![
                 SectionSpec {
                     title_key: "settings-section-fonts",
-                    items: vec![
-                        font(&general.font_sans),
-                        font(&general.font_mono),
-                    ],
+                    items: vec![font(&general.font_sans), font(&general.font_mono)],
                 },
                 SectionSpec {
                     title_key: "settings-section-display",

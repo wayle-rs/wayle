@@ -1,10 +1,14 @@
 //! Bar dropdown settings: behavior toggles and appearance.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{toggle::{toggle}, slider::{percentage}};
-use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
+use crate::{
+    editors::{slider::percentage, toggle::toggle},
+    pages::{
+        nav::LeafEntry,
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let bar = &config.bar;

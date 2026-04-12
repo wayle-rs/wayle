@@ -1,8 +1,11 @@
 //! Single monitor wallpaper card. Shows monitor name, wallpaper path,
 //! and fit mode in a compact card layout.
 
-use gtk4::{gio, prelude::*};
-use relm4::{factory::FactoryView, prelude::*};
+use relm4::{
+    factory::FactoryView,
+    gtk::{gio, prelude::*},
+    prelude::*,
+};
 use serde::{Deserialize, de::value::StrDeserializer};
 use wayle_config::{
     EnumVariants,
@@ -14,8 +17,8 @@ pub(super) struct MonitorCard {
     name: String,
     wallpaper: String,
     fit_mode: FitMode,
-    name_entry: gtk4::Entry,
-    wallpaper_entry: gtk4::Entry,
+    name_entry: gtk::Entry,
+    wallpaper_entry: gtk::Entry,
 }
 
 #[derive(Debug)]
@@ -81,26 +84,26 @@ impl FactoryComponent for MonitorCard {
     type Input = MonitorCardMsg;
     type Output = MonitorCardOutput;
     type CommandOutput = ();
-    type ParentWidget = gtk4::Box;
+    type ParentWidget = gtk::Box;
 
     view! {
         #[root]
-        gtk4::Box {
+        gtk::Box {
             add_css_class: "monitor-card",
-            set_orientation: gtk4::Orientation::Vertical,
+            set_orientation: gtk::Orientation::Vertical,
 
             #[name = "header"]
-            gtk4::Box {
+            gtk::Box {
                 add_css_class: "monitor-card-header",
-                set_orientation: gtk4::Orientation::Horizontal,
+                set_orientation: gtk::Orientation::Horizontal,
 
-                gtk4::Label {
+                gtk::Label {
                     add_css_class: "monitor-card-label",
                     set_label: &t("settings-wallpaper-monitor-label"),
                 },
 
                 #[name = "name_entry"]
-                gtk4::Entry {
+                gtk::Entry {
                     add_css_class: "monitor-name-entry",
                     set_placeholder_text: Some("DP-1"),
                     set_hexpand: true,
@@ -108,7 +111,7 @@ impl FactoryComponent for MonitorCard {
                 },
 
                 #[name = "remove_button"]
-                gtk4::Button {
+                gtk::Button {
                     add_css_class: "ghost-icon",
                     set_icon_name: "ld-trash-2-symbolic",
                     set_cursor_from_name: Some("pointer"),
@@ -119,17 +122,17 @@ impl FactoryComponent for MonitorCard {
             },
 
             #[name = "body"]
-            gtk4::Box {
+            gtk::Box {
                 add_css_class: "monitor-card-body",
-                set_orientation: gtk4::Orientation::Horizontal,
+                set_orientation: gtk::Orientation::Horizontal,
 
-                gtk4::Label {
+                gtk::Label {
                     add_css_class: "monitor-card-label",
                     set_label: &t("settings-wallpaper-path-label"),
                 },
 
                 #[name = "wallpaper_entry"]
-                gtk4::Entry {
+                gtk::Entry {
                     add_css_class: "monitor-wallpaper-entry",
                     set_placeholder_text: Some(&t("settings-wallpaper-path-placeholder")),
                     set_hexpand: true,
@@ -137,7 +140,7 @@ impl FactoryComponent for MonitorCard {
                 },
 
                 #[name = "browse_button"]
-                gtk4::Button {
+                gtk::Button {
                     add_css_class: "icon",
                     set_icon_name: "ld-folder-open-symbolic",
                     set_cursor_from_name: Some("pointer"),
@@ -145,7 +148,7 @@ impl FactoryComponent for MonitorCard {
                 },
 
                 #[name = "fit_dropdown"]
-                gtk4::DropDown {
+                gtk::DropDown {
                     add_css_class: "monitor-fit-dropdown",
                 },
             },
@@ -157,8 +160,8 @@ impl FactoryComponent for MonitorCard {
             name: config.name,
             wallpaper: config.wallpaper,
             fit_mode: config.fit_mode,
-            name_entry: gtk4::Entry::new(),
-            wallpaper_entry: gtk4::Entry::new(),
+            name_entry: gtk::Entry::new(),
+            wallpaper_entry: gtk::Entry::new(),
         }
     }
 
@@ -176,7 +179,7 @@ impl FactoryComponent for MonitorCard {
 
         let labels = fit_mode_labels();
         let string_list =
-            gtk4::StringList::new(&labels.iter().map(String::as_str).collect::<Vec<_>>());
+            gtk::StringList::new(&labels.iter().map(String::as_str).collect::<Vec<_>>());
         widgets.fit_dropdown.set_model(Some(&string_list));
         widgets
             .fit_dropdown
@@ -215,13 +218,13 @@ impl FactoryComponent for MonitorCard {
             }
 
             MonitorCardMsg::Browse => {
-                let dialog = gtk4::FileDialog::new();
+                let dialog = gtk::FileDialog::new();
                 let input_sender = sender.input_sender().clone();
 
                 let root = self.wallpaper_entry.root();
                 let window = root
                     .as_ref()
-                    .and_then(|root| root.downcast_ref::<gtk4::Window>());
+                    .and_then(|root| root.downcast_ref::<gtk::Window>());
 
                 dialog.open(window, gio::Cancellable::NONE, move |result| {
                     if let Ok(file) = result

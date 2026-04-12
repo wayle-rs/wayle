@@ -1,11 +1,17 @@
 //! Idle inhibit module settings.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{number::{number_u32}, text::{text}};
-use crate::pages::spec::{SectionSpec, page_spec};
-use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
+use crate::{
+    editors::{number::number_u32, text::text},
+    pages::{
+        nav::LeafEntry,
+        sections::bar_button::{
+            BarButtonFields, actions_section, bar_display_section, colors_section,
+        },
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.idle_inhibit;

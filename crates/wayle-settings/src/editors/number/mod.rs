@@ -1,20 +1,18 @@
 //! SpinButton wired to a typed numeric property via caller-provided conversion functions.
 
 mod row;
-pub(crate) use row::*;
-
 use std::sync::Arc;
 
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk, gtk::prelude::*, prelude::*};
+pub(crate) use row::*;
 use wayle_config::ConfigProperty;
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 pub(crate) struct NumberControl<T: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<T>,
-    spin: gtk4::SpinButton,
-    handler_id: gtk4::glib::SignalHandlerId,
+    spin: gtk::SpinButton,
+    handler_id: gtk::glib::SignalHandlerId,
     to_f64: fn(&T) -> f64,
 }
 
@@ -39,14 +37,14 @@ where
 {
     type Init = NumberInit<T>;
     type Input = NumberMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
+        gtk::Box::builder()
             .hexpand(false)
-            .valign(gtk4::Align::Center)
+            .valign(gtk::Align::Center)
             .build()
     }
 
@@ -57,7 +55,7 @@ where
     ) -> ComponentParts<Self> {
         let current = (init.to_f64)(&init.property.get());
 
-        let spin = gtk4::SpinButton::builder()
+        let spin = gtk::SpinButton::builder()
             .digits(init.digits)
             .numeric(true)
             .build();
@@ -69,11 +67,9 @@ where
 
         let prop = Arc::new(init.property.clone());
         let from_f64 = init.from_f64;
-        let output_sender = sender.output_sender().clone();
 
         let handler_id = spin.connect_value_changed(move |spin| {
             prop.set(from_f64(spin.value()));
-            let _ = output_sender.send(ControlOutput::ValueChanged);
         });
 
         let input_sender = sender.input_sender().clone();

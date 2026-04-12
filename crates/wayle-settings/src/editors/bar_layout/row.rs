@@ -1,5 +1,4 @@
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk::prelude::*, prelude::*};
 use wayle_config::{
     ConfigProperty,
     schemas::{bar::BarLayout, modules::CustomModuleDefinition},
@@ -7,7 +6,7 @@ use wayle_config::{
 
 use crate::{
     editors::bar_layout::{BarLayoutControl, BarLayoutInit},
-    pages::spec::SettingSpec,
+    pages::spec::SettingRowInit,
     property_handle::PropertyHandle,
     row::RowBehavior,
 };
@@ -15,7 +14,7 @@ use crate::{
 pub(crate) fn bar_layout(
     property: &ConfigProperty<Vec<BarLayout>>,
     custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,
-) -> SettingSpec {
+) -> SettingRowInit {
     let controller = BarLayoutControl::builder()
         .launch(BarLayoutInit {
             property: property.clone(),
@@ -25,7 +24,7 @@ pub(crate) fn bar_layout(
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |layouts| layouts.len().to_string()),
         control: widget.upcast(),

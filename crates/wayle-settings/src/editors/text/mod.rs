@@ -1,16 +1,14 @@
 //! Text entry for string-like config properties. Commits on Enter.
 
 mod row;
+use relm4::{gtk, gtk::prelude::*, prelude::*};
 pub(crate) use row::*;
-
-use gtk4::prelude::*;
-use relm4::prelude::*;
 use wayle_config::{
     ClickAction, ConfigProperty,
     schemas::{modules::PopupMonitor, osd::OsdMonitor},
 };
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 pub(crate) trait TextLike: Clone + Send + Sync + PartialEq + 'static {
     fn to_entry_text(&self) -> String;
@@ -88,14 +86,14 @@ impl TextLike for ClickAction {
 
 pub(crate) struct TextControl<T: TextLike> {
     property: ConfigProperty<T>,
-    entry: gtk4::Entry,
-    activate_id: gtk4::glib::SignalHandlerId,
-    changed_id: gtk4::glib::SignalHandlerId,
+    entry: gtk::Entry,
+    activate_id: gtk::glib::SignalHandlerId,
+    changed_id: gtk::glib::SignalHandlerId,
 }
 
 pub(crate) struct TextInit<T: TextLike> {
     pub property: ConfigProperty<T>,
-    pub dirty_badge: gtk4::Label,
+    pub dirty_badge: gtk::Label,
 }
 
 #[derive(Debug)]
@@ -106,14 +104,14 @@ pub(crate) enum TextMsg {
 impl<T: TextLike> SimpleComponent for TextControl<T> {
     type Init = TextInit<T>;
     type Input = TextMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
+        gtk::Box::builder()
             .hexpand(false)
-            .valign(gtk4::Align::Center)
+            .valign(gtk::Align::Center)
             .build()
     }
 
@@ -122,9 +120,9 @@ impl<T: TextLike> SimpleComponent for TextControl<T> {
         root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let entry = gtk4::Entry::builder()
+        let entry = gtk::Entry::builder()
             .text(init.property.get().to_entry_text())
-            .valign(gtk4::Align::Center)
+            .valign(gtk::Align::Center)
             .build();
         entry.add_css_class("setting-text-entry");
 
@@ -134,13 +132,11 @@ impl<T: TextLike> SimpleComponent for TextControl<T> {
         });
 
         let prop = init.property.clone();
-        let output_sender = sender.output_sender().clone();
         let dirty_badge_commit = init.dirty_badge;
 
         let activate_id = entry.connect_activate(move |entry| {
             prop.set(T::from_entry_text(&entry.text()));
             dirty_badge_commit.set_visible(false);
-            let _ = output_sender.send(ControlOutput::ValueChanged);
         });
 
         let input_sender = sender.input_sender().clone();

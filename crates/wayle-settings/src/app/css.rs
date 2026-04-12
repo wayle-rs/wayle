@@ -1,8 +1,7 @@
 //! CSS provider setup and rebuild for the settings window.
 
-use gtk4::{
-    CssProvider, STYLE_PROVIDER_PRIORITY_USER, gdk::Display,
-    style_context_add_provider_for_display,
+use relm4::gtk::{
+    CssProvider, STYLE_PROVIDER_PRIORITY_USER, gdk::Display, style_context_add_provider_for_display,
 };
 use tracing::warn;
 use wayle_config::ConfigService;

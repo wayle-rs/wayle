@@ -1,16 +1,17 @@
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk::prelude::*, prelude::*};
 use wayle_config::ConfigProperty;
 
-use crate::editors::make_dirty_badge;
 use crate::{
-    editors::file_picker::{FilePickerControl, FilePickerInit},
-    pages::spec::SettingSpec,
+    editors::{
+        file_picker::{FilePickerControl, FilePickerInit},
+        make_dirty_badge,
+    },
+    pages::spec::SettingRowInit,
     property_handle::PropertyHandle,
     row::RowBehavior,
 };
 
-pub(crate) fn file_path(property: &ConfigProperty<String>) -> SettingSpec {
+pub(crate) fn file_path(property: &ConfigProperty<String>) -> SettingRowInit {
     let badge = make_dirty_badge();
 
     let controller = FilePickerControl::builder()
@@ -22,7 +23,7 @@ pub(crate) fn file_path(property: &ConfigProperty<String>) -> SettingSpec {
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value: &String| value.clone()),
         control: widget.upcast(),

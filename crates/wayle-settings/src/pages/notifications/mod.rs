@@ -1,10 +1,20 @@
 //! Notifications settings page: popup display, positioning, and filtering.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{enum_select::{enum_select}, toggle::{toggle}, toml_editor::{toml_editor}, number::{number_u32, spacing}, text::{text_like}};
-use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::Config;
 
+use crate::{
+    editors::{
+        enum_select::enum_select,
+        number::{number_u32, spacing},
+        text::text_like,
+        toggle::toggle,
+        toml_editor::toml_editor,
+    },
+    pages::{
+        nav::LeafEntry,
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let notif = &config.modules.notification;
@@ -42,11 +52,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                     title_key: "settings-section-filtering",
                     items: vec![
                         enum_select(&notif.icon_source),
-                        toml_editor(
-                            &notif.blocklist,
-                            "blocklist",
-                            &config.styling.palette.bg,
-                        ),
+                        toml_editor(&notif.blocklist, "blocklist", &config.styling.palette.bg),
                     ],
                 },
             ],

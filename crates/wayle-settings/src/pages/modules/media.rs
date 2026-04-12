@@ -1,11 +1,17 @@
 //! Media module settings.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{enum_select::{enum_select}, toml_editor::{toml_editor}, text::{text}};
-use crate::pages::spec::{SectionSpec, page_spec};
-use crate::pages::sections::bar_button::{BarButtonFields, actions_section, bar_display_section, colors_section};
 use wayle_config::Config;
 
+use crate::{
+    editors::{enum_select::enum_select, text::text, toml_editor::toml_editor},
+    pages::{
+        nav::LeafEntry,
+        sections::bar_button::{
+            BarButtonFields, actions_section, bar_display_section, colors_section,
+        },
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let m = &config.modules.media;
@@ -41,11 +47,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                         text(&m.format),
                         text(&m.icon_name),
                         text(&m.spinning_disc_icon),
-                        toml_editor(
-                            &m.player_icons,
-                            "player-icons",
-                            &config.styling.palette.bg,
-                        ),
+                        toml_editor(&m.player_icons, "player-icons", &config.styling.palette.bg),
                         toml_editor(
                             &m.players_ignored,
                             "players-ignored",

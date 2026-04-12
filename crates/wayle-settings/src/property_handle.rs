@@ -5,7 +5,7 @@
 use std::sync::Arc;
 
 use futures::StreamExt;
-use gtk4::glib;
+use relm4::gtk::glib;
 use wayle_config::{ConfigProperty, ValueSource};
 
 pub(crate) type WatchCallback = Box<dyn FnOnce(Box<dyn Fn() + 'static>)>;

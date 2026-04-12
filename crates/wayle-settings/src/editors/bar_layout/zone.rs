@@ -2,8 +2,10 @@
 
 use std::{fmt, str::FromStr};
 
-use gtk4::{gdk, prelude::*};
-use relm4::prelude::*;
+use relm4::{
+    gtk::{gdk, prelude::*},
+    prelude::*,
+};
 use wayle_config::{
     ConfigProperty,
     schemas::{
@@ -75,19 +77,19 @@ pub(super) fn build_zone_row(
     card_index: usize,
     custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,
     sender: &FactorySender<super::card::LayoutCard>,
-) -> (gtk4::Box, gtk4::Box) {
-    let row = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Horizontal)
+) -> (gtk::Box, gtk::Box) {
+    let row = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
         .build();
     row.add_css_class("layout-zone");
 
-    let label = gtk4::Label::new(Some(&t(zone.i18n_key())));
+    let label = gtk::Label::new(Some(&t(zone.i18n_key())));
     label.add_css_class("layout-zone-label");
-    label.set_halign(gtk4::Align::Start);
-    label.set_valign(gtk4::Align::Center);
+    label.set_halign(gtk::Align::Start);
+    label.set_valign(gtk::Align::Center);
 
-    let chips_box = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Horizontal)
+    let chips_box = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
         .hexpand(true)
         .build();
     chips_box.add_css_class("layout-zone-items");
@@ -95,13 +97,13 @@ pub(super) fn build_zone_row(
     rebuild_zone_chips(&chips_box, items, card_index, zone, custom_modules, sender);
     attach_drop_target(&chips_box, card_index, zone, sender);
 
-    let add_button = gtk4::MenuButton::builder()
+    let add_button = gtk::MenuButton::builder()
         .icon_name("ld-plus-symbolic")
         .tooltip_text(t("settings-layout-add-module"))
         .build();
     add_button.add_css_class("zone-add-btn");
     add_button.set_cursor_from_name(Some("pointer"));
-    add_button.set_valign(gtk4::Align::Center);
+    add_button.set_valign(gtk::Align::Center);
 
     super::module_picker::attach(
         &add_button,
@@ -110,13 +112,13 @@ pub(super) fn build_zone_row(
         sender.input_sender().clone(),
     );
 
-    let group_button = gtk4::Button::builder()
+    let group_button = gtk::Button::builder()
         .icon_name("ld-layers-symbolic")
         .tooltip_text(t("settings-layout-add-group"))
         .build();
     group_button.add_css_class("zone-add-btn");
     group_button.set_cursor_from_name(Some("pointer"));
-    group_button.set_valign(gtk4::Align::Center);
+    group_button.set_valign(gtk::Align::Center);
 
     let group_sender = sender.input_sender().clone();
     group_button.connect_clicked(move |_button| {
@@ -132,7 +134,7 @@ pub(super) fn build_zone_row(
 }
 
 pub(super) fn rebuild_zone_chips(
-    chips_box: &gtk4::Box,
+    chips_box: &gtk::Box,
     items: &[BarItem],
     card_index: usize,
     zone: ZoneId,
@@ -157,7 +159,7 @@ pub(super) fn rebuild_zone_chips(
     }
 
     if items.is_empty() {
-        let empty = gtk4::Label::new(Some(&t("settings-layout-zone-empty")));
+        let empty = gtk::Label::new(Some(&t("settings-layout-zone-empty")));
         empty.add_css_class("layout-zone-empty");
         chips_box.append(&empty);
     }
@@ -169,13 +171,13 @@ fn build_module_chip(
     zone: ZoneId,
     item_index: usize,
     sender: &FactorySender<super::card::LayoutCard>,
-) -> gtk4::Box {
-    let chip = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Horizontal)
+) -> gtk::Box {
+    let chip = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
         .build();
     chip.add_css_class("module-chip");
 
-    let label = gtk4::Label::new(Some(&module_ref.module().to_string()));
+    let label = gtk::Label::new(Some(&module_ref.module().to_string()));
 
     let remove = build_chip_button("ld-x-symbolic", "chip-remove");
     let remove_sender = sender.input_sender().clone();
@@ -198,13 +200,13 @@ fn build_group_chip(
     item_index: usize,
     custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,
     sender: &FactorySender<super::card::LayoutCard>,
-) -> gtk4::Box {
-    let chip = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Horizontal)
+) -> gtk::Box {
+    let chip = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
         .build();
     chip.add_css_class("group-chip");
 
-    let name_entry = gtk4::Entry::builder()
+    let name_entry = gtk::Entry::builder()
         .text(&group.name)
         .width_chars(6)
         .max_width_chars(10)
@@ -245,13 +247,13 @@ fn build_sub_module_chip(
     group_index: usize,
     mod_index: usize,
     sender: &FactorySender<super::card::LayoutCard>,
-) -> gtk4::Box {
-    let chip = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Horizontal)
+) -> gtk::Box {
+    let chip = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
         .build();
     chip.add_css_class("module-chip");
 
-    let label = gtk4::Label::new(Some(&module_ref.module().to_string()));
+    let label = gtk::Label::new(Some(&module_ref.module().to_string()));
 
     let remove = build_chip_button("ld-x-symbolic", "chip-remove");
     let remove_sender = sender.input_sender().clone();
@@ -274,10 +276,10 @@ fn build_add_button(
     zone: ZoneId,
     item_index: usize,
     sender: &FactorySender<super::card::LayoutCard>,
-) -> gtk4::MenuButton {
-    let button = gtk4::MenuButton::builder()
+) -> gtk::MenuButton {
+    let button = gtk::MenuButton::builder()
         .icon_name("ld-plus-symbolic")
-        .valign(gtk4::Align::Center)
+        .valign(gtk::Align::Center)
         .build();
     button.add_css_class("chip-add");
     button.set_cursor_from_name(Some("pointer"));
@@ -296,7 +298,7 @@ fn build_remove_button(
     zone: ZoneId,
     item_index: usize,
     sender: &FactorySender<super::card::LayoutCard>,
-) -> gtk4::Button {
+) -> gtk::Button {
     let button = build_chip_button("ld-x-symbolic", "chip-remove");
 
     let remove_sender = sender.input_sender().clone();
@@ -307,10 +309,10 @@ fn build_remove_button(
     button
 }
 
-fn build_chip_button(icon: &str, css_class: &str) -> gtk4::Button {
-    let button = gtk4::Button::builder()
+fn build_chip_button(icon: &str, css_class: &str) -> gtk::Button {
+    let button = gtk::Button::builder()
         .icon_name(icon)
-        .valign(gtk4::Align::Center)
+        .valign(gtk::Align::Center)
         .build();
     button.add_css_class(css_class);
     button.set_cursor_from_name(Some("pointer"));
@@ -318,8 +320,8 @@ fn build_chip_button(icon: &str, css_class: &str) -> gtk4::Button {
     button
 }
 
-fn attach_drag_source(widget: &gtk4::Box, card_index: usize, zone: ZoneId, item_index: usize) {
-    let drag = gtk4::DragSource::new();
+fn attach_drag_source(widget: &gtk::Box, card_index: usize, zone: ZoneId, item_index: usize) {
+    let drag = gtk::DragSource::new();
     drag.set_actions(gdk::DragAction::MOVE);
 
     let payload = DragPayload {
@@ -349,12 +351,12 @@ fn attach_drag_source(widget: &gtk4::Box, card_index: usize, zone: ZoneId, item_
 }
 
 fn attach_drop_target(
-    chips_box: &gtk4::Box,
+    chips_box: &gtk::Box,
     card_index: usize,
     zone: ZoneId,
     sender: &FactorySender<super::card::LayoutCard>,
 ) {
-    let drop = gtk4::DropTarget::new(gtk4::glib::Type::STRING, gdk::DragAction::MOVE);
+    let drop = gtk::DropTarget::new(gtk::glib::Type::STRING, gdk::DragAction::MOVE);
 
     let motion_box = chips_box.clone();
 
@@ -400,7 +402,7 @@ fn attach_drop_target(
     chips_box.add_controller(drop);
 }
 
-fn compute_drop_position(container: &gtk4::Box, drop_x: f64) -> usize {
+fn compute_drop_position(container: &gtk::Box, drop_x: f64) -> usize {
     let mut position = 0;
     let mut child = container.first_child();
 
@@ -423,10 +425,10 @@ fn compute_drop_position(container: &gtk4::Box, drop_x: f64) -> usize {
     position
 }
 
-fn highlight_drop_position(container: &gtk4::Box, position: usize) {
+fn highlight_drop_position(container: &gtk::Box, position: usize) {
     let mut index = 0;
     let mut child = container.first_child();
-    let mut last_child: Option<gtk4::Widget> = None;
+    let mut last_child: Option<gtk::Widget> = None;
 
     while let Some(widget) = child {
         if index == position {
@@ -445,7 +447,7 @@ fn highlight_drop_position(container: &gtk4::Box, position: usize) {
     }
 }
 
-fn clear_drop_highlight(container: &gtk4::Box) {
+fn clear_drop_highlight(container: &gtk::Box) {
     let mut child = container.first_child();
 
     while let Some(widget) = child {

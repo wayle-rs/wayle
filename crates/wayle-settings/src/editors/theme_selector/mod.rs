@@ -3,14 +3,16 @@
 //! theme's values. The button has no persistent selection state.
 
 mod row;
-pub(crate) use row::*;
-
 use std::{cell::RefCell, collections::BTreeSet};
 
-use gtk4::{
-    STYLE_PROVIDER_PRIORITY_USER, gdk::Display, prelude::*, style_context_add_provider_for_display,
+use relm4::{
+    gtk::{
+        STYLE_PROVIDER_PRIORITY_USER, gdk::Display, prelude::*,
+        style_context_add_provider_for_display,
+    },
+    prelude::*,
 };
-use relm4::prelude::*;
+pub(crate) use row::*;
 use tracing::warn;
 use wayle_config::{
     ConfigProperty,
@@ -19,22 +21,22 @@ use wayle_config::{
 };
 use wayle_i18n::t;
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 thread_local! {
     static SWATCH_PROVIDER: RefCell<Option<SwatchStyles>> = const { RefCell::new(None) };
 }
 
 struct SwatchStyles {
-    provider: gtk4::CssProvider,
+    provider: gtk::CssProvider,
     registered_hexes: BTreeSet<String>,
 }
 
 pub(crate) struct ThemeSelectorControl {
     available: ConfigProperty<Vec<ThemeEntry>>,
     palette: PaletteConfig,
-    popover: gtk4::Popover,
-    list_box: gtk4::ListBox,
+    popover: gtk::Popover,
+    list_box: gtk::ListBox,
 }
 
 pub(crate) struct ThemeSelectorInit {
@@ -51,14 +53,14 @@ pub(crate) enum ThemeSelectorMsg {
 impl SimpleComponent for ThemeSelectorControl {
     type Init = ThemeSelectorInit;
     type Input = ThemeSelectorMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
+        gtk::Box::builder()
             .hexpand(false)
-            .valign(gtk4::Align::Center)
+            .valign(gtk::Align::Center)
             .build()
     }
 
@@ -67,39 +69,39 @@ impl SimpleComponent for ThemeSelectorControl {
         root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let button_content = gtk4::Box::builder()
-            .orientation(gtk4::Orientation::Horizontal)
-            .valign(gtk4::Align::Center)
+        let button_content = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .valign(gtk::Align::Center)
             .build();
 
-        let button_icon = gtk4::Image::from_icon_name("ld-palette-symbolic");
+        let button_icon = gtk::Image::from_icon_name("ld-palette-symbolic");
         button_icon.add_css_class("theme-preset-button-icon");
         button_content.append(&button_icon);
 
-        let button_label = gtk4::Label::new(Some(&t("settings-theme-preset-apply")));
+        let button_label = gtk::Label::new(Some(&t("settings-theme-preset-apply")));
         button_label.add_css_class("theme-preset-button-label");
         button_content.append(&button_label);
 
-        let button_chevron = gtk4::Image::from_icon_name("ld-chevron-down-symbolic");
+        let button_chevron = gtk::Image::from_icon_name("ld-chevron-down-symbolic");
         button_chevron.add_css_class("theme-preset-button-chevron");
         button_content.append(&button_chevron);
 
-        let button = gtk4::Button::builder().child(&button_content).build();
+        let button = gtk::Button::builder().child(&button_content).build();
         button.add_css_class("theme-preset-button");
         button.set_cursor_from_name(Some("pointer"));
 
-        let list_box = gtk4::ListBox::new();
+        let list_box = gtk::ListBox::new();
         list_box.add_css_class("theme-preset-list");
-        list_box.set_selection_mode(gtk4::SelectionMode::None);
+        list_box.set_selection_mode(gtk::SelectionMode::None);
 
-        let scrolled = gtk4::ScrolledWindow::builder()
+        let scrolled = gtk::ScrolledWindow::builder()
             .child(&list_box)
-            .hscrollbar_policy(gtk4::PolicyType::Never)
+            .hscrollbar_policy(gtk::PolicyType::Never)
             .propagate_natural_height(true)
             .build();
         scrolled.add_css_class("theme-preset-scroll");
 
-        let popover = gtk4::Popover::builder()
+        let popover = gtk::Popover::builder()
             .child(&scrolled)
             .has_arrow(false)
             .build();
@@ -142,7 +144,6 @@ impl SimpleComponent for ThemeSelectorControl {
 
                 apply_palette(&self.palette, &theme.palette);
                 self.popover.popdown();
-                let _ = sender.output(ControlOutput::ValueChanged);
             }
 
             ThemeSelectorMsg::RebuildList => {
@@ -153,7 +154,7 @@ impl SimpleComponent for ThemeSelectorControl {
 }
 
 fn populate_list(
-    list_box: &gtk4::ListBox,
+    list_box: &gtk::ListBox,
     themes: &[ThemeEntry],
     sender: &ComponentSender<ThemeSelectorControl>,
 ) {
@@ -170,24 +171,24 @@ fn populate_list(
 fn build_theme_row(
     theme: &ThemeEntry,
     sender: &ComponentSender<ThemeSelectorControl>,
-) -> gtk4::Button {
-    let content = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Horizontal)
+) -> gtk::Button {
+    let content = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
         .build();
     content.add_css_class("theme-preset-row");
 
     let swatches = build_swatches(&theme.palette);
     content.append(&swatches);
 
-    let label = gtk4::Label::builder()
+    let label = gtk::Label::builder()
         .label(&theme.name)
-        .halign(gtk4::Align::Start)
+        .halign(gtk::Align::Start)
         .hexpand(true)
         .build();
     label.add_css_class("theme-preset-name");
     content.append(&label);
 
-    let button = gtk4::Button::new();
+    let button = gtk::Button::new();
     button.set_child(Some(&content));
     button.add_css_class("theme-preset-entry");
     button.set_cursor_from_name(Some("pointer"));
@@ -201,10 +202,10 @@ fn build_theme_row(
     button
 }
 
-fn build_swatches(palette: &Palette) -> gtk4::Box {
-    let container = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Horizontal)
-        .valign(gtk4::Align::Center)
+fn build_swatches(palette: &Palette) -> gtk::Box {
+    let container = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .valign(gtk::Align::Center)
         .build();
     container.add_css_class("theme-preset-swatches");
 
@@ -216,10 +217,10 @@ fn build_swatches(palette: &Palette) -> gtk4::Box {
         &palette.green,
         &palette.blue,
     ] {
-        let swatch = gtk4::Box::builder()
-            .orientation(gtk4::Orientation::Horizontal)
-            .valign(gtk4::Align::Center)
-            .halign(gtk4::Align::Center)
+        let swatch = gtk::Box::builder()
+            .orientation(gtk::Orientation::Horizontal)
+            .valign(gtk::Align::Center)
+            .halign(gtk::Align::Center)
             .vexpand(false)
             .hexpand(false)
             .build();
@@ -231,7 +232,7 @@ fn build_swatches(palette: &Palette) -> gtk4::Box {
     container
 }
 
-fn paint_swatch(widget: &gtk4::Box, hex: &str) {
+fn paint_swatch(widget: &gtk::Box, hex: &str) {
     let Some(class) = register_swatch_color(hex) else {
         return;
     };
@@ -278,7 +279,7 @@ fn rebuild_all_css(hexes: &BTreeSet<String>) -> String {
 }
 
 fn init_swatch_styles() -> SwatchStyles {
-    let provider = gtk4::CssProvider::new();
+    let provider = gtk::CssProvider::new();
 
     if let Some(display) = Display::default() {
         style_context_add_provider_for_display(&display, &provider, STYLE_PROVIDER_PRIORITY_USER);

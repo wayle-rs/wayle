@@ -4,18 +4,16 @@
 mod card;
 
 mod row;
-pub(crate) use row::*;
-
 use card::{MonitorCard, MonitorCardOutput};
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk, gtk::prelude::*, prelude::*};
+pub(crate) use row::*;
 use wayle_config::{
     ConfigProperty,
     schemas::wallpaper::{FitMode, MonitorWallpaperConfig},
 };
 use wayle_i18n::t;
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 pub(crate) struct MonitorWallpaperControl {
     property: ConfigProperty<Vec<MonitorWallpaperConfig>>,
@@ -33,13 +31,13 @@ pub(crate) enum MonitorWallpaperMsg {
 impl SimpleComponent for MonitorWallpaperControl {
     type Init = ConfigProperty<Vec<MonitorWallpaperConfig>>;
     type Input = MonitorWallpaperMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
-            .orientation(gtk4::Orientation::Vertical)
+        gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
             .hexpand(true)
             .build()
     }
@@ -51,8 +49,8 @@ impl SimpleComponent for MonitorWallpaperControl {
     ) -> ComponentParts<Self> {
         root.add_css_class("monitor-wallpaper-control");
 
-        let card_list = gtk4::Box::builder()
-            .orientation(gtk4::Orientation::Vertical)
+        let card_list = gtk::Box::builder()
+            .orientation(gtk::Orientation::Vertical)
             .build();
         card_list.add_css_class("monitor-wallpaper-list");
 
@@ -70,15 +68,15 @@ impl SimpleComponent for MonitorWallpaperControl {
             }
         }
 
-        let add_icon = gtk4::Image::from_icon_name("ld-plus-symbolic");
-        let add_label = gtk4::Label::new(Some(&t("settings-monitor-add")));
-        let add_content = gtk4::Box::new(gtk4::Orientation::Horizontal, 0);
+        let add_icon = gtk::Image::from_icon_name("ld-plus-symbolic");
+        let add_label = gtk::Label::new(Some(&t("settings-monitor-add")));
+        let add_content = gtk::Box::new(gtk::Orientation::Horizontal, 0);
         add_content.append(&add_icon);
         add_content.append(&add_label);
 
-        let add_button = gtk4::Button::builder()
+        let add_button = gtk::Button::builder()
             .child(&add_content)
-            .halign(gtk4::Align::Start)
+            .halign(gtk::Align::Start)
             .build();
 
         add_button.add_css_class("ghost");
@@ -146,11 +144,10 @@ impl SimpleComponent for MonitorWallpaperControl {
 }
 
 impl MonitorWallpaperControl {
-    fn commit(&self, sender: &ComponentSender<Self>) {
+    fn commit(&self, _sender: &ComponentSender<Self>) {
         let configs: Vec<MonitorWallpaperConfig> =
             self.cards.iter().map(|card| card.to_config()).collect();
 
         self.property.set(configs);
-        let _ = sender.output(ControlOutput::ValueChanged);
     }
 }

@@ -1,13 +1,11 @@
 //! GTK Switch bound to a boolean config property.
 
 mod row;
+use relm4::{gtk, gtk::prelude::*, prelude::*};
 pub(crate) use row::*;
-
-use gtk4::prelude::*;
-use relm4::prelude::*;
 use wayle_config::ConfigProperty;
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 pub struct ToggleControl {
     property: ConfigProperty<bool>,
@@ -24,12 +22,12 @@ pub enum ToggleMsg {
 impl SimpleComponent for ToggleControl {
     type Init = ConfigProperty<bool>;
     type Input = ToggleMsg;
-    type Output = ControlOutput;
+    type Output = ();
 
     view! {
-        gtk4::Switch {
+        gtk::Switch {
             set_hexpand: false,
-            set_valign: gtk4::Align::Center,
+            set_valign: gtk::Align::Center,
             set_cursor_from_name: Some("pointer"),
 
             #[watch]
@@ -39,7 +37,7 @@ impl SimpleComponent for ToggleControl {
             connect_state_set[sender] => move |switch, active| {
                 let _ = sender.input_sender().send(ToggleMsg::Toggled(active));
                 switch.set_state(active);
-                gtk4::glib::Propagation::Stop
+                gtk::glib::Propagation::Stop
             } @toggle_handler,
         }
     }
@@ -62,12 +60,11 @@ impl SimpleComponent for ToggleControl {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>) {
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
             ToggleMsg::Toggled(active) => {
                 self.active = active;
                 self.property.set(active);
-                let _ = sender.output(ControlOutput::ValueChanged);
             }
 
             ToggleMsg::Refresh => {

@@ -1,7 +1,6 @@
 //! Theme preset selector control factory.
 
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk::prelude::*, prelude::*};
 use wayle_config::{
     ConfigProperty,
     schemas::styling::{PaletteConfig, ThemeEntry},
@@ -9,7 +8,7 @@ use wayle_config::{
 
 use crate::{
     editors::theme_selector::{ThemeSelectorControl, ThemeSelectorInit},
-    pages::spec::SettingSpec,
+    pages::spec::SettingRowInit,
     property_handle::PropertyHandle,
     row::RowBehavior,
 };
@@ -18,7 +17,7 @@ pub(crate) fn theme_selector(
     available: &ConfigProperty<Vec<ThemeEntry>>,
     palette: &PaletteConfig,
     i18n_key: &'static str,
-) -> SettingSpec {
+) -> SettingRowInit {
     let controller = ThemeSelectorControl::builder()
         .launch(ThemeSelectorInit {
             available: available.clone(),
@@ -28,7 +27,7 @@ pub(crate) fn theme_selector(
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: Some(i18n_key),
         handle: PropertyHandle::new(available, |themes| format!("{} themes", themes.len())),
         control: widget.upcast(),

@@ -1,7 +1,7 @@
 //! Watches config properties that affect settings dialog CSS and
 //! triggers a CSS reload when any of them change.
 
-use std::sync::Arc;
+use std::{future::ready, sync::Arc};
 
 use futures::StreamExt;
 use relm4::ComponentSender;
@@ -23,7 +23,7 @@ pub fn spawn(sender: &ComponentSender<SettingsApp>, config_service: &Arc<ConfigS
             .styling
             .theme_provider
             .watch()
-            .filter(|provider| std::future::ready(*provider == ThemeProvider::Wayle)),
+            .filter(|provider| ready(*provider == ThemeProvider::Wayle)),
     );
 
     watch_palette(sender, config_service);

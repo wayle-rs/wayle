@@ -1,13 +1,20 @@
 //! Wallpaper settings page: engine, transitions, cycling, and per-monitor config.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{enum_select::{enum_select}, toggle::{toggle}, file_picker::{file_path}, number::{number_newtype}, monitor_wallpaper::{monitor_wallpaper}};
-use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::{
     Config,
     schemas::wallpaper::{CyclingInterval, TransitionDuration, TransitionFps},
 };
 
+use crate::{
+    editors::{
+        enum_select::enum_select, file_picker::file_path, monitor_wallpaper::monitor_wallpaper,
+        number::number_newtype, toggle::toggle,
+    },
+    pages::{
+        nav::LeafEntry,
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let wp = &config.wallpaper;

@@ -1,10 +1,22 @@
 //! Theme settings page: provider selection, palette, scale, and provider-specific tuning.
 
-use crate::pages::nav::LeafEntry;
-use crate::editors::{enum_select::{enum_select}, toggle::{toggle}, color::{color}, slider::{signed_normalized, normalized, scale, percentage}, number::{number_u8, number_newtype}, text::{text}, theme_selector::{theme_selector}};
-use crate::pages::spec::{SectionSpec, page_spec};
 use wayle_config::{Config, schemas::styling::PywalContrast};
 
+use crate::{
+    editors::{
+        color::color,
+        enum_select::enum_select,
+        number::{number_newtype, number_u8},
+        slider::{normalized, percentage, scale, signed_normalized},
+        text::text,
+        theme_selector::theme_selector,
+        toggle::toggle,
+    },
+    pages::{
+        nav::LeafEntry,
+        spec::{SectionSpec, page_spec},
+    },
+};
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
     let styling = &config.styling;
@@ -27,11 +39,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-palette",
                     items: vec![
-                        theme_selector(
-                            &styling.available,
-                            palette,
-                            "settings-theme-preset",
-                        ),
+                        theme_selector(&styling.available, palette, "settings-theme-preset"),
                         color(&palette.bg),
                         color(&palette.surface),
                         color(&palette.elevated),
@@ -46,10 +54,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 },
                 SectionSpec {
                     title_key: "settings-section-scale-rounding",
-                    items: vec![
-                        scale(&styling.scale),
-                        enum_select(&styling.rounding),
-                    ],
+                    items: vec![scale(&styling.scale), enum_select(&styling.rounding)],
                 },
                 SectionSpec {
                     title_key: "settings-section-matugen",

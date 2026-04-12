@@ -1,5 +1,4 @@
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk::prelude::*, prelude::*};
 use wayle_config::{
     ConfigProperty,
     schemas::styling::{NormalizedF64, Percentage, ScaleFactor, SignedNormalizedF64},
@@ -7,12 +6,12 @@ use wayle_config::{
 
 use crate::{
     editors::slider::{SliderControl, SliderInit},
-    pages::spec::SettingSpec,
+    pages::spec::SettingRowInit,
     property_handle::PropertyHandle,
     row::RowBehavior,
 };
 
-pub(crate) fn percentage(property: &ConfigProperty<Percentage>) -> SettingSpec {
+pub(crate) fn percentage(property: &ConfigProperty<Percentage>) -> SettingRowInit {
     let controller = SliderControl::builder()
         .launch(SliderInit {
             property: property.clone(),
@@ -26,7 +25,7 @@ pub(crate) fn percentage(property: &ConfigProperty<Percentage>) -> SettingSpec {
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |pct| format!("{}%", pct.value())),
         control: widget.upcast(),
@@ -37,7 +36,7 @@ pub(crate) fn percentage(property: &ConfigProperty<Percentage>) -> SettingSpec {
     }
 }
 
-pub(crate) fn scale(property: &ConfigProperty<ScaleFactor>) -> SettingSpec {
+pub(crate) fn scale(property: &ConfigProperty<ScaleFactor>) -> SettingRowInit {
     let controller = SliderControl::builder()
         .launch(SliderInit {
             property: property.clone(),
@@ -51,7 +50,7 @@ pub(crate) fn scale(property: &ConfigProperty<ScaleFactor>) -> SettingSpec {
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |sf| format!("{:.2}x", sf.value())),
         control: widget.upcast(),
@@ -62,7 +61,7 @@ pub(crate) fn scale(property: &ConfigProperty<ScaleFactor>) -> SettingSpec {
     }
 }
 
-pub(crate) fn normalized(property: &ConfigProperty<NormalizedF64>) -> SettingSpec {
+pub(crate) fn normalized(property: &ConfigProperty<NormalizedF64>) -> SettingRowInit {
     let controller = SliderControl::builder()
         .launch(SliderInit {
             property: property.clone(),
@@ -76,7 +75,7 @@ pub(crate) fn normalized(property: &ConfigProperty<NormalizedF64>) -> SettingSpe
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |nf| format!("{:.2}", nf.value())),
         control: widget.upcast(),
@@ -87,7 +86,7 @@ pub(crate) fn normalized(property: &ConfigProperty<NormalizedF64>) -> SettingSpe
     }
 }
 
-pub(crate) fn signed_normalized(property: &ConfigProperty<SignedNormalizedF64>) -> SettingSpec {
+pub(crate) fn signed_normalized(property: &ConfigProperty<SignedNormalizedF64>) -> SettingRowInit {
     let controller = SliderControl::builder()
         .launch(SliderInit {
             property: property.clone(),
@@ -101,7 +100,7 @@ pub(crate) fn signed_normalized(property: &ConfigProperty<SignedNormalizedF64>) 
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |snf| format!("{:.2}", snf.value())),
         control: widget.upcast(),

@@ -1,19 +1,19 @@
 //! Generic settings page component. Each page is just a PageSpec
 //! describing its header and sections.
 
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk, gtk::prelude::*, prelude::*};
 
-use crate::pages::{
-    layout::{build_page_header, build_sections},
-    spec::{Keepalive, PageSpec},
+use crate::{
+    pages::{
+        layout::{build_page_header, build_sections},
+        spec::PageSpec,
+    },
+    row::SettingRow,
 };
-use crate::row::SettingRow;
 
 #[allow(dead_code)]
 pub(crate) struct SettingsPage {
     rows: Vec<Controller<SettingRow>>,
-    keepalives: Vec<Keepalive>,
 }
 
 #[relm4::component(pub(crate))]
@@ -23,13 +23,13 @@ impl SimpleComponent for SettingsPage {
     type Output = ();
 
     view! {
-        gtk4::ScrolledWindow {
+        gtk::ScrolledWindow {
             set_hexpand: true,
             set_vexpand: true,
 
             #[name = "content"]
-            gtk4::Box {
-                set_orientation: gtk4::Orientation::Vertical,
+            gtk::Box {
+                set_orientation: gtk::Orientation::Vertical,
                 add_css_class: "settings-page",
             },
         }
@@ -45,9 +45,9 @@ impl SimpleComponent for SettingsPage {
 
         content.append(&build_page_header(spec.header_key));
 
-        let (rows, keepalives) = build_sections(content, spec.sections);
+        let rows = build_sections(content, spec.sections);
 
-        let model = Self { rows, keepalives };
+        let model = Self { rows };
 
         ComponentParts { model, widgets }
     }

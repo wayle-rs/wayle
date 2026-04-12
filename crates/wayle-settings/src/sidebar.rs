@@ -5,8 +5,7 @@
 
 use std::collections::{HashMap, HashSet};
 
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk, gtk::prelude::*, prelude::*};
 use wayle_i18n::t;
 
 /// A nav entry that navigates directly to a page.
@@ -31,9 +30,9 @@ pub struct SidebarInit {
 pub struct Sidebar {
     active_id: &'static str,
     collapsed: HashSet<&'static str>,
-    nav_buttons: HashMap<&'static str, gtk4::Button>,
-    section_items: HashMap<&'static str, gtk4::Box>,
-    section_headers: HashMap<&'static str, gtk4::Button>,
+    nav_buttons: HashMap<&'static str, gtk::Button>,
+    section_items: HashMap<&'static str, gtk::Box>,
+    section_headers: HashMap<&'static str, gtk::Button>,
 }
 
 #[derive(Debug)]
@@ -56,59 +55,59 @@ impl SimpleComponent for Sidebar {
     type Output = SidebarOutput;
 
     view! {
-        gtk4::Box {
+        gtk::Box {
             add_css_class: "sidebar",
-            set_orientation: gtk4::Orientation::Vertical,
+            set_orientation: gtk::Orientation::Vertical,
             set_vexpand: true,
             set_hexpand: false,
 
-            gtk4::Box {
+            gtk::Box {
                 add_css_class: "sidebar-header",
-                set_orientation: gtk4::Orientation::Horizontal,
-                set_valign: gtk4::Align::Center,
+                set_orientation: gtk::Orientation::Horizontal,
+                set_valign: gtk::Align::Center,
 
-                gtk4::Image {
+                gtk::Image {
                     set_icon_name: Some("ld-settings-symbolic"),
                     add_css_class: "sidebar-icon",
                 },
 
-                gtk4::Label {
+                gtk::Label {
                     set_label: &t("settings-title"),
                     add_css_class: "sidebar-title",
                 },
             },
 
-            gtk4::ScrolledWindow {
+            gtk::ScrolledWindow {
                 set_vexpand: true,
-                set_hscrollbar_policy: gtk4::PolicyType::Never,
+                set_hscrollbar_policy: gtk::PolicyType::Never,
 
                 #[name = "nav"]
-                gtk4::Box {
+                gtk::Box {
                     add_css_class: "sidebar-nav",
-                    set_orientation: gtk4::Orientation::Vertical,
+                    set_orientation: gtk::Orientation::Vertical,
                 },
             },
 
-            gtk4::Box {
+            gtk::Box {
                 add_css_class: "sidebar-footer",
-                set_orientation: gtk4::Orientation::Horizontal,
+                set_orientation: gtk::Orientation::Horizontal,
 
-                gtk4::Button {
+                gtk::Button {
                     add_css_class: "sidebar-reset-all",
                     set_cursor_from_name: Some("pointer"),
                     set_hexpand: true,
                     connect_clicked => SidebarMsg::ResetAllRequested,
 
-                    gtk4::Box {
-                        set_orientation: gtk4::Orientation::Horizontal,
-                        set_halign: gtk4::Align::Start,
+                    gtk::Box {
+                        set_orientation: gtk::Orientation::Horizontal,
+                        set_halign: gtk::Align::Start,
 
-                        gtk4::Image {
+                        gtk::Image {
                             set_icon_name: Some("ld-rotate-ccw-symbolic"),
                             add_css_class: "sidebar-reset-icon",
                         },
 
-                        gtk4::Label {
+                        gtk::Label {
                             set_label: &t("settings-reset-all"),
                             add_css_class: "sidebar-reset-label",
                         },
@@ -123,15 +122,15 @@ impl SimpleComponent for Sidebar {
         root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let mut nav_buttons: HashMap<&'static str, gtk4::Button> = HashMap::new();
-        let mut section_items: HashMap<&'static str, gtk4::Box> = HashMap::new();
-        let mut section_headers: HashMap<&'static str, gtk4::Button> = HashMap::new();
+        let mut nav_buttons: HashMap<&'static str, gtk::Button> = HashMap::new();
+        let mut section_items: HashMap<&'static str, gtk::Box> = HashMap::new();
+        let mut section_headers: HashMap<&'static str, gtk::Button> = HashMap::new();
 
         let widgets = view_output!();
 
         for section in &init.sections {
-            let section_box = gtk4::Box::builder()
-                .orientation(gtk4::Orientation::Vertical)
+            let section_box = gtk::Box::builder()
+                .orientation(gtk::Orientation::Vertical)
                 .build();
             section_box.add_css_class("sidebar-section");
 
@@ -139,8 +138,8 @@ impl SimpleComponent for Sidebar {
             section_headers.insert(section.i18n_key, header.clone());
             section_box.append(&header);
 
-            let items_box = gtk4::Box::builder()
-                .orientation(gtk4::Orientation::Vertical)
+            let items_box = gtk::Box::builder()
+                .orientation(gtk::Orientation::Vertical)
                 .build();
             items_box.add_css_class("sidebar-section-items");
 
@@ -218,25 +217,25 @@ impl SimpleComponent for Sidebar {
     }
 }
 
-fn build_section_header(i18n_key: &'static str, sender: &ComponentSender<Sidebar>) -> gtk4::Button {
-    let label = gtk4::Label::builder()
+fn build_section_header(i18n_key: &'static str, sender: &ComponentSender<Sidebar>) -> gtk::Button {
+    let label = gtk::Label::builder()
         .label(t(i18n_key))
-        .halign(gtk4::Align::Start)
+        .halign(gtk::Align::Start)
         .hexpand(true)
         .build();
 
-    let chevron = gtk4::Image::builder()
+    let chevron = gtk::Image::builder()
         .icon_name("ld-chevron-down-symbolic")
         .build();
     chevron.add_css_class("sidebar-section-chevron");
 
-    let content = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Horizontal)
+    let content = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
         .build();
     content.append(&label);
     content.append(&chevron);
 
-    let button = gtk4::Button::new();
+    let button = gtk::Button::new();
     button.set_child(Some(&content));
     button.add_css_class("sidebar-section-title");
     button.set_cursor_from_name(Some("pointer"));
@@ -249,23 +248,23 @@ fn build_section_header(i18n_key: &'static str, sender: &ComponentSender<Sidebar
     button
 }
 
-fn build_nav_item(item: &NavItem, sender: &ComponentSender<Sidebar>) -> gtk4::Button {
-    let icon = gtk4::Image::builder().icon_name(item.icon).build();
+fn build_nav_item(item: &NavItem, sender: &ComponentSender<Sidebar>) -> gtk::Button {
+    let icon = gtk::Image::builder().icon_name(item.icon).build();
     icon.add_css_class("sidebar-item-icon");
 
-    let label = gtk4::Label::builder()
+    let label = gtk::Label::builder()
         .label(t(item.i18n_key))
         .hexpand(true)
-        .halign(gtk4::Align::Start)
+        .halign(gtk::Align::Start)
         .build();
 
-    let content = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Horizontal)
+    let content = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
         .build();
     content.append(&icon);
     content.append(&label);
 
-    let button = gtk4::Button::new();
+    let button = gtk::Button::new();
     button.set_child(Some(&content));
     button.add_css_class("sidebar-item");
     button.set_cursor_from_name(Some("pointer"));

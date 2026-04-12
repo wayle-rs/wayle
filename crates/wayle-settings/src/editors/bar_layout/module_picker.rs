@@ -3,8 +3,7 @@
 
 use std::rc::Rc;
 
-use gtk4::prelude::*;
-use relm4::Sender;
+use relm4::{Sender, gtk, gtk::prelude::*};
 use serde::{Deserialize, de::value::StrDeserializer};
 use wayle_config::{
     ConfigProperty,
@@ -15,27 +14,27 @@ use wayle_i18n::t;
 use super::card::LayoutCardMsg;
 
 pub(super) fn attach(
-    button: &gtk4::MenuButton,
+    button: &gtk::MenuButton,
     custom_modules: ConfigProperty<Vec<CustomModuleDefinition>>,
     build_msg: impl Fn(BarModule) -> LayoutCardMsg + 'static,
     sender: Sender<LayoutCardMsg>,
 ) {
-    let popover = gtk4::Popover::new();
+    let popover = gtk::Popover::new();
     popover.add_css_class("module-picker-popover");
     button.set_popover(Some(&popover));
 
-    let content = gtk4::Box::builder()
-        .orientation(gtk4::Orientation::Vertical)
+    let content = gtk::Box::builder()
+        .orientation(gtk::Orientation::Vertical)
         .build();
 
-    let search = gtk4::SearchEntry::new();
+    let search = gtk::SearchEntry::new();
     search.set_placeholder_text(Some(&t("settings-layout-search")));
 
-    let list = gtk4::ListBox::new();
+    let list = gtk::ListBox::new();
     list.add_css_class("module-picker-list");
-    list.set_selection_mode(gtk4::SelectionMode::None);
+    list.set_selection_mode(gtk::SelectionMode::None);
 
-    let scrolled = gtk4::ScrolledWindow::builder()
+    let scrolled = gtk::ScrolledWindow::builder()
         .child(&list)
         .vexpand(true)
         .build();
@@ -90,11 +89,11 @@ fn all_module_names(custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>
 }
 
 fn populate_list(
-    list: &gtk4::ListBox,
+    list: &gtk::ListBox,
     filter: &str,
     custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,
     sender: &Sender<LayoutCardMsg>,
-    popover: &gtk4::Popover,
+    popover: &gtk::Popover,
     build_msg: &Rc<dyn Fn(BarModule) -> LayoutCardMsg>,
 ) {
     while let Some(child) = list.first_child() {
@@ -106,12 +105,12 @@ fn populate_list(
             continue;
         }
 
-        let row = gtk4::ListBoxRow::builder().selectable(false).build();
+        let row = gtk::ListBoxRow::builder().selectable(false).build();
         row.set_cursor_from_name(Some("pointer"));
 
-        let label = gtk4::Label::builder()
+        let label = gtk::Label::builder()
             .label(&module_name)
-            .halign(gtk4::Align::Start)
+            .halign(gtk::Align::Start)
             .build();
         label.add_css_class("module-picker-item");
 
@@ -121,9 +120,9 @@ fn populate_list(
         let click_popover = popover.clone();
         let click_build = Rc::clone(build_msg);
 
-        let click = gtk4::GestureClick::new();
+        let click = gtk::GestureClick::new();
         click.connect_released(move |gesture, _n_press, _x, _y| {
-            gesture.set_state(gtk4::EventSequenceState::Claimed);
+            gesture.set_state(gtk::EventSequenceState::Claimed);
 
             let deserializer: StrDeserializer<'_, serde::de::value::Error> =
                 StrDeserializer::new(&module_name);

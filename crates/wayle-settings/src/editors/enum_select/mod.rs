@@ -1,21 +1,19 @@
 //! Dropdown control for config enums that derive `EnumVariants`.
 
 mod row;
+use relm4::{gtk, gtk::prelude::*, prelude::*};
 pub(crate) use row::*;
-
-use gtk4::prelude::*;
-use relm4::prelude::*;
 use serde::{Deserialize, de::value::StrDeserializer};
 use wayle_config::{ConfigProperty, EnumVariant, EnumVariants};
 use wayle_i18n::t;
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 pub(crate) struct EnumSelectControl<E: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<E>,
     selected: u32,
-    dropdown: gtk4::DropDown,
-    handler_id: gtk4::glib::SignalHandlerId,
+    dropdown: gtk::DropDown,
+    handler_id: gtk::glib::SignalHandlerId,
 }
 
 #[derive(Debug)]
@@ -30,14 +28,14 @@ where
 {
     type Init = ConfigProperty<E>;
     type Input = EnumSelectMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
+        gtk::Box::builder()
             .hexpand(false)
-            .valign(gtk4::Align::Center)
+            .valign(gtk::Align::Center)
             .build()
     }
 
@@ -62,19 +60,19 @@ where
             .collect();
 
         let string_list =
-            gtk4::StringList::new(&labels.iter().map(String::as_str).collect::<Vec<_>>());
+            gtk::StringList::new(&labels.iter().map(String::as_str).collect::<Vec<_>>());
 
         let current_index = variant_index_of(&property.get(), variants);
 
-        let dropdown = gtk4::DropDown::new(Some(string_list), gtk4::Expression::NONE);
+        let dropdown = gtk::DropDown::new(Some(string_list), gtk::Expression::NONE);
         dropdown.set_selected(current_index);
         dropdown.set_cursor_from_name(Some("pointer"));
 
         if let Some(popover) = dropdown
             .last_child()
-            .and_then(|child| child.downcast::<gtk4::Popover>().ok())
+            .and_then(|child| child.downcast::<gtk::Popover>().ok())
         {
-            popover.set_halign(gtk4::Align::Center);
+            popover.set_halign(gtk::Align::Center);
         }
 
         let input_sender = sender.input_sender().clone();
@@ -100,7 +98,7 @@ where
         ComponentParts { model, widgets: () }
     }
 
-    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>) {
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
             EnumSelectMsg::Selected(index) => {
                 self.selected = index;
@@ -110,8 +108,6 @@ where
                 {
                     self.property.set(value);
                 }
-
-                let _ = sender.output(ControlOutput::ValueChanged);
             }
 
             EnumSelectMsg::Refresh => {

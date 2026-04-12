@@ -1,14 +1,13 @@
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk::prelude::*, prelude::*};
 use serde::{Deserialize, Serialize};
 use wayle_config::{ConfigProperty, EnumVariants};
 
 use crate::{
-    editors::enum_select::EnumSelectControl, pages::spec::SettingSpec,
+    editors::enum_select::EnumSelectControl, pages::spec::SettingRowInit,
     property_handle::PropertyHandle, row::RowBehavior,
 };
 
-pub(crate) fn enum_select<E>(property: &ConfigProperty<E>) -> SettingSpec
+pub(crate) fn enum_select<E>(property: &ConfigProperty<E>) -> SettingRowInit
 where
     E: EnumVariants
         + Clone
@@ -25,7 +24,7 @@ where
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| {
             serde_json::to_string(value)

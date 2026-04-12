@@ -1,19 +1,18 @@
 use std::fmt;
 
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk::prelude::*, prelude::*};
 use wayle_config::{ConfigProperty, schemas::styling::Spacing};
 
 use crate::{
     editors::number::{NumberControl, NumberInit},
-    pages::spec::SettingSpec,
+    pages::spec::SettingRowInit,
     property_handle::PropertyHandle,
     row::RowBehavior,
 };
 
 const U64_DISPLAY_MAX: f64 = 1_000_000.0;
 
-pub(crate) fn spacing(property: &ConfigProperty<Spacing>) -> SettingSpec {
+pub(crate) fn spacing(property: &ConfigProperty<Spacing>) -> SettingRowInit {
     let controller = NumberControl::builder()
         .launch(NumberInit {
             property: property.clone(),
@@ -28,7 +27,7 @@ pub(crate) fn spacing(property: &ConfigProperty<Spacing>) -> SettingSpec {
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| format!("{}", value.value())),
         control: widget.upcast(),
@@ -39,7 +38,7 @@ pub(crate) fn spacing(property: &ConfigProperty<Spacing>) -> SettingSpec {
     }
 }
 
-pub(crate) fn number_u8(property: &ConfigProperty<u8>) -> SettingSpec {
+pub(crate) fn number_u8(property: &ConfigProperty<u8>) -> SettingRowInit {
     let controller = NumberControl::builder()
         .launch(NumberInit {
             property: property.clone(),
@@ -54,7 +53,7 @@ pub(crate) fn number_u8(property: &ConfigProperty<u8>) -> SettingSpec {
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| value.to_string()),
         control: widget.upcast(),
@@ -65,7 +64,7 @@ pub(crate) fn number_u8(property: &ConfigProperty<u8>) -> SettingSpec {
     }
 }
 
-pub(crate) fn number_u32(property: &ConfigProperty<u32>) -> SettingSpec {
+pub(crate) fn number_u32(property: &ConfigProperty<u32>) -> SettingRowInit {
     let controller = NumberControl::builder()
         .launch(NumberInit {
             property: property.clone(),
@@ -84,7 +83,7 @@ pub(crate) fn number_u32(property: &ConfigProperty<u32>) -> SettingSpec {
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| value.to_string()),
         control: widget.upcast(),
@@ -95,7 +94,7 @@ pub(crate) fn number_u32(property: &ConfigProperty<u32>) -> SettingSpec {
     }
 }
 
-pub(crate) fn number_u64(property: &ConfigProperty<u64>) -> SettingSpec {
+pub(crate) fn number_u64(property: &ConfigProperty<u64>) -> SettingRowInit {
     let controller = NumberControl::builder()
         .launch(NumberInit {
             property: property.clone(),
@@ -110,7 +109,7 @@ pub(crate) fn number_u64(property: &ConfigProperty<u64>) -> SettingSpec {
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| value.to_string()),
         control: widget.upcast(),
@@ -127,7 +126,7 @@ pub(crate) fn number_f64(
     range_max: f64,
     step: f64,
     digits: u32,
-) -> SettingSpec {
+) -> SettingRowInit {
     let controller = NumberControl::builder()
         .launch(NumberInit {
             property: property.clone(),
@@ -142,7 +141,7 @@ pub(crate) fn number_f64(
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| format!("{value:.2}")),
         control: widget.upcast(),
@@ -161,7 +160,7 @@ pub(crate) fn number_newtype<T>(
     digits: u32,
     to_f64: fn(&T) -> f64,
     from_f64: fn(f64) -> T,
-) -> SettingSpec
+) -> SettingRowInit
 where
     T: Clone + Send + Sync + PartialEq + fmt::Display + 'static,
 {
@@ -179,7 +178,7 @@ where
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, |value| value.to_string()),
         control: widget.upcast(),

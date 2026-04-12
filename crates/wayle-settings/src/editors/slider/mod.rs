@@ -2,16 +2,17 @@
 //! with a final commit on release.
 
 mod row;
-pub(crate) use row::*;
-
 use std::sync::Arc;
 
-use gtk4::{glib, prelude::*};
-use relm4::prelude::*;
+use relm4::{
+    gtk::{glib, prelude::*},
+    prelude::*,
+};
+pub(crate) use row::*;
 use wayle_config::ConfigProperty;
 use wayle_widgets::primitives::slider::DebouncedSlider;
 
-use super::{ControlOutput, spawn_property_watcher};
+use super::spawn_property_watcher;
 
 pub(crate) struct SliderControl<T: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<T>,
@@ -39,14 +40,14 @@ where
 {
     type Init = SliderInit<T>;
     type Input = SliderMsg;
-    type Output = ControlOutput;
-    type Root = gtk4::Box;
+    type Output = ();
+    type Root = gtk::Box;
     type Widgets = ();
 
     fn init_root() -> Self::Root {
-        gtk4::Box::builder()
+        gtk::Box::builder()
             .hexpand(false)
-            .valign(gtk4::Align::Center)
+            .valign(gtk::Align::Center)
             .build()
     }
 
@@ -65,14 +66,12 @@ where
 
         let prop = Arc::new(init.property.clone());
         let from_slider = init.from_slider;
-        let output_sender = sender.output_sender().clone();
 
         slider.connect_closure(
             "committed",
             false,
             glib::closure_local!(move |_slider: DebouncedSlider, value: f64| {
                 prop.set(from_slider(value));
-                let _ = output_sender.send(ControlOutput::ValueChanged);
             }),
         );
 

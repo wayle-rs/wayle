@@ -1,12 +1,13 @@
-use gtk4::prelude::*;
-use relm4::prelude::*;
+use relm4::{gtk::prelude::*, prelude::*};
 use serde::{Deserialize, Serialize};
 use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 
-use crate::editors::make_dirty_badge;
 use crate::{
-    editors::toml_editor::{TomlEditorControl, TomlEditorInit, helpers::serialize_with_key},
-    pages::spec::SettingSpec,
+    editors::{
+        make_dirty_badge,
+        toml_editor::{TomlEditorControl, TomlEditorInit, helpers::serialize_with_key},
+    },
+    pages::spec::SettingRowInit,
     property_handle::PropertyHandle,
     row::RowBehavior,
 };
@@ -15,7 +16,7 @@ pub(crate) fn toml_editor<T>(
     property: &ConfigProperty<T>,
     key: &'static str,
     palette_bg: &ConfigProperty<HexColor>,
-) -> SettingSpec
+) -> SettingRowInit
 where
     T: Clone + Send + Sync + PartialEq + Serialize + for<'de> Deserialize<'de> + 'static,
 {
@@ -27,7 +28,7 @@ pub(crate) fn toml_editor_sized<T>(
     key: &'static str,
     min_lines: u32,
     palette_bg: &ConfigProperty<HexColor>,
-) -> SettingSpec
+) -> SettingRowInit
 where
     T: Clone + Send + Sync + PartialEq + Serialize + for<'de> Deserialize<'de> + 'static,
 {
@@ -46,7 +47,7 @@ where
 
     let widget = controller.widget().clone();
 
-    SettingSpec {
+    SettingRowInit {
         i18n_key: property.i18n_key(),
         handle: PropertyHandle::new(property, move |value| serialize_with_key(value, key)),
         control: widget.upcast(),
