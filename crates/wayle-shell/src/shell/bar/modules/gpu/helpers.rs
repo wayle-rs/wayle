@@ -8,9 +8,11 @@ use wayle_sysinfo::types::{GpuData, GpuDeviceData};
 ///
 /// - `{{ count }}` - Number of detected GPUs
 /// - `{{ active_count }}` - Number of GPUs reporting utilization
-/// - `{{ percent }}` - Average GPU core utilization (00-100, zero-padded)
-/// - `{{ mem_percent }}` - Average GPU memory utilization (00-100, zero-padded)
-/// - `{{ temp_c }}` - Maximum GPU temperature across devices (zero-padded)
+/// - `{{ avg_percent }}` - Average GPU core utilization (00-100, zero-padded)
+/// - `{{ avg_mem_percent }}` - Average GPU memory utilization (00-100, zero-padded)
+/// - `{{ max_temp_c }}` - Maximum GPU temperature across devices (zero-padded)
+/// - `{{ total_power_w }}` - Total GPU power draw in watts across devices
+/// - `{{ hottest_gpu_name }}` - Name of the hottest GPU
 ///
 /// ## Per-device Variables (first two GPUs)
 ///
@@ -19,6 +21,12 @@ use wayle_sysinfo::types::{GpuData, GpuDeviceData};
 /// - `{{ gpu0_temp_c }}`, `{{ gpu1_temp_c }}`
 /// - `{{ gpu0_mem_used_gib }}`, `{{ gpu1_mem_used_gib }}`
 /// - `{{ gpu0_mem_total_gib }}`, `{{ gpu1_mem_total_gib }}`
+/// - `{{ gpu0_name }}`, `{{ gpu1_name }}`
+/// - `{{ gpu0_power_w }}`, `{{ gpu1_power_w }}`
+/// - `{{ gpu0_power_limit_w }}`, `{{ gpu1_power_limit_w }}`
+/// - `{{ gpu0_fan_percent }}`, `{{ gpu1_fan_percent }}`
+/// - `{{ gpu0_graphics_mhz }}`, `{{ gpu1_graphics_mhz }}`
+/// - `{{ gpu0_memory_mhz }}`, `{{ gpu1_memory_mhz }}`
 pub(super) fn format_label(format: &str, gpu: &GpuData) -> String {
     let gpu0 = gpu.devices.iter().find(|device| device.index == 0);
     let gpu1 = gpu.devices.iter().find(|device| device.index == 1);
@@ -29,12 +37,24 @@ pub(super) fn format_label(format: &str, gpu: &GpuData) -> String {
         .filter_map(|d| d.temperature_celsius)
         .fold(0.0_f32, f32::max);
 
+    let total_power_watts: f32 = gpu.devices.iter().filter_map(|d| d.power_watts).sum();
+
+    let hottest_gpu_name = gpu
+        .devices
+        .iter()
+        .filter_map(|d| d.temperature_celsius.map(|temp| (d.name.as_str(), temp)))
+        .max_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(name, _)| name)
+        .unwrap_or("");
+
     let ctx = json!({
         "count": gpu.total_count,
         "active_count": gpu.active_count,
-        "percent": format!("{:02.0}", gpu.average_utilization_percent),
-        "mem_percent": format!("{:02.0}", gpu.average_memory_utilization_percent),
-        "temp_c": format!("{max_temp_c:02.0}"),
+        "avg_percent": format!("{:02.0}", gpu.average_utilization_percent),
+        "avg_mem_percent": format!("{:02.0}", gpu.average_memory_utilization_percent),
+        "max_temp_c": format!("{max_temp_c:02.0}"),
+        "total_power_w": format_float(Some(total_power_watts), 1),
+        "hottest_gpu_name": hottest_gpu_name,
 
         "gpu0_percent": format_percent(gpu0.and_then(|d| d.utilization_percent)),
         "gpu1_percent": format_percent(gpu1.and_then(|d| d.utilization_percent)),
@@ -49,6 +69,24 @@ pub(super) fn format_label(format: &str, gpu: &GpuData) -> String {
         "gpu1_mem_used_gib": gib(gpu1.and_then(|d| d.memory_used_bytes)),
         "gpu0_mem_total_gib": gib(gpu0.and_then(|d| d.memory_total_bytes)),
         "gpu1_mem_total_gib": gib(gpu1.and_then(|d| d.memory_total_bytes)),
+
+        "gpu0_name": text(gpu0.map(|d| d.name.as_str())),
+        "gpu1_name": text(gpu1.map(|d| d.name.as_str())),
+
+        "gpu0_power_w": format_float(gpu0.and_then(|d| d.power_watts), 1),
+        "gpu1_power_w": format_float(gpu1.and_then(|d| d.power_watts), 1),
+
+        "gpu0_power_limit_w": format_float(gpu0.and_then(|d| d.power_limit_watts), 1),
+        "gpu1_power_limit_w": format_float(gpu1.and_then(|d| d.power_limit_watts), 1),
+
+        "gpu0_fan_percent": format_percent(gpu0.and_then(|d| d.fan_speed_percent)),
+        "gpu1_fan_percent": format_percent(gpu1.and_then(|d| d.fan_speed_percent)),
+
+        "gpu0_graphics_mhz": format_u32(gpu0.and_then(|d| d.graphics_clock_mhz)),
+        "gpu1_graphics_mhz": format_u32(gpu1.and_then(|d| d.graphics_clock_mhz)),
+
+        "gpu0_memory_mhz": format_u32(gpu0.and_then(|d| d.memory_clock_mhz)),
+        "gpu1_memory_mhz": format_u32(gpu1.and_then(|d| d.memory_clock_mhz)),
     });
 
     crate::template::render(format, ctx).unwrap_or_default()
@@ -56,6 +94,18 @@ pub(super) fn format_label(format: &str, gpu: &GpuData) -> String {
 
 fn format_percent(value: Option<f32>) -> String {
     format!("{:02.0}", value.unwrap_or(0.0))
+}
+
+fn format_float(value: Option<f32>, decimals: usize) -> String {
+    format!("{:.decimals$}", value.unwrap_or(0.0), decimals = decimals)
+}
+
+fn format_u32(value: Option<u32>) -> String {
+    value.unwrap_or(0).to_string()
+}
+
+fn text(value: Option<&str>) -> String {
+    value.unwrap_or("").to_string()
 }
 
 fn gib(bytes: Option<u64>) -> String {
@@ -87,11 +137,11 @@ mod tests {
                 Some(0.0)
             },
             temperature_celsius: temp,
-            power_watts: None,
-            power_limit_watts: None,
-            fan_speed_percent: None,
-            graphics_clock_mhz: None,
-            memory_clock_mhz: None,
+            power_watts: Some(100.0 + index as f32),
+            power_limit_watts: Some(250.0),
+            fan_speed_percent: Some(40.0 + index as f32),
+            graphics_clock_mhz: Some(1800 + index),
+            memory_clock_mhz: Some(9000 + index),
         }
     }
 
@@ -118,7 +168,7 @@ mod tests {
     #[test]
     fn format_label_replaces_aggregate_placeholders() {
         let gpu = gpu_data(vec![], 37.2, 42.1);
-        let out = format_label("{{ percent }}% VRAM {{ mem_percent }}% ({{ count }})", &gpu);
+        let out = format_label("{{ avg_percent }}% VRAM {{ avg_mem_percent }}% ({{ count }})", &gpu);
         assert_eq!(out, "37% VRAM 42% (0)");
     }
 
@@ -132,7 +182,7 @@ mod tests {
             15.0,
             19.0,
         );
-        let out = format_label("{{ temp_c }}C", &gpu);
+        let out = format_label("{{ max_temp_c }}C", &gpu);
         assert_eq!(out, "73C");
     }
 
@@ -183,5 +233,40 @@ mod tests {
         );
         let out = format_label("{{ gpu0_mem_used_gib }}/{{ gpu0_mem_total_gib }}", &gpu);
         assert_eq!(out, "1.5/12.0");
+    }
+
+    #[test]
+    fn format_label_replaces_name_power_fan_clock_placeholders() {
+        let gpu = gpu_data(
+            vec![
+                device(0, Some(52.0), 3 * GIB, 8 * GIB, Some(65.0)),
+                device(1, Some(11.0), 1 * GIB, 8 * GIB, Some(49.0)),
+            ],
+            31.5,
+            25.0,
+        );
+
+        let out = format_label(
+            "{{ gpu0_name }} {{ gpu0_power_w }}/{{ gpu0_power_limit_w }}W {{ gpu0_fan_percent }}% {{ gpu0_graphics_mhz }}/{{ gpu0_memory_mhz }}",
+            &gpu,
+        );
+
+        assert_eq!(out, "GPU 0 100.0/250.0W 40% 1800/9000");
+    }
+
+    #[test]
+    fn format_label_replaces_aggregate_power_and_hottest_name() {
+        let gpu = gpu_data(
+            vec![
+                device(0, Some(52.0), 3 * GIB, 8 * GIB, Some(65.0)),
+                device(1, Some(11.0), 1 * GIB, 8 * GIB, Some(73.0)),
+            ],
+            31.5,
+            25.0,
+        );
+
+        let out = format_label("{{ max_temp_c }} {{ total_power_w }} {{ hottest_gpu_name }}", &gpu);
+
+        assert_eq!(out, "73 201.0 GPU 1");
     }
 }

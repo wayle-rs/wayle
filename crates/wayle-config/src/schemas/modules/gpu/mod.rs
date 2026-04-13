@@ -25,9 +25,11 @@ pub struct GpuConfig {
     ///
     /// - `{{ count }}` - Number of detected GPUs
     /// - `{{ active_count }}` - Number of GPUs currently reporting utilization
-    /// - `{{ percent }}` - Average GPU core utilization (0-100)
-    /// - `{{ mem_percent }}` - Average GPU memory utilization (0-100)
-    /// - `{{ temp_c }}` - Maximum GPU temperature in Celsius (if available)
+    /// - `{{ avg_percent }}` - Average GPU core utilization (0-100)
+    /// - `{{ avg_mem_percent }}` - Average GPU memory utilization (0-100)
+    /// - `{{ max_temp_c }}` - Maximum GPU temperature in Celsius (if available)
+    /// - `{{ total_power_w }}` - Total GPU power draw in watts across devices
+    /// - `{{ hottest_gpu_name }}` - Name of the hottest GPU
     ///
     /// ## Per-GPU Placeholders (first two GPUs)
     ///
@@ -36,14 +38,20 @@ pub struct GpuConfig {
     /// - `{{ gpu0_temp_c }}`, `{{ gpu1_temp_c }}`
     /// - `{{ gpu0_mem_used_gib }}`, `{{ gpu1_mem_used_gib }}`
     /// - `{{ gpu0_mem_total_gib }}`, `{{ gpu1_mem_total_gib }}`
+    /// - `{{ gpu0_name }}`, `{{ gpu1_name }}`
+    /// - `{{ gpu0_power_w }}`, `{{ gpu1_power_w }}`
+    /// - `{{ gpu0_power_limit_w }}`, `{{ gpu1_power_limit_w }}`
+    /// - `{{ gpu0_fan_percent }}`, `{{ gpu1_fan_percent }}`
+    /// - `{{ gpu0_graphics_mhz }}`, `{{ gpu1_graphics_mhz }}`
+    /// - `{{ gpu0_memory_mhz }}`, `{{ gpu1_memory_mhz }}`
     ///
     /// ## Examples
     ///
-    /// - `"{{ percent }}%"` - `"37%"`
+    /// - `"{{ avg_percent }}%"` - `"37%"`
     /// - `"{{ gpu0_percent }}% | {{ gpu1_percent }}%"` - `"52% | 11%"`
-    /// - `"{{ percent }}% VRAM {{ mem_percent }}%"` - `"37% VRAM 42%"`
+    /// - `"{{ avg_percent }}% VRAM {{ avg_mem_percent }}%"` - `"37% VRAM 42%"`
     #[serde(rename = "format")]
-    #[default(String::from("{{ percent }}%"))]
+    #[default(String::from("{{ avg_percent }}%"))]
     pub format: ConfigProperty<String>,
 
     /// Icon name.
