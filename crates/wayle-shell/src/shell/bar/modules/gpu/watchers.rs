@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use relm4::ComponentSender;
 use wayle_config::schemas::{modules::GpuConfig, styling::evaluate_thresholds};
@@ -48,11 +48,5 @@ pub(super) fn spawn_watchers(
     let icon_name = config.icon_name.clone();
     watch!(sender, [icon_name.watch()], |out| {
         let _ = out.send(GpuCmd::UpdateIcon(icon_name.get().clone()));
-    });
-
-    let poll_interval = config.poll_interval_ms.clone();
-    let sysinfo_interval = sysinfo.clone();
-    watch!(sender, [poll_interval.watch()], |_out| {
-        sysinfo_interval.set_gpu_interval(Duration::from_millis(poll_interval.get()));
     });
 }
