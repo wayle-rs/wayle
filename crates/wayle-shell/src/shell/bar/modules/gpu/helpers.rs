@@ -1,6 +1,6 @@
 use bytesize::ByteSize;
 use serde_json::json;
-use wayle_sysinfo::types::{GpuData, GpuDeviceData};
+use wayle_sysinfo::types::GpuData;
 
 /// Formats a GPU label using Jinja2 template syntax.
 ///
@@ -168,7 +168,10 @@ mod tests {
     #[test]
     fn format_label_replaces_aggregate_placeholders() {
         let gpu = gpu_data(vec![], 37.2, 42.1);
-        let out = format_label("{{ avg_percent }}% VRAM {{ avg_mem_percent }}% ({{ count }})", &gpu);
+        let out = format_label(
+            "{{ avg_percent }}% VRAM {{ avg_mem_percent }}% ({{ count }})",
+            &gpu,
+        );
         assert_eq!(out, "37% VRAM 42% (0)");
     }
 
@@ -213,7 +216,11 @@ mod tests {
 
     #[test]
     fn format_label_uses_device_index_not_vector_position() {
-        let gpu = gpu_data(vec![device(1, Some(11.0), 1 * GIB, 8 * GIB, Some(49.0))], 11.0, 12.5);
+        let gpu = gpu_data(
+            vec![device(1, Some(11.0), 1 * GIB, 8 * GIB, Some(49.0))],
+            11.0,
+            12.5,
+        );
         let out = format_label("{{ gpu0_percent }}% | {{ gpu1_percent }}%", &gpu);
         assert_eq!(out, "00% | 11%");
     }
@@ -265,7 +272,10 @@ mod tests {
             25.0,
         );
 
-        let out = format_label("{{ max_temp_c }} {{ total_power_w }} {{ hottest_gpu_name }}", &gpu);
+        let out = format_label(
+            "{{ max_temp_c }} {{ total_power_w }} {{ hottest_gpu_name }}",
+            &gpu,
+        );
 
         assert_eq!(out, "73 201.0 GPU 1");
     }
