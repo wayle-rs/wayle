@@ -42,6 +42,29 @@ pub(crate) fn spawn_action(command: &str) {
     });
 }
 
+/// Run a shell command with an environment variable set, returning its output.
+///
+/// Used by dropdown selection to safely pass the selected item without shell
+/// interpolation. The command can reference the value via `$WAYLE_SELECTED`.
+pub(crate) async fn run_command_with_env(command: &str, env_key: &str, env_val: &str) -> String {
+    match Command::new("sh")
+        .arg("-c")
+        .arg(command)
+        .env(env_key, env_val)
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .kill_on_drop(true)
+        .output()
+        .await
+    {
+        Ok(output) => String::from_utf8_lossy(&output.stdout).trim().to_string(),
+        Err(error) => {
+            warn!(error = %error, "command with env failed");
+            String::new()
+        }
+    }
+}
+
 /// Runs a command asynchronously with timeout and single-flight cancellation.
 ///
 /// If `cancel_token` is triggered, the command is cancelled.
@@ -90,6 +113,19 @@ fn map_exec_outcome(module_id: &str, outcome: ExecOutcome) -> CustomCmd {
         ExecOutcome::Failed(error) => {
             warn!(module_id = %module_id, error = %error, "command execution failed");
             CustomCmd::CommandCancelled
+        }
+    }
+}
+
+/// Run a shell command and return its stdout output.
+///
+/// Used by the dropdown list loader to fetch items asynchronously.
+pub(crate) async fn run_command_for_output(command: &str) -> String {
+    match run_command(command).await {
+        Ok(output) => output,
+        Err(error) => {
+            warn!(error = %error, "dropdown list command failed");
+            String::new()
         }
     }
 }

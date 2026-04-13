@@ -52,6 +52,8 @@ pub enum BarButtonInput {
     FreezeSize,
     /// Unlock label width, restoring normal sizing.
     ThawSize,
+    /// Override the ellipsize mode (default is `End` when max chars is set).
+    SetEllipsize(gtk::pango::EllipsizeMode),
     /// Config property changed.
     ConfigChanged,
     /// Apply threshold-based color overrides.
@@ -74,6 +76,7 @@ pub struct BarButton {
     tooltip: Option<String>,
     size_frozen: bool,
     pending_label: Option<String>,
+    ellipsize_override: Option<gtk::pango::EllipsizeMode>,
     pub(super) variant: BarButtonVariant,
     pub(super) colors: BarButtonColors,
     pub(super) behavior: BarButtonBehavior,
@@ -185,6 +188,7 @@ impl Component for BarButton {
             tooltip: init.tooltip,
             size_frozen: false,
             pending_label: None,
+            ellipsize_override: None,
             variant: init.settings.variant.get(),
             colors: init.colors,
             behavior: init.behavior,
@@ -234,6 +238,9 @@ impl Component for BarButton {
                 if let Some(label) = self.pending_label.take() {
                     self.label = label;
                 }
+            }
+            BarButtonInput::SetEllipsize(mode) => {
+                self.ellipsize_override = Some(mode);
             }
             BarButtonInput::ConfigChanged => {}
             BarButtonInput::SetThresholdColors(colors) => {
@@ -311,7 +318,8 @@ impl BarButton {
 
     fn ellipsize(&self) -> gtk::pango::EllipsizeMode {
         if self.behavior.label_max_chars.get() > 0 {
-            gtk::pango::EllipsizeMode::End
+            self.ellipsize_override
+                .unwrap_or(gtk::pango::EllipsizeMode::End)
         } else {
             gtk::pango::EllipsizeMode::None
         }

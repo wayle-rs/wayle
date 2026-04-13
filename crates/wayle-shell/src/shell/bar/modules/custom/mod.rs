@@ -1,3 +1,4 @@
+mod dropdown;
 mod factory;
 mod helpers;
 mod messages;
@@ -9,7 +10,7 @@ use std::rc::Rc;
 use gtk::prelude::*;
 use relm4::prelude::*;
 use wayle_config::{
-    ConfigProperty,
+    ClickAction, ConfigProperty,
     schemas::{
         modules::{CustomModuleDefinition, ExecutionMode},
         styling::{ColorValue, CssToken},
@@ -17,22 +18,25 @@ use wayle_config::{
 };
 use wayle_widgets::{
     WatcherToken,
-    prelude::{BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonOutput},
+    prelude::{
+        BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonInput,
+        BarButtonOutput,
+    },
     utils::force_window_resize,
 };
 
+use self::dropdown::CustomDropdownPicker;
 use self::helpers::{ParsedOutput, format_label};
 pub(crate) use self::{
     factory::Factory,
     messages::{CustomCmd, CustomInit, CustomMsg},
 };
-use crate::shell::bar::dropdowns::DropdownRegistry;
+use crate::shell::bar::dropdowns::{self, DropdownRegistry};
 
 pub(crate) struct CustomModule {
     bar_button: Controller<BarButton>,
     definition: CustomModuleDefinition,
     definition_present: bool,
-    #[allow(dead_code)]
     dropdowns: Rc<DropdownRegistry>,
     poller_token: WatcherToken,
     watcher_token: WatcherToken,
@@ -49,6 +53,9 @@ pub(crate) struct CustomModule {
     border_color: ConfigProperty<ColorValue>,
     dynamic_classes: Vec<String>,
     last_output: String,
+    dropdown_popover: Option<gtk::Popover>,
+    dropdown_picker: Option<Controller<CustomDropdownPicker>>,
+    dropdown_load_gen: u64,
 }
 
 #[relm4::component(pub(crate))]
@@ -115,6 +122,19 @@ impl Component for CustomModule {
                 BarButtonOutput::ScrollDown => CustomMsg::ScrollDown,
             });
 
+        // Apply ellipsize mode if non-default.
+        {
+            use wayle_config::schemas::modules::LabelEllipsize;
+            let mode = match definition.label_ellipsize {
+                LabelEllipsize::End => None,
+                LabelEllipsize::Middle => Some(gtk::pango::EllipsizeMode::Middle),
+                LabelEllipsize::Start => Some(gtk::pango::EllipsizeMode::Start),
+            };
+            if let Some(mode) = mode {
+                bar_button.emit(BarButtonInput::SetEllipsize(mode));
+            }
+        }
+
         let custom_modules = &init.config.config().modules.custom;
         let mut poller_token = WatcherToken::new();
         let mut watcher_token = WatcherToken::new();
@@ -151,6 +171,9 @@ impl Component for CustomModule {
             border_color,
             dynamic_classes: Vec::new(),
             last_output: String::new(),
+            dropdown_popover: None,
+            dropdown_picker: None,
+            dropdown_load_gen: 0,
         };
 
         if helpers::should_hide("", model.definition.hide_if_empty) {
@@ -164,18 +187,37 @@ impl Component for CustomModule {
     }
 
     fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
+        // Handle dropdown item selection separately.
+        if let CustomMsg::DropdownItemSelected(selected) = msg {
+            self.handle_dropdown_selection(&sender, &selected);
+            return;
+        }
+
         let is_scroll = matches!(msg, CustomMsg::ScrollUp | CustomMsg::ScrollDown);
 
-        let action_cmd = match msg {
+        let action_str = match msg {
             CustomMsg::LeftClick => &self.definition.left_click,
             CustomMsg::RightClick => &self.definition.right_click,
             CustomMsg::MiddleClick => &self.definition.middle_click,
             CustomMsg::ScrollUp => &self.definition.scroll_up,
             CustomMsg::ScrollDown => &self.definition.scroll_down,
+            CustomMsg::DropdownItemSelected(_) => unreachable!(),
         };
 
-        if !action_cmd.is_empty() {
-            watchers::spawn_action(action_cmd);
+        let action = ClickAction::parse_str(action_str);
+
+        match &action {
+            ClickAction::InlineDropdown => {
+                self.toggle_inline_dropdown(&sender);
+                return;
+            }
+            ClickAction::Dropdown(_) => {
+                dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+            }
+            ClickAction::Shell(_) if !action_str.is_empty() => {
+                watchers::spawn_action(action_str);
+            }
+            _ => {}
         }
 
         let Some(on_action) = &self.definition.on_action else {
@@ -225,6 +267,16 @@ impl Component for CustomModule {
             }
             CustomCmd::DefinitionChanged(boxed_definition) => {
                 self.handle_definition_changed(&sender, root, *boxed_definition);
+            }
+            CustomCmd::DropdownListLoaded {
+                items,
+                active_item,
+                generation,
+            } => {
+                // Discard stale results from a previous load cycle.
+                if generation == self.dropdown_load_gen {
+                    self.show_dropdown_with_items(items, active_item);
+                }
             }
         }
     }
