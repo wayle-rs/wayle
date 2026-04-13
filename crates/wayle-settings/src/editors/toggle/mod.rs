@@ -9,11 +9,12 @@ use relm4::{
 pub(crate) use row::toggle;
 use wayle_config::ConfigProperty;
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct ToggleControl {
     property: ConfigProperty<bool>,
     active: bool,
+    _watcher: WatcherHandle,
 }
 
 #[derive(Debug)]
@@ -54,11 +55,15 @@ impl SimpleComponent for ToggleControl {
         let active = property.get();
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&property, move || {
+        let watcher = spawn_property_watcher(&property, move || {
             input_sender.send(ToggleMsg::Refresh).is_ok()
         });
 
-        let model = Self { property, active };
+        let model = Self {
+            property,
+            active,
+            _watcher: watcher,
+        };
         let widgets = view_output!();
 
         ComponentParts { model, widgets }

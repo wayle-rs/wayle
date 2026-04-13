@@ -12,12 +12,13 @@ pub(crate) use row::{normalized, percentage, scale, signed_normalized};
 use wayle_config::ConfigProperty;
 use wayle_widgets::primitives::slider::DebouncedSlider;
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct SliderControl<T: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<T>,
     slider: DebouncedSlider,
     to_slider: fn(&T) -> f64,
+    _watcher: WatcherHandle,
 }
 
 pub(crate) struct SliderInit<T: Clone + Send + Sync + PartialEq + 'static> {
@@ -76,7 +77,7 @@ where
         );
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&init.property, move || {
+        let watcher = spawn_property_watcher(&init.property, move || {
             input_sender.send(SliderMsg::Refresh).is_ok()
         });
 
@@ -86,6 +87,7 @@ where
             property: init.property,
             slider,
             to_slider: init.to_slider,
+            _watcher: watcher,
         };
 
         ComponentParts { model, widgets: () }

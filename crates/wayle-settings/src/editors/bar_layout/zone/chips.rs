@@ -18,6 +18,9 @@ use super::{
     drag_drop::attach_drag_source,
 };
 
+const GROUP_NAME_WIDTH_CHARS: i32 = 6;
+const GROUP_NAME_MAX_WIDTH_CHARS: i32 = 10;
+
 pub(super) fn build_module_chip(
     module_ref: &ModuleRef,
     card_index: usize,
@@ -27,6 +30,7 @@ pub(super) fn build_module_chip(
 ) -> gtk::Box {
     let chip = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
+        .halign(gtk::Align::Start)
         .build();
     chip.add_css_class("module-chip");
 
@@ -56,13 +60,14 @@ pub(super) fn build_group_chip(
 ) -> gtk::Box {
     let chip = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
+        .halign(gtk::Align::Start)
         .build();
     chip.add_css_class("group-chip");
 
     let name_entry = gtk::Entry::builder()
         .text(&group.name)
-        .width_chars(6)
-        .max_width_chars(10)
+        .width_chars(GROUP_NAME_WIDTH_CHARS)
+        .max_width_chars(GROUP_NAME_MAX_WIDTH_CHARS)
         .hexpand(false)
         .build();
     name_entry.add_css_class("group-name-entry");
@@ -103,6 +108,7 @@ fn build_sub_module_chip(
 ) -> gtk::Box {
     let chip = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
+        .halign(gtk::Align::Start)
         .build();
     chip.add_css_class("module-chip");
 

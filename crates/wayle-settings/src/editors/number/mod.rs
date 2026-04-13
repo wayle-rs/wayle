@@ -11,13 +11,14 @@ use relm4::{
 pub(crate) use row::{number_f64, number_newtype, number_u8, number_u32, number_u64, spacing};
 use wayle_config::ConfigProperty;
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct NumberControl<T: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<T>,
     spin: gtk::SpinButton,
     handler_id: SignalHandlerId,
     to_f64: fn(&T) -> f64,
+    _watcher: WatcherHandle,
 }
 
 pub(crate) struct NumberInit<T: Clone + Send + Sync + PartialEq + 'static> {
@@ -77,7 +78,7 @@ where
         });
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&init.property, move || {
+        let watcher = spawn_property_watcher(&init.property, move || {
             input_sender.send(NumberMsg::Refresh).is_ok()
         });
 
@@ -88,6 +89,7 @@ where
             spin,
             handler_id,
             to_f64: init.to_f64,
+            _watcher: watcher,
         };
 
         ComponentParts { model, widgets: () }

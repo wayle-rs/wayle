@@ -8,7 +8,7 @@ use relm4::{
 pub(crate) use row::file_path;
 use wayle_config::ConfigProperty;
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct FilePickerControl {
     property: ConfigProperty<String>,
@@ -16,6 +16,7 @@ pub(crate) struct FilePickerControl {
     activate_id: SignalHandlerId,
     changed_id: SignalHandlerId,
     dirty_badge: gtk::Label,
+    _watcher: WatcherHandle,
 }
 
 pub(crate) struct FilePickerInit {
@@ -82,7 +83,7 @@ impl SimpleComponent for FilePickerControl {
         });
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&init.property, move || {
+        let watcher = spawn_property_watcher(&init.property, move || {
             input_sender.send(FilePickerMsg::Refresh).is_ok()
         });
 
@@ -95,6 +96,7 @@ impl SimpleComponent for FilePickerControl {
             activate_id,
             changed_id,
             dirty_badge: init.dirty_badge,
+            _watcher: watcher,
         };
 
         ComponentParts { model, widgets: () }

@@ -21,7 +21,7 @@ use wayle_config::{
 };
 use wayle_i18n::t;
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 thread_local! {
     static SWATCH_PROVIDER: RefCell<Option<SwatchStyles>> = const { RefCell::new(None) };
@@ -37,6 +37,7 @@ pub(crate) struct ThemeSelectorControl {
     palette: PaletteConfig,
     popover: gtk::Popover,
     list_box: gtk::ListBox,
+    _watcher: WatcherHandle,
 }
 
 pub(crate) struct ThemeSelectorInit {
@@ -114,7 +115,7 @@ impl SimpleComponent for ThemeSelectorControl {
         populate_list(&list_box, &init.available.get(), &sender);
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&init.available, move || {
+        let watcher = spawn_property_watcher(&init.available, move || {
             input_sender.send(ThemeSelectorMsg::RebuildList).is_ok()
         });
 
@@ -128,6 +129,7 @@ impl SimpleComponent for ThemeSelectorControl {
             palette: init.palette,
             popover,
             list_box,
+            _watcher: watcher,
         };
 
         ComponentParts { model, widgets: () }

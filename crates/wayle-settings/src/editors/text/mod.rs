@@ -12,7 +12,7 @@ use wayle_config::{
     schemas::{modules::PopupMonitor, osd::OsdMonitor},
 };
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) trait TextLike: Clone + Send + Sync + PartialEq + 'static {
     fn to_entry_text(&self) -> String;
@@ -93,6 +93,7 @@ pub(crate) struct TextControl<T: TextLike> {
     entry: gtk::Entry,
     activate_id: SignalHandlerId,
     changed_id: SignalHandlerId,
+    _watcher: WatcherHandle,
 }
 
 pub(crate) struct TextInit<T: TextLike> {
@@ -144,7 +145,7 @@ impl<T: TextLike> SimpleComponent for TextControl<T> {
         });
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&init.property, move || {
+        let watcher = spawn_property_watcher(&init.property, move || {
             input_sender.send(TextMsg::Refresh).is_ok()
         });
 
@@ -155,6 +156,7 @@ impl<T: TextLike> SimpleComponent for TextControl<T> {
             entry,
             activate_id,
             changed_id,
+            _watcher: watcher,
         };
 
         ComponentParts { model, widgets: () }

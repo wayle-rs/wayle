@@ -13,11 +13,12 @@ use wayle_config::{
 };
 use wayle_i18n::t;
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct MonitorWallpaperControl {
     property: ConfigProperty<Vec<MonitorWallpaperConfig>>,
     cards: FactoryVecDeque<MonitorCard>,
+    _watcher: WatcherHandle,
 }
 
 #[derive(Debug)]
@@ -88,14 +89,18 @@ impl SimpleComponent for MonitorWallpaperControl {
         });
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&property, move || {
+        let watcher = spawn_property_watcher(&property, move || {
             input_sender.send(MonitorWallpaperMsg::Refresh).is_ok()
         });
 
         root.append(&card_list);
         root.append(&add_button);
 
-        let model = Self { property, cards };
+        let model = Self {
+            property,
+            cards,
+            _watcher: watcher,
+        };
 
         ComponentParts { model, widgets: () }
     }

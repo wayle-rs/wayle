@@ -32,6 +32,13 @@ pub(super) fn attach(
 
     let search = gtk::SearchEntry::new();
     search.set_placeholder_text(Some(&t("settings-layout-search")));
+    search.set_valign(gtk::Align::Center);
+
+    if let Some(icon) = search.first_child() {
+        icon.set_halign(gtk::Align::Center);
+        icon.set_valign(gtk::Align::Center);
+        icon.add_css_class("module-picker-search-icon");
+    }
 
     let list = gtk::ListBox::new();
     list.add_css_class("module-picker-list");
@@ -59,7 +66,7 @@ pub(super) fn attach(
     let filter_custom = Rc::clone(&custom_modules);
 
     search.connect_search_changed(move |search_entry| {
-        let query = search_entry.text().to_string().to_lowercase();
+        let query = search_entry.text().to_lowercase();
         populate_list(
             &filter_list,
             &query,

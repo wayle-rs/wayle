@@ -1,47 +1,54 @@
 //! Top-level settings window. Owns the page stack, sidebar, and CSS provider.
 
 mod css;
+mod methods;
+mod reset;
 pub(crate) mod sourceview_scheme;
 mod watchers;
+mod window;
 
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use relm4::{
     gtk::{CssProvider, StackTransitionType, prelude::*},
     prelude::*,
 };
-use tracing::{info, warn};
+use tracing::warn;
 use wayle_config::{Config, ConfigService};
 use wayle_i18n::t;
 use wayle_icons::IconRegistry;
 use wayle_widgets::primitives::confirm_modal::{
-    ConfirmModal, ConfirmModalConfig, ConfirmModalMsg, ConfirmModalOutput, ConfirmStyle, ModalIcon,
+    ConfirmModal, ConfirmModalConfig, ConfirmModalMsg, ConfirmStyle, ModalIcon,
 };
 
 use self::{
     css::{build_css, load_css},
+    reset::{build_confirm_modal, perform_reset_all},
     sourceview_scheme::update_wayle_scheme,
+    window::{build_content_overlay, setup_paned_clamp},
 };
 use crate::{
     pages::{
-        bar, general, modules, nav::LeafEntry, notifications, osd, page::SettingsPage, styling,
-        wallpaper,
+        nav::{NavSectionLayout, PageFactory, layout},
+        page::SettingsPage,
     },
     sidebar::{NavItem, NavSection, Sidebar, SidebarInit, SidebarOutput},
 };
 
 const DEFAULT_SIDEBAR_WIDTH: i32 = 220;
-const MAX_SIDEBAR_REM: f64 = 25.0;
-const BASE_PX_PER_REM: f64 = 16.0;
+const DEFAULT_WINDOW_WIDTH: i32 = 900;
+const DEFAULT_WINDOW_HEIGHT: i32 = 650;
+const STACK_TRANSITION_DURATION_MS: u32 = 100;
+const INITIAL_PAGE_ID: &str = "general";
 
-#[allow(dead_code)]
 pub(crate) struct SettingsApp {
-    config_service: Arc<ConfigService>,
-    css_provider: CssProvider,
-    stack: gtk::Stack,
-    pages: Vec<Controller<SettingsPage>>,
-    sidebar: Controller<Sidebar>,
-    confirm_modal: Controller<ConfirmModal>,
+    pub(super) config_service: Arc<ConfigService>,
+    pub(super) css_provider: CssProvider,
+    pub(super) stack: gtk::Stack,
+    pub(super) factories: HashMap<&'static str, PageFactory>,
+    pub(super) current_page: Option<(&'static str, Controller<SettingsPage>)>,
+    _sidebar: Controller<Sidebar>,
+    pub(super) confirm_modal: Controller<ConfirmModal>,
 }
 
 #[derive(Debug)]
@@ -51,7 +58,6 @@ pub(crate) enum SettingsAppMsg {
     PageSelected(&'static str),
     ConfirmResetAll,
     ExecuteResetAll,
-    #[allow(dead_code)]
     Noop,
 }
 
@@ -71,7 +77,7 @@ impl Component for SettingsApp {
         gtk::Window {
             set_title: Some(&t("settings-title")),
             add_css_class: "settings-window",
-            set_default_size: (900, 650),
+            set_default_size: (DEFAULT_WINDOW_WIDTH, DEFAULT_WINDOW_HEIGHT),
 
             #[name = "paned"]
             gtk::Paned {
@@ -103,7 +109,8 @@ impl Component for SettingsApp {
 
         let config = config_service.config();
         update_wayle_scheme(&config.styling.palette);
-        let (sidebar, stack, pages) = build_pages(config, &sender);
+
+        let (sidebar, stack, factories) = build_nav_and_factories(config, &sender);
 
         widgets.paned.set_start_child(Some(sidebar.widget()));
         widgets
@@ -113,14 +120,17 @@ impl Component for SettingsApp {
         setup_paned_clamp(&widgets.paned, config);
         let confirm_modal = build_confirm_modal(&sender);
 
-        let model = Self {
+        let mut model = Self {
             config_service,
             css_provider,
             stack,
-            pages,
-            sidebar,
+            factories,
+            current_page: None,
+            _sidebar: sidebar,
             confirm_modal,
         };
+
+        model.show_page(INITIAL_PAGE_ID);
 
         ComponentParts { model, widgets }
     }
@@ -139,7 +149,7 @@ impl Component for SettingsApp {
             }
 
             SettingsAppMsg::PageSelected(id) => {
-                self.stack.set_visible_child_name(id);
+                self.show_page(id);
             }
 
             SettingsAppMsg::ConfirmResetAll => {
@@ -176,45 +186,20 @@ impl Component for SettingsApp {
     }
 }
 
-fn build_pages(
+fn build_nav_and_factories(
     config: &Config,
     sender: &ComponentSender<SettingsApp>,
 ) -> (
     Controller<Sidebar>,
     gtk::Stack,
-    Vec<Controller<SettingsPage>>,
+    HashMap<&'static str, PageFactory>,
 ) {
-    let theme_entry = styling::entry(config);
-    let wallpaper_entry = wallpaper::entry(config);
-    let bar_entries = bar::entries(config);
-    let notifications_entry = notifications::entry(config);
-    let osd_entry = osd::entry(config);
-    let general_entry = general::entry(config);
+    let mut factories = HashMap::new();
+    let mut nav_sections = Vec::new();
 
-    let module_entries = modules::all_entries(config);
-
-    let nav_sections = vec![
-        NavSection {
-            i18n_key: "settings-nav-system",
-            items: vec![leaf_nav(&general_entry)],
-        },
-        NavSection {
-            i18n_key: "settings-nav-appearance",
-            items: vec![leaf_nav(&theme_entry), leaf_nav(&wallpaper_entry)],
-        },
-        NavSection {
-            i18n_key: "settings-nav-bar-section",
-            items: bar_entries.iter().map(leaf_nav).collect(),
-        },
-        NavSection {
-            i18n_key: "settings-nav-overlays",
-            items: vec![leaf_nav(&notifications_entry), leaf_nav(&osd_entry)],
-        },
-        NavSection {
-            i18n_key: "settings-nav-modules",
-            items: module_entries.iter().map(leaf_nav).collect(),
-        },
-    ];
+    for section in layout() {
+        nav_sections.push(build_nav_section(config, section, &mut factories));
+    }
 
     let sidebar = Sidebar::builder()
         .launch(SidebarInit {
@@ -225,91 +210,45 @@ fn build_pages(
             SidebarOutput::ResetAllRequested => SettingsAppMsg::ConfirmResetAll,
         });
 
+    let stack = build_stack();
+
+    (sidebar, stack, factories)
+}
+
+fn build_nav_section(
+    config: &Config,
+    section: NavSectionLayout,
+    factories: &mut HashMap<&'static str, PageFactory>,
+) -> NavSection {
+    let mut items = Vec::with_capacity(section.factories.len());
+
+    for factory in section.factories {
+        let entry = factory(config);
+        if factories.insert(entry.id, factory).is_some() {
+            warn!(
+                page_id = entry.id,
+                "duplicate page id, replacing previous factory"
+            );
+        }
+
+        items.push(NavItem {
+            id: entry.id,
+            i18n_key: entry.i18n_key,
+            icon: entry.icon,
+        });
+    }
+
+    NavSection {
+        i18n_key: section.i18n_key,
+        items,
+    }
+}
+
+fn build_stack() -> gtk::Stack {
     let stack = gtk::Stack::new();
     stack.set_transition_type(StackTransitionType::Crossfade);
+    stack.set_transition_duration(STACK_TRANSITION_DURATION_MS);
     stack.set_hexpand(true);
     stack.set_vexpand(true);
-
-    let mut pages = Vec::new();
-
-    for entry in [
-        general_entry,
-        theme_entry,
-        wallpaper_entry,
-        notifications_entry,
-        osd_entry,
-    ] {
-        let page = SettingsPage::builder().launch(entry.spec).detach();
-        stack.add_named(page.widget(), Some(entry.id));
-        pages.push(page);
-    }
-
-    for entry in bar_entries {
-        let page = SettingsPage::builder().launch(entry.spec).detach();
-        stack.add_named(page.widget(), Some(entry.id));
-        pages.push(page);
-    }
-
-    for entry in module_entries {
-        let page = SettingsPage::builder().launch(entry.spec).detach();
-        stack.add_named(page.widget(), Some(entry.id));
-        pages.push(page);
-    }
-
-    (sidebar, stack, pages)
-}
-
-fn leaf_nav(entry: &LeafEntry) -> NavItem {
-    NavItem {
-        id: entry.id,
-        i18n_key: entry.i18n_key,
-        icon: entry.icon,
-    }
-}
-
-fn build_content_overlay(stack: &gtk::Stack, window: &gtk::Window) -> gtk::Overlay {
-    let close_button = gtk::Button::from_icon_name("ld-x-symbolic");
-    close_button.add_css_class("settings-close");
-    close_button.set_cursor_from_name(Some("pointer"));
-    close_button.set_valign(gtk::Align::Start);
-    close_button.set_halign(gtk::Align::End);
-    close_button.set_tooltip_text(Some(&t("settings-close")));
-
-    let window_ref = window.clone();
-    close_button.connect_clicked(move |_| window_ref.close());
-
-    let overlay = gtk::Overlay::new();
-    overlay.set_child(Some(stack));
-    overlay.add_overlay(&close_button);
-
-    overlay
-}
-
-fn setup_paned_clamp(paned: &gtk::Paned, config: &Config) {
-    let scale_property = config.styling.scale.clone();
-
-    paned.connect_position_notify(move |paned| {
-        let scale = scale_property.get().value() as f64;
-        let max_width = (MAX_SIDEBAR_REM * BASE_PX_PER_REM * scale).round() as i32;
-
-        if paned.position() > max_width {
-            paned.set_position(max_width);
-        }
-    });
-}
-
-fn build_confirm_modal(sender: &ComponentSender<SettingsApp>) -> Controller<ConfirmModal> {
-    ConfirmModal::builder()
-        .launch(())
-        .forward(sender.input_sender(), |output| match output {
-            ConfirmModalOutput::Confirmed => SettingsAppMsg::ExecuteResetAll,
-            ConfirmModalOutput::Cancelled => SettingsAppMsg::Noop,
-        })
-}
-
-fn perform_reset_all(config_service: &ConfigService) {
-    match config_service.reset_all_runtime() {
-        Ok(()) => info!("all runtime overrides cleared"),
-        Err(err) => warn!(error = %err, "reset-all partially failed"),
-    }
+    stack
 }

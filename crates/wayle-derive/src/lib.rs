@@ -123,15 +123,14 @@ pub fn derive_enum_variants(input: TokenStream) -> TokenStream {
     enum_variants::derive(input)
 }
 
-/// Loads config.toml values into each field's config layer by matching
-/// serde-renamed keys in the incoming TOML table.
+/// Derives [`ApplyConfigLayer`], loading config.toml values into each field's
+/// config layer by matching serde-renamed TOML keys.
 ///
-///
-/// For a struct with #[serde(rename = "font-sans")] on font_sans,
-/// the generated impl does:
 /// ```ignore
-/// if let Some(val) = table.get("font-sans") {
-///     self.font_sans.apply_config_layer(val, "general.font-sans");
+/// #[derive(ApplyConfigLayer)]
+/// pub struct ClockConfig {
+///     #[serde(rename = "format")]
+///     pub format: ConfigProperty<String>,
 /// }
 /// ```
 #[proc_macro_derive(ApplyConfigLayer, attributes(wayle))]
@@ -149,12 +148,14 @@ pub fn derive_apply_runtime_layer(input: TokenStream) -> TokenStream {
     derives::apply_runtime_layer(input)
 }
 
-/// Serializes all runtime overrides into a sparse TOML table for writing
-/// back to runtime.toml. Fields without overrides are omitted.
+/// Derives [`ExtractRuntimeValues`], serializing all runtime overrides into a
+/// sparse TOML table for writing back to runtime.toml. Fields without
+/// overrides are omitted.
 ///
 /// ```ignore
-/// if let Some(value) = self.font_sans.extract_runtime_values() {
-///     table.insert("font-sans", value);
+/// #[derive(ExtractRuntimeValues)]
+/// pub struct ClockConfig {
+///     pub format: ConfigProperty<String>,
 /// }
 /// ```
 #[proc_macro_derive(ExtractRuntimeValues, attributes(wayle))]
@@ -162,13 +163,9 @@ pub fn derive_extract_runtime_values(input: TokenStream) -> TokenStream {
     derives::extract_runtime_values(input)
 }
 
-/// Part of the hot-reload cycle: quietly clears config layer values so
-/// fresh ones can be re-applied without triggering watchers mid-reload.
-///
-/// ```ignore
-/// self.font_sans.reset_config_layer();
-/// self.tearing_mode.reset_config_layer();
-/// ```
+/// Derives [`ResetConfigLayer`], clearing each field's config layer without
+/// firing watchers. Used mid hot-reload so stale values are gone before
+/// fresh ones get applied.
 #[proc_macro_derive(ResetConfigLayer, attributes(wayle))]
 pub fn derive_reset_config_layer(input: TokenStream) -> TokenStream {
     derives::simple_field_walk(input, "ResetConfigLayer", "reset_config_layer")
@@ -183,35 +180,33 @@ pub fn derive_reset_runtime_layer(input: TokenStream) -> TokenStream {
     derives::simple_field_walk(input, "ResetRuntimeLayer", "reset_runtime_layer")
 }
 
-/// Final step of the hot-reload cycle: recomputes effective values from
-/// both layers and fires watcher notifications for anything that changed.
-///
-/// ```ignore
-/// self.font_sans.commit_config_reload();
-/// self.tearing_mode.commit_config_reload();
-/// ```
+/// Derives [`CommitConfigReload`], the final step of the hot-reload cycle:
+/// recomputes effective values from both layers and fires watcher
+/// notifications for anything that changed.
 #[proc_macro_derive(CommitConfigReload, attributes(wayle))]
 pub fn derive_commit_config_reload(input: TokenStream) -> TokenStream {
     derives::simple_field_walk(input, "CommitConfigReload", "commit_config_reload")
 }
 
-/// Bulk "reset to defaults" action. Drops the runtime layer on every
-/// property and forces a watcher notification even if the effective value
-/// didn't change. The naive path (reset + commit) deduplicates identical
-/// values, leaving subscribers (source badges, persistence) thinking
-/// nothing changed.
+/// Derives [`ClearAllRuntime`], clearing the runtime override on every field
+/// and forcing a watcher notification even when the effective value is
+/// unchanged. Needed for "reset all" actions where subscribers must see the
+/// clear regardless of value equality.
 #[proc_macro_derive(ClearAllRuntime, attributes(wayle))]
 pub fn derive_clear_all_runtime(input: TokenStream) -> TokenStream {
     derives::simple_field_walk(input, "ClearAllRuntime", "clear_all_runtime")
 }
 
-/// Wires up an `mpsc::UnboundedSender<()>` to every field so any property
-/// change sends a signal. Used by `PersistenceWatcher` to know when to
-/// save, and by page-level watchers to refresh the settings UI.
+/// Derives [`SubscribeChanges`], forwarding a `()` on `tx` whenever any
+/// field's effective config value changes. Resetting a runtime override also
+/// fires, even when the resulting value is unchanged.
 ///
 /// ```ignore
-/// self.font_sans.subscribe_changes(tx.clone());
-/// self.tearing_mode.subscribe_changes(tx.clone());
+/// let (tx, mut rx) = mpsc::unbounded_channel();
+/// config.subscribe_changes(tx);
+/// while rx.recv().await.is_some() {
+///     // a field changed
+/// }
 /// ```
 #[proc_macro_derive(SubscribeChanges, attributes(wayle))]
 pub fn derive_subscribe_changes(input: TokenStream) -> TokenStream {

@@ -50,7 +50,7 @@ pub struct ConfigProperty<T: Clone + Send + Sync + PartialEq + 'static> {
 }
 
 impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
-    /// Property with no i18n key (internal fields, non-GUI properties).
+    /// Creates a property with the given default value and no i18n key.
     pub fn new(default: T) -> Self {
         let effective = Property::new(default.clone());
         Self {
@@ -62,7 +62,8 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
         }
     }
 
-    /// Property with a fluent key for the settings GUI label and description.
+    /// Creates a property bound to a Fluent key for the settings GUI label
+    /// and description.
     pub fn with_i18n_key(default: T, key: &'static str) -> Self {
         let effective = Property::new(default.clone());
         Self {
@@ -117,7 +118,6 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
     }
 
     /// Sets a runtime override and immediately notifies watchers.
-    /// This is the interactive path (GUI controls, CLI set).
     pub fn set(&self, value: T) {
         if let Ok(mut guard) = self.runtime.write() {
             *guard = Some(value);
@@ -125,9 +125,8 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
         self.flush();
     }
 
-    /// Removes the runtime override and notifies watchers even if the
-    /// effective value stays the same (so PersistenceWatcher cleans up
-    /// the runtime.toml entry).
+    /// Removes the runtime override and always notifies watchers, even when
+    /// the effective value is unchanged.
     pub fn clear_runtime(&self) {
         if let Ok(mut guard) = self.runtime.write() {
             *guard = None;

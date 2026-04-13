@@ -8,10 +8,6 @@ use wayle_config::Config;
 
 use super::nav::LeafEntry;
 
-pub(crate) fn entries(config: &Config) -> Vec<LeafEntry> {
-    vec![
-        general::entry(config),
-        button::entry(config),
-        dropdown::entry(config),
-    ]
+pub(crate) fn factories() -> Vec<fn(&Config) -> LeafEntry> {
+    vec![general::entry, button::entry, dropdown::entry]
 }

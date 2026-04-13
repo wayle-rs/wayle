@@ -24,19 +24,34 @@ use relm4::{
 use wayle_config::ConfigProperty;
 use wayle_i18n::t;
 
+/// Handle whose `Drop` impl calls [`glib::JoinHandle::abort`] on the
+/// underlying watcher future.
+///
+/// The watcher loop awaits `stream.next().await`, which only yields when
+/// the property value changes. While the config is idle, the callback
+/// never runs, so `callback() -> false` can't end the loop on its own.
+/// Holding this handle keeps the future alive; dropping it aborts the future.
+#[must_use = "discarding the handle aborts the watcher subscription"]
+pub(crate) struct WatcherHandle(glib::JoinHandle<()>);
+
+impl Drop for WatcherHandle {
+    fn drop(&mut self) {
+        self.0.abort();
+    }
+}
+
 /// Invokes `callback` on every property change after the initial emission.
 ///
-/// `ConfigProperty::watch` sends a snapshot on subscribe; we swallow it so
-/// editors don't re-emit `Refresh` during init. When `callback` returns
-/// `false` the subscription is dropped, so the watch doesn't outlive the
-/// owning component.
+/// `ConfigProperty::watch` yields the current value on subscribe; we swallow
+/// it so editors don't re-emit `Refresh` during init. Dropping the returned
+/// [`WatcherHandle`] aborts the future.
 pub(super) fn spawn_property_watcher<T: Clone + Send + Sync + PartialEq + 'static>(
     property: &ConfigProperty<T>,
     callback: impl Fn() -> bool + 'static,
-) {
+) -> WatcherHandle {
     let mut stream = property.watch();
 
-    glib::spawn_future_local(async move {
+    let handle = glib::spawn_future_local(async move {
         stream.next().await;
 
         while stream.next().await.is_some() {
@@ -45,6 +60,8 @@ pub(super) fn spawn_property_watcher<T: Clone + Send + Sync + PartialEq + 'stati
             }
         }
     });
+
+    WatcherHandle(handle)
 }
 
 pub(crate) fn make_dirty_badge() -> gtk::Label {

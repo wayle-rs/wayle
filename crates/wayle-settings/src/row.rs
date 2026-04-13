@@ -10,6 +10,7 @@ use wayle_config::ValueSource;
 use wayle_i18n::{t, t_attr};
 
 use crate::{
+    editors::WatcherHandle,
     pages::spec::{Keepalive, SettingRowInit},
     property_handle::PropertyHandle,
 };
@@ -38,6 +39,7 @@ pub(crate) struct SettingRow {
     behavior: RowBehavior,
     #[allow(dead_code)]
     keepalive: Keepalive,
+    _watcher: Option<WatcherHandle>,
 }
 
 #[derive(Debug)]
@@ -144,7 +146,7 @@ impl SimpleComponent for SettingRow {
         let label = t(i18n_key);
         let description = t_attr(i18n_key, "description");
 
-        let watcher = init.handle.watch_changes.take();
+        let watch_fn = init.handle.watch_changes.take();
 
         let mut model = Self {
             handle: init.handle,
@@ -156,6 +158,7 @@ impl SimpleComponent for SettingRow {
             behavior: init.behavior,
             config_matches_default: true,
             keepalive: init.keepalive,
+            _watcher: None,
         };
 
         model.update_source_info();
@@ -174,11 +177,11 @@ impl SimpleComponent for SettingRow {
             widgets.label_row.append(&widgets.reset_button);
         }
 
-        if let Some(watch) = watcher {
+        if let Some(watch) = watch_fn {
             let sender = sender.input_sender().clone();
-            watch(Box::new(move || {
+            model._watcher = Some(watch(Box::new(move || {
                 sender.send(SettingRowMsg::Refresh).is_ok()
-            }));
+            })));
         }
 
         ComponentParts { model, widgets }

@@ -16,7 +16,7 @@ use wayle_config::{
 use wayle_i18n::t;
 use zone::{DragPayload, DropLocation};
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct BarLayoutInit {
     pub(crate) property: ConfigProperty<Vec<BarLayout>>,
@@ -27,6 +27,7 @@ pub(crate) struct BarLayoutControl {
     property: ConfigProperty<Vec<BarLayout>>,
     custom_modules: ConfigProperty<Vec<CustomModuleDefinition>>,
     cards: FactoryVecDeque<LayoutCard>,
+    _watcher: WatcherHandle,
 }
 
 #[derive(Debug)]
@@ -102,7 +103,7 @@ impl SimpleComponent for BarLayoutControl {
         });
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&init.property, move || {
+        let watcher = spawn_property_watcher(&init.property, move || {
             input_sender.send(BarLayoutMsg::Refresh).is_ok()
         });
 
@@ -113,6 +114,7 @@ impl SimpleComponent for BarLayoutControl {
             property: init.property,
             custom_modules: init.custom_modules,
             cards,
+            _watcher: watcher,
         };
 
         ComponentParts { model, widgets: () }

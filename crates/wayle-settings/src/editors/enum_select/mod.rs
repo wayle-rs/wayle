@@ -14,13 +14,14 @@ use serde::{
 use wayle_config::{ConfigProperty, EnumVariant, EnumVariants};
 use wayle_i18n::t;
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct EnumSelectControl<E: Clone + Send + Sync + PartialEq + 'static> {
     property: ConfigProperty<E>,
     selected: u32,
     dropdown: gtk::DropDown,
     handler_id: SignalHandlerId,
+    _watcher: WatcherHandle,
 }
 
 #[derive(Debug)]
@@ -89,7 +90,7 @@ where
         });
 
         let watcher_sender = sender.input_sender().clone();
-        spawn_property_watcher(&property, move || {
+        let watcher = spawn_property_watcher(&property, move || {
             watcher_sender.send(EnumSelectMsg::Refresh).is_ok()
         });
 
@@ -100,6 +101,7 @@ where
             selected: current_index,
             dropdown,
             handler_id,
+            _watcher: watcher,
         };
 
         ComponentParts { model, widgets: () }

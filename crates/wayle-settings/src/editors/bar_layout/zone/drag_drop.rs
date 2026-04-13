@@ -6,6 +6,7 @@ use relm4::{
     gtk,
     gtk::{gdk, glib},
 };
+use tracing::warn;
 
 use super::{
     super::card::{LayoutCard, LayoutCardOutput},
@@ -62,7 +63,7 @@ pub(super) fn attach_drag_source(
 }
 
 pub(super) fn attach_drop_target(
-    chips_box: &gtk::Box,
+    chips_box: &gtk::FlowBox,
     card_index: usize,
     zone: ZoneId,
     sender: &FactorySender<LayoutCard>,
@@ -71,8 +72,8 @@ pub(super) fn attach_drop_target(
 
     let motion_box = chips_box.clone();
 
-    drop.connect_motion(move |_target, x, _y| {
-        let position = compute_drop_position(&motion_box, x);
+    drop.connect_motion(move |_target, x, y| {
+        let position = compute_drop_position(&motion_box, x, y);
         clear_drop_highlight(&motion_box);
         highlight_drop_position(&motion_box, position);
         gdk::DragAction::MOVE
@@ -87,18 +88,23 @@ pub(super) fn attach_drop_target(
     let drop_box = chips_box.clone();
     let drop_sender = sender.output_sender().clone();
 
-    drop.connect_drop(move |_target, value, x, _y| {
+    drop.connect_drop(move |_target, value, x, y| {
         clear_drop_highlight(&drop_box);
 
-        let Ok(payload_str) = value.get::<String>() else {
-            return false;
+        let payload_str = match value.get::<String>() {
+            Ok(payload) => payload,
+            Err(err) => {
+                warn!(error = %err, "drop payload was not a string");
+                return false;
+            }
         };
 
         let Some(from) = DragPayload::decode(&payload_str) else {
+            warn!(payload = %payload_str, "cannot decode drop payload");
             return false;
         };
 
-        let position = compute_drop_position(&drop_box, x);
+        let position = compute_drop_position(&drop_box, x, y);
 
         let to = DropLocation {
             card_index,
@@ -113,58 +119,68 @@ pub(super) fn attach_drop_target(
     chips_box.add_controller(drop);
 }
 
-fn compute_drop_position(container: &gtk::Box, drop_x: f64) -> usize {
-    let mut position = 0;
-    let mut child = container.first_child();
+fn flow_children(container: &gtk::FlowBox) -> Vec<gtk::FlowBoxChild> {
+    let mut children = Vec::new();
+    let mut index = 0;
 
-    while let Some(widget) = child {
-        let Some(bounds) = widget.compute_bounds(container) else {
-            child = widget.next_sibling();
-            continue;
+    while let Some(child) = container.child_at_index(index) {
+        children.push(child);
+        index += 1;
+    }
+
+    children
+}
+
+fn compute_drop_position(container: &gtk::FlowBox, drop_x: f64, drop_y: f64) -> usize {
+    let children = flow_children(container);
+
+    if let Some(hit) = container.child_at_pos(drop_x as i32, drop_y as i32) {
+        let hit_index = hit.index() as usize;
+        let Some(bounds) = hit.compute_bounds(container) else {
+            return hit_index;
         };
 
         let center_x = f64::from(bounds.x() + bounds.width() / 2.0);
-
         if drop_x < center_x {
-            return position;
+            return hit_index;
         }
-
-        position += 1;
-        child = widget.next_sibling();
+        return hit_index + 1;
     }
 
-    position
+    let mut row_last: Option<usize> = None;
+
+    for (index, child) in children.iter().enumerate() {
+        let Some(bounds) = child.compute_bounds(container) else {
+            continue;
+        };
+
+        let row_top = f64::from(bounds.y());
+        let row_bottom = f64::from(bounds.y() + bounds.height());
+
+        if drop_y < row_top || drop_y > row_bottom {
+            continue;
+        }
+
+        row_last = Some(index);
+    }
+
+    row_last.map_or(children.len(), |index| index + 1)
 }
 
-fn highlight_drop_position(container: &gtk::Box, position: usize) {
-    let mut index = 0;
-    let mut child = container.first_child();
-    let mut last_child: Option<gtk::Widget> = None;
+fn highlight_drop_position(container: &gtk::FlowBox, position: usize) {
+    let children = flow_children(container);
 
-    while let Some(widget) = child {
-        if index == position {
-            widget.add_css_class("drop-before");
-        }
-
-        last_child = Some(widget.clone());
-        index += 1;
-        child = widget.next_sibling();
-    }
-
-    if position >= index
-        && let Some(last) = last_child
-    {
+    if let Some(target) = children.get(position) {
+        target.add_css_class("drop-before");
+    } else if let Some(last) = children.last() {
         last.add_css_class("drop-after");
     }
 }
 
-fn clear_drop_highlight(container: &gtk::Box) {
-    let mut child = container.first_child();
-
-    while let Some(widget) = child {
-        widget.remove_css_class("drop-before");
-        widget.remove_css_class("drop-after");
-        child = widget.next_sibling();
+fn clear_drop_highlight(container: &gtk::FlowBox) {
+    for child in flow_children(container) {
+        child.remove_css_class("drop-before");
+        child.remove_css_class("drop-after");
     }
 }
 

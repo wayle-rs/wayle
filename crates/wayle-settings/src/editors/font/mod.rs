@@ -8,12 +8,13 @@ use relm4::{
 pub(crate) use row::font;
 use wayle_config::ConfigProperty;
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct FontControl {
     property: ConfigProperty<String>,
     button: gtk::FontDialogButton,
     handler_id: SignalHandlerId,
+    _watcher: WatcherHandle,
 }
 
 #[derive(Debug)]
@@ -61,7 +62,7 @@ impl SimpleComponent for FontControl {
         });
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&property, move || {
+        let watcher = spawn_property_watcher(&property, move || {
             input_sender.send(FontMsg::Refresh).is_ok()
         });
 
@@ -71,6 +72,7 @@ impl SimpleComponent for FontControl {
             property,
             button,
             handler_id,
+            _watcher: watcher,
         };
 
         ComponentParts { model, widgets: () }

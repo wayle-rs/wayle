@@ -8,12 +8,13 @@ use relm4::{
 pub(crate) use row::color;
 use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct ColorControl {
     property: ConfigProperty<HexColor>,
     button: gtk::ColorDialogButton,
     handler_id: SignalHandlerId,
+    _watcher: WatcherHandle,
 }
 
 #[derive(Debug)]
@@ -59,7 +60,7 @@ impl SimpleComponent for ColorControl {
         });
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&property, move || {
+        let watcher = spawn_property_watcher(&property, move || {
             input_sender.send(ColorMsg::Refresh).is_ok()
         });
 
@@ -69,6 +70,7 @@ impl SimpleComponent for ColorControl {
             property,
             button,
             handler_id,
+            _watcher: watcher,
         };
 
         ComponentParts { model, widgets: () }

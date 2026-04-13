@@ -31,9 +31,9 @@ pub(super) struct LayoutCard {
     monitor_entry: gtk::Entry,
     extends_entry: gtk::Entry,
     body: gtk::Box,
-    left_flow: gtk::Box,
-    center_flow: gtk::Box,
-    right_flow: gtk::Box,
+    left_flow: gtk::FlowBox,
+    center_flow: gtk::FlowBox,
+    right_flow: gtk::FlowBox,
 }
 
 pub(super) struct LayoutCardInit {
@@ -81,7 +81,7 @@ impl LayoutCard {
         }
     }
 
-    fn zone_flow(&self, zone: ZoneId) -> &gtk::Box {
+    fn zone_flow(&self, zone: ZoneId) -> &gtk::FlowBox {
         match zone {
             ZoneId::Left => &self.left_flow,
             ZoneId::Center => &self.center_flow,
@@ -249,9 +249,9 @@ impl FactoryComponent for LayoutCard {
             monitor_entry: gtk::Entry::new(),
             extends_entry: gtk::Entry::new(),
             body: gtk::Box::new(gtk::Orientation::Vertical, 0),
-            left_flow: gtk::Box::new(gtk::Orientation::Horizontal, 0),
-            center_flow: gtk::Box::new(gtk::Orientation::Horizontal, 0),
-            right_flow: gtk::Box::new(gtk::Orientation::Horizontal, 0),
+            left_flow: gtk::FlowBox::new(),
+            center_flow: gtk::FlowBox::new(),
+            right_flow: gtk::FlowBox::new(),
         }
     }
 

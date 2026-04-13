@@ -99,8 +99,8 @@ pub trait CommitConfigReload {
 /// Drops every runtime override in the tree, notifying watchers even when
 /// the effective value is unchanged.
 pub trait ClearAllRuntime {
-    /// Clears the runtime layer on every property and forces a change
-    /// notification for each one.
+    /// Drops every runtime override and fires watcher notifications
+    /// unconditionally, even for fields whose effective value is unchanged.
     fn clear_all_runtime(&self);
 }
 

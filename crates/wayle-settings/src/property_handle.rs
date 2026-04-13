@@ -6,9 +6,9 @@ use std::sync::Arc;
 
 use wayle_config::{ConfigProperty, ValueSource};
 
-use crate::editors::spawn_property_watcher;
+use crate::editors::{WatcherHandle, spawn_property_watcher};
 
-pub(crate) type WatchCallback = Box<dyn FnOnce(Box<dyn Fn() -> bool + 'static>)>;
+pub(crate) type WatchCallback = Box<dyn FnOnce(Box<dyn Fn() -> bool + 'static>) -> WatcherHandle>;
 
 pub(crate) struct PropertyHandle {
     pub(crate) source: Box<dyn Fn() -> ValueSource>,
@@ -46,7 +46,7 @@ impl PropertyHandle {
             default_display: Box::new(move || default_display_fn(default_prop.default())),
 
             watch_changes: Some(Box::new(move |callback| {
-                spawn_property_watcher(&watch_prop, callback);
+                spawn_property_watcher(&watch_prop, callback)
             })),
         }
     }

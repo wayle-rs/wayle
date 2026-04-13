@@ -9,10 +9,8 @@ use crate::{
     validate_named_struct,
 };
 
-/// Generates `ApplyConfigLayer`. When config.toml is loaded, the parsed
-/// TOML table lands here. Each field gets its value by looking up the
-/// serde-renamed key (e.g. `inset-edge` for `inset_edge`). Fields with
-/// `#[wayle(skip)]` are ignored.
+/// Generates the `ApplyConfigLayer` impl. Fields are matched by serde-renamed
+/// key; fields with `#[wayle(skip)]` are excluded.
 pub fn apply_config_layer(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     let struct_name = &derive_input.ident;
@@ -145,10 +143,8 @@ pub fn extract_runtime_values(input: TokenStream) -> TokenStream {
     TokenStream::from(generated)
 }
 
-/// Generates `SubscribeChanges`. Clones the `mpsc::UnboundedSender<()>`
-/// into each field. When any `ConfigProperty` changes its effective value,
-/// a `()` fires on the channel, which is how `PersistenceWatcher` and
-/// page-level watchers know something changed.
+/// Generates the `SubscribeChanges` impl, calling
+/// `subscribe_changes(tx.clone())` on every non-skipped field.
 pub fn subscribe_changes(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     let struct_name = &derive_input.ident;

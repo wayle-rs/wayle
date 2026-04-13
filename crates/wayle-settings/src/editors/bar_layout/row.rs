@@ -11,7 +11,7 @@ use crate::{
     row::RowBehavior,
 };
 
-/// Full-width row with the bar layout editor, laying out left, center, and right zones against the set of custom module definitions.
+/// Full-width bar layout editor with left, center, and right zones.
 pub(crate) fn bar_layout(
     property: &ConfigProperty<Vec<BarLayout>>,
     custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,

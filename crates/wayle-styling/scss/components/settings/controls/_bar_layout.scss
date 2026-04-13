@@ -47,7 +47,7 @@
     background-color: var(--bg-base);
     border: 2px dashed var(--border-subtle);
     border-radius: var(--rounding-container);
-    padding: var(--space-sm);
+    padding: var(--space-sm) var(--space-sm) 0 var(--space-sm);
     margin-right: var(--space-md);
 }
 
@@ -107,7 +107,8 @@ button.chip-add image {
     margin-right: var(--space-sm);
 }
 
-button.zone-add-btn {
+button.zone-add-btn,
+menubutton.zone-add-btn > button {
     min-width: calc(1.5rem * var(--global-scale));
     min-height: calc(1.5rem * var(--global-scale));
     padding: 0;
@@ -119,7 +120,8 @@ button.zone-add-btn {
     margin-right: var(--space-xs);
 }
 
-button.zone-add-btn:hover {
+button.zone-add-btn:hover,
+menubutton.zone-add-btn > button:hover {
     border-color: var(--border-default);
     color: var(--fg-default);
 }
@@ -128,12 +130,16 @@ button.zone-add-btn:hover {
     opacity: 0.3;
 }
 
+.layout-zone-items > flowboxchild {
+    margin-bottom: var(--space-sm);
+}
+
 .layout-zone-items > .drop-before {
-    border-left: 2px solid var(--accent);
+    box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .layout-zone-items > .drop-after {
-    border-right: 2px solid var(--accent);
+    box-shadow: inset -2px 0 0 var(--accent);
 }
 
 .layout-hidden-label {
@@ -150,18 +156,35 @@ button.zone-add-btn:hover {
 }
 
 .module-picker-popover contents {
-    padding: var(--space-sm);
+    padding: var(--space-md);
+}
+
+image.module-picker-search-icon {
+    margin-left: var(--space-sm);
+    margin-right: var(--space-sm);
+    color: var(--fg-subtle);
+}
+
+.module-picker-popover entry {
+    border-spacing: 0;
+}
+
+.module-picker-popover entry > text {
+    margin-left: 0;
+    padding-left: 0;
 }
 
 .module-picker-scroll {
-    min-width: calc(12rem * var(--global-scale));
+    margin-top: var(--space-sm);
+    min-width: calc(14rem * var(--global-scale));
     min-height: calc(15rem * var(--global-scale));
 }
 
 .module-picker-list row {
     padding: var(--space-xs) var(--space-sm);
     font-size: var(--text-sm);
-    color: var(--fg-default);
+    font-weight: var(--weight-medium);
+    color: var(--fg-muted);
     border-radius: var(--rounding-element);
 }
 

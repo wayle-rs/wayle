@@ -68,7 +68,7 @@ pub(super) fn build_zone_row(
     card_index: usize,
     custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,
     sender: &FactorySender<LayoutCard>,
-) -> (gtk::Box, gtk::Box) {
+) -> (gtk::Box, gtk::FlowBox) {
     let row = gtk::Box::builder()
         .orientation(gtk::Orientation::Horizontal)
         .build();
@@ -79,8 +79,9 @@ pub(super) fn build_zone_row(
     label.set_halign(gtk::Align::Start);
     label.set_valign(gtk::Align::Center);
 
-    let chips_box = gtk::Box::builder()
-        .orientation(gtk::Orientation::Horizontal)
+    let chips_box = gtk::FlowBox::builder()
+        .selection_mode(gtk::SelectionMode::None)
+        .homogeneous(false)
         .hexpand(true)
         .build();
     chips_box.add_css_class("layout-zone-items");
@@ -125,7 +126,7 @@ pub(super) fn build_zone_row(
 }
 
 pub(super) fn rebuild_zone_chips(
-    chips_box: &gtk::Box,
+    chips_box: &gtk::FlowBox,
     items: &[BarItem],
     card_index: usize,
     zone: ZoneId,

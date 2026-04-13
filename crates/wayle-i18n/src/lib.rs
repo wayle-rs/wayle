@@ -21,7 +21,8 @@ struct Localizations;
 
 static LOADER: OnceLock<FluentLanguageLoader> = OnceLock::new();
 
-/// Lazy-initialized Fluent loader. Detects system locale on first call, falls back to en-US.
+/// Returns the Fluent loader, detecting system locale on first call and
+/// falling back to en-US.
 ///
 /// # Panics
 ///

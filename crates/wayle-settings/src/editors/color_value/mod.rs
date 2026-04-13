@@ -19,7 +19,7 @@ use wayle_config::{
     schemas::styling::{ColorValue, HexColor},
 };
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct ColorValueControl {
     property: ConfigProperty<ColorValue>,
@@ -28,6 +28,7 @@ pub(crate) struct ColorValueControl {
     color_button: gtk::ColorDialogButton,
     color_button_handler: SignalHandlerId,
     items: Vec<ColorItem>,
+    _watcher: WatcherHandle,
 }
 
 #[derive(Debug)]
@@ -133,7 +134,7 @@ impl SimpleComponent for ColorValueControl {
         let (color_button, color_button_handler) = build_color_button(&current, &sender);
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&property, move || {
+        let watcher = spawn_property_watcher(&property, move || {
             input_sender.send(ColorValueMsg::Refresh).is_ok()
         });
 
@@ -147,6 +148,7 @@ impl SimpleComponent for ColorValueControl {
             color_button,
             color_button_handler,
             items,
+            _watcher: watcher,
         };
 
         ComponentParts { model, widgets: () }

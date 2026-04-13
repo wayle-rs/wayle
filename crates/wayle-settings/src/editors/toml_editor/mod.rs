@@ -15,7 +15,7 @@ use sourceview5::prelude::*;
 use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 use wayle_i18n::t;
 
-use super::spawn_property_watcher;
+use super::{WatcherHandle, spawn_property_watcher};
 use crate::app::sourceview_scheme::SCHEME_ID;
 
 pub(crate) struct TomlEditorControl<
@@ -27,6 +27,8 @@ pub(crate) struct TomlEditorControl<
     scrolled: gtk::ScrolledWindow,
     dirty_badge: gtk::Label,
     key: &'static str,
+    _property_watcher: WatcherHandle,
+    _palette_watcher: WatcherHandle,
 }
 
 pub(crate) struct TomlEditorInit<T: Clone + Send + Sync + PartialEq + 'static> {
@@ -124,12 +126,12 @@ where
         });
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&init.property, move || {
+        let property_watcher = spawn_property_watcher(&init.property, move || {
             input_sender.send(TomlEditorMsg::Refresh).is_ok()
         });
 
         let input_sender = sender.input_sender().clone();
-        spawn_property_watcher(&init.palette_bg, move || {
+        let palette_watcher = spawn_property_watcher(&init.palette_bg, move || {
             input_sender.send(TomlEditorMsg::ReapplyScheme).is_ok()
         });
 
@@ -143,6 +145,8 @@ where
             scrolled,
             dirty_badge: init.dirty_badge,
             key: init.key,
+            _property_watcher: property_watcher,
+            _palette_watcher: palette_watcher,
         };
 
         ComponentParts { model, widgets: () }
