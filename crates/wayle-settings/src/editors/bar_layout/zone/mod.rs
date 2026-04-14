@@ -22,6 +22,9 @@ use super::{
     module_picker,
 };
 
+const CHIP_ROW_SPACING: u32 = 4;
+const CHIP_COLUMN_SPACING: u32 = 4;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum ZoneId {
     Left,
@@ -82,12 +85,21 @@ pub(super) fn build_zone_row(
     let chips_box = gtk::FlowBox::builder()
         .selection_mode(gtk::SelectionMode::None)
         .homogeneous(false)
-        .hexpand(true)
+        .halign(gtk::Align::Start)
+        .valign(gtk::Align::Center)
+        .row_spacing(CHIP_ROW_SPACING)
+        .column_spacing(CHIP_COLUMN_SPACING)
         .build();
-    chips_box.add_css_class("layout-zone-items");
 
     rebuild_zone_chips(&chips_box, items, card_index, zone, custom_modules, sender);
     attach_drop_target(&chips_box, card_index, zone, sender);
+
+    let chips_frame = gtk::Box::builder()
+        .orientation(gtk::Orientation::Horizontal)
+        .hexpand(true)
+        .build();
+    chips_frame.add_css_class("layout-zone-items");
+    chips_frame.append(&chips_box);
 
     let add_button = gtk::MenuButton::builder()
         .icon_name("ld-plus-symbolic")
@@ -118,7 +130,7 @@ pub(super) fn build_zone_row(
     });
 
     row.append(&label);
-    row.append(&chips_box);
+    row.append(&chips_frame);
     row.append(&add_button);
     row.append(&group_button);
 

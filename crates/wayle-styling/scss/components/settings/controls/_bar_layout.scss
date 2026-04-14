@@ -47,7 +47,7 @@
     background-color: var(--bg-base);
     border: 2px dashed var(--border-subtle);
     border-radius: var(--rounding-container);
-    padding: var(--space-sm) var(--space-sm) 0 var(--space-sm);
+    padding: var(--space-sm);
     margin-right: var(--space-md);
 }
 
@@ -130,16 +130,14 @@ menubutton.zone-add-btn > button:hover {
     opacity: 0.3;
 }
 
-.layout-zone-items > flowboxchild {
-    margin-bottom: var(--space-sm);
+.layout-zone-items flowboxchild.drop-before > .module-chip,
+.layout-zone-items flowboxchild.drop-before > .group-chip {
+    box-shadow: -3px 0 0 var(--accent);
 }
 
-.layout-zone-items > .drop-before {
-    box-shadow: inset 2px 0 0 var(--accent);
-}
-
-.layout-zone-items > .drop-after {
-    box-shadow: inset -2px 0 0 var(--accent);
+.layout-zone-items flowboxchild.drop-after > .module-chip,
+.layout-zone-items flowboxchild.drop-after > .group-chip {
+    box-shadow: 3px 0 0 var(--accent);
 }
 
 .layout-hidden-label {
