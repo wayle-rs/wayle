@@ -3458,41 +3458,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sourceview5"
-version = "0.10.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6e4acb02162917d7b689c84f4ed710c22302c67c7e61da28a4e8ac548c04442c"
-dependencies = [
- "futures-channel",
- "futures-core",
- "gdk-pixbuf",
- "gdk4",
- "gio",
- "glib",
- "gtk4",
- "libc",
- "pango",
- "sourceview5-sys",
-]
-
-[[package]]
-name = "sourceview5-sys"
-version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e1c1529de5df2653788828ef71d44b113bb80e496bc17315f4122106bd6eebae"
-dependencies = [
- "gdk-pixbuf-sys",
- "gdk4-sys",
- "gio-sys",
- "glib-sys",
- "gobject-sys",
- "gtk4-sys",
- "libc",
- "pango-sys",
- "system-deps",
-]
-
-[[package]]
 name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4452,7 +4417,7 @@ dependencies = [
 
 [[package]]
 name = "wayle"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "clap",
@@ -4482,7 +4447,7 @@ dependencies = [
  "wayle-bluetooth",
  "wayle-cava",
  "wayle-config",
- "wayle-core 0.1.0",
+ "wayle-core",
  "wayle-hyprland",
  "wayle-icons",
  "wayle-ipc",
@@ -4500,9 +4465,9 @@ dependencies = [
 
 [[package]]
 name = "wayle-audio"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7e097b11476c92ff34daa68920e2a7eabbb91221155962936f9ed210ccafc4c0"
+checksum = "e93f5c9ad9d44606308e76c8e122f073ed51c36462573a25912a648755a0e2df"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -4514,16 +4479,16 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
  "zbus",
 ]
 
 [[package]]
 name = "wayle-battery"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "db4e8607a34cd837af195d715a4602896443657bf95dc7cf9d6195dfedf8674f"
+checksum = "a84c4e68a9846ac0ef9bc9582595480250bfd189be6b4857965a7843766b7bb3"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -4534,16 +4499,16 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
  "zbus",
 ]
 
 [[package]]
 name = "wayle-bluetooth"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2bc0f0aa01408dbe917300eb4c754d4171b9bc864ff74c9745feb44c6d5c5a23"
+checksum = "35a305da7cb48665722675fd4d2fb66e286f6e56be55de3f496c50f8e765658a"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -4553,16 +4518,16 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
  "zbus",
 ]
 
 [[package]]
 name = "wayle-brightness"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ea20f62a8de326f9b5bb5b763cfc8508909d992847d3c01b43ea0d46d9c17809"
+checksum = "af92a59189bb1b93a5665b1ba68a8bfeee73f07ea5ee3acbc276cc3b4a3de3dd"
 dependencies = [
  "derive_more",
  "futures",
@@ -4572,16 +4537,16 @@ dependencies = [
  "tokio-util",
  "tracing",
  "udev",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
  "zbus",
 ]
 
 [[package]]
 name = "wayle-cava"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d05544f478c95a602fa5d906e42e5633d01d84ce35b535d05cb7c541b82e9726"
+checksum = "047afe21a11ebaad6e3de43af2a5bc7e46d2ce2cb05bdf17e576f5d204bc21c5"
 dependencies = [
  "bindgen",
  "cc",
@@ -4592,13 +4557,13 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
 ]
 
 [[package]]
 name = "wayle-config"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "dotenvy",
  "futures",
@@ -4614,15 +4579,15 @@ dependencies = [
  "tokio-stream",
  "toml 0.9.11+spec-1.1.0",
  "tracing",
- "wayle-core 0.1.0",
+ "wayle-core",
  "wayle-derive",
 ]
 
 [[package]]
 name = "wayle-core"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "70f75176c2dcaea613d8bf2dfab55f90dde4432856a01a59d8edca6d279eecbf"
+checksum = "867109345d4043305fbee2df1847e8cd9ca33bac34550b541323fc17ae81e513"
 dependencies = [
  "futures",
  "schemars",
@@ -4635,21 +4600,8 @@ dependencies = [
 ]
 
 [[package]]
-name = "wayle-core"
-version = "0.1.2"
-dependencies = [
- "futures",
- "serde",
- "serde_json",
- "tokio",
- "tokio-stream",
- "tracing",
- "zbus",
-]
-
-[[package]]
 name = "wayle-derive"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4661,9 +4613,9 @@ dependencies = [
 
 [[package]]
 name = "wayle-hyprland"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "96bf2541effb4ec57aec118cc12054b4e6ecafc1991cb820e56b4bdf7ae173b8"
+checksum = "d26dec5f77d085bcc60e5043623724bd0055f0e2ff792639f95491c86bc85bf4"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -4675,13 +4627,13 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
 ]
 
 [[package]]
 name = "wayle-i18n"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "i18n-embed",
  "i18n-embed-fl",
@@ -4689,12 +4641,11 @@ dependencies = [
  "thiserror 2.0.18",
  "tracing",
  "unic-langid",
- "wayle-config",
 ]
 
 [[package]]
 name = "wayle-icons"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "futures",
  "gtk4",
@@ -4708,7 +4659,7 @@ dependencies = [
 
 [[package]]
 name = "wayle-idle-inhibit"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "gdk4",
  "glib",
@@ -4718,16 +4669,16 @@ dependencies = [
 
 [[package]]
 name = "wayle-ipc"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "zbus",
 ]
 
 [[package]]
 name = "wayle-media"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f906ebd4e77bb09f000a67c330ce579d8dd6b42190368b21348d6717931ae2d"
+checksum = "0bbda2acafa86fcc0e8d714f7cb744d34e4449965906eb73e4b4f49b55d79fc0"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -4741,17 +4692,17 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
  "wildcard",
  "zbus",
 ]
 
 [[package]]
 name = "wayle-network"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8d8c76d59f5b022c50092d5ed51e27b81c620eec5f446768b9c7c8952382939c"
+checksum = "f94efa40c4e13aec2a8b8e5e4aaf3432c58eb99d4232e2be86402df29dc0d952"
 dependencies = [
  "async-trait",
  "bitflags 2.10.0",
@@ -4763,16 +4714,16 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
  "zbus",
 ]
 
 [[package]]
 name = "wayle-notification"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b4e21c10829eebc1d63096020c721e3e75ea086f27e1b207ba9e1dee33e01a00"
+checksum = "3cd650ecea662204ae90e0984fd2cf94f0280365c8f0b782b9b8804f2ceaa210"
 dependencies = [
  "async-trait",
  "chrono",
@@ -4787,17 +4738,17 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
  "wildcard",
  "zbus",
 ]
 
 [[package]]
 name = "wayle-power-profiles"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e6294a9c2668d98a04d472f365069960bbe35998a099e18b919f407aa6daa086"
+checksum = "e0a9e4372007c71f81d5cb627c3ba5e5e78e84a7eefd239e976f0540fa499ef6"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -4808,38 +4759,14 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
- "zbus",
-]
-
-[[package]]
-name = "wayle-settings"
-version = "0.1.1"
-dependencies = [
- "futures",
- "gtk4",
- "notify",
- "relm4",
- "serde",
- "serde_json",
- "sourceview5",
- "tokio",
- "toml 0.9.11+spec-1.1.0",
- "tracing",
- "tracing-subscriber",
- "wayle-config",
- "wayle-i18n",
- "wayle-icons",
- "wayle-styling",
- "wayle-wallpaper",
- "wayle-widgets",
+ "wayle-core",
+ "wayle-traits",
  "zbus",
 ]
 
 [[package]]
 name = "wayle-shell"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "bytesize",
  "chrono",
@@ -4872,7 +4799,7 @@ dependencies = [
  "wayle-brightness",
  "wayle-cava",
  "wayle-config",
- "wayle-core 0.1.0",
+ "wayle-core",
  "wayle-hyprland",
  "wayle-icons",
  "wayle-idle-inhibit",
@@ -4893,7 +4820,7 @@ dependencies = [
 
 [[package]]
 name = "wayle-styling"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "grass",
  "gtk4",
@@ -4908,9 +4835,9 @@ dependencies = [
 
 [[package]]
 name = "wayle-sysinfo"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b5dc6c27ef70d3532dd4b8f4a186a5500155f380076f3fd4997f53b7c4655448"
+checksum = "457d314fb55348d1f330217e158ad7892f13e6a5c3b37f4f118915615f0b6dda"
 dependencies = [
  "derive_more",
  "futures",
@@ -4919,14 +4846,14 @@ dependencies = [
  "tokio",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
+ "wayle-core",
 ]
 
 [[package]]
 name = "wayle-systray"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42ebc7fa8240c328fb7352cc750b0f8c6d955766340620dfa51cfe9f85be0f07"
+checksum = "9ff89f65e6e5fe98f915acb62d82b09769f214e608731f9b958ddb0aab70701c"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -4941,24 +4868,22 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
  "zbus",
 ]
 
 [[package]]
 name = "wayle-traits"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ad6969f5a77e22bc808f31b322517a3e029229067938d04ab016c5886a99edfe"
-
-[[package]]
-name = "wayle-traits"
 version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0833629ad4481a1302cb6df07da2b438bdb1c99dc5e5844e3198d53945728a6d"
 
 [[package]]
 name = "wayle-wallpaper"
-version = "0.1.3"
+version = "0.1.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "02bea011f6013230b70337d63e58f1235a93f606b0caecb61b8bc87923a5c414"
 dependencies = [
  "derive_more",
  "futures",
@@ -4971,16 +4896,16 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.2",
- "wayle-traits 0.1.2",
+ "wayle-core",
+ "wayle-traits",
  "zbus",
 ]
 
 [[package]]
 name = "wayle-weather"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "71626e0d294e5fe960d32160afab17020ddf1bd87bb3e6a6d57d0f17ea8ebd94"
+checksum = "5aad4c55e7d8d5000ca1774194c34b1bc7f3b96aa2df506a38a789af646f13b4"
 dependencies = [
  "async-trait",
  "chrono",
@@ -4992,13 +4917,13 @@ dependencies = [
  "tokio-stream",
  "tokio-util",
  "tracing",
- "wayle-core 0.1.0",
- "wayle-traits 0.1.0",
+ "wayle-core",
+ "wayle-traits",
 ]
 
 [[package]]
 name = "wayle-widgets"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "chrono",
  "futures",
@@ -5010,7 +4935,7 @@ dependencies = [
  "tokio-util",
  "tracing",
  "wayle-config",
- "wayle-core 0.1.0",
+ "wayle-core",
 ]
 
 [[package]]

@@ -193,6 +193,18 @@ To manually manage icons:
 # Install bundled icons (automatic on first launch)
 wayle icons setup
 
+# See all available icon sources and their prefixes
+wayle icons sources
+
+# List installed icons
+wayle icons list
+
+# Filter installed icons by source prefix (e.g. ld, tb, si, md)
+wayle icons list --source ld
+
+# Interactive fuzzy search of installed icons (requires fzf)
+wayle icons list --interactive
+
 # Install additional icons from CDN sources
 wayle icons install tabler home settings bell
 wayle icons install simple-icons firefox spotify
@@ -202,6 +214,8 @@ wayle icons install --help
 ```
 
 Icons are installed to `~/.local/share/wayle/icons/` as GTK symbolic icons.
+For remote icon discovery, browse each source website shown in `wayle icons sources`
+and use the icon slug with `wayle icons install <source> <slug...>`.
 
 ## Custom Modules
 
