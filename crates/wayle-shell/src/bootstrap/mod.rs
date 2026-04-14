@@ -31,7 +31,7 @@ use zbus::{Connection, fdo::DBusProxy};
 
 use crate::{
     services::{IdleInhibitService, ShellIpcService},
-    shell::ShellServices,
+    shell::{PomodoroSharedState, ShellServices},
     startup::StartupTimer,
     watchers::build_extractor_config,
 };
@@ -151,6 +151,16 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
 
     timer.mark_services_done();
 
+    // Initialize pomodoro shared state
+    let config = config_service.config();
+    let pomodoro_config = &config.modules.pomodoro;
+    let pomodoro_state = std::sync::Arc::new(PomodoroSharedState::new(
+        pomodoro_config.work_duration.get(),
+        pomodoro_config.short_break_duration.get(),
+        pomodoro_config.long_break_duration.get(),
+        pomodoro_config.cycles_before_long_break.get(),
+    ));
+
     let services = ShellServices {
         audio: daemons.audio,
         battery: core.battery,
@@ -168,6 +178,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         wallpaper: core.wallpaper,
         weather,
         shell_ipc,
+        pomodoro_state,
     };
 
     Ok((timer, services))

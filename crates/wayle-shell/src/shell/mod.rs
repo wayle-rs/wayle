@@ -14,6 +14,9 @@ use relm4::{gtk, gtk::prelude::*, prelude::*};
 pub(crate) use services::ShellServices;
 use tracing::{debug, info};
 
+pub(crate) use self::bar::pomodoro::{
+    PomodoroMode, PomodoroSharedState, PomodoroSnapshot, SharedPomodoroState, TimerState,
+};
 use self::{
     notification_popup::{NotificationPopupHost, PopupHostInit},
     osd::{Osd, OsdInit},

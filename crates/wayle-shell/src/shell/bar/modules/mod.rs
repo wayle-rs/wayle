@@ -16,6 +16,7 @@ mod microphone;
 mod netstat;
 mod network;
 mod notification;
+mod pomodoro;
 mod power;
 mod ram;
 mod registry;
@@ -73,6 +74,7 @@ register_modules! {
     Netstat => netstat::Factory,
     Network => network::Factory,
     Notifications => notification::Factory,
+    Pomodoro => pomodoro::Factory,
     Power => power::Factory,
     Ram => ram::Factory,
     Separator => separator::Factory,
