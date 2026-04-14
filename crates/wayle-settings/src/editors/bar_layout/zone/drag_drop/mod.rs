@@ -95,7 +95,7 @@ pub(crate) fn attach_drag_source(
 
 pub(crate) fn attach_drop_target(
     chips_box: &gtk::FlowBox,
-    card_index: usize,
+    card_index: DynamicIndex,
     zone: ZoneId,
     sender: &FactorySender<LayoutCard>,
 ) {
@@ -138,7 +138,7 @@ pub(crate) fn attach_drop_target(
         let position = compute_drop_position(&drop_box, x, y);
 
         let to = DropLocation {
-            card_index,
+            card_index: card_index.current_index(),
             zone,
             position,
         };

@@ -15,7 +15,7 @@ use crate::{
 };
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
-    let m = &config.modules.dashboard;
+    let module = &config.modules.dashboard;
 
     LeafEntry {
         id: "dashboard",
@@ -26,37 +26,37 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
             vec![
                 SectionSpec {
                     title_key: "settings-section-general",
-                    items: vec![text(&m.icon_override)],
+                    items: vec![text(&module.icon_override)],
                 },
                 SectionSpec {
                     title_key: "settings-section-commands",
                     items: vec![
-                        text(&m.dropdown_lock_command),
-                        text(&m.dropdown_logout_command),
-                        text(&m.dropdown_reboot_command),
-                        text(&m.dropdown_poweroff_command),
+                        text(&module.dropdown_lock_command),
+                        text(&module.dropdown_logout_command),
+                        text(&module.dropdown_reboot_command),
+                        text(&module.dropdown_poweroff_command),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-bar-display",
-                    items: vec![toggle(&m.border_show)],
+                    items: vec![toggle(&module.border_show)],
                 },
                 SectionSpec {
                     title_key: "settings-section-colors",
                     items: vec![
-                        color_value(&m.icon_color),
-                        color_value(&m.icon_bg_color),
-                        color_value(&m.border_color),
+                        color_value(&module.icon_color),
+                        color_value(&module.icon_bg_color),
+                        color_value(&module.border_color),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-actions",
                     items: vec![
-                        text_like(&m.left_click),
-                        text_like(&m.right_click),
-                        text_like(&m.middle_click),
-                        text_like(&m.scroll_up),
-                        text_like(&m.scroll_down),
+                        text_like(&module.left_click),
+                        text_like(&module.right_click),
+                        text_like(&module.middle_click),
+                        text_like(&module.scroll_up),
+                        text_like(&module.scroll_down),
                     ],
                 },
             ],

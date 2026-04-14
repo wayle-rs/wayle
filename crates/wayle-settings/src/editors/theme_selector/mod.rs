@@ -16,7 +16,7 @@ use wayle_config::{
 };
 use wayle_i18n::t;
 
-use self::methods::populate_list;
+use self::helpers::populate_list;
 use super::{WatcherHandle, spawn_property_watcher};
 
 struct SwatchStyles {

@@ -14,23 +14,23 @@ use crate::{
 };
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
-    let m = &config.modules.idle_inhibit;
+    let module = &config.modules.idle_inhibit;
 
     let fields = BarButtonFields {
-        icon_show: &m.icon_show,
-        label_show: &m.label_show,
-        label_max_length: &m.label_max_length,
-        border_show: &m.border_show,
-        icon_color: &m.icon_color,
-        icon_bg_color: &m.icon_bg_color,
-        label_color: &m.label_color,
-        button_bg_color: &m.button_bg_color,
-        border_color: &m.border_color,
-        left_click: &m.left_click,
-        right_click: &m.right_click,
-        middle_click: &m.middle_click,
-        scroll_up: &m.scroll_up,
-        scroll_down: &m.scroll_down,
+        icon_show: &module.icon_show,
+        label_show: &module.label_show,
+        label_max_length: &module.label_max_length,
+        border_show: &module.border_show,
+        icon_color: &module.icon_color,
+        icon_bg_color: &module.icon_bg_color,
+        label_color: &module.label_color,
+        button_bg_color: &module.button_bg_color,
+        border_color: &module.border_color,
+        left_click: &module.left_click,
+        right_click: &module.right_click,
+        middle_click: &module.middle_click,
+        scroll_up: &module.scroll_up,
+        scroll_down: &module.scroll_down,
     };
 
     LeafEntry {
@@ -43,10 +43,10 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        number_u32(&m.startup_duration),
-                        text(&m.icon_inactive),
-                        text(&m.icon_active),
-                        text(&m.format),
+                        number_u32(&module.startup_duration),
+                        text(&module.icon_inactive),
+                        text(&module.icon_active),
+                        text(&module.format),
                     ],
                 },
                 bar_display_section(&fields),

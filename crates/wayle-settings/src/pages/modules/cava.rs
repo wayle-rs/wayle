@@ -21,7 +21,7 @@ use crate::{
 };
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
-    let m = &config.modules.cava;
+    let module = &config.modules.cava;
 
     LeafEntry {
         id: "cava",
@@ -34,7 +34,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                     title_key: "settings-section-general",
                     items: vec![
                         number_newtype(
-                            &m.bars,
+                            &module.bars,
                             1.0,
                             256.0,
                             1.0,
@@ -43,7 +43,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             |count| CavaBarCount::new(count as u16),
                         ),
                         number_newtype(
-                            &m.framerate,
+                            &module.framerate,
                             1.0,
                             360.0,
                             1.0,
@@ -51,12 +51,12 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             |v: &CavaFramerate| v.value() as f64,
                             |fps| CavaFramerate::new(fps as u32),
                         ),
-                        toggle(&m.stereo),
-                        normalized(&m.noise_reduction),
-                        number_f64(&m.monstercat, 0.0, 10.0, 0.1, 1),
-                        number_u32(&m.waves),
+                        toggle(&module.stereo),
+                        normalized(&module.noise_reduction),
+                        number_f64(&module.monstercat, 0.0, 10.0, 0.1, 1),
+                        number_u32(&module.waves),
                         number_newtype(
-                            &m.low_cutoff,
+                            &module.low_cutoff,
                             1.0,
                             50000.0,
                             1.0,
@@ -65,7 +65,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             |hz| FrequencyHz::new(hz as u32),
                         ),
                         number_newtype(
-                            &m.high_cutoff,
+                            &module.high_cutoff,
                             1.0,
                             50000.0,
                             1.0,
@@ -73,35 +73,35 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                             |v: &FrequencyHz| v.value() as f64,
                             |hz| FrequencyHz::new(hz as u32),
                         ),
-                        enum_select(&m.input),
-                        text(&m.source),
-                        enum_select(&m.style),
-                        enum_select(&m.direction),
-                        number_u32(&m.bar_width),
-                        number_u32(&m.bar_gap),
-                        spacing(&m.internal_padding),
+                        enum_select(&module.input),
+                        text(&module.source),
+                        enum_select(&module.style),
+                        enum_select(&module.direction),
+                        number_u32(&module.bar_width),
+                        number_u32(&module.bar_gap),
+                        spacing(&module.internal_padding),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-bar-display",
-                    items: vec![toggle(&m.border_show)],
+                    items: vec![toggle(&module.border_show)],
                 },
                 SectionSpec {
                     title_key: "settings-section-colors",
                     items: vec![
-                        color_value(&m.color),
-                        color_value(&m.button_bg_color),
-                        color_value(&m.border_color),
+                        color_value(&module.color),
+                        color_value(&module.button_bg_color),
+                        color_value(&module.border_color),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-actions",
                     items: vec![
-                        text_like(&m.left_click),
-                        text_like(&m.right_click),
-                        text_like(&m.middle_click),
-                        text_like(&m.scroll_up),
-                        text_like(&m.scroll_down),
+                        text_like(&module.left_click),
+                        text_like(&module.right_click),
+                        text_like(&module.middle_click),
+                        text_like(&module.scroll_up),
+                        text_like(&module.scroll_down),
                     ],
                 },
             ],

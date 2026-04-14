@@ -63,7 +63,7 @@ impl ZoneId {
 
 pub(super) fn build_zone_row(
     zone: ZoneId,
-    card_index: usize,
+    card_index: DynamicIndex,
     custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,
     sender: &FactorySender<LayoutCard>,
 ) -> (gtk::Box, gtk::FlowBox) {

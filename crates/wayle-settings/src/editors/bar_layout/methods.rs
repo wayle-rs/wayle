@@ -7,19 +7,17 @@ use wayle_config::schemas::bar::BarLayout;
 use super::{BarLayoutControl, DragPayload, DropLocation, LayoutCardInit};
 
 impl BarLayoutControl {
-    pub(super) fn on_add(&mut self, sender: &ComponentSender<Self>) {
+    pub(super) fn on_add(&mut self) {
         self.cards.guard().push_back(LayoutCardInit {
             layout: BarLayout::default(),
             custom_modules: self.custom_modules.clone(),
         });
         self.commit();
-        let _ = sender;
     }
 
-    pub(super) fn on_remove(&mut self, index: DynamicIndex, sender: &ComponentSender<Self>) {
+    pub(super) fn on_remove(&mut self, index: DynamicIndex) {
         self.cards.guard().remove(index.current_index());
         self.commit();
-        let _ = sender;
     }
 
     pub(super) fn on_item_dropped(&mut self, from: DragPayload, to: DropLocation) {

@@ -29,7 +29,7 @@ pub(super) fn compute_drop_position(container: &gtk::FlowBox, drop_x: f64, drop_
         let row_top = f64::from(bounds.y());
         let row_bottom = f64::from(bounds.y() + bounds.height());
 
-        if drop_y < row_top || drop_y > row_bottom {
+        if drop_y < row_top || drop_y >= row_bottom {
             continue;
         }
 

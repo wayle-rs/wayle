@@ -22,7 +22,10 @@ pub(crate) fn spacing(property: &ConfigProperty<Spacing>) -> SettingRowInit {
             step: 0.5,
             digits: 2,
             to_f64: |spacing| spacing.value() as f64,
-            from_f64: |value| Spacing::new(value as f32),
+            from_f64: |value| {
+                let clean = if value.is_finite() { value } else { 0.0 };
+                Spacing::new(clean.clamp(Spacing::MIN as f64, 500.0) as f32)
+            },
         })
         .detach();
 
@@ -30,7 +33,7 @@ pub(crate) fn spacing(property: &ConfigProperty<Spacing>) -> SettingRowInit {
 
     SettingRowInit {
         i18n_key: property.i18n_key(),
-        handle: PropertyHandle::new(property, |value| format!("{}", value.value())),
+        handle: PropertyHandle::new(property, |value| value.value().to_string()),
         control: widget.upcast(),
         keepalive: Box::new(controller),
         full_width: false,
@@ -49,7 +52,12 @@ pub(crate) fn number_u8(property: &ConfigProperty<u8>) -> SettingRowInit {
             step: 1.0,
             digits: 0,
             to_f64: |value| f64::from(*value),
-            from_f64: |value| value.round().clamp(f64::from(u8::MIN), f64::from(u8::MAX)) as u8,
+            from_f64: |value| {
+                if !value.is_finite() {
+                    return 0;
+                }
+                value.round().clamp(f64::from(u8::MIN), f64::from(u8::MAX)) as u8
+            },
         })
         .detach();
 
@@ -77,6 +85,9 @@ pub(crate) fn number_u32(property: &ConfigProperty<u32>) -> SettingRowInit {
             digits: 0,
             to_f64: |value| f64::from(*value),
             from_f64: |value| {
+                if !value.is_finite() {
+                    return 0;
+                }
                 value
                     .round()
                     .clamp(f64::from(u32::MIN), f64::from(u32::MAX)) as u32
@@ -107,7 +118,12 @@ pub(crate) fn number_u64(property: &ConfigProperty<u64>) -> SettingRowInit {
             step: 1.0,
             digits: 0,
             to_f64: |value| *value as f64,
-            from_f64: |value| value.round().clamp(0.0, U64_DISPLAY_MAX) as u64,
+            from_f64: |value| {
+                if !value.is_finite() {
+                    return 0;
+                }
+                value.round().clamp(0.0, U64_DISPLAY_MAX) as u64
+            },
         })
         .detach();
 
@@ -140,7 +156,7 @@ pub(crate) fn number_f64(
             step,
             digits,
             to_f64: |value| *value,
-            from_f64: |value| value,
+            from_f64: |value| if value.is_finite() { value } else { 0.0 },
         })
         .detach();
 

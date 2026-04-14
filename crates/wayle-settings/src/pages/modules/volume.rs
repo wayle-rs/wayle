@@ -14,23 +14,23 @@ use crate::{
 };
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
-    let m = &config.modules.volume;
+    let module = &config.modules.volume;
 
     let fields = BarButtonFields {
-        icon_show: &m.icon_show,
-        label_show: &m.label_show,
-        label_max_length: &m.label_max_length,
-        border_show: &m.border_show,
-        icon_color: &m.icon_color,
-        icon_bg_color: &m.icon_bg_color,
-        label_color: &m.label_color,
-        button_bg_color: &m.button_bg_color,
-        border_color: &m.border_color,
-        left_click: &m.left_click,
-        right_click: &m.right_click,
-        middle_click: &m.middle_click,
-        scroll_up: &m.scroll_up,
-        scroll_down: &m.scroll_down,
+        icon_show: &module.icon_show,
+        label_show: &module.label_show,
+        label_max_length: &module.label_max_length,
+        border_show: &module.border_show,
+        icon_color: &module.icon_color,
+        icon_bg_color: &module.icon_bg_color,
+        label_color: &module.label_color,
+        button_bg_color: &module.button_bg_color,
+        border_color: &module.border_color,
+        left_click: &module.left_click,
+        right_click: &module.right_click,
+        middle_click: &module.middle_click,
+        scroll_up: &module.scroll_up,
+        scroll_down: &module.scroll_down,
     };
 
     LeafEntry {
@@ -43,15 +43,19 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
-                        text(&m.icon_muted),
-                        text(&m.format),
-                        toml_editor(&m.level_icons, "level-icons", &config.styling.palette.bg),
-                        toml_editor(&m.thresholds, "thresholds", &config.styling.palette.bg),
+                        text(&module.icon_muted),
+                        text(&module.format),
+                        toml_editor(
+                            &module.level_icons,
+                            "level-icons",
+                            &config.styling.palette.bg,
+                        ),
+                        toml_editor(&module.thresholds, "thresholds", &config.styling.palette.bg),
                     ],
                 },
                 SectionSpec {
                     title_key: "settings-section-dropdown",
-                    items: vec![enum_select(&m.dropdown_app_icons)],
+                    items: vec![enum_select(&module.dropdown_app_icons)],
                 },
                 bar_display_section(&fields),
                 colors_section(&fields),

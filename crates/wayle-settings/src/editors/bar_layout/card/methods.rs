@@ -65,14 +65,24 @@ impl LayoutCard {
             return;
         }
 
-        let card_index = self.index.current_index();
-
-        let (left_row, left_flow) =
-            zone::build_zone_row(ZoneId::Left, card_index, &self.custom_modules, sender);
-        let (center_row, center_flow) =
-            zone::build_zone_row(ZoneId::Center, card_index, &self.custom_modules, sender);
-        let (right_row, right_flow) =
-            zone::build_zone_row(ZoneId::Right, card_index, &self.custom_modules, sender);
+        let (left_row, left_flow) = zone::build_zone_row(
+            ZoneId::Left,
+            self.index.clone(),
+            &self.custom_modules,
+            sender,
+        );
+        let (center_row, center_flow) = zone::build_zone_row(
+            ZoneId::Center,
+            self.index.clone(),
+            &self.custom_modules,
+            sender,
+        );
+        let (right_row, right_flow) = zone::build_zone_row(
+            ZoneId::Right,
+            self.index.clone(),
+            &self.custom_modules,
+            sender,
+        );
 
         self.body.append(&left_row);
         self.body.append(&center_row);
@@ -197,14 +207,8 @@ impl LayoutCard {
         }
         group.modules.remove(module_index);
 
-        if !group.modules.is_empty() {
-            let updated = items[group_index].clone();
-            self.replace_chip(zone, group_index, updated);
-            return true;
-        }
-
-        items.remove(group_index);
-        self.remove_chip(zone, group_index);
+        let updated = items[group_index].clone();
+        self.replace_chip(zone, group_index, updated);
         true
     }
 

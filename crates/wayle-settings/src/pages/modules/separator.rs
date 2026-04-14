@@ -14,7 +14,7 @@ use crate::{
 };
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
-    let m = &config.modules.separator;
+    let module = &config.modules.separator;
 
     LeafEntry {
         id: "separator",
@@ -25,11 +25,11 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
             vec![
                 SectionSpec {
                     title_key: "settings-section-general",
-                    items: vec![number_u32(&m.size), spacing(&m.length)],
+                    items: vec![number_u32(&module.size), spacing(&module.length)],
                 },
                 SectionSpec {
                     title_key: "settings-section-colors",
-                    items: vec![color_value(&m.color)],
+                    items: vec![color_value(&module.color)],
                 },
             ],
         ),

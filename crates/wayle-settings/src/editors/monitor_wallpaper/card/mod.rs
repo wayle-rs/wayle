@@ -146,9 +146,11 @@ impl FactoryComponent for MonitorCard {
         let string_list =
             gtk::StringList::new(&labels.iter().map(String::as_str).collect::<Vec<_>>());
         widgets.fit_dropdown.set_model(Some(&string_list));
-        widgets
-            .fit_dropdown
-            .set_selected(fit_mode_index(&self.fit_mode));
+        if let Some(index) = fit_mode_index(&self.fit_mode) {
+            widgets.fit_dropdown.set_selected(index);
+        } else {
+            widgets.fit_dropdown.set_sensitive(false);
+        }
 
         let fit_sender = sender.input_sender().clone();
         widgets

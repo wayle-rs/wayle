@@ -22,11 +22,11 @@ pub(super) fn fit_mode_labels() -> Vec<String> {
         .collect()
 }
 
-pub(super) fn fit_mode_index(mode: &FitMode) -> u32 {
+pub(super) fn fit_mode_index(mode: &FitMode) -> Option<u32> {
     FitMode::variants()
         .iter()
         .position(|variant| fit_mode_from_value(variant.value).as_ref() == Some(mode))
-        .unwrap_or(0) as u32
+        .map(|index| index as u32)
 }
 
 pub(super) fn fit_mode_from_index(index: u32) -> Option<FitMode> {
