@@ -2,21 +2,19 @@
 //! wallpaper file picker, and fit mode dropdown. Add/remove monitors.
 
 mod card;
-
+mod methods;
 mod row;
+
 use card::{MonitorCard, MonitorCardOutput};
 use relm4::{gtk, gtk::prelude::*, prelude::*};
 pub(crate) use row::monitor_wallpaper;
-use wayle_config::{
-    ConfigProperty,
-    schemas::wallpaper::{FitMode, MonitorWallpaperConfig},
-};
+use wayle_config::{ConfigProperty, schemas::wallpaper::MonitorWallpaperConfig};
 use wayle_i18n::t;
 
 use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct MonitorWallpaperControl {
-    property: ConfigProperty<Vec<MonitorWallpaperConfig>>,
+    pub(super) property: ConfigProperty<Vec<MonitorWallpaperConfig>>,
     cards: FactoryVecDeque<MonitorCard>,
     _watcher: WatcherHandle,
 }
@@ -105,54 +103,12 @@ impl SimpleComponent for MonitorWallpaperControl {
         ComponentParts { model, widgets: () }
     }
 
-    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>) {
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
-            MonitorWallpaperMsg::Add => {
-                let new_config = MonitorWallpaperConfig {
-                    name: String::new(),
-                    fit_mode: FitMode::Fill,
-                    wallpaper: String::new(),
-                };
-
-                self.cards.guard().push_back(new_config);
-                self.commit(&sender);
-            }
-
-            MonitorWallpaperMsg::Remove(index) => {
-                self.cards.guard().remove(index.current_index());
-                self.commit(&sender);
-            }
-
-            MonitorWallpaperMsg::CardChanged => {
-                self.commit(&sender);
-            }
-
-            MonitorWallpaperMsg::Refresh => {
-                let incoming = self.property.get();
-
-                let current: Vec<MonitorWallpaperConfig> =
-                    self.cards.iter().map(|card| card.to_config()).collect();
-
-                if incoming == current {
-                    return;
-                }
-
-                let mut guard = self.cards.guard();
-                guard.clear();
-
-                for config in incoming {
-                    guard.push_back(config);
-                }
-            }
+            MonitorWallpaperMsg::Add => self.on_add(),
+            MonitorWallpaperMsg::Remove(index) => self.on_remove(index),
+            MonitorWallpaperMsg::CardChanged => self.commit(),
+            MonitorWallpaperMsg::Refresh => self.on_refresh(),
         }
-    }
-}
-
-impl MonitorWallpaperControl {
-    fn commit(&self, _sender: &ComponentSender<Self>) {
-        let configs: Vec<MonitorWallpaperConfig> =
-            self.cards.iter().map(|card| card.to_config()).collect();
-
-        self.property.set(configs);
     }
 }

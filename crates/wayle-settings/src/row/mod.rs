@@ -1,6 +1,9 @@
 //! One row per config field. Shows label, source badge, reset button,
 //! and a control slot for the widget.
 
+mod helpers;
+mod methods;
+
 use relm4::{
     gtk,
     gtk::{pango, prelude::*},
@@ -9,6 +12,7 @@ use relm4::{
 use wayle_config::ValueSource;
 use wayle_i18n::{t, t_attr};
 
+use self::helpers::apply_control_layout;
 use crate::{
     editors::WatcherHandle,
     pages::spec::{Keepalive, SettingRowInit},
@@ -29,14 +33,14 @@ pub(crate) enum RowBehavior {
 }
 
 pub(crate) struct SettingRow {
-    handle: PropertyHandle,
-    label: String,
-    description: String,
-    source: ValueSource,
-    source_label: String,
-    source_tooltip: String,
-    config_matches_default: bool,
-    behavior: RowBehavior,
+    pub(super) handle: PropertyHandle,
+    pub(super) label: String,
+    pub(super) description: String,
+    pub(super) source: ValueSource,
+    pub(super) source_label: String,
+    pub(super) source_tooltip: String,
+    pub(super) config_matches_default: bool,
+    pub(super) behavior: RowBehavior,
     #[allow(dead_code)]
     keepalive: Keepalive,
     _watcher: Option<WatcherHandle>,
@@ -198,64 +202,5 @@ impl SimpleComponent for SettingRow {
                 self.update_source_info();
             }
         }
-    }
-}
-
-fn apply_control_layout(control: &gtk::Widget, root: &gtk::Box, slot: &gtk::Box, full_width: bool) {
-    if full_width {
-        control.set_hexpand(true);
-        root.set_orientation(gtk::Orientation::Vertical);
-        root.add_css_class("vertical");
-        slot.set_hexpand(true);
-        return;
-    }
-
-    control.set_hexpand(false);
-    control.set_valign(gtk::Align::Center);
-}
-
-impl SettingRow {
-    fn has_runtime_override(&self) -> bool {
-        self.behavior == RowBehavior::Setting
-            && matches!(
-                self.source,
-                ValueSource::RuntimeOnly | ValueSource::Overridden
-            )
-    }
-
-    fn has_source_badge(&self) -> bool {
-        self.behavior == RowBehavior::Setting
-            && self.source != ValueSource::Default
-            && !self.config_matches_default
-    }
-
-    fn source_css_class(&self) -> &'static str {
-        match self.source {
-            ValueSource::Default => "",
-            ValueSource::Config => "info",
-            ValueSource::RuntimeOnly => "success",
-            ValueSource::Overridden => "warning",
-        }
-    }
-
-    fn update_source_info(&mut self) {
-        self.source = self.handle.source();
-
-        self.source_label = match self.source {
-            ValueSource::Default => String::new(),
-            ValueSource::Config => t("settings-source-config"),
-            ValueSource::RuntimeOnly => t("settings-source-custom"),
-            ValueSource::Overridden => t("settings-source-override"),
-        };
-
-        self.source_tooltip = match self.source {
-            ValueSource::Default => String::new(),
-            ValueSource::Config => t_attr("settings-source-config", "description"),
-            ValueSource::RuntimeOnly => t_attr("settings-source-custom", "description"),
-            ValueSource::Overridden => t_attr("settings-source-override", "description"),
-        };
-
-        self.config_matches_default = self.source == ValueSource::Config
-            && self.handle.config_display() == Some(self.handle.default_display());
     }
 }

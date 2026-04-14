@@ -14,14 +14,14 @@ use wayle_config::{
 };
 use wayle_i18n::t;
 
-use super::card::LayoutCardMsg;
-
-pub(super) fn attach(
+pub(super) fn attach<M>(
     button: &gtk::MenuButton,
     custom_modules: ConfigProperty<Vec<CustomModuleDefinition>>,
-    build_msg: impl Fn(BarModule) -> LayoutCardMsg + 'static,
-    sender: Sender<LayoutCardMsg>,
-) {
+    build_msg: impl Fn(BarModule) -> M + 'static,
+    sender: Sender<M>,
+) where
+    M: 'static,
+{
     let popover = gtk::Popover::new();
     popover.add_css_class("module-picker-popover");
     button.set_popover(Some(&popover));
@@ -54,7 +54,7 @@ pub(super) fn attach(
     content.append(&scrolled);
     popover.set_child(Some(&content));
 
-    let build_msg: Rc<dyn Fn(BarModule) -> LayoutCardMsg> = Rc::new(build_msg);
+    let build_msg: Rc<dyn Fn(BarModule) -> M> = Rc::new(build_msg);
     let custom_modules = Rc::new(custom_modules);
 
     populate_list(&list, "", &custom_modules, &sender, &popover, &build_msg);
@@ -98,13 +98,13 @@ fn all_module_names(custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>
     [builtin, custom].concat()
 }
 
-fn populate_list(
+fn populate_list<M: 'static>(
     list: &gtk::ListBox,
     filter: &str,
     custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,
-    sender: &Sender<LayoutCardMsg>,
+    sender: &Sender<M>,
     popover: &gtk::Popover,
-    build_msg: &Rc<dyn Fn(BarModule) -> LayoutCardMsg>,
+    build_msg: &Rc<dyn Fn(BarModule) -> M>,
 ) {
     while let Some(child) = list.first_child() {
         list.remove(&child);

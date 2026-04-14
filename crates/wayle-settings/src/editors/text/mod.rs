@@ -1,91 +1,21 @@
 //! Text entry for string-like config properties. Commits on Enter.
 
+mod helpers;
 mod row;
+
 use relm4::{
     gtk,
     gtk::{glib::SignalHandlerId, prelude::*},
     prelude::*,
 };
 pub(crate) use row::{text, text_like};
-use wayle_config::{
-    ClickAction, ConfigProperty,
-    schemas::{modules::PopupMonitor, osd::OsdMonitor},
-};
+use wayle_config::ConfigProperty;
 
 use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) trait TextLike: Clone + Send + Sync + PartialEq + 'static {
     fn to_entry_text(&self) -> String;
     fn from_entry_text(text: &str) -> Self;
-}
-
-impl TextLike for String {
-    fn to_entry_text(&self) -> String {
-        self.clone()
-    }
-
-    fn from_entry_text(text: &str) -> Self {
-        text.to_string()
-    }
-}
-
-impl TextLike for Option<String> {
-    fn to_entry_text(&self) -> String {
-        self.as_deref().unwrap_or_default().to_owned()
-    }
-
-    fn from_entry_text(text: &str) -> Self {
-        if text.is_empty() {
-            None
-        } else {
-            Some(text.to_string())
-        }
-    }
-}
-
-macro_rules! impl_monitor_text_like {
-    ($type:ty) => {
-        impl TextLike for $type {
-            fn to_entry_text(&self) -> String {
-                match self {
-                    Self::Primary => String::from("primary"),
-                    Self::Connector(name) => name.clone(),
-                }
-            }
-
-            fn from_entry_text(text: &str) -> Self {
-                if text.eq_ignore_ascii_case("primary") || text.is_empty() {
-                    Self::Primary
-                } else {
-                    Self::Connector(text.to_owned())
-                }
-            }
-        }
-    };
-}
-
-impl_monitor_text_like!(OsdMonitor);
-impl_monitor_text_like!(PopupMonitor);
-
-impl TextLike for ClickAction {
-    fn to_entry_text(&self) -> String {
-        match self {
-            Self::None => String::new(),
-            Self::Dropdown(name) => format!("dropdown:{name}"),
-            Self::Shell(cmd) => cmd.clone(),
-        }
-    }
-
-    fn from_entry_text(text: &str) -> Self {
-        if text.is_empty() {
-            return Self::None;
-        }
-
-        match text.strip_prefix("dropdown:") {
-            Some(name) => Self::Dropdown(name.to_owned()),
-            None => Self::Shell(text.to_owned()),
-        }
-    }
 }
 
 pub(crate) struct TextControl<T: TextLike> {

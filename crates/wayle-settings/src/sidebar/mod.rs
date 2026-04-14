@@ -3,10 +3,15 @@
 //! Renders collapsible section headers and nav items with icons.
 //! Emits the selected page ID when the user clicks a nav item.
 
+mod helpers;
+mod methods;
+
 use std::collections::{HashMap, HashSet};
 
 use relm4::{gtk, gtk::prelude::*, prelude::*};
 use wayle_i18n::t;
+
+use self::helpers::{build_nav_item, build_section_header};
 
 pub(crate) struct NavItem {
     pub(crate) id: &'static str,
@@ -24,11 +29,11 @@ pub(crate) struct SidebarInit {
 }
 
 pub(crate) struct Sidebar {
-    active_id: &'static str,
-    collapsed: HashSet<&'static str>,
-    nav_buttons: HashMap<&'static str, gtk::Button>,
-    section_items: HashMap<&'static str, gtk::Box>,
-    section_headers: HashMap<&'static str, gtk::Button>,
+    pub(super) active_id: &'static str,
+    pub(super) collapsed: HashSet<&'static str>,
+    pub(super) nav_buttons: HashMap<&'static str, gtk::Button>,
+    pub(super) section_items: HashMap<&'static str, gtk::Box>,
+    pub(super) section_headers: HashMap<&'static str, gtk::Button>,
 }
 
 #[derive(Debug)]
@@ -43,6 +48,8 @@ pub(crate) enum SidebarOutput {
     PageSelected(&'static str),
     ResetAllRequested,
 }
+
+const DEFAULT_ACTIVE_ID: &str = "general";
 
 #[relm4::component(pub(crate))]
 impl SimpleComponent for Sidebar {
@@ -150,14 +157,12 @@ impl SimpleComponent for Sidebar {
             widgets.nav.append(&section_box);
         }
 
-        let default_active = "general";
-
-        if let Some(button) = nav_buttons.get(default_active) {
+        if let Some(button) = nav_buttons.get(DEFAULT_ACTIVE_ID) {
             button.add_css_class("active");
         }
 
         let model = Self {
-            active_id: default_active,
+            active_id: DEFAULT_ACTIVE_ID,
             collapsed: HashSet::new(),
             nav_buttons,
             section_items,
@@ -169,108 +174,11 @@ impl SimpleComponent for Sidebar {
 
     fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>) {
         match msg {
-            SidebarMsg::Navigate(id) => {
-                if let Some(prev) = self.nav_buttons.get(self.active_id) {
-                    prev.remove_css_class("active");
-                }
-
-                self.active_id = id;
-
-                if let Some(next) = self.nav_buttons.get(id) {
-                    next.add_css_class("active");
-                }
-
-                let _ = sender.output(SidebarOutput::PageSelected(id));
-            }
-
-            SidebarMsg::ToggleSection(section_key) => {
-                let Some(items_box) = self.section_items.get(section_key) else {
-                    return;
-                };
-                let header = self.section_headers.get(section_key);
-
-                if self.collapsed.contains(section_key) {
-                    self.collapsed.remove(section_key);
-                    items_box.set_visible(true);
-
-                    if let Some(header) = header {
-                        header.remove_css_class("collapsed");
-                    }
-                } else {
-                    self.collapsed.insert(section_key);
-                    items_box.set_visible(false);
-
-                    if let Some(header) = header {
-                        header.add_css_class("collapsed");
-                    }
-                }
-            }
-
+            SidebarMsg::Navigate(id) => self.on_navigate(id, &sender),
+            SidebarMsg::ToggleSection(section_key) => self.on_toggle_section(section_key),
             SidebarMsg::ResetAllRequested => {
                 let _ = sender.output(SidebarOutput::ResetAllRequested);
             }
         }
     }
-}
-
-fn build_section_header(i18n_key: &'static str, sender: &ComponentSender<Sidebar>) -> gtk::Button {
-    let label = gtk::Label::builder()
-        .label(t(i18n_key))
-        .halign(gtk::Align::Start)
-        .hexpand(true)
-        .build();
-
-    let chevron = gtk::Image::builder()
-        .icon_name("ld-chevron-down-symbolic")
-        .build();
-    chevron.add_css_class("sidebar-section-chevron");
-
-    let content = gtk::Box::builder()
-        .orientation(gtk::Orientation::Horizontal)
-        .build();
-    content.append(&label);
-    content.append(&chevron);
-
-    let button = gtk::Button::new();
-    button.set_child(Some(&content));
-    button.add_css_class("sidebar-section-title");
-    button.set_cursor_from_name(Some("pointer"));
-
-    let sender = sender.clone();
-    button.connect_clicked(move |_| {
-        sender.input(SidebarMsg::ToggleSection(i18n_key));
-    });
-
-    button
-}
-
-fn build_nav_item(item: &NavItem, sender: &ComponentSender<Sidebar>) -> gtk::Button {
-    let icon = gtk::Image::builder().icon_name(item.icon).build();
-    icon.add_css_class("sidebar-item-icon");
-
-    let label = gtk::Label::builder()
-        .label(t(item.i18n_key))
-        .hexpand(true)
-        .halign(gtk::Align::Start)
-        .build();
-
-    let content = gtk::Box::builder()
-        .orientation(gtk::Orientation::Horizontal)
-        .build();
-    content.append(&icon);
-    content.append(&label);
-
-    let button = gtk::Button::new();
-    button.set_child(Some(&content));
-    button.add_css_class("sidebar-item");
-    button.set_cursor_from_name(Some("pointer"));
-
-    let item_id = item.id;
-    let sender = sender.clone();
-
-    button.connect_clicked(move |_| {
-        sender.input(SidebarMsg::Navigate(item_id));
-    });
-
-    button
 }

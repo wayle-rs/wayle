@@ -1,6 +1,5 @@
-//! Zone row and chip rebuild. Zone = a left/center/right slot on a bar card.
+//! Zone row frame. Zone = a left/center/right slot on a bar card.
 
-mod chips;
 mod drag_drop;
 
 use std::{fmt, str::FromStr};
@@ -8,15 +7,12 @@ use std::{fmt, str::FromStr};
 use relm4::{gtk, gtk::prelude::*, prelude::*};
 use wayle_config::{
     ConfigProperty,
-    schemas::{bar::BarItem, modules::CustomModuleDefinition},
+    schemas::{bar::BarModule, modules::CustomModuleDefinition},
 };
 use wayle_i18n::t;
 
-pub(crate) use self::drag_drop::{DragPayload, DropLocation};
-use self::{
-    chips::{build_group_chip, build_module_chip},
-    drag_drop::attach_drop_target,
-};
+use self::drag_drop::attach_drop_target;
+pub(crate) use self::drag_drop::{DragPayload, DropLocation, attach_drag_source};
 use super::{
     card::{LayoutCard, LayoutCardMsg},
     module_picker,
@@ -67,7 +63,6 @@ impl ZoneId {
 
 pub(super) fn build_zone_row(
     zone: ZoneId,
-    items: &[BarItem],
     card_index: usize,
     custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,
     sender: &FactorySender<LayoutCard>,
@@ -91,7 +86,6 @@ pub(super) fn build_zone_row(
         .column_spacing(CHIP_COLUMN_SPACING)
         .build();
 
-    rebuild_zone_chips(&chips_box, items, card_index, zone, custom_modules, sender);
     attach_drop_target(&chips_box, card_index, zone, sender);
 
     let chips_frame = gtk::Box::builder()
@@ -109,10 +103,10 @@ pub(super) fn build_zone_row(
     add_button.set_cursor_from_name(Some("pointer"));
     add_button.set_valign(gtk::Align::Center);
 
-    module_picker::attach(
+    module_picker::attach::<LayoutCardMsg>(
         &add_button,
         custom_modules.clone(),
-        move |module| LayoutCardMsg::AddModule(zone, module),
+        move |module: BarModule| LayoutCardMsg::AddModule(zone, module),
         sender.input_sender().clone(),
     );
 
@@ -135,36 +129,4 @@ pub(super) fn build_zone_row(
     row.append(&group_button);
 
     (row, chips_box)
-}
-
-pub(super) fn rebuild_zone_chips(
-    chips_box: &gtk::FlowBox,
-    items: &[BarItem],
-    card_index: usize,
-    zone: ZoneId,
-    custom_modules: &ConfigProperty<Vec<CustomModuleDefinition>>,
-    sender: &FactorySender<LayoutCard>,
-) {
-    while let Some(child) = chips_box.first_child() {
-        chips_box.remove(&child);
-    }
-
-    for (item_index, item) in items.iter().enumerate() {
-        let chip = match item {
-            BarItem::Module(module_ref) => {
-                build_module_chip(module_ref, card_index, zone, item_index, sender)
-            }
-            BarItem::Group(group) => {
-                build_group_chip(group, card_index, zone, item_index, custom_modules, sender)
-            }
-        };
-
-        chips_box.append(&chip);
-    }
-
-    if items.is_empty() {
-        let empty = gtk::Label::new(Some(&t("settings-layout-zone-empty")));
-        empty.add_css_class("layout-zone-empty");
-        chips_box.append(&empty);
-    }
 }

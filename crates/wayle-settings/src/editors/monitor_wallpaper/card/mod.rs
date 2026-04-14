@@ -1,27 +1,21 @@
 //! Single monitor wallpaper card. Shows monitor name, wallpaper path,
 //! and fit mode in a compact card layout.
 
-use relm4::{
-    factory::FactoryView,
-    gtk::{gio, prelude::*},
-    prelude::*,
-};
-use serde::{
-    Deserialize,
-    de::value::{Error as SerdeValueError, StrDeserializer},
-};
-use wayle_config::{
-    EnumVariants,
-    schemas::wallpaper::{FitMode, MonitorWallpaperConfig},
-};
+mod helpers;
+mod methods;
+
+use relm4::{factory::FactoryView, gtk, gtk::prelude::*, prelude::*};
+use wayle_config::schemas::wallpaper::{FitMode, MonitorWallpaperConfig};
 use wayle_i18n::t;
 
+use self::helpers::{fit_mode_index, fit_mode_labels};
+
 pub(super) struct MonitorCard {
-    name: String,
-    wallpaper: String,
-    fit_mode: FitMode,
-    name_entry: gtk::Entry,
-    wallpaper_entry: gtk::Entry,
+    pub(super) name: String,
+    pub(super) wallpaper: String,
+    pub(super) fit_mode: FitMode,
+    pub(super) name_entry: gtk::Entry,
+    pub(super) wallpaper_entry: gtk::Entry,
 }
 
 #[derive(Debug)]
@@ -47,38 +41,6 @@ impl MonitorCard {
             wallpaper: self.wallpaper.clone(),
         }
     }
-}
-
-fn fit_mode_labels() -> Vec<String> {
-    FitMode::variants()
-        .iter()
-        .map(|variant| {
-            let resolved = t(variant.fluent_key);
-
-            if resolved == variant.fluent_key {
-                variant.value.to_owned()
-            } else {
-                resolved
-            }
-        })
-        .collect()
-}
-
-fn fit_mode_index(mode: &FitMode) -> u32 {
-    FitMode::variants()
-        .iter()
-        .position(|variant| fit_mode_from_value(variant.value).as_ref() == Some(mode))
-        .unwrap_or(0) as u32
-}
-
-fn fit_mode_from_index(index: u32) -> Option<FitMode> {
-    let variant = FitMode::variants().get(index as usize)?;
-    fit_mode_from_value(variant.value)
-}
-
-fn fit_mode_from_value(value: &str) -> Option<FitMode> {
-    let deserializer: StrDeserializer<'_, SerdeValueError> = StrDeserializer::new(value);
-    FitMode::deserialize(deserializer).ok()
 }
 
 #[relm4::factory(pub(super))]
@@ -203,47 +165,11 @@ impl FactoryComponent for MonitorCard {
 
     fn update(&mut self, msg: Self::Input, sender: FactorySender<Self>) {
         match msg {
-            MonitorCardMsg::NameChanged => {
-                self.name = self.name_entry.text().to_string();
-                let _ = sender.output(MonitorCardOutput::Changed);
-            }
-
-            MonitorCardMsg::WallpaperChanged => {
-                self.wallpaper = self.wallpaper_entry.text().to_string();
-                let _ = sender.output(MonitorCardOutput::Changed);
-            }
-
-            MonitorCardMsg::FitModeSelected(index) => {
-                if let Some(mode) = fit_mode_from_index(index) {
-                    self.fit_mode = mode;
-                    let _ = sender.output(MonitorCardOutput::Changed);
-                }
-            }
-
-            MonitorCardMsg::Browse => {
-                let dialog = gtk::FileDialog::new();
-                let input_sender = sender.input_sender().clone();
-
-                let root = self.wallpaper_entry.root();
-                let window = root
-                    .as_ref()
-                    .and_then(|root| root.downcast_ref::<gtk::Window>());
-
-                dialog.open(window, gio::Cancellable::NONE, move |result| {
-                    if let Ok(file) = result
-                        && let Some(path) = file.path()
-                    {
-                        let path_str = path.to_string_lossy().into_owned();
-                        let _ = input_sender.send(MonitorCardMsg::FileSelected(path_str));
-                    }
-                });
-            }
-
-            MonitorCardMsg::FileSelected(path) => {
-                self.wallpaper_entry.set_text(&path);
-                self.wallpaper = path;
-                let _ = sender.output(MonitorCardOutput::Changed);
-            }
+            MonitorCardMsg::NameChanged => self.on_name_changed(&sender),
+            MonitorCardMsg::WallpaperChanged => self.on_wallpaper_changed(&sender),
+            MonitorCardMsg::FitModeSelected(index) => self.on_fit_mode_selected(index, &sender),
+            MonitorCardMsg::Browse => self.on_browse(&sender),
+            MonitorCardMsg::FileSelected(path) => self.on_file_selected(path, &sender),
         }
     }
 }

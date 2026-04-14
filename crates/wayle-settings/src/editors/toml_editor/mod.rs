@@ -1,9 +1,9 @@
 //! TOML source editor for complex config values (maps, lists, thresholds).
 
 pub(crate) mod helpers;
+mod methods;
 mod row;
 
-use helpers::{deserialize_with_key, serialize_with_key};
 use relm4::{
     gtk,
     gtk::{glib, prelude::*},
@@ -15,18 +15,19 @@ use sourceview5::prelude::*;
 use wayle_config::{ConfigProperty, schemas::styling::HexColor};
 use wayle_i18n::t;
 
+use self::helpers::serialize_with_key;
 use super::{WatcherHandle, spawn_property_watcher};
 use crate::app::sourceview_scheme::SCHEME_ID;
 
 pub(crate) struct TomlEditorControl<
     T: Clone + Send + Sync + PartialEq + Serialize + for<'de> Deserialize<'de> + 'static,
 > {
-    property: ConfigProperty<T>,
-    buffer: sourceview5::Buffer,
-    changed_id: glib::SignalHandlerId,
-    scrolled: gtk::ScrolledWindow,
-    dirty_badge: gtk::Label,
-    key: &'static str,
+    pub(super) property: ConfigProperty<T>,
+    pub(super) buffer: sourceview5::Buffer,
+    pub(super) changed_id: glib::SignalHandlerId,
+    pub(super) scrolled: gtk::ScrolledWindow,
+    pub(super) dirty_badge: gtk::Label,
+    pub(super) key: &'static str,
     _property_watcher: WatcherHandle,
     _palette_watcher: WatcherHandle,
 }
@@ -154,42 +155,9 @@ where
 
     fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
-            TomlEditorMsg::Save => {
-                let start = self.buffer.start_iter();
-                let end = self.buffer.end_iter();
-                let text = self.buffer.text(&start, &end, false);
-
-                match deserialize_with_key::<T>(&text, self.key) {
-                    Some(value) => {
-                        self.scrolled.remove_css_class("error");
-                        self.property.set(value);
-                        self.dirty_badge.set_visible(false);
-                    }
-                    None => {
-                        self.scrolled.add_css_class("error");
-                    }
-                }
-            }
-
-            TomlEditorMsg::Refresh => {
-                self.buffer.block_signal(&self.changed_id);
-                let toml_text = serialize_with_key(&self.property.get(), self.key);
-                self.buffer.set_text(&toml_text);
-                self.buffer.unblock_signal(&self.changed_id);
-                self.dirty_badge.set_visible(false);
-            }
-
-            TomlEditorMsg::ReapplyScheme => {
-                let buffer = self.buffer.clone();
-
-                glib::idle_add_local_once(move || {
-                    let manager = sourceview5::StyleSchemeManager::default();
-
-                    if let Some(scheme) = manager.scheme(SCHEME_ID) {
-                        buffer.set_style_scheme(Some(&scheme));
-                    }
-                });
-            }
+            TomlEditorMsg::Save => self.on_save(),
+            TomlEditorMsg::Refresh => self.on_refresh(),
+            TomlEditorMsg::ReapplyScheme => self.on_reapply_scheme(),
         }
     }
 }

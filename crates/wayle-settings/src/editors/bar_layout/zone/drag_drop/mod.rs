@@ -1,13 +1,17 @@
 //! Drag-and-drop payload encoding and drop handling.
 
+mod helpers;
+
 use gtk::prelude::*;
 use relm4::{
     factory::FactorySender,
     gtk,
     gtk::{gdk, glib},
+    prelude::DynamicIndex,
 };
 use tracing::warn;
 
+use self::helpers::{clear_drop_highlight, compute_drop_position, highlight_drop_position};
 use super::{
     super::card::{LayoutCard, LayoutCardOutput},
     ZoneId,
@@ -27,23 +31,50 @@ pub(crate) struct DropLocation {
     pub(crate) position: usize,
 }
 
-pub(super) fn attach_drag_source(
+impl DragPayload {
+    const SEPARATOR: char = ':';
+
+    fn encode(&self) -> String {
+        format!(
+            "{}{sep}{}{sep}{}",
+            self.card_index,
+            self.zone,
+            self.item_index,
+            sep = Self::SEPARATOR,
+        )
+    }
+
+    fn decode(encoded: &str) -> Option<Self> {
+        let mut parts = encoded.splitn(3, Self::SEPARATOR);
+
+        let card_index = parts.next()?.parse().ok()?;
+        let zone = parts.next()?.parse().ok()?;
+        let item_index = parts.next()?.parse().ok()?;
+
+        Some(Self {
+            card_index,
+            zone,
+            item_index,
+        })
+    }
+}
+
+pub(crate) fn attach_drag_source(
     widget: &gtk::Box,
-    card_index: usize,
+    card_index: DynamicIndex,
     zone: ZoneId,
-    item_index: usize,
+    self_index: DynamicIndex,
 ) {
     let drag = gtk::DragSource::new();
     drag.set_actions(gdk::DragAction::MOVE);
 
-    let payload = DragPayload {
-        card_index,
-        zone,
-        item_index,
-    }
-    .encode();
-
     drag.connect_prepare(move |_source, _x, _y| {
+        let payload = DragPayload {
+            card_index: card_index.current_index(),
+            zone,
+            item_index: self_index.current_index(),
+        }
+        .encode();
         Some(gdk::ContentProvider::for_value(&payload.to_value()))
     });
 
@@ -62,7 +93,7 @@ pub(super) fn attach_drag_source(
     widget.add_controller(drag);
 }
 
-pub(super) fn attach_drop_target(
+pub(crate) fn attach_drop_target(
     chips_box: &gtk::FlowBox,
     card_index: usize,
     zone: ZoneId,
@@ -117,97 +148,4 @@ pub(super) fn attach_drop_target(
     });
 
     chips_box.add_controller(drop);
-}
-
-fn flow_children(container: &gtk::FlowBox) -> Vec<gtk::FlowBoxChild> {
-    let mut children = Vec::new();
-    let mut index = 0;
-
-    while let Some(child) = container.child_at_index(index) {
-        children.push(child);
-        index += 1;
-    }
-
-    children
-}
-
-fn compute_drop_position(container: &gtk::FlowBox, drop_x: f64, drop_y: f64) -> usize {
-    let children = flow_children(container);
-
-    if let Some(hit) = container.child_at_pos(drop_x as i32, drop_y as i32) {
-        let hit_index = hit.index() as usize;
-        let Some(bounds) = hit.compute_bounds(container) else {
-            return hit_index;
-        };
-
-        let center_x = f64::from(bounds.x() + bounds.width() / 2.0);
-        if drop_x < center_x {
-            return hit_index;
-        }
-        return hit_index + 1;
-    }
-
-    let mut row_last: Option<usize> = None;
-
-    for (index, child) in children.iter().enumerate() {
-        let Some(bounds) = child.compute_bounds(container) else {
-            continue;
-        };
-
-        let row_top = f64::from(bounds.y());
-        let row_bottom = f64::from(bounds.y() + bounds.height());
-
-        if drop_y < row_top || drop_y > row_bottom {
-            continue;
-        }
-
-        row_last = Some(index);
-    }
-
-    row_last.map_or(children.len(), |index| index + 1)
-}
-
-fn highlight_drop_position(container: &gtk::FlowBox, position: usize) {
-    let children = flow_children(container);
-
-    if let Some(target) = children.get(position) {
-        target.add_css_class("drop-before");
-    } else if let Some(last) = children.last() {
-        last.add_css_class("drop-after");
-    }
-}
-
-fn clear_drop_highlight(container: &gtk::FlowBox) {
-    for child in flow_children(container) {
-        child.remove_css_class("drop-before");
-        child.remove_css_class("drop-after");
-    }
-}
-
-impl DragPayload {
-    const SEPARATOR: char = ':';
-
-    fn encode(&self) -> String {
-        format!(
-            "{}{sep}{}{sep}{}",
-            self.card_index,
-            self.zone,
-            self.item_index,
-            sep = Self::SEPARATOR,
-        )
-    }
-
-    fn decode(encoded: &str) -> Option<Self> {
-        let mut parts = encoded.splitn(3, Self::SEPARATOR);
-
-        let card_index = parts.next()?.parse().ok()?;
-        let zone = parts.next()?.parse().ok()?;
-        let item_index = parts.next()?.parse().ok()?;
-
-        Some(Self {
-            card_index,
-            zone,
-            item_index,
-        })
-    }
 }
