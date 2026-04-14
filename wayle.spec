@@ -7,7 +7,7 @@ Summary: A configurable desktop shell for Wayland compositors
 
 License: MIT
 URL: https://github.com/wayle-rs/wayle
-Source: %{url}/archive/v%{version}.tar.gz
+Source0: {{{ git_dir_pack }}}
 
 BuildRequires: glib2-devel
 BuildRequires: gdk-pixbuf2-devel
@@ -41,7 +41,7 @@ Suggests: power-profiles-daemon
 A configurable desktop shell for Wayland compositors. Built in Rust with GTK4 and Relm4. Compositor-agnostic successor to HyprPanel.
 
 %prep
-%autosetup -n %{name}-%{version}
+{{{ git_dir_setup_macro }}}
 cargo fetch --target "$(rustc -vV | sed -n 's/host: //p')"
 
 %build
@@ -49,6 +49,7 @@ cargo build --frozen --release
 
 %install
 install -Dm755 target/release/%{name} %{buildroot}%{_bindir}/%{name} 
+install -Dm755 target/release/%{name}-settings %{buildroot}%{_bindir}/%{name}-settings
 
 install -dm755 %{buildroot}%{_datadir}/%{name}/icons
 cp -r resources/icons/hicolor %{buildroot}%{_datadir}/%{name}/icons
@@ -61,14 +62,19 @@ install -Dm644 wayle.bash %{buildroot}%{_datadir}/bash-completion/completions/wa
 install -Dm644 _wayle %{buildroot}%{_datadir}/zsh/site-functions/_wayle
 install -Dm644 wayle.fish %{buildroot}%{_datadir}/fish/vendor_completions.d/wayle.fish
 
-install -Dm644 resources/%{name}.service %{buildroot}%{_userunitdir}/%{name}.service
+install -Dm644 resources/wayle.service %{buildroot}%{_userunitdir}/wayle.service
+install -Dm644 resources/com.wayle.settings.desktop %{buildroot}%{_datadir}/applications/com.wayle.settings.desktop
+install -Dm644 resources/wayle-settings.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/wayle-settings.svg
 
 %files
 %{_bindir}/%{name}
+%{_bindir}/%{name}-settings
 %{_datadir}/%{name}/
 %{_datadir}/bash-completion/completions/wayle
 %{_datadir}/zsh/site-functions/_wayle
 %{_datadir}/fish/vendor_completions.d/wayle.fish
 %{_userunitdir}/%{name}.service
+%{_datadir}/applications/com.wayle.settings.desktop
+%{_datadir}/icons/hicolor/scalable/apps/wayle-settings.svg
 %license LICENSE
 %doc docs/
