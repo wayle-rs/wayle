@@ -382,6 +382,7 @@ mod tests {
         let prop = ConfigProperty::new(10);
 
         prop.stage_config(20);
+        prop.commit_config_reload();
 
         assert_eq!(prop.get(), 20);
         assert_eq!(prop.source(), ValueSource::Config);
@@ -447,6 +448,7 @@ mod tests {
     fn reset_config_layer_clears_without_recomputing() {
         let prop = ConfigProperty::new(10);
         prop.stage_config(20);
+        prop.commit_config_reload();
         assert_eq!(prop.get(), 20);
 
         prop.reset_config_layer();
@@ -463,6 +465,7 @@ mod tests {
     fn commit_config_reload_recomputes_effective() {
         let prop = ConfigProperty::new(10);
         prop.stage_config(20);
+        prop.commit_config_reload();
         prop.reset_config_layer();
         assert_eq!(prop.get(), 20);
 
@@ -476,6 +479,7 @@ mod tests {
     fn reset_apply_commit_reverts_removed_config_to_default() {
         let prop = ConfigProperty::new(10);
         prop.stage_config(20);
+        prop.commit_config_reload();
         assert_eq!(prop.get(), 20);
 
         prop.reset_config_layer();

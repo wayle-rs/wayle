@@ -3458,6 +3458,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "sourceview5"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6e4acb02162917d7b689c84f4ed710c22302c67c7e61da28a4e8ac548c04442c"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "gdk-pixbuf",
+ "gdk4",
+ "gio",
+ "glib",
+ "gtk4",
+ "libc",
+ "pango",
+ "sourceview5-sys",
+]
+
+[[package]]
+name = "sourceview5-sys"
+version = "0.10.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e1c1529de5df2653788828ef71d44b113bb80e496bc17315f4122106bd6eebae"
+dependencies = [
+ "gdk-pixbuf-sys",
+ "gdk4-sys",
+ "gio-sys",
+ "glib-sys",
+ "gobject-sys",
+ "gtk4-sys",
+ "libc",
+ "pango-sys",
+ "system-deps",
+]
+
+[[package]]
 name = "spin"
 version = "0.9.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4641,6 +4676,7 @@ dependencies = [
  "thiserror 2.0.18",
  "tracing",
  "unic-langid",
+ "wayle-config",
 ]
 
 [[package]]
@@ -4721,9 +4757,9 @@ dependencies = [
 
 [[package]]
 name = "wayle-notification"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cd650ecea662204ae90e0984fd2cf94f0280365c8f0b782b9b8804f2ceaa210"
+checksum = "e3ba2fb081f8e54cf5772929c95b263230f2f5842b87f5359a01bfbe520a9c19"
 dependencies = [
  "async-trait",
  "chrono",
@@ -4761,6 +4797,30 @@ dependencies = [
  "tracing",
  "wayle-core",
  "wayle-traits",
+ "zbus",
+]
+
+[[package]]
+name = "wayle-settings"
+version = "0.1.2"
+dependencies = [
+ "futures",
+ "gtk4",
+ "notify",
+ "relm4",
+ "serde",
+ "serde_json",
+ "sourceview5",
+ "tokio",
+ "toml 0.9.11+spec-1.1.0",
+ "tracing",
+ "tracing-subscriber",
+ "wayle-config",
+ "wayle-i18n",
+ "wayle-icons",
+ "wayle-styling",
+ "wayle-wallpaper",
+ "wayle-widgets",
  "zbus",
 ]
 
@@ -4881,9 +4941,9 @@ checksum = "0833629ad4481a1302cb6df07da2b438bdb1c99dc5e5844e3198d53945728a6d"
 
 [[package]]
 name = "wayle-wallpaper"
-version = "0.1.2"
+version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "02bea011f6013230b70337d63e58f1235a93f606b0caecb61b8bc87923a5c414"
+checksum = "7b42f430fdaa906ad76bdcc583969b7203b7a7eacaccf2709f10c279c20b9efe"
 dependencies = [
  "derive_more",
  "futures",
