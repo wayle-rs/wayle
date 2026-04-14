@@ -3,7 +3,7 @@
 ## Battery Module Configuration
 
 settings-modules-battery-level-icons = Level Icons
-    .description = Icons for battery levels from empty to full
+    .description = Icons shown at different charge levels, from empty to full
 
 settings-modules-battery-charging-icon = Charging Icon
     .description = Icon shown when battery is charging
@@ -49,3 +49,12 @@ settings-modules-battery-scroll-up = Scroll Up
 
 settings-modules-battery-scroll-down = Scroll Down
     .description = Shell command on scroll down
+
+settings-modules-battery-format = Format
+    .description = Label template for battery display (e.g. {"{{"}percentage{"}}"} %)
+
+settings-modules-battery-left-click = Left Click
+    .description = Action on left click
+
+settings-modules-battery-thresholds = Thresholds
+    .description = Color thresholds that change based on value levels

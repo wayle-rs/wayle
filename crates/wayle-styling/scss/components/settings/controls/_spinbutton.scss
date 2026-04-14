@@ -1,0 +1,22 @@
+.setting-control spinbutton {
+    min-width: calc(8rem * var(--global-scale));
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-default);
+}
+
+.setting-control spinbutton text {
+    padding: var(--space-xs) var(--space-sm);
+}
+
+.setting-control spinbutton button {
+    padding: 0 var(--space-xs);
+    color: var(--fg-muted);
+}
+
+.setting-control spinbutton button:hover {
+    color: var(--fg-default);
+    background-color: var(--bg-hover);
+}

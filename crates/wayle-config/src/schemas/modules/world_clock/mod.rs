@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// World clock module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-world-clock")]
 pub struct WorldClockConfig {
     /// Format string with embedded timezone blocks.
     ///

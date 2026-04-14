@@ -52,3 +52,6 @@ settings-modules-ram-scroll-up = Scroll Up
 
 settings-modules-ram-scroll-down = Scroll Down
     .description = Shell command on scroll down
+
+settings-modules-ram-thresholds = Thresholds
+    .description = Color thresholds that change based on value levels

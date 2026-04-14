@@ -1,0 +1,8 @@
+button.font {
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-default);
+}

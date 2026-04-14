@@ -13,7 +13,7 @@ use crate::{
 };
 
 /// Cava audio visualizer module configuration.
-#[wayle_config(bar_container)]
+#[wayle_config(bar_container, i18n_prefix = "settings-modules-cava")]
 pub struct CavaConfig {
     /// Number of frequency bars.
     #[default(BarCount::DEFAULT)]

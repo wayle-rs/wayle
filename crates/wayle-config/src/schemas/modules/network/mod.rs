@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Network module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-network")]
 pub struct NetworkConfig {
     /// WiFi icon when disabled.
     #[serde(rename = "wifi-disabled-icon")]

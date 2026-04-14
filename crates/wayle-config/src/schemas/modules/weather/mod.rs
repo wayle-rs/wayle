@@ -12,7 +12,7 @@ use crate::{
 };
 
 /// Weather module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-weather")]
 pub struct WeatherConfig {
     /// Weather data provider.
     #[default(WeatherProvider::default())]
@@ -147,7 +147,18 @@ pub struct WeatherConfig {
 }
 
 /// Weather data provider selection.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum WeatherProvider {
     /// Open-Meteo (no API key required).
@@ -160,7 +171,18 @@ pub enum WeatherProvider {
 }
 
 /// Temperature unit for display.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum TemperatureUnit {
     /// Celsius (metric).

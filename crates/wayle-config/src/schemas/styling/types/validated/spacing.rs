@@ -18,13 +18,16 @@ const MIN: f32 = 0.0;
 pub struct Spacing(#[schemars(range(min = MIN))] f32);
 
 impl Spacing {
+    /// `0.0`
+    pub const MIN: f32 = MIN;
+
     /// Creates a spacing value, clamping negatives to 0.
     #[must_use]
     pub fn new(value: f32) -> Self {
-        Self(value.max(MIN))
+        Self(value.max(Self::MIN))
     }
 
-    /// Returns the inner f32 value.
+    /// The raw `f32`.
     #[must_use]
     pub fn value(self) -> f32 {
         self.0

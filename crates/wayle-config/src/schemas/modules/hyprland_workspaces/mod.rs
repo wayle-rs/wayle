@@ -2,7 +2,7 @@ use std::{collections::HashMap, ops::Deref};
 
 use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use wayle_derive::wayle_config;
+use wayle_derive::{wayle_config, wayle_enum};
 
 use crate::{
     ConfigProperty,
@@ -11,8 +11,7 @@ use crate::{
 };
 
 /// What identifies a workspace in the UI.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum DisplayMode {
     /// Show workspace number or name.
     #[default]
@@ -24,7 +23,18 @@ pub enum DisplayMode {
 }
 
 /// How workspace numbers are displayed.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum Numbering {
     /// Show actual Hyprland workspace IDs (1, 2, 3, 4, 5, 6...).
@@ -38,7 +48,18 @@ pub enum Numbering {
 }
 
 /// Where the urgent pulse animation is applied.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum UrgentMode {
     /// Pulse the entire workspace.
@@ -51,8 +72,7 @@ pub enum UrgentMode {
 }
 
 /// Visual indicator style for the active workspace.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum ActiveIndicator {
     /// Entire button gets a colored background.
     #[default]
@@ -135,7 +155,7 @@ impl<'de> Deserialize<'de> for WorkspaceMap {
 }
 
 /// Hyprland workspaces module configuration.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-modules-hyprland-workspaces")]
 pub struct HyprlandWorkspacesConfig {
     /// Minimum number of workspace buttons to display.
     ///

@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Dashboard module configuration.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-modules-dashboard")]
 pub struct DashboardConfig {
     /// Override the auto-detected distro icon.
     #[serde(rename = "icon-override")]
@@ -84,6 +84,7 @@ pub struct DashboardConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(true)]
     pub icon_show: ConfigProperty<bool>,
 
@@ -91,6 +92,7 @@ pub struct DashboardConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(false)]
     pub label_show: ConfigProperty<bool>,
 
@@ -98,6 +100,7 @@ pub struct DashboardConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(ColorValue::Token(CssToken::Yellow))]
     pub label_color: ConfigProperty<ColorValue>,
 
@@ -105,6 +108,7 @@ pub struct DashboardConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(0)]
     pub label_max_length: ConfigProperty<u32>,
 
@@ -112,6 +116,7 @@ pub struct DashboardConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(ColorValue::Token(CssToken::BgSurfaceElevated))]
     pub button_bg_color: ConfigProperty<ColorValue>,
 }

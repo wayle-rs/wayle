@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Separator module configuration.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-modules-separator")]
 pub struct SeparatorConfig {
     /// Thickness of the separator line in pixels.
     #[serde(rename = "size")]

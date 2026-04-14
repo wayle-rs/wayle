@@ -9,7 +9,7 @@ use crate::{
 };
 
 /// Systray module configuration.
-#[wayle_config(bar_container)]
+#[wayle_config(bar_container, i18n_prefix = "settings-modules-systray")]
 pub struct SystrayConfig {
     /// Scale multiplier for tray item icons.
     #[serde(rename = "icon-scale")]

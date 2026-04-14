@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Clock module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-clock")]
 pub struct ClockConfig {
     /// Format string using strftime syntax.
     ///

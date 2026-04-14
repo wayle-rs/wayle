@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Microphone module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-microphone")]
 pub struct MicrophoneConfig {
     /// Icon shown when microphone is active (unmuted).
     #[serde(rename = "icon-active")]

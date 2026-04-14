@@ -3,7 +3,7 @@ use wayle_derive::wayle_config;
 use crate::ConfigProperty;
 
 /// General Wayle configuration.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-general")]
 pub struct GeneralConfig {
     /// Sans-serif font family for UI text and labels.
     #[serde(rename = "font-sans")]

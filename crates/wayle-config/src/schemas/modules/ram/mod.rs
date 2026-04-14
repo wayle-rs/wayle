@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// RAM module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-ram")]
 pub struct RamConfig {
     /// Polling interval in milliseconds.
     ///

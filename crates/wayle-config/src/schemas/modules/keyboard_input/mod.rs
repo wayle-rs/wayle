@@ -10,7 +10,7 @@ use crate::{
 };
 
 /// Keyboard input module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-keyboard-input")]
 pub struct KeyboardInputConfig {
     /// Format string for the label.
     ///

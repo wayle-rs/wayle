@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Storage module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-storage")]
 pub struct StorageConfig {
     /// Polling interval in milliseconds.
     ///

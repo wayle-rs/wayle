@@ -6,7 +6,7 @@ use wayle_derive::wayle_config;
 use crate::{ConfigProperty, schemas::styling::Spacing};
 
 /// On-screen display configuration.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-osd")]
 pub struct OsdConfig {
     /// Show OSD overlays for volume, brightness, and keyboard toggles.
     #[default(true)]

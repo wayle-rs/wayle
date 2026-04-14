@@ -14,7 +14,7 @@ use crate::{
 };
 
 /// Bar configuration.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-bar")]
 pub struct BarConfig {
     //
     // === === === === === === === === === ===

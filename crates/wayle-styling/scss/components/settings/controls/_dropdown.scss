@@ -1,0 +1,58 @@
+.setting-control dropdown {
+    min-width: calc(8rem * var(--global-scale));
+}
+
+.setting-control dropdown button {
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-default);
+}
+
+.setting-control dropdown button:hover {
+    border-color: var(--accent);
+}
+
+.setting-control dropdown button arrow {
+    -gtk-icon-source: -gtk-icontheme("ld-chevron-down-symbolic");
+    -gtk-icon-size: var(--icon-xs);
+    color: var(--fg-subtle);
+    margin-left: var(--space-xs);
+}
+
+.setting-control dropdown popover {
+    margin-top: var(--space-xs);
+}
+
+.setting-control dropdown popover contents {
+    padding: var(--space-xs);
+}
+
+.setting-control dropdown listview row {
+    padding: var(--space-xs) var(--space-sm);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--fg-muted);
+}
+
+.setting-control dropdown listview row:hover {
+    background-color: var(--bg-hover);
+    color: var(--fg-default);
+}
+
+.setting-control dropdown listview row:selected {
+    background-color: var(--accent-subtle);
+    color: var(--accent);
+}
+
+.setting-control dropdown listview row image {
+    -gtk-icon-size: var(--icon-xs);
+    margin-left: var(--space-md);
+}
+
+.setting-control dropdown listview row label {
+    margin-right: var(--space-md);
+}

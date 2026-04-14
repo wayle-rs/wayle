@@ -5,6 +5,7 @@ use std::fmt;
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer, de};
 pub use shadow::ShadowPreset;
+use wayle_derive::wayle_enum;
 
 /// Layout configuration for a bar on a specific monitor.
 ///
@@ -243,6 +244,11 @@ impl schemars::JsonSchema for BarModule {
 impl BarModule {
     const CUSTOM_PREFIX: &str = "custom-";
 
+    /// All built-in module names in kebab-case.
+    pub fn builtin_names() -> &'static [&'static str] {
+        BUILTIN_MODULES
+    }
+
     fn to_kebab_case(&self) -> &'static str {
         match self {
             Self::Battery => "battery",
@@ -389,8 +395,8 @@ const BUILTIN_MODULES: &[&str] = &[
 ];
 
 /// Bar position on screen.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Hash)]
+#[wayle_enum]
 pub enum Location {
     /// Top edge of the screen.
     Top,
@@ -420,8 +426,8 @@ impl Location {
 }
 
 /// Border placement for bar buttons.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Hash)]
+#[wayle_enum(default)]
 pub enum BorderLocation {
     /// No border.
     #[default]
@@ -453,8 +459,8 @@ impl BorderLocation {
 }
 
 /// Visual style variants for bar buttons.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Hash)]
+#[wayle_enum(default)]
 pub enum BarButtonVariant {
     /// Icon + label, minimal background.
     #[default]
@@ -477,8 +483,8 @@ impl BarButtonVariant {
 }
 
 /// Icon position within bar buttons.
-#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[derive(Hash)]
+#[wayle_enum(default)]
 pub enum IconPosition {
     /// Icon before label (left for horizontal, top for vertical bars).
     #[default]
@@ -494,5 +500,36 @@ impl IconPosition {
             Self::Start => None,
             Self::End => Some("icon-end"),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn bar_layout_group_roundtrip() {
+        let layout = BarLayout {
+            monitor: String::from("DP-1"),
+            extends: None,
+            show: true,
+            left: vec![
+                BarItem::Module(ModuleRef::Plain(BarModule::Clock)),
+                BarItem::Group(BarGroup {
+                    name: String::from("status"),
+                    modules: vec![ModuleRef::Plain(BarModule::Battery)],
+                }),
+            ],
+            center: vec![],
+            right: vec![],
+        };
+
+        let value = toml::Value::try_from(&layout).expect("serialize to toml::Value");
+        let toml_string = toml::to_string_pretty(&value).expect("serialize to string");
+
+        let deserialized: BarLayout =
+            toml::from_str(&toml_string).expect("deserialize from string");
+
+        assert_eq!(layout, deserialized);
     }
 }

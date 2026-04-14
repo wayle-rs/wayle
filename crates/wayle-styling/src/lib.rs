@@ -140,6 +140,7 @@ pub fn resolve_palette(fallback: &Palette, styling: &StylingConfig) -> Palette {
 
     match styling.theme_provider.get() {
         ThemeProvider::Wayle => fallback.clone(),
+
         ThemeProvider::Matugen => {
             let is_light = styling.matugen_light.get();
             matugen::MatugenProvider::load(is_light).unwrap_or_else(|err| {
@@ -147,6 +148,7 @@ pub fn resolve_palette(fallback: &Palette, styling: &StylingConfig) -> Palette {
                 fallback.clone()
             })
         }
+
         ThemeProvider::Wallust => {
             let is_light = styling.wallust_palette.get().is_light();
             wallust::WallustProvider::load(is_light).unwrap_or_else(|err| {
@@ -154,6 +156,7 @@ pub fn resolve_palette(fallback: &Palette, styling: &StylingConfig) -> Palette {
                 fallback.clone()
             })
         }
+
         ThemeProvider::Pywal => {
             let is_light = styling.pywal_light.get();
             pywal::PywalProvider::load(is_light).unwrap_or_else(|err| {

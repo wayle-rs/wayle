@@ -14,7 +14,7 @@ use wayle_derive::wayle_config;
 use crate::{ConfigProperty, infrastructure::themes::Palette};
 
 /// Styling configuration. Changes trigger stylesheet recompilation.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-styling")]
 pub struct StylingConfig {
     /// Scale multiplier for dropdowns, popovers, and dialogs.
     #[default(ScaleFactor::new(1.01))]
@@ -111,6 +111,7 @@ pub struct StylingConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(Vec::new())]
     pub available: ConfigProperty<Vec<ThemeEntry>>,
 }

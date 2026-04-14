@@ -7,6 +7,7 @@ members = [
 	"crates/wayle-icons",
 	"crates/wayle-idle-inhibit",
 	"crates/wayle-ipc",
+	"crates/wayle-settings",
 	"crates/wayle-shell",
 	"crates/wayle-styling",
 	"crates/wayle-widgets",
@@ -15,7 +16,7 @@ members = [
 exclude = ["sandbox"]
 
 [workspace.package]
-version = "0.1.2"
+version = "0.2.0"
 edition = "2024"
 rust-version = "1.92"
 repository = "https://github.com/wayle-rs/wayle"
@@ -72,6 +73,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 serde_json = "1.0.145"
 serde_json_path = "0.7"
 smithay-client-toolkit = "0.20"
+sourceview5 = "0.10.0"
 sysinfo = { version = "0.33", default-features = false, features = [
 	"component",
 	"disk",
@@ -101,12 +103,12 @@ wayle-core = "0.1.2"
 wayle-hyprland = "0.1.2"
 wayle-media = "0.1.2"
 wayle-network = "0.1.2"
-wayle-notification = "0.1.2"
+wayle-notification = "0.1.3"
 wayle-power-profiles = "0.1.2"
 wayle-sysinfo = "0.1.2"
 wayle-systray = "0.1.2"
 wayle-traits = "0.1.2"
-wayle-wallpaper = "0.1.2"
+wayle-wallpaper = "0.1.3"
 wayle-weather = "0.1.2"
 
 wayle-config = { path = "crates/wayle-config" }

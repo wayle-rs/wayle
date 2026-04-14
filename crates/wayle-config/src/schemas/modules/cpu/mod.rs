@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// CPU module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-cpu")]
 pub struct CpuConfig {
     /// Polling interval in milliseconds.
     ///

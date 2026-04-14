@@ -1,0 +1,18 @@
+.setting-control entry {
+    padding: 0;
+    min-height: 0;
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    color: var(--fg-default);
+}
+
+.setting-control entry text {
+    padding: var(--space-sm);
+    min-height: 0;
+}
+
+.setting-control entry:focus-within {
+    border-color: var(--accent);
+}

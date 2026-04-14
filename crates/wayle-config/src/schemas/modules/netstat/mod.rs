@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Network statistics module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-netstat")]
 pub struct NetstatConfig {
     /// Polling interval in milliseconds.
     ///

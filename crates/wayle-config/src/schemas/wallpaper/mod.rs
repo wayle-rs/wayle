@@ -9,7 +9,7 @@ use wayle_derive::wayle_config;
 use crate::ConfigProperty;
 
 /// Wallpaper management configuration.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-wallpaper")]
 pub struct WallpaperConfig {
     /// Enable the awww wallpaper engine. Disable to use an external wallpaper
     /// tool while keeping color extraction and theming.

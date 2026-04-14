@@ -2,10 +2,10 @@ use std::{borrow::Cow, fmt};
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize, Serializer, de};
+use wayle_derive::wayle_enum;
 
 /// Screen anchor for the OSD overlay.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum OsdPosition {
     /// Top-left corner.
     TopLeft,

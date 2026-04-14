@@ -49,3 +49,6 @@ settings-modules-microphone-scroll-up = Scroll Up
 
 settings-modules-microphone-scroll-down = Scroll Down
     .description = Action on scroll down
+
+settings-modules-microphone-thresholds = Thresholds
+    .description = Color thresholds that change based on value levels

@@ -13,7 +13,7 @@ use crate::{
 };
 
 /// Window title module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-window-title")]
 pub struct WindowTitleConfig {
     /// Format string for the label.
     ///

@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Hyprsunset (blue light filter) module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-hyprsunset")]
 pub struct HyprsunsetConfig {
     /// Format string for the label.
     ///

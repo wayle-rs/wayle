@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Battery module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-battery")]
 pub struct BatteryConfig {
     /// Icons for battery levels from empty to full.
     ///

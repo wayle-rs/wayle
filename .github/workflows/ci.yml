@@ -52,6 +52,7 @@ jobs:
                     clang \
                     gtk4 \
                     gtk4-layer-shell \
+                    gtksourceview5 \
                     libpulse \
                     fftw \
                     libpipewire \
@@ -94,6 +95,7 @@ jobs:
                     clang \
                     gtk4 \
                     gtk4-layer-shell \
+                    gtksourceview5 \
                     libpulse \
                     fftw \
                     libpipewire \
@@ -127,6 +129,7 @@ jobs:
                     clang \
                     gtk4 \
                     gtk4-layer-shell \
+                    gtksourceview5 \
                     libpulse \
                     fftw \
                     libpipewire \

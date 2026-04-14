@@ -16,13 +16,19 @@ const MAX: f64 = 1.0;
 pub struct NormalizedF64(#[schemars(range(min = MIN, max = MAX))] f64);
 
 impl NormalizedF64 {
+    /// `0.0`
+    pub const MIN: f64 = MIN;
+
+    /// `1.0`
+    pub const MAX: f64 = MAX;
+
     /// Creates a normalized value, clamping to 0.0-1.0.
     #[must_use]
     pub fn new(value: f64) -> Self {
-        Self(value.clamp(MIN, MAX))
+        Self(value.clamp(Self::MIN, Self::MAX))
     }
 
-    /// Returns the inner f64 value.
+    /// The raw `f64`.
     #[must_use]
     pub fn value(self) -> f64 {
         self.0

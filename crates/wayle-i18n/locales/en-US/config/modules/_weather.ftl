@@ -64,3 +64,12 @@ settings-modules-weather-scroll-up = Scroll Up
 
 settings-modules-weather-scroll-down = Scroll Down
     .description = Shell command on scroll down
+
+settings-modules-weather-time-format = Time Format
+    .description = Time display format for forecasts
+
+settings-modules-weather-left-click = Left Click
+    .description = Action on left click
+
+settings-modules-weather-refresh-interval-seconds = Refresh Interval
+    .description = How often weather data is fetched (seconds)

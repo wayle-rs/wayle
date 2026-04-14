@@ -49,3 +49,6 @@ settings-modules-clock-scroll-up = Scroll Up
 
 settings-modules-clock-scroll-down = Scroll Down
     .description = Shell command on scroll down
+
+settings-modules-clock-dropdown-show-seconds = Show Seconds
+    .description = Show seconds in the calendar dropdown clock display

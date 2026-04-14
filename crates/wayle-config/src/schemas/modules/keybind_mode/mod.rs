@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Keybind mode indicator configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-keybind-mode")]
 pub struct KeybindModeConfig {
     /// Format string for the label.
     ///

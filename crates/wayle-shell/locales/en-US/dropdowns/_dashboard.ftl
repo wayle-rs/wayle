@@ -1,6 +1,7 @@
 ### Dashboard Dropdown
 
 dropdown-dashboard-title = Dashboard
+dropdown-dashboard-open-settings = Open Settings
 
 ## Quick Actions
 dropdown-dashboard-wifi = WiFi

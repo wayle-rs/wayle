@@ -13,7 +13,7 @@ use crate::{
 };
 
 /// Notification module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-notification")]
 pub struct NotificationConfig {
     /// Icon shown when no notifications and DND is off.
     #[serde(rename = "icon-name")]

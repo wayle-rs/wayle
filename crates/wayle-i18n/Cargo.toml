@@ -15,6 +15,7 @@ tracing.workspace = true
 unic-langid.workspace = true
 
 [dev-dependencies]
+wayle-config = { path = "../wayle-config" }
 
 [lints]
 workspace = true

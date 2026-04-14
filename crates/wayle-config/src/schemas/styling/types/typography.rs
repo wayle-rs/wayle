@@ -4,6 +4,7 @@
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use wayle_derive::wayle_enum;
 
 /// Text size class for CSS-based typography.
 ///
@@ -42,7 +43,7 @@ impl TextSizeClass {
 ///
 /// Maps to CSS classes like `.weight-normal`, `.weight-bold`, etc.
 /// Uses the existing `--weight-*` tokens defined in SCSS.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[wayle_enum(default)]
 #[serde(rename_all = "lowercase")]
 pub enum FontWeightClass {
     /// Normal weight (--weight-normal: 400).

@@ -11,7 +11,7 @@ use crate::{
 ///
 /// Prevents screen dimming, lock, and suspend when active.
 /// Can control via CLI: `wayle idle on/off/duration/remaining/status`
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-idle-inhibit")]
 pub struct IdleInhibitConfig {
     /// Duration in minutes when service starts. 0 means indefinite.
     #[serde(rename = "startup-duration")]

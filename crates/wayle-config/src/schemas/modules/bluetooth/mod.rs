@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Bluetooth module configuration.
-#[wayle_config(bar_button)]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-bluetooth")]
 pub struct BluetoothConfig {
     /// Icon when Bluetooth is disabled or unavailable.
     #[serde(rename = "disabled-icon")]
