@@ -31,39 +31,40 @@ fn tz_function(tz_id: &str, time_format: &str) -> Result<Value, TemplateError> {
 mod tests {
     use super::*;
 
-    fn render(format: &str) -> String {
-        match format_world_clock(format) {
-            Ok(label) => label,
-            Err(err) => panic!("expected Ok render for `{format}`, got error: {err}"),
-        }
+    #[test]
+    fn empty_string_returns_empty() -> Result<(), TemplateError> {
+        assert_eq!(format_world_clock("")?, "");
+        Ok(())
     }
 
     #[test]
-    fn empty_string_returns_empty() {
-        assert_eq!(render(""), "");
+    fn plain_text_preserved() -> Result<(), TemplateError> {
+        assert_eq!(format_world_clock("NYC  TYO")?, "NYC  TYO");
+        Ok(())
     }
 
     #[test]
-    fn plain_text_preserved() {
-        assert_eq!(render("NYC  TYO"), "NYC  TYO");
+    fn valid_timezone_formatted() -> Result<(), TemplateError> {
+        assert_eq!(format_world_clock("{{ tz('UTC', '%Z') }}")?, "UTC");
+        Ok(())
     }
 
     #[test]
-    fn valid_timezone_formatted() {
-        assert_eq!(render("{{ tz('UTC', '%Z') }}"), "UTC");
-    }
-
-    #[test]
-    fn multiple_timezones_all_formatted() {
+    fn multiple_timezones_all_formatted() -> Result<(), TemplateError> {
         assert_eq!(
-            render("{{ tz('UTC', '%Z') }} | {{ tz('UTC', '%Z') }}"),
+            format_world_clock("{{ tz('UTC', '%Z') }} | {{ tz('UTC', '%Z') }}")?,
             "UTC | UTC"
         );
+        Ok(())
     }
 
     #[test]
-    fn mixed_text_and_timezones() {
-        assert_eq!(render("Time: {{ tz('UTC', '%Z') }} end"), "Time: UTC end");
+    fn mixed_text_and_timezones() -> Result<(), TemplateError> {
+        assert_eq!(
+            format_world_clock("Time: {{ tz('UTC', '%Z') }} end")?,
+            "Time: UTC end"
+        );
+        Ok(())
     }
 
     #[test]
