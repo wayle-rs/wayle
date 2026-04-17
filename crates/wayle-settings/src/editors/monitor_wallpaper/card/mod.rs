@@ -149,6 +149,10 @@ impl FactoryComponent for MonitorCard {
         if let Some(index) = fit_mode_index(&self.fit_mode) {
             widgets.fit_dropdown.set_selected(index);
         } else {
+            tracing::warn!(
+                fit_mode = ?self.fit_mode,
+                "fit mode does not round-trip through serde variants; disabling dropdown"
+            );
             widgets.fit_dropdown.set_sensitive(false);
         }
 

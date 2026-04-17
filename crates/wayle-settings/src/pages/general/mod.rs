@@ -3,7 +3,7 @@
 use wayle_config::Config;
 
 use crate::{
-    editors::{enum_select::enum_select, font::font, slider::scale, toggle::toggle},
+    editors::{enum_select::enum_select, font::font, number::scale, toggle::toggle},
     pages::{
         nav::LeafEntry,
         spec::{SectionSpec, page_spec},

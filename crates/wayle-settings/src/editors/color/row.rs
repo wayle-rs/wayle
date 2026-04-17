@@ -19,5 +19,6 @@ pub(crate) fn color(property: &ConfigProperty<HexColor>) -> SettingRowInit {
         full_width: false,
         dirty_badge: None,
         behavior: RowBehavior::Setting,
+        unit: None,
     }
 }

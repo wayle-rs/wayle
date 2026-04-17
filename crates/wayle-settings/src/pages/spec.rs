@@ -16,6 +16,7 @@ pub(crate) struct SettingRowInit {
     pub(crate) full_width: bool,
     pub(crate) dirty_badge: Option<gtk::Label>,
     pub(crate) behavior: RowBehavior,
+    pub(crate) unit: Option<String>,
 }
 
 pub(crate) struct SectionSpec {

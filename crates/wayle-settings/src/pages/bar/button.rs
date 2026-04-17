@@ -6,8 +6,8 @@ use crate::{
     editors::{
         color_value::color_value,
         enum_select::enum_select,
-        number::{number_u8, spacing},
-        slider::{percentage, scale},
+        number::{number_u8, scale, spacing},
+        slider::percentage,
     },
     pages::{
         nav::LeafEntry,

@@ -8,7 +8,9 @@ use relm4::{
     gtk::{glib::SignalHandlerId, prelude::*},
     prelude::*,
 };
-pub(crate) use row::{number_f64, number_newtype, number_u8, number_u32, number_u64, spacing};
+pub(crate) use row::{
+    number_f64, number_newtype, number_u8, number_u32, number_u64, scale, spacing,
+};
 use wayle_config::ConfigProperty;
 
 use super::{WatcherHandle, spawn_property_watcher};

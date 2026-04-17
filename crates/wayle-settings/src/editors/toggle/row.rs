@@ -19,5 +19,6 @@ pub(crate) fn toggle(property: &ConfigProperty<bool>) -> SettingRowInit {
         full_width: false,
         dirty_badge: None,
         behavior: RowBehavior::Setting,
+        unit: None,
     }
 }

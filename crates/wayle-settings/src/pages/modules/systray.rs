@@ -4,7 +4,9 @@ use wayle_config::Config;
 
 use crate::{
     editors::{
-        color_value::color_value, number::spacing, slider::scale, toggle::toggle,
+        color_value::color_value,
+        number::{scale, spacing},
+        toggle::toggle,
         toml_editor::toml_editor,
     },
     pages::{

@@ -19,5 +19,6 @@ pub(crate) fn font(property: &ConfigProperty<String>) -> SettingRowInit {
         full_width: false,
         dirty_badge: None,
         behavior: RowBehavior::Setting,
+        unit: None,
     }
 }

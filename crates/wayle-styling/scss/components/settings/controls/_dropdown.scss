@@ -22,10 +22,6 @@
     margin-left: var(--space-xs);
 }
 
-.setting-control dropdown popover {
-    margin-top: var(--space-xs);
-}
-
 .setting-control dropdown popover contents {
     padding: var(--space-xs);
 }
@@ -33,8 +29,8 @@
 .setting-control dropdown listview row {
     padding: var(--space-xs) var(--space-sm);
     border-radius: var(--rounding-element);
-    font-size: var(--text-sm);
-    font-weight: var(--weight-medium);
+    font-size: var(--text-base);
+    font-weight: var(--weight-semibold);
     color: var(--fg-muted);
 }
 

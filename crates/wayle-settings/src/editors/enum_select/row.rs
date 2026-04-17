@@ -38,5 +38,6 @@ where
         full_width: false,
         dirty_badge: None,
         behavior: RowBehavior::Setting,
+        unit: None,
     }
 }
