@@ -32,6 +32,7 @@ pub(crate) fn text(property: &ConfigProperty<String>) -> SettingRowInit {
         full_width: false,
         dirty_badge: Some(badge),
         behavior: RowBehavior::Setting,
+        unit: None,
     }
 }
 
@@ -56,5 +57,6 @@ pub(crate) fn text_like<T: TextLike>(property: &ConfigProperty<T>) -> SettingRow
         full_width: false,
         dirty_badge: Some(badge),
         behavior: RowBehavior::Setting,
+        unit: None,
     }
 }

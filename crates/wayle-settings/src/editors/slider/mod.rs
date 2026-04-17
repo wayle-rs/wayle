@@ -8,7 +8,7 @@ use relm4::{
     gtk::{glib, prelude::*},
     prelude::*,
 };
-pub(crate) use row::{normalized, percentage, scale, signed_normalized};
+pub(crate) use row::{normalized, percentage, signed_normalized};
 use wayle_config::ConfigProperty;
 use wayle_widgets::primitives::slider::DebouncedSlider;
 

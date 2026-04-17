@@ -57,5 +57,6 @@ where
         full_width: true,
         dirty_badge: Some(badge),
         behavior: RowBehavior::Setting,
+        unit: None,
     }
 }

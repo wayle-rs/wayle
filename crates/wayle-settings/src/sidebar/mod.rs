@@ -49,7 +49,7 @@ pub(crate) enum SidebarOutput {
     ResetAllRequested,
 }
 
-const DEFAULT_ACTIVE_ID: &str = "general";
+const DEFAULT_ACTIVE_ID: &str = "bar-general";
 
 #[relm4::component(pub(crate))]
 impl SimpleComponent for Sidebar {

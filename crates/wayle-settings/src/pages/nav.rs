@@ -22,16 +22,16 @@ pub(crate) struct NavSectionLayout {
 pub(crate) fn layout() -> Vec<NavSectionLayout> {
     vec![
         NavSectionLayout {
-            i18n_key: "settings-nav-system",
-            factories: vec![general::entry],
+            i18n_key: "settings-nav-bar-section",
+            factories: bar::factories(),
         },
         NavSectionLayout {
             i18n_key: "settings-nav-appearance",
             factories: vec![styling::entry, wallpaper::entry],
         },
         NavSectionLayout {
-            i18n_key: "settings-nav-bar-section",
-            factories: bar::factories(),
+            i18n_key: "settings-nav-system",
+            factories: vec![general::entry],
         },
         NavSectionLayout {
             i18n_key: "settings-nav-overlays",

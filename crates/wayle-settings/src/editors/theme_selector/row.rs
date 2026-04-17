@@ -36,5 +36,6 @@ pub(crate) fn theme_selector(
         full_width: false,
         dirty_badge: None,
         behavior: RowBehavior::Action,
+        unit: None,
     }
 }

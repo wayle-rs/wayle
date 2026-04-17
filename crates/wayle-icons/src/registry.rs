@@ -232,18 +232,19 @@ impl IconRegistry {
 
         let icon_theme = gtk4::IconTheme::for_display(&display);
 
-        let mut paths: Vec<PathBuf> = icon_theme
+        let existing: Vec<PathBuf> = icon_theme
             .search_path()
             .into_iter()
-            .filter(|p| p != user_path)
+            .filter(|p| p != user_path && !Self::system_icon_paths().contains(p))
             .collect();
 
+        let mut paths = vec![user_path.clone()];
         for system_path in Self::system_icon_paths() {
             if !paths.contains(&system_path) {
                 paths.push(system_path);
             }
         }
-        paths.push(user_path.clone());
+        paths.extend(existing);
 
         let path_refs: Vec<&std::path::Path> = paths.iter().map(|p| p.as_path()).collect();
         icon_theme.set_search_path(&path_refs);

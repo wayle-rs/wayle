@@ -6,8 +6,7 @@ use crate::{
     editors::{
         color_value::color_value,
         enum_select::enum_select,
-        number::{number_u8, spacing},
-        slider::scale,
+        number::{number_u8, scale, spacing},
         text::text,
         toggle::toggle,
         toml_editor::toml_editor,

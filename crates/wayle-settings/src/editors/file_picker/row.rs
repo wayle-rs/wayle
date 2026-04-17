@@ -32,5 +32,6 @@ pub(crate) fn file_path(property: &ConfigProperty<String>) -> SettingRowInit {
         full_width: false,
         dirty_badge: Some(badge),
         behavior: RowBehavior::Setting,
+        unit: None,
     }
 }

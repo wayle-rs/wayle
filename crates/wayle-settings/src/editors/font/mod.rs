@@ -1,19 +1,25 @@
-//! Font picker using GTK's FontDialogButton. Only the family name is saved.
+//! Font family picker. MenuButton opens a searchable popover of system fonts.
 
+mod helpers;
+mod methods;
+mod picker;
 mod row;
+
 use relm4::{
-    gtk::{glib::SignalHandlerId, pango::FontDescription, prelude::*},
+    gtk,
+    gtk::{pango, prelude::*},
     prelude::*,
 };
 pub(crate) use row::font;
 use wayle_config::ConfigProperty;
 
+use self::picker::FontPicker;
 use super::{WatcherHandle, spawn_property_watcher};
 
 pub(crate) struct FontControl {
     property: ConfigProperty<String>,
-    button: gtk::FontDialogButton,
-    handler_id: SignalHandlerId,
+    label: gtk::Label,
+    _picker: Controller<FontPicker>,
     _watcher: WatcherHandle,
 }
 
@@ -41,25 +47,17 @@ impl SimpleComponent for FontControl {
         root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let dialog = gtk::FontDialog::new();
-        let button = gtk::FontDialogButton::new(Some(dialog));
+        let label = gtk::Label::new(Some(&property.get()));
+        label.add_css_class("font-picker-label");
+        label.set_ellipsize(pango::EllipsizeMode::End);
+        label.set_max_width_chars(20);
+
+        let button = gtk::MenuButton::builder().child(&label).build();
+        button.add_css_class("font");
         button.set_cursor_from_name(Some("pointer"));
 
-        let current_font = FontDescription::from_string(&property.get());
-        button.set_font_desc(&current_font);
-
-        let prop = property.clone();
-
-        let handler_id = button.connect_font_desc_notify(move |btn: &gtk::FontDialogButton| {
-            let Some(font_desc) = btn.font_desc() else {
-                return;
-            };
-            let Some(family) = font_desc.family() else {
-                return;
-            };
-
-            prop.set(family.to_string());
-        });
+        let picker = FontPicker::builder().launch(property.clone()).detach();
+        button.set_popover(Some(picker.widget()));
 
         let input_sender = sender.input_sender().clone();
         let watcher = spawn_property_watcher(&property, move || {
@@ -70,8 +68,8 @@ impl SimpleComponent for FontControl {
 
         let model = Self {
             property,
-            button,
-            handler_id,
+            label,
+            _picker: picker,
             _watcher: watcher,
         };
 
@@ -81,11 +79,7 @@ impl SimpleComponent for FontControl {
     fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
         match msg {
             FontMsg::Refresh => {
-                let font = FontDescription::from_string(&self.property.get());
-
-                self.button.block_signal(&self.handler_id);
-                self.button.set_font_desc(&font);
-                self.button.unblock_signal(&self.handler_id);
+                self.label.set_text(&self.property.get());
             }
         }
     }

@@ -19,6 +19,13 @@
     color: var(--fg-subtle);
 }
 
+.setting-unit {
+    margin-left: var(--space-xs);
+    font-size: var(--text-xs);
+    font-family: var(--font-mono);
+    color: var(--fg-subtle);
+}
+
 .setting-row .badge-subtle {
     margin-left: var(--space-sm);
     font-size: var(--text-xs);

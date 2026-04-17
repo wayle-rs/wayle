@@ -38,7 +38,7 @@ const DEFAULT_SIDEBAR_WIDTH: i32 = 220;
 const DEFAULT_WINDOW_WIDTH: i32 = 900;
 const DEFAULT_WINDOW_HEIGHT: i32 = 650;
 const STACK_TRANSITION_DURATION_MS: u32 = 100;
-const INITIAL_PAGE_ID: &str = "general";
+const INITIAL_PAGE_ID: &str = "bar-general";
 
 pub(crate) struct SettingsApp {
     pub(super) config_service: Arc<ConfigService>,

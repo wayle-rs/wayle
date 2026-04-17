@@ -33,5 +33,6 @@ pub(crate) fn bar_layout(
         full_width: true,
         dirty_badge: None,
         behavior: RowBehavior::Setting,
+        unit: None,
     }
 }

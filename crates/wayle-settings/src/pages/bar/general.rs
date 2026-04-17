@@ -7,8 +7,8 @@ use crate::{
         bar_layout::bar_layout,
         color_value::color_value,
         enum_select::enum_select,
-        number::{number_u8, spacing},
-        slider::{percentage, scale},
+        number::{number_u8, scale, spacing},
+        slider::percentage,
     },
     pages::{
         nav::LeafEntry,
@@ -29,9 +29,9 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-layout",
                     items: vec![
-                        bar_layout(&bar.layout, &config.modules.custom),
                         enum_select(&bar.location),
                         scale(&bar.scale),
+                        bar_layout(&bar.layout, &config.modules.custom),
                     ],
                 },
                 SectionSpec {

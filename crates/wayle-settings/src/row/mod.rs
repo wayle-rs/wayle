@@ -19,8 +19,8 @@ use crate::{
     property_handle::PropertyHandle,
 };
 
-const DESCRIPTION_MAX_CHARS: i32 = 60;
-const DESCRIPTION_TOOLTIP_THRESHOLD: usize = 50;
+const DESCRIPTION_MAX_CHARS: i32 = 120;
+const DESCRIPTION_TOOLTIP_THRESHOLD: usize = 80;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum RowBehavior {
@@ -41,6 +41,7 @@ pub(crate) struct SettingRow {
     pub(super) source_tooltip: String,
     pub(super) config_matches_default: bool,
     pub(super) behavior: RowBehavior,
+    pub(super) unit_display: String,
     #[allow(dead_code)]
     keepalive: Keepalive,
     _watcher: Option<WatcherHandle>,
@@ -82,6 +83,15 @@ impl SimpleComponent for SettingRow {
                         set_label: &model.label,
                     },
 
+                    #[name = "row_unit"]
+                    gtk::Label {
+                        add_css_class: "setting-unit",
+                        set_valign: gtk::Align::Center,
+                        set_halign: gtk::Align::Start,
+                        set_visible: !model.unit_display.is_empty(),
+                        set_label: &model.unit_display,
+                    },
+
                     #[name = "source_badge"]
                     gtk::Label {
                         add_css_class: "badge-subtle",
@@ -103,6 +113,8 @@ impl SimpleComponent for SettingRow {
                 #[name = "row_description"]
                 gtk::Label {
                     set_halign: gtk::Align::Start,
+                    set_hexpand: true,
+                    set_xalign: 0.0,
                     add_css_class: "setting-description",
                     set_ellipsize: pango::EllipsizeMode::End,
                     set_max_width_chars: DESCRIPTION_MAX_CHARS,
@@ -161,6 +173,10 @@ impl SimpleComponent for SettingRow {
             source_tooltip: String::new(),
             behavior: init.behavior,
             config_matches_default: true,
+            unit_display: init
+                .unit
+                .map(|unit| format!("({unit})"))
+                .unwrap_or_default(),
             keepalive: init.keepalive,
             _watcher: None,
         };

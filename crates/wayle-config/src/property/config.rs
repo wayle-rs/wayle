@@ -118,7 +118,33 @@ impl<T: Clone + Send + Sync + PartialEq + 'static> ConfigProperty<T> {
     }
 
     /// Sets a runtime override and immediately notifies watchers.
+    ///
+    /// If the new value matches the value the property would resolve to
+    /// without a runtime override (the config-layer value, or the default
+    /// when config is empty), the runtime override is cleared instead of
+    /// written. Keeps `runtime.toml` free of entries that redundantly shadow
+    /// `config.toml` and returns GUI edits to config-as-source-of-truth
+    /// when the user dials back to their manual config value.
     pub fn set(&self, value: T) {
+        let without_runtime = self.config();
+        let resolves_without_runtime = match without_runtime.as_ref() {
+            Some(config_value) => config_value == &value,
+            None => value == self.default,
+        };
+
+        if resolves_without_runtime {
+            let has_runtime = self
+                .runtime
+                .read()
+                .ok()
+                .is_some_and(|guard| guard.is_some());
+
+            if has_runtime {
+                self.clear_runtime();
+            }
+            return;
+        }
+
         if let Ok(mut guard) = self.runtime.write() {
             *guard = Some(value);
         }
@@ -410,6 +436,66 @@ mod tests {
 
         assert_eq!(prop.get(), 30);
         assert_eq!(prop.source(), ValueSource::RuntimeOnly);
+    }
+
+    #[test]
+    fn set_back_to_config_value_clears_runtime() {
+        let prop = ConfigProperty::new(10);
+        prop.stage_config(20);
+        prop.commit_config_reload();
+        prop.set(30);
+        assert_eq!(prop.source(), ValueSource::Overridden);
+
+        prop.set(20);
+
+        assert_eq!(prop.get(), 20);
+        assert_eq!(prop.source(), ValueSource::Config);
+        assert_eq!(prop.runtime(), None);
+    }
+
+    #[test]
+    fn set_back_to_default_without_config_clears_runtime() {
+        let prop = ConfigProperty::new(10);
+        prop.set(30);
+        assert_eq!(prop.source(), ValueSource::RuntimeOnly);
+
+        prop.set(10);
+
+        assert_eq!(prop.get(), 10);
+        assert_eq!(prop.source(), ValueSource::Default);
+        assert_eq!(prop.runtime(), None);
+    }
+
+    #[test]
+    fn set_to_default_when_config_differs_still_writes_runtime() {
+        let prop = ConfigProperty::new(10);
+        prop.stage_config(20);
+        prop.commit_config_reload();
+
+        prop.set(10);
+
+        assert_eq!(prop.get(), 10);
+        assert_eq!(prop.source(), ValueSource::Overridden);
+        assert_eq!(prop.runtime(), Some(10));
+    }
+
+    #[test]
+    fn set_matching_default_without_runtime_does_not_notify() {
+        use futures::FutureExt;
+
+        let prop = ConfigProperty::new(10);
+        let mut stream = prop.watch();
+
+        let _initial = futures::executor::block_on(stream.next());
+
+        prop.set(10);
+
+        assert!(
+            stream.next().now_or_never().is_none(),
+            "set() matching default without a runtime override should not wake watchers"
+        );
+        assert_eq!(prop.source(), ValueSource::Default);
+        assert_eq!(prop.runtime(), None);
     }
 
     #[test]
