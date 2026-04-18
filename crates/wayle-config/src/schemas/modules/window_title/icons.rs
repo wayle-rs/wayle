@@ -40,6 +40,7 @@ pub const BUILTIN_MAPPINGS: &[(&str, &str)] = &[
     ("*discord*", "si-discord-symbolic"),
     ("*legcord*", "si-discord-symbolic"),
     ("*vesktop*", "si-discord-symbolic"),
+    ("equibop", "si-discord-symbolic"),
     ("*webcord*", "si-discord-symbolic"),
     ("*element*", "si-element-symbolic"),
     ("*signal*", "si-signal-symbolic"),

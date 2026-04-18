@@ -123,6 +123,7 @@ pub(crate) const DEFAULT_APP_ICON_MAP: &[(&str, &str)] = &[
     ("*telegram*", "si-telegram-symbolic"),
     ("*thunderbird*", "si-thunderbird-symbolic"),
     ("*vesktop*", "si-discord-symbolic"),
+    ("equibop", "si-discord-symbolic"),
     ("*webcord*", "si-discord-symbolic"),
     ("*whatsapp*", "si-whatsapp-symbolic"),
     ("*wire*", "si-wire-symbolic"),
