@@ -33,6 +33,7 @@ jobs:
                         - 'wayle/**'
                         - 'resources/**'
                         - 'scripts/**'
+                        - 'packaging/**'
                         - 'Cargo.*'
                         - '.github/workflows/ci.yml'
 
@@ -124,6 +125,7 @@ jobs:
             - name: Install dependencies
               run: |
                   pacman --noconfirm --needed -Syu \
+                    desktop-file-utils \
                     git \
                     rustup \
                     clang \
@@ -133,6 +135,7 @@ jobs:
                     libpulse \
                     fftw \
                     libpipewire \
+                    rpm-tools \
                     systemd-libs
 
             - name: Setup Rust
@@ -146,6 +149,17 @@ jobs:
 
             - name: Build workspace
               run: cargo build --workspace
+
+            - name: Build archive
+              id: archive
+              run: |
+                  VERSION=$(sed -n '/\[workspace\.package\]/,/\[/{/^version/p}' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+                  ./scripts/ci/build-archive.sh target/debug "${VERSION}" x86_64
+                  echo "archive=wayle-${VERSION}-x86_64-linux.tar.gz" >> "$GITHUB_OUTPUT"
+                  echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+            - name: Build packages
+              run: ./scripts/ci/build-packages.sh "${{ steps.archive.outputs.archive }}" "${{ steps.archive.outputs.version }}"
 
     ci-status:
         name: CI Status
