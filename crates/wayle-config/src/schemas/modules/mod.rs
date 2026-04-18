@@ -7,6 +7,7 @@ mod clock;
 mod cpu;
 mod custom;
 mod dashboard;
+mod gpu;
 mod hyprland_workspaces;
 mod hyprsunset;
 mod idle_inhibit;
@@ -38,6 +39,7 @@ pub use clock::ClockConfig;
 pub use cpu::CpuConfig;
 pub use custom::{CustomModuleDefinition, ExecutionMode, RestartDelay, RestartPolicy};
 pub use dashboard::DashboardConfig;
+pub use gpu::GpuConfig;
 pub use hyprland_workspaces::{
     ActiveIndicator, DisplayMode, HyprlandWorkspacesConfig, Numbering, UrgentMode, WorkspaceStyle,
 };
@@ -82,6 +84,8 @@ pub struct ModulesConfig {
     pub cpu: CpuConfig,
     /// Dashboard module.
     pub dashboard: DashboardConfig,
+    /// GPU usage module.
+    pub gpu: GpuConfig,
     /// Hyprland workspace switcher module.
     #[serde(rename = "hyprland-workspaces")]
     pub hyprland_workspaces: HyprlandWorkspacesConfig,

@@ -19,6 +19,7 @@ pub fn spawn(services: &ShellServices) {
     spawn_memory_watcher(&modules.ram, sysinfo);
     spawn_disk_watcher(&modules.storage, sysinfo);
     spawn_network_watcher(&modules.netstat, sysinfo);
+    spawn_gpu_watcher(&modules.gpu, sysinfo);
 }
 
 fn spawn_cpu_watcher(
@@ -81,6 +82,22 @@ fn spawn_network_watcher(
 
         while let Some(interval_ms) = stream.next().await {
             sysinfo.set_network_interval(Duration::from_millis(interval_ms));
+        }
+    });
+}
+
+fn spawn_gpu_watcher(
+    config: &wayle_config::schemas::modules::GpuConfig,
+    sysinfo: &Arc<SysinfoService>,
+) {
+    let mut stream = config.poll_interval_ms.watch();
+    let sysinfo = sysinfo.clone();
+
+    tokio::spawn(async move {
+        stream.next().await;
+
+        while let Some(interval_ms) = stream.next().await {
+            sysinfo.set_gpu_interval(Duration::from_millis(interval_ms));
         }
     });
 }
