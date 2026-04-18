@@ -365,9 +365,12 @@ mod tests {
     }
 
     fn default_definition() -> CustomModuleDefinition {
-        use wayle_config::schemas::{
-            modules::{ExecutionMode, RestartDelay, RestartPolicy},
-            styling::ColorValue,
+        use wayle_config::{
+            ClickAction,
+            schemas::{
+                modules::{ExecutionMode, RestartDelay, RestartPolicy},
+                styling::ColorValue,
+            },
         };
 
         CustomModuleDefinition {
@@ -393,11 +396,11 @@ mod tests {
             button_bg_color: ColorValue::Auto,
             border_show: false,
             border_color: ColorValue::Auto,
-            left_click: String::new(),
-            right_click: String::new(),
-            middle_click: String::new(),
-            scroll_up: String::new(),
-            scroll_down: String::new(),
+            left_click: ClickAction::None,
+            right_click: ClickAction::None,
+            middle_click: ClickAction::None,
+            scroll_up: ClickAction::None,
+            scroll_down: ClickAction::None,
             on_action: None,
         }
     }

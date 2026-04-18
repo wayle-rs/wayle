@@ -9,7 +9,7 @@ use std::rc::Rc;
 use gtk::prelude::*;
 use relm4::prelude::*;
 use wayle_config::{
-    ConfigProperty,
+    ClickAction, ConfigProperty,
     schemas::{
         modules::{CustomModuleDefinition, ExecutionMode},
         styling::{ColorValue, CssToken},
@@ -166,7 +166,7 @@ impl Component for CustomModule {
     fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
         let is_scroll = matches!(msg, CustomMsg::ScrollUp | CustomMsg::ScrollDown);
 
-        let action_cmd = match msg {
+        let action = match msg {
             CustomMsg::LeftClick => &self.definition.left_click,
             CustomMsg::RightClick => &self.definition.right_click,
             CustomMsg::MiddleClick => &self.definition.middle_click,
@@ -174,8 +174,30 @@ impl Component for CustomModule {
             CustomMsg::ScrollDown => &self.definition.scroll_down,
         };
 
-        if !action_cmd.is_empty() {
-            watchers::spawn_action(action_cmd);
+        match action {
+            ClickAction::Dropdown(name) => {
+                crate::shell::bar::dropdowns::dispatch_click(
+                    action,
+                    &self.dropdowns,
+                    &self.bar_button,
+                );
+                // Schedule on_action to run when the dropdown closes,
+                // so the bar label refreshes after a selection.
+                if let Some(on_action) = &self.definition.on_action {
+                    let on_action = on_action.clone();
+                    let module_id = self.definition.id.clone();
+                    let token = self.command_token.reset();
+                    let sender = sender.clone();
+                    self.dropdowns.on_next_close(name, move || {
+                        watchers::run_command_async(&sender, &module_id, on_action, token);
+                    });
+                }
+                return;
+            }
+            ClickAction::Shell(cmd) => {
+                watchers::spawn_action(cmd);
+            }
+            ClickAction::None => return,
         }
 
         let Some(on_action) = &self.definition.on_action else {
