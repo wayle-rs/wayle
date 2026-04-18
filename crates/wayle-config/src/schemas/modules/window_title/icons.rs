@@ -62,7 +62,13 @@ pub const BUILTIN_MAPPINGS: &[(&str, &str)] = &[
     ("*inkscape*", "si-inkscape-symbolic"),
     ("*krita*", "si-krita-symbolic"),
     // Office
-    ("*libreoffice*", "si-libreoffice-symbolic"),
+    ("libreoffice-base", "si-libreofficebase-symbolic"),
+    ("libreoffice-calc", "si-libreofficecalc-symbolic"),
+    ("libreoffice-draw", "si-libreofficedraw-symbolic"),
+    ("libreoffice-math", "si-libreofficemath-symbolic"),
+    ("libreoffice-writer", "si-libreofficewriter-symbolic"),
+    ("libreoffice-impress", "si-libreofficeimpress-symbolic"),
+    ("libreoffice*", "si-libreoffice-symbolic"),
     ("*obsidian*", "si-obsidian-symbolic"),
     // Games
     ("*steam*", "si-steam-symbolic"),
