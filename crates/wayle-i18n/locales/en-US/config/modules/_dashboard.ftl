@@ -35,6 +35,12 @@ settings-modules-dashboard-left-click = Left Click
 settings-modules-dashboard-dropdown-lock-command = Lock Command
     .description = Shell command for the lock button
 
+settings-modules-dashboard-dropdown-sleep-command = Sleep Command
+    .description = Shell command for the sleep button
+
+settings-modules-dashboard-dropdown-hibernate-command = Hibernate Command
+    .description = Shell command for the hibernate button
+
 settings-modules-dashboard-dropdown-logout-command = Logout Command
     .description = Shell command for the logout button
 
