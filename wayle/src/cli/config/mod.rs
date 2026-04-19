@@ -2,6 +2,8 @@
 pub mod commands;
 /// Default configuration output command
 pub mod default;
+/// Docs generator command
+pub mod docs;
 /// Get configuration value command
 pub mod get;
 /// Reset configuration value command
@@ -26,5 +28,6 @@ pub async fn execute(command: ConfigCommands) -> CliAction {
         ConfigCommands::Reset { path } => reset::execute(path).await,
         ConfigCommands::Schema { stdout } => schema::execute(stdout),
         ConfigCommands::Default { stdout } => default::execute(stdout),
+        ConfigCommands::Docs { out, only } => docs::execute(out, only),
     }
 }

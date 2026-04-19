@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Subcommand;
 
 /// Configuration management subcommands.
@@ -31,5 +33,14 @@ pub enum ConfigCommands {
         /// Print to stdout instead of writing config.toml.example
         #[arg(long)]
         stdout: bool,
+    },
+    /// Generate markdown reference pages for every registered schema
+    Docs {
+        /// Output directory for the generated pages
+        #[arg(long, default_value = "docs/config")]
+        out: PathBuf,
+        /// Regenerate only the named module
+        #[arg(long)]
+        only: Option<String>,
     },
 }

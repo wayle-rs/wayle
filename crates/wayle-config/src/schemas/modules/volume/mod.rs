@@ -3,7 +3,7 @@ use wayle_derive::{wayle_config, wayle_enum};
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
@@ -17,7 +17,7 @@ pub enum AppIconSource {
     Native,
 }
 
-/// Volume module configuration.
+/// Output volume control with a dropdown for device and app volumes.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-volume")]
 pub struct VolumeConfig {
     /// Icons for volume levels from low to maximum.
@@ -152,10 +152,15 @@ impl ModuleInfoProvider for VolumeConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("volume"),
-            icon: String::from("󰕾"),
-            description: String::from("Audio volume control and mute toggle"),
-            behavior_configs: vec![(String::from("volume"), || schema_for!(VolumeConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(VolumeConfig),
+            layout_id: Some(String::from("volume")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(VolumeConfig);

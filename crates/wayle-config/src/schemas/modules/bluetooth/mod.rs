@@ -3,11 +3,11 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Bluetooth module configuration.
+/// Bluetooth connection status with a dropdown for pairing and managing devices.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-bluetooth")]
 pub struct BluetoothConfig {
     /// Icon when Bluetooth is disabled or unavailable.
@@ -105,10 +105,15 @@ impl ModuleInfoProvider for BluetoothConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("bluetooth"),
-            icon: String::from("󰂯"),
-            description: String::from("Bluetooth connection status"),
-            behavior_configs: vec![(String::from("bluetooth"), || schema_for!(BluetoothConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(BluetoothConfig),
+            layout_id: Some(String::from("bluetooth")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(BluetoothConfig);

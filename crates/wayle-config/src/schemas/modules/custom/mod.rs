@@ -2,125 +2,18 @@ mod types;
 
 use std::collections::HashMap;
 
-use schemars::JsonSchema;
+use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Serialize};
 
 pub use self::types::{ExecutionMode, RestartDelay, RestartPolicy};
-use crate::schemas::styling::{ColorValue, CssToken};
+use crate::{
+    docs::{ConfigGroup, ModuleInfo, ModuleInfoProvider},
+    schemas::styling::{ColorValue, CssToken},
+};
 
-/// Custom module definition for user-defined bar modules.
+/// User-defined module that runs a shell command and renders the output in the bar.
 ///
-/// Custom modules execute shell commands and display the output in the bar.
-/// They support both polling (periodic execution) and watch mode (event-driven
-/// updates from long-running processes).
-///
-/// # Output Formats
-///
-/// Commands can output plain text or JSON:
-///
-/// - **Plain text**: Use `{{ output }}` in format strings
-/// - **JSON**: Auto-detected when output starts with `{` or `[`.
-///   Access fields directly (`{{ field }}`), use dot notation (`{{ nested.value }}`),
-///   or use array indices (`{{ items.0 }}`).
-///
-/// # JSON Reserved Fields
-///
-/// When outputting JSON, these fields have special meaning:
-///
-/// | Field | Type | Purpose |
-/// |-------|------|---------|
-/// | `text` | string | Overrides `format` result for the label |
-/// | `alt` | string | Key for `icon-map` lookup |
-/// | `percentage` | number | 0-100, index for `icon-names` array |
-/// | `tooltip` | string | Overrides `tooltip-format` result |
-/// | `class` | string or array | CSS classes added to the module |
-///
-/// Any other fields are accessible in format strings via dot notation.
-///
-/// # Icon Resolution Priority
-///
-/// Icons are resolved in this order (first match wins):
-///
-/// 1. `icon-map[alt]` - If JSON output has `alt` field matching a map key
-/// 2. `icon-names[percentage]` - If JSON output has `percentage` field (0-100)
-/// 3. `icon-map["default"]` - Fallback key in icon-map
-/// 4. `icon-name` - Static icon name
-///
-/// # Usage in Layout
-///
-/// After defining a custom module, reference it in your bar layout:
-///
-/// ```toml
-/// [bar]
-/// layout = ["workspaces", "custom-gpu-temp", "clock"]
-/// ```
-///
-/// # Examples
-///
-/// ## Simple GPU Temperature
-///
-/// ```toml
-/// [[modules.custom]]
-/// id = "gpu-temp"
-/// command = "nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader,nounits"
-/// interval-ms = 5000
-/// format = "{{ output }}°C"
-/// icon-name = "ld-gpu-symbolic"
-/// ```
-///
-/// ## Volume with Dynamic Icons
-///
-/// ```toml
-/// [[modules.custom]]
-/// id = "volume"
-/// command = '''
-/// vol=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\d+(?=%)' | head -1)
-/// mute=$(pactl get-sink-mute @DEFAULT_SINK@ | grep -oP 'yes|no')
-/// if [ "$mute" = "yes" ]; then
-///   echo '{"percentage": 0, "alt": "muted"}'
-/// else
-///   echo "{\"percentage\": $vol}"
-/// fi
-/// '''
-/// interval-ms = 500
-/// format = "{{ percentage }}%"
-/// icon-names = [
-///   "audio-volume-muted-symbolic",
-///   "audio-volume-low-symbolic",
-///   "audio-volume-medium-symbolic",
-///   "audio-volume-high-symbolic"
-/// ]
-/// scroll-up = "pactl set-sink-volume @DEFAULT_SINK@ +5%"
-/// scroll-down = "pactl set-sink-volume @DEFAULT_SINK@ -5%"
-/// on-action = "..." # Same command to refresh after scroll
-/// ```
-///
-/// ## Event-Driven with Watch Mode
-///
-/// ```toml
-/// [[modules.custom]]
-/// id = "volume-watch"
-/// mode = "watch"
-/// command = '''
-/// # Emit initial state
-/// vol=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\d+(?=%)' | head -1)
-/// echo "{\"percentage\": $vol}"
-///
-/// # Watch for changes
-/// pactl subscribe | while read -r line; do
-///   if [[ "$line" == *"sink"* ]]; then
-///     vol=$(pactl get-sink-volume @DEFAULT_SINK@ | grep -oP '\d+(?=%)' | head -1)
-///     echo "{\"percentage\": $vol}"
-///   fi
-/// done
-/// '''
-/// format = "{{ percentage }}%"
-/// icon-names = [
-///   "ld-volume-symbolic",
-///   "ld-volume-1-symbolic",
-///   "ld-volume-2-symbolic"
-/// ]
-/// ```
+/// Full walkthrough with examples at <https://wayle.dev/guide/custom-modules>.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub struct CustomModuleDefinition {
@@ -435,3 +328,26 @@ fn default_auto_color() -> ColorValue {
 fn default_button_bg() -> ColorValue {
     ColorValue::Token(CssToken::BgSurfaceElevated)
 }
+
+impl ModuleInfoProvider for CustomModuleDefinition {
+    fn module_info() -> ModuleInfo {
+        ModuleInfo {
+            name: String::from("custom"),
+            schema: || schema_for!(CustomModuleDefinition),
+            layout_id: Some(String::from("custom-<id>")),
+            array_entry: true,
+        }
+    }
+
+    fn groups() -> Vec<ConfigGroup> {
+        vec![
+            ConfigGroup::general(),
+            ConfigGroup::colors(),
+            ConfigGroup::click(),
+            ConfigGroup::prefix("Icons", "icon-"),
+            ConfigGroup::prefix("Restart", "restart-"),
+        ]
+    }
+}
+
+crate::register_module!(CustomModuleDefinition);

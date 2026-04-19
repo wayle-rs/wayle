@@ -3,11 +3,11 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Network statistics module configuration.
+/// Network traffic counters (up/down rates).
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-netstat")]
 pub struct NetstatConfig {
     /// Polling interval in milliseconds.
@@ -134,10 +134,15 @@ impl ModuleInfoProvider for NetstatConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("netstat"),
-            icon: String::from("󰛳"),
-            description: String::from("Network traffic statistics"),
-            behavior_configs: vec![(String::from("netstat"), || schema_for!(NetstatConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(NetstatConfig),
+            layout_id: Some(String::from("netstat")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(NetstatConfig);

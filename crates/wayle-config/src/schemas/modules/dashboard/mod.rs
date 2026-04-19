@@ -3,11 +3,11 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Dashboard module configuration.
+/// Quick-access button with a distro icon; opens the dashboard dropdown.
 #[wayle_config(i18n_prefix = "settings-modules-dashboard")]
 pub struct DashboardConfig {
     /// Override the auto-detected distro icon.
@@ -125,10 +125,15 @@ impl ModuleInfoProvider for DashboardConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("dashboard"),
-            icon: String::from("󰕰"),
-            description: String::from("Quick access dashboard with distro icon"),
-            behavior_configs: vec![(String::from("dashboard"), || schema_for!(DashboardConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(DashboardConfig),
+            layout_id: Some(String::from("dashboard")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(DashboardConfig);

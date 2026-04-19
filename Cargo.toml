@@ -70,8 +70,9 @@ rusqlite = { version = "0.38.0", features = ["bundled"] }
 rust-embed = "8"
 schemars = { version = "1.0.4", features = ["derive"] }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
+serde_json = { version = "1.0.145", features = ["preserve_order"] }
 serde_json_path = "0.7"
+inventory = "0.3"
 smithay-client-toolkit = "0.20"
 sourceview5 = "0.10.0"
 sysinfo = { version = "0.33", default-features = false, features = [
@@ -85,7 +86,7 @@ thiserror = "2.0.17"
 tokio = { version = "1.47.1", features = ["full", "time"] }
 tokio-stream = { version = "0.1.17", features = ["sync"] }
 tokio-util = "0.7.16"
-toml = "0.9.7"
+toml = { version = "0.9.7", features = ["preserve_order"] }
 tracing = "0.1.41"
 tracing-appender = "0.2.3"
 tracing-attributes = "0.1.30"

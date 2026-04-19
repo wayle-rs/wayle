@@ -1,14 +1,18 @@
 mod types;
 
+use schemars::schema_for;
 pub use types::{
     CyclingInterval, CyclingMode, FitMode, MonitorWallpaperConfig, TransitionDuration,
     TransitionFps, TransitionType,
 };
 use wayle_derive::wayle_config;
 
-use crate::ConfigProperty;
+use crate::{
+    ConfigProperty,
+    docs::{ConfigGroup, ModuleInfo, ModuleInfoProvider},
+};
 
-/// Wallpaper management configuration.
+/// Wallpaper rendering, cycling, and per-monitor overrides.
 #[wayle_config(i18n_prefix = "settings-wallpaper")]
 pub struct WallpaperConfig {
     /// Enable the awww wallpaper engine. Disable to use an external wallpaper
@@ -58,7 +62,45 @@ pub struct WallpaperConfig {
     #[default(false)]
     pub cycling_same_image: ConfigProperty<bool>,
 
-    /// Per-monitor wallpaper and fit mode settings.
+    /// Per-monitor wallpaper and fit mode settings. Each entry targets a
+    /// monitor by connector name. See [`MonitorWallpaperConfig`] for the
+    /// available fields.
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [[wallpaper.monitors]]
+    /// name = "DP-1"
+    /// wallpaper = "/home/me/pictures/wall-primary.png"
+    /// fit-mode = "fill"
+    ///
+    /// [[wallpaper.monitors]]
+    /// name = "HDMI-1"
+    /// wallpaper = "/home/me/pictures/wall-secondary.png"
+    /// fit-mode = "fit"
+    /// ```
     #[default(Vec::new())]
     pub monitors: ConfigProperty<Vec<MonitorWallpaperConfig>>,
 }
+
+impl ModuleInfoProvider for WallpaperConfig {
+    fn module_info() -> ModuleInfo {
+        ModuleInfo {
+            name: String::from("wallpaper"),
+            schema: || schema_for!(WallpaperConfig),
+            layout_id: None,
+            array_entry: false,
+        }
+    }
+
+    fn groups() -> Vec<ConfigGroup> {
+        vec![
+            ConfigGroup::general(),
+            ConfigGroup::prefix("Transitions", "transition-"),
+            ConfigGroup::prefix("Cycling", "cycling-"),
+            ConfigGroup::standalone("Per-monitor overrides", "monitors"),
+        ]
+    }
+}
+
+crate::register_module!(WallpaperConfig);

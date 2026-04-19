@@ -3,11 +3,11 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
-/// Microphone module configuration.
+/// Microphone input level and mute toggle.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-microphone")]
 pub struct MicrophoneConfig {
     /// Icon shown when microphone is active (unmuted).
@@ -117,10 +117,15 @@ impl ModuleInfoProvider for MicrophoneConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("microphone"),
-            icon: String::from(""),
-            description: String::from("Microphone input control and mute toggle"),
-            behavior_configs: vec![(String::from("microphone"), || schema_for!(MicrophoneConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(MicrophoneConfig),
+            layout_id: Some(String::from("microphone")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(MicrophoneConfig);

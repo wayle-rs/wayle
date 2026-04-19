@@ -3,11 +3,11 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Keybind mode indicator configuration.
+/// Current keybind-mode indicator for modal compositors.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-keybind-mode")]
 pub struct KeybindModeConfig {
     /// Format string for the label.
@@ -109,12 +109,15 @@ impl ModuleInfoProvider for KeybindModeConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("keybind-mode"),
-            icon: String::from("󰌨"),
-            description: String::from("Keybind mode indicator"),
-            behavior_configs: vec![(String::from("keybind-mode"), || {
-                schema_for!(KeybindModeConfig)
-            })],
-            styling_configs: vec![],
+            schema: || schema_for!(KeybindModeConfig),
+            layout_id: Some(String::from("keybind-mode")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(KeybindModeConfig);

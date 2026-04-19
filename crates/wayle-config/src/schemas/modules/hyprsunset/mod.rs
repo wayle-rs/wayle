@@ -3,11 +3,11 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Hyprsunset (blue light filter) module configuration.
+/// Toggle for Hyprland's blue-light filter.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-hyprsunset")]
 pub struct HyprsunsetConfig {
     /// Format string for the label.
@@ -124,10 +124,15 @@ impl ModuleInfoProvider for HyprsunsetConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("hyprsunset"),
-            icon: String::from(""),
-            description: String::from("Control Hyprland's blue light filter (night light)"),
-            behavior_configs: vec![(String::from("hyprsunset"), || schema_for!(HyprsunsetConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(HyprsunsetConfig),
+            layout_id: Some(String::from("hyprsunset")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(HyprsunsetConfig);
