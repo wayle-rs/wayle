@@ -15,6 +15,7 @@ Wayle requires a Wayland compositor that implements the `wlr-layer-shell` protoc
 - [Arch Linux](/guide/getting-started-arch)
 - [Debian / Ubuntu](/guide/getting-started-debian)
 - [Fedora](/guide/getting-started-fedora)
+- [NixOS](/guide/getting-started-nixos)
 
 <details>
 <summary>Other distros</summary>
