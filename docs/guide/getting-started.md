@@ -10,6 +10,14 @@ Settings can be edited in `config.toml`, through the `wayle-settings` GUI, or wi
 
 Wayle requires a Wayland compositor that implements the `wlr-layer-shell` protocol. Compositor-specific modules currently target Hyprland; Niri, Sway, and Mango support is in development.
 
+<a href="/wayle-preview.png" target="_blank" rel="noopener">
+  <img src="/wayle-preview.png" alt="Wayle desktop shell" style="margin-bottom: 1.5rem;">
+</a>
+
+<a href="/wayle-settings-preview.png" target="_blank" rel="noopener">
+  <img src="/wayle-settings-preview.png" alt="Wayle settings GUI">
+</a>
+
 ## Install
 
 - [Arch Linux](/guide/getting-started-arch)

@@ -14,6 +14,14 @@ A Wayland desktop shell with the bar, notifications, OSD, wallpaper, and device 
 
 Configure it in `config.toml`, through the `wayle-settings` GUI, or with the `wayle config` CLI.
 
+<p align="center">
+  <img src="assets/wayle-preview.png" alt="Wayle desktop shell">
+</p>
+
+<p align="center">
+  <img src="assets/wayle-settings-preview.png" alt="Wayle settings GUI">
+</p>
+
 ## Documentation
 
 Full guides, reference, and walkthroughs are at **[wayle.app](https://wayle.app)**.
