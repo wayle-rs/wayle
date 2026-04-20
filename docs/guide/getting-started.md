@@ -8,7 +8,7 @@ Wayle is a Wayland desktop shell written in Rust with GTK4 and Relm4. It provide
 
 Settings can be edited in `config.toml`, through the `wayle-settings` GUI, or with the `wayle config` CLI. All three surfaces provided hot reloaded updates, reflected in the shell immediately.
 
-Wayle requires a Wayland compositor that implements the `wlr-layer-shell` protocol.
+Wayle requires a Wayland compositor that implements the `wlr-layer-shell` protocol. Compositor-specific modules currently target Hyprland; Niri, Sway, and Mango support is in development.
 
 ## Install
 
