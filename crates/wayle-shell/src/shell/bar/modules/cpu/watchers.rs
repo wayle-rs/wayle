@@ -1,4 +1,4 @@
-use std::{sync::Arc, time::Duration};
+use std::sync::Arc;
 
 use relm4::ComponentSender;
 use wayle_config::schemas::{modules::CpuConfig, styling::evaluate_thresholds};
@@ -51,11 +51,5 @@ pub(super) fn spawn_watchers(
     let sysinfo_sensor = sysinfo.clone();
     watch!(sender, [temp_sensor.watch()], |_out| {
         sysinfo_sensor.set_cpu_temp_sensor(&temp_sensor.get());
-    });
-
-    let poll_interval = config.poll_interval_ms.clone();
-    let sysinfo_interval = sysinfo.clone();
-    watch!(sender, [poll_interval.watch()], |_out| {
-        sysinfo_interval.set_cpu_interval(Duration::from_millis(poll_interval.get()));
     });
 }

@@ -106,7 +106,7 @@ wayle-media = "0.1.2"
 wayle-network = "0.1.2"
 wayle-notification = "0.1.3"
 wayle-power-profiles = "0.1.2"
-wayle-sysinfo = "0.1.2"
+wayle-sysinfo = { path = "../wayle-services/wayle-sysinfo" }
 wayle-systray = "0.1.2"
 wayle-traits = "0.1.2"
 wayle-wallpaper = "0.1.3"

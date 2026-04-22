@@ -207,6 +207,8 @@ pub enum BarModule {
     Cpu,
     /// Quick access dashboard button.
     Dashboard,
+    /// GPU usage, memory, and temperature.
+    Gpu,
     /// Compositor keybind mode indicator (submaps in Hyprland, modes in Sway/River).
     KeybindMode,
     /// Hyprland workspace switcher.
@@ -287,6 +289,7 @@ impl BarModule {
             Self::Clock => "clock",
             Self::Cpu => "cpu",
             Self::Dashboard => "dashboard",
+            Self::Gpu => "gpu",
             Self::KeybindMode => "keybind-mode",
             Self::HyprlandWorkspaces => "hyprland-workspaces",
             Self::IdleInhibit => "idle-inhibit",
@@ -319,6 +322,7 @@ impl BarModule {
             "clock" => Self::Clock,
             "cpu" => Self::Cpu,
             "dashboard" => Self::Dashboard,
+            "gpu" => Self::Gpu,
             "keybind-mode" => Self::KeybindMode,
             "hyprland-workspaces" => Self::HyprlandWorkspaces,
             "idle-inhibit" => Self::IdleInhibit,
@@ -402,6 +406,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "clock",
     "cpu",
     "dashboard",
+    "gpu",
     "hyprland-workspaces",
     "hyprsunset",
     "idle-inhibit",
