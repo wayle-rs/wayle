@@ -64,6 +64,7 @@ jobs:
             - name: Install dependencies
               run: |
                   pacman --noconfirm --needed -Syu \
+                    desktop-file-utils \
                     git \
                     github-cli \
                     rustup \
@@ -74,6 +75,7 @@ jobs:
                     libpulse \
                     fftw \
                     libpipewire \
+                    rpm-tools \
                     systemd-libs
 
             - name: Setup Rust
@@ -89,25 +91,13 @@ jobs:
             - name: Build release binaries
               run: cargo build --release --locked
 
-            - name: Generate completions
-              run: |
-                  target/release/wayle completions bash > completions.bash
-                  target/release/wayle completions zsh > _wayle
-                  target/release/wayle completions fish > wayle.fish
+            - name: Build archive
+              run: ./scripts/ci/build-archive.sh target/release "${GITHUB_REF_NAME#v}" "${{ matrix.arch }}"
 
-            - name: Create archive
+            - name: Build packages
               run: |
                   VERSION="${GITHUB_REF_NAME#v}"
-                  ARCH="${{ matrix.arch }}"
-                  STAGING="wayle-${VERSION}-${ARCH}-linux"
-                  mkdir -p "${STAGING}/icons" "${STAGING}/completions"
-                  cp target/release/wayle target/release/wayle-settings LICENSE "${STAGING}/"
-                  cp -r resources/icons/hicolor "${STAGING}/icons/"
-                  cp completions.bash _wayle wayle.fish "${STAGING}/completions/"
-                  cp resources/wayle.service "${STAGING}/"
-                  cp resources/com.wayle.settings.desktop "${STAGING}/"
-                  cp resources/wayle-settings.svg "${STAGING}/"
-                  tar czf "${STAGING}.tar.gz" "${STAGING}"
+                  ./scripts/ci/build-packages.sh "wayle-${VERSION}-${{ matrix.arch }}-linux.tar.gz" "${VERSION}"
 
             - name: Upload to release
               env:
@@ -117,6 +107,7 @@ jobs:
                   ARCH="${{ matrix.arch }}"
                   gh release upload "${{ github.ref_name }}" \
                     "wayle-${VERSION}-${ARCH}-linux.tar.gz" \
+                    rpmbuild/RPMS/${ARCH}/*.rpm \
                     --clobber
 
     checksums:
@@ -131,10 +122,11 @@ jobs:
                   gh release download "${{ github.ref_name }}" \
                     --repo "${{ github.repository }}" \
                     --pattern "*.tar.gz" \
+                    --pattern "*.rpm" \
                     --dir release
 
             - name: Generate SHA256SUMS
-              run: cd release && sha256sum *.tar.gz > ../SHA256SUMS
+              run: cd release && sha256sum *.tar.gz *.rpm > ../SHA256SUMS
 
             - name: Upload checksums
               env:

@@ -1,0 +1,71 @@
+# Prebuilt upstream binary: no source to compile, so no useful debuginfo
+# can be produced. Disable debug_package to avoid an empty subpackage.
+%global debug_package %{nil}
+%global _build_id_links none
+
+# Arch's rpm-tools lacks systemd-rpm-macros, so _userunitdir may be undefined.
+%{!?_userunitdir: %global _userunitdir %{_prefix}/lib/systemd/user}
+
+Name:           wayle
+Version:        @VERSION@
+Release:        1%{?dist}
+Summary:        Wayland Elements - A compositor agnostic shell with extensive customization
+License:        Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND CC0-1.0 AND CDLA-Permissive-2.0 AND ISC AND MIT AND OpenSSL AND Unicode-3.0 AND Zlib
+URL:            https://github.com/wayle-rs/wayle
+Source0:        https://github.com/wayle-rs/wayle/releases/download/v%{version}/wayle-%{version}-%{_arch}-linux.tar.gz
+ExclusiveArch:  x86_64
+
+BuildRequires:  desktop-file-utils
+Requires:       hicolor-icon-theme
+
+%description
+Wayland Elements - A compositor agnostic shell with extensive customization
+
+%prep
+%setup -q -n wayle-%{version}-%{_arch}-linux
+
+%build
+# prebuilt upstream binary - nothing to build
+
+%install
+install -d %{buildroot}%{_bindir}
+install -m 0755 wayle %{buildroot}%{_bindir}/wayle
+install -m 0755 wayle-settings %{buildroot}%{_bindir}/wayle-settings
+
+install -d %{buildroot}%{_userunitdir}
+install -m 0644 wayle.service %{buildroot}%{_userunitdir}/wayle.service
+
+install -d %{buildroot}%{_datadir}/applications
+install -m 0644 com.wayle.settings.desktop %{buildroot}%{_datadir}/applications/com.wayle.settings.desktop
+desktop-file-validate %{buildroot}%{_datadir}/applications/com.wayle.settings.desktop
+
+install -d %{buildroot}%{_datadir}/icons/hicolor/scalable/apps
+install -m 0644 wayle-settings.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/apps/wayle-settings.svg
+
+install -d %{buildroot}%{_datadir}/icons/hicolor/scalable/actions
+install -m 0644 icons/hicolor/scalable/actions/*.svg %{buildroot}%{_datadir}/icons/hicolor/scalable/actions/
+
+install -d %{buildroot}%{_datadir}/bash-completion/completions
+install -m 0644 completions/completions.bash %{buildroot}%{_datadir}/bash-completion/completions/wayle
+
+install -d %{buildroot}%{_datadir}/zsh/site-functions
+install -m 0644 completions/_wayle %{buildroot}%{_datadir}/zsh/site-functions/_wayle
+
+install -d %{buildroot}%{_datadir}/fish/vendor_completions.d
+install -m 0644 completions/wayle.fish %{buildroot}%{_datadir}/fish/vendor_completions.d/wayle.fish
+
+%files
+%license LICENSE
+%{_bindir}/wayle
+%{_bindir}/wayle-settings
+%{_userunitdir}/wayle.service
+%{_datadir}/applications/com.wayle.settings.desktop
+%{_datadir}/icons/hicolor/scalable/apps/wayle-settings.svg
+%{_datadir}/icons/hicolor/scalable/actions/*.svg
+%{_datadir}/bash-completion/completions/wayle
+%{_datadir}/zsh/site-functions/_wayle
+%{_datadir}/fish/vendor_completions.d/wayle.fish
+
+%changelog
+* @DATE@ Jas Singh <jaskiratpal.singh@outlook.com> - @VERSION@-1
+- Repackaged upstream binary release
