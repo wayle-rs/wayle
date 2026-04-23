@@ -23,7 +23,7 @@ sudo apt install git pkg-config cmake libgtk-4-dev libgtk4-layer-shell-dev \
 If you want the battery, bluetooth, network, power, or audio modules, install their daemons (skip any you don't need):
 
 ```sh
-sudo apt install dbus-user-session fonts-dejavu-core bluez network-manager \
+sudo apt install dbus-user-session bluez network-manager \
   upower power-profiles-daemon pipewire-pulse wireplumber
 sudo systemctl enable --now bluetooth NetworkManager upower power-profiles-daemon
 ```
