@@ -311,10 +311,10 @@ mod tests {
                 fallback: "fallback-icon",
             };
             let window = WindowInfo {
-                class: "org.mozilla.firefox",
-                title: "Mozilla Firefox",
+                class: "libreoffice-foo",
+                title: "Libreoffice",
             };
-            assert_eq!(resolve_app_icon(&window, &ctx), "si-firefox-symbolic");
+            assert_eq!(resolve_app_icon(&window, &ctx), "si-libreoffice-symbolic");
         }
 
         #[test]
