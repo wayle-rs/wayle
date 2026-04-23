@@ -101,6 +101,7 @@ settings-nav-volume = Volume
 settings-nav-weather = Weather
 settings-nav-window-title = Window Title
 settings-nav-world-clock = World Clock
+settings-nav-aurora = Aurora
 
 ## Page titles
 settings-page-general = General
@@ -170,6 +171,8 @@ settings-page-weather = Weather
 settings-page-window-title = Window Title
     .breadcrumb = Modules
 settings-page-world-clock = World Clock
+settings-page-aurora = Aurora
+    .breadcrumb = Modules
     .breadcrumb = Modules
 
 ## Section titles

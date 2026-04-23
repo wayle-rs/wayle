@@ -62,6 +62,9 @@ pub use types::TimeFormat;
 pub use volume::{AppIconSource, VolumeConfig};
 use wayle_derive::wayle_config;
 pub use weather::{TemperatureUnit, WeatherConfig, WeatherProvider};
+mod aurora;
+pub use aurora::AuroraConfig;
+
 pub use window_title::{BUILTIN_MAPPINGS as WINDOW_TITLE_BUILTIN_MAPPINGS, WindowTitleConfig};
 pub use world_clock::WorldClockConfig;
 
@@ -120,6 +123,8 @@ pub struct ModulesConfig {
     pub volume: VolumeConfig,
     /// Weather display module.
     pub weather: WeatherConfig,
+    /// Aurora Borealis forecast module.
+    pub aurora: AuroraConfig,
     /// Window title module.
     #[serde(rename = "window-title")]
     pub window_title: WindowTitleConfig,

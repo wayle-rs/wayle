@@ -26,6 +26,7 @@ mod volume;
 mod weather;
 mod window_title;
 mod world_clock;
+mod aurora;
 
 use wayle_config::Config;
 
@@ -59,5 +60,6 @@ pub(crate) fn factories() -> Vec<fn(&Config) -> LeafEntry> {
         weather::entry,
         window_title::entry,
         world_clock::entry,
+        aurora::entry,
     ]
 }
