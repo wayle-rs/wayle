@@ -4835,6 +4835,7 @@ dependencies = [
  "console",
  "evdev",
  "futures",
+ "gdk-pixbuf",
  "gdk4",
  "glob",
  "gtk4",

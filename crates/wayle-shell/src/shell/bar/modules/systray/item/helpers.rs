@@ -1,3 +1,5 @@
+use std::{collections::hash_map::DefaultHasher, hash::Hasher, path::Path};
+
 use gtk4::{gdk, glib, prelude::Cast};
 use wayle_systray::types::item::IconPixmap;
 
@@ -25,19 +27,45 @@ pub(super) fn create_texture_from_pixmap(pixmap: &IconPixmap) -> Option<gdk::Tex
     .into()
 }
 
-pub(super) fn load_icon_from_theme_path(theme_path: &str, icon_name: &str) -> Option<gdk::Texture> {
+pub(super) fn hash_pixmaps(pixmaps: &[IconPixmap]) -> u64 {
+    let mut hasher = DefaultHasher::new();
+
+    for pixmap in pixmaps {
+        hasher.write_i32(pixmap.width);
+        hasher.write_i32(pixmap.height);
+        hasher.write_usize(pixmap.data.len());
+        hasher.write(&pixmap.data);
+    }
+
+    hasher.finish()
+}
+
+pub(super) fn load_scaled_texture_from_file(path: &str) -> Option<gdk::Texture> {
+    let pixbuf =
+        gdk_pixbuf::Pixbuf::from_file_at_scale(path, TARGET_ICON_SIZE, TARGET_ICON_SIZE, true)
+            .ok()?;
+    Some(gdk::Texture::for_pixbuf(&pixbuf))
+}
+
+pub(super) fn find_icon_in_theme_path(theme_path: &str, icon_name: &str) -> Option<String> {
     if theme_path.is_empty() {
         return None;
     }
 
     for ext in ICON_EXTENSIONS {
         let file_path = format!("{theme_path}/{icon_name}.{ext}");
-        if let Ok(texture) = gdk::Texture::from_filename(&file_path) {
-            return Some(texture);
+        if Path::new(&file_path).is_file() {
+            return Some(file_path);
         }
     }
 
     None
+}
+
+pub(super) fn load_icon_from_theme_path(theme_path: &str, icon_name: &str) -> Option<gdk::Texture> {
+    find_icon_in_theme_path(theme_path, icon_name)
+        .as_deref()
+        .and_then(load_scaled_texture_from_file)
 }
 
 fn argb_to_rgba(argb: &[u8]) -> Vec<u8> {
