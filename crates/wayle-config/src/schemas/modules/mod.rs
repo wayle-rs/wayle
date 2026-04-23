@@ -34,7 +34,7 @@ pub use cava::{
     BarCount as CavaBarCount, CavaConfig, CavaDirection, CavaInput, CavaStyle,
     Framerate as CavaFramerate, FrequencyHz,
 };
-pub use clock::ClockConfig;
+pub use clock::{ClockConfig, WeekStart};
 pub use cpu::CpuConfig;
 pub use custom::{CustomModuleDefinition, ExecutionMode, RestartDelay, RestartPolicy};
 pub use dashboard::DashboardConfig;

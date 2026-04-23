@@ -4,7 +4,7 @@ pub mod helpers;
 pub mod messages;
 mod methods;
 
-use chrono::{Datelike, Months, NaiveDate};
+use chrono::{Datelike, Months, NaiveDate, Weekday};
 use gtk::prelude::*;
 use relm4::{gtk, prelude::*};
 
@@ -21,6 +21,7 @@ pub struct Calendar {
     months: [String; 12],
     month_year_pattern: String,
     weekdays: [String; 7],
+    week_start: Weekday,
     grid: gtk::Grid,
 }
 
@@ -112,6 +113,7 @@ impl Component for Calendar {
             months: init.labels.months,
             month_year_pattern,
             weekdays: init.labels.weekdays,
+            week_start: init.week_start,
             grid: grid.clone(),
         };
 
@@ -167,6 +169,13 @@ impl Component for Calendar {
             CalendarInput::UpdateToday(new_today) => {
                 if self.today != new_today {
                     self.today = new_today;
+                    self.rebuild_grid(&sender);
+                }
+            }
+
+            CalendarInput::UpdateWeekStart(week_start) => {
+                if self.week_start != week_start {
+                    self.week_start = week_start;
                     self.rebuild_grid(&sender);
                 }
             }

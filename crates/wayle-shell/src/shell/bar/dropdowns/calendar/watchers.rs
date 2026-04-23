@@ -1,7 +1,8 @@
 use std::{sync::Arc, time::Duration};
 
 use relm4::ComponentSender;
-use wayle_config::ConfigService;
+use chrono::Weekday;
+use wayle_config::{ConfigService, schemas::modules::WeekStart};
 use wayle_widgets::watch;
 
 use super::{CalendarDropdown, helpers, messages::CalendarDropdownCmd};
@@ -13,6 +14,7 @@ pub(super) fn spawn(sender: &ComponentSender<CalendarDropdown>, config: &Arc<Con
     spawn_time_tick(sender);
     spawn_format_watcher(sender, config);
     spawn_show_seconds_watcher(sender, config);
+    spawn_week_start_watcher(sender, config);
 }
 
 fn spawn_scale_watcher(sender: &ComponentSender<CalendarDropdown>, config: &Arc<ConfigService>) {
@@ -57,4 +59,29 @@ fn spawn_show_seconds_watcher(
     watch!(sender, [show_seconds.watch()], |out| {
         let _ = out.send(CalendarDropdownCmd::ShowSecondsChanged(show_seconds.get()));
     });
+}
+
+fn spawn_week_start_watcher(
+    sender: &ComponentSender<CalendarDropdown>,
+    config: &Arc<ConfigService>,
+) {
+    let week_start_prop = config.config().modules.clock.calendar_weekday_start.clone();
+
+    watch!(sender, [week_start_prop.watch()], |out| {
+        let _ = out.send(CalendarDropdownCmd::WeekStartChanged(
+            week_start_to_weekday(week_start_prop.get()),
+        ));
+    });
+}
+
+pub(super) fn week_start_to_weekday(ws: WeekStart) -> Weekday {
+    match ws {
+        WeekStart::Monday => Weekday::Mon,
+        WeekStart::Tuesday => Weekday::Tue,
+        WeekStart::Wednesday => Weekday::Wed,
+        WeekStart::Thursday => Weekday::Thu,
+        WeekStart::Friday => Weekday::Fri,
+        WeekStart::Saturday => Weekday::Sat,
+        WeekStart::Sunday => Weekday::Sun,
+    }
 }
