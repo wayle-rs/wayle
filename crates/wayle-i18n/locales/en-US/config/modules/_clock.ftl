@@ -52,3 +52,6 @@ settings-modules-clock-scroll-down = Scroll Down
 
 settings-modules-clock-dropdown-show-seconds = Show Seconds
     .description = Show seconds in the calendar dropdown clock display
+
+settings-modules-clock-calendar-weekday-start = Calendar Week Start
+    .description = First day of the week in the calendar dropdown

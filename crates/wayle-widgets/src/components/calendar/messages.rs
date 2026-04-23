@@ -1,8 +1,8 @@
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Weekday};
 
 /// Localized strings for the calendar widget.
 pub struct CalendarLabels {
-    /// Abbreviated weekday names starting from Sunday.
+    /// Abbreviated weekday names starting from the configured week start day.
     pub weekdays: [String; 7],
     /// Full month names starting from January.
     pub months: [String; 12],
@@ -21,6 +21,8 @@ pub struct CalendarInit {
     pub today: NaiveDate,
     /// Localized strings for weekdays, months, and navigation.
     pub labels: CalendarLabels,
+    /// The weekday that appears in column 0 of the calendar grid.
+    pub week_start: Weekday,
 }
 
 /// Calendar widget input messages.
@@ -36,6 +38,8 @@ pub enum CalendarInput {
     DayClicked(NaiveDate),
     /// Midnight rollover — parent sends the new date.
     UpdateToday(NaiveDate),
+    /// Week start day changed at runtime via config hot-reload.
+    UpdateWeekStart(Weekday),
 }
 
 /// Calendar widget output messages.

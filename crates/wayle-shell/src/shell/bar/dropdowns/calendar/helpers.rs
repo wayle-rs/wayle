@@ -1,4 +1,4 @@
-use chrono::{DateTime, Datelike, Local};
+use chrono::{DateTime, Datelike, Local, Weekday};
 
 use crate::i18n::t;
 
@@ -48,8 +48,9 @@ pub(super) fn day_names_array() -> [String; 7] {
     ]
 }
 
-pub(super) fn weekdays_array() -> [String; 7] {
-    [
+pub(super) fn weekdays_array(week_start: Weekday) -> [String; 7] {
+    // Base order is Sunday-first (matches num_days_from_sunday indexing).
+    let base = [
         t!("cal-weekday-sun"),
         t!("cal-weekday-mon"),
         t!("cal-weekday-tue"),
@@ -57,7 +58,10 @@ pub(super) fn weekdays_array() -> [String; 7] {
         t!("cal-weekday-thu"),
         t!("cal-weekday-fri"),
         t!("cal-weekday-sat"),
-    ]
+    ];
+    // Rotate left by the start day's Sunday-offset so week_start lands at col 0.
+    let rot = week_start.num_days_from_sunday() as usize;
+    std::array::from_fn(|i| base[(rot + i) % 7].clone())
 }
 
 pub(super) fn months_array() -> [String; 12] {
