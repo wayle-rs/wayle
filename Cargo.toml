@@ -1,3 +1,5 @@
+
+
 [workspace]
 resolver = "2"
 members = [
@@ -143,3 +145,9 @@ unsafe_code = "deny"
 [profile.release]
 lto = true
 codegen-units = 1
+
+[profile.dev]
+opt-level = 1          # modest optimisation – much faster than opt-level = 0
+debug = true           # keep debug info
+incremental = true     # enable incremental compilation
+# (keep default debug‑assertions and overflow‑checks)

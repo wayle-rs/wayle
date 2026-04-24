@@ -195,6 +195,8 @@ pub struct ClassedModule {
 /// ID defined in `[[modules.custom]]`.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum BarModule {
+    /// Aurora Borealis forecast.
+    Aurora,
     /// Battery status and percentage.
     Battery,
     /// Bluetooth connection status and devices.
@@ -305,6 +307,7 @@ impl BarModule {
             Self::Updates => "updates",
             Self::Volume => "volume",
             Self::Weather => "weather",
+            Self::Aurora => "aurora",
             Self::WindowTitle => "window-title",
             Self::WorldClock => "world-clock",
             Self::Custom(_) => unreachable!("Custom modules use dynamic serialization"),
@@ -337,6 +340,7 @@ impl BarModule {
             "updates" => Self::Updates,
             "volume" => Self::Volume,
             "weather" => Self::Weather,
+            "aurora" => Self::Aurora,
             "window-title" => Self::WindowTitle,
             "world-clock" => Self::WorldClock,
             _ => return None,
@@ -419,7 +423,8 @@ const BUILTIN_MODULES: &[&str] = &[
     "systray",
     "updates",
     "volume",
-    "weather",
+"weather",
+    "aurora",
     "window-title",
     "world-clock",
 ];

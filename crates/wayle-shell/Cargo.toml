@@ -57,7 +57,9 @@ wayle-styling = { workspace = true }
 wayle-sysinfo.workspace = true
 wayle-systray = { workspace = true, features = ["adapter-gtk"] }
 wayle-wallpaper.workspace = true
-wayle-weather.workspace = true
+    wayle-weather.workspace = true
+    # glib version aligned with workspace (removed explicit 0.18)
+    reqwest = { version = "0.13", features = ["blocking", "json"] }
 wayle-widgets = { workspace = true }
 zbus.workspace = true
 
