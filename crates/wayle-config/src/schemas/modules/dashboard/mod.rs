@@ -65,6 +65,16 @@ pub struct DashboardConfig {
     #[default(String::from("loginctl lock-session"))]
     pub dropdown_lock_command: ConfigProperty<String>,
 
+    /// Shell command for the sleep button in the dashboard dropdown.
+    #[serde(rename = "dropdown-sleep-command")]
+    #[default(String::from("systemctl sleep"))]
+    pub dropdown_sleep_command: ConfigProperty<String>,
+
+    /// Shell command for the hibernate button in the dashboard dropdown.
+    #[serde(rename = "dropdown-hibernate-command")]
+    #[default(String::from("systemctl hibernate"))]
+    pub dropdown_hibernate_command: ConfigProperty<String>,
+
     /// Shell command for the logout button in the dashboard dropdown.
     #[serde(rename = "dropdown-logout-command")]
     #[default(String::from("loginctl terminate-session $XDG_SESSION_ID"))]

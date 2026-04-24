@@ -1,10 +1,10 @@
 .dashboard-dropdown {
     .dashboard-user-session {
-        border-spacing: var(--space-sm);
+        border-spacing: var(--space-md);
     }
 
     .user-info {
-        border-spacing: var(--space-md);
+        border-spacing: var(--space-sm);
     }
 
     .user-avatar {
@@ -12,8 +12,8 @@
         background-color: var(--bg-overlay);
         background-size: cover;
         background-position: center;
-        min-width: calc(2.5rem * var(--global-scale));
-        min-height: calc(2.5rem * var(--global-scale));
+        min-width: calc(5rem * var(--global-scale));
+        min-height: calc(5rem * var(--global-scale));
 
         image {
             -gtk-icon-size: var(--icon-md);
@@ -22,9 +22,9 @@
     }
 
     .user-name {
-        font-size: var(--text-base);
+        font-size: var(--text-lg);
         color: var(--fg-default);
-        font-weight: var(--weight-semibold);
+        font-weight: var(--weight-bold);
         text-transform: capitalize;
     }
 
@@ -34,12 +34,14 @@
     }
 
     .session-actions {
-        border-spacing: var(--space-xs);
+        border-spacing: var(--space-sm);
     }
 
     button.icon.session-btn {
+        padding: var(--space-xs);
+
         > image {
-            -gtk-icon-size: var(--icon-md);
+            -gtk-icon-size: var(--icon-lg);
             color: var(--fg-muted);
         }
 
