@@ -30,7 +30,7 @@ use relm4::{factory::FactoryVecDeque, prelude::*};
 use tokio_util::sync::CancellationToken;
 use tracing::debug;
 use wayle_config::ConfigService;
-use wayle_hyprland::{Address, HyprlandService, WorkspaceId};
+use wayle_hyprland::{Address, HyprlandService, WorkspaceAddress, WorkspaceId};
 use wayle_widgets::{prelude::BarSettings, utils::force_window_resize};
 
 use self::{
@@ -49,6 +49,7 @@ pub(crate) struct HyprlandWorkspaces {
     hyprland: Option<Arc<HyprlandService>>,
     config: Arc<ConfigService>,
     settings: BarSettings,
+    active_workspace_any_monitor: HashSet<WorkspaceAddress>,
     active_workspace: Option<ActiveWorkspace>,
     focused_monitor: Option<String>,
     workspace_monitor_rules: HashMap<WorkspaceId, String>,
@@ -86,10 +87,15 @@ impl Component for HyprlandWorkspaces {
         let config = init.config.config();
         let workspaces_config = &config.modules.hyprland_workspaces;
         let monitor_specific = workspaces_config.monitor_specific.get();
+        let monitor_specific_highlight = workspaces_config.highlight_active_on_other_monitor.get();
         let theme_provider = config.styling.theme_provider.clone();
 
-        let active_workspace =
-            Self::initial_active_workspace(&init.hyprland, &init.settings, monitor_specific);
+        let active_workspace = Self::initial_active_workspace(
+            &init.hyprland,
+            &init.settings,
+            monitor_specific || monitor_specific_highlight,
+        );
+        let active_any_monitor = Self::initial_active_workspace_other_monitor(&init.hyprland);
         let focused_monitor = Self::initial_focused_monitor(&init.hyprland);
         let bar_scale = config.bar.scale.clone();
 
@@ -125,6 +131,7 @@ impl Component for HyprlandWorkspaces {
             config: init.config,
             settings: init.settings,
             active_workspace,
+            active_workspace_any_monitor: active_any_monitor,
             focused_monitor,
             workspace_monitor_rules: HashMap::new(),
             urgent_windows: HashSet::new(),

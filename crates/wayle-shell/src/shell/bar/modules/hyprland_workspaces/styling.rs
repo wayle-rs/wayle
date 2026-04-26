@@ -24,6 +24,8 @@ pub(super) fn apply_styling(
     let is_wayle_theme = matches!(config.styling.theme_provider.get(), ThemeProvider::Wayle);
 
     let active_color = resolve_color(&ws_config.active_color, is_wayle_theme);
+    let active_on_other_color =
+        resolve_color(&ws_config.active_on_other_monitor_color, is_wayle_theme);
     let occupied_color = resolve_color(&ws_config.occupied_color, is_wayle_theme);
     let empty_color = resolve_color(&ws_config.empty_color, is_wayle_theme);
     let container_bg_color = resolve_color(&ws_config.container_bg_color, is_wayle_theme);
@@ -49,6 +51,7 @@ pub(super) fn apply_styling(
     let mut css = format!(
         ".workspaces {{ \
             --ws-active-color: {active_color}; \
+            --ws-active-other-monitor-color: {active_on_other_color}; \
             --ws-occupied-color: {occupied_color}; \
             --ws-empty-color: {empty_color}; \
             --ws-container-bg-color: {container_bg_color}; \

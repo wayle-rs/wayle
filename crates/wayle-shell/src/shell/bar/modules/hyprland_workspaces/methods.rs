@@ -151,6 +151,21 @@ impl HyprlandWorkspaces {
         })
     }
 
+    pub(super) fn initial_active_workspace_other_monitor(
+        hyprland: &Option<Arc<HyprlandService>>,
+    ) -> HashSet<WorkspaceAddress> {
+        let Some(hyprland) = hyprland else {
+            return HashSet::new();
+        };
+
+        hyprland
+            .monitors
+            .get()
+            .into_iter()
+            .map(|m| m.active_workspace.get().address)
+            .collect::<HashSet<WorkspaceAddress>>()
+    }
+
     pub(super) fn should_apply_workspace_event(&self) -> bool {
         let Some(bar_monitor) = self.settings.monitor_name.as_ref() else {
             return true;
@@ -196,14 +211,28 @@ impl HyprlandWorkspaces {
         let config = self.config.config();
         let ws_config = &config.modules.hyprland_workspaces;
         let monitor_specific = ws_config.monitor_specific.get();
+        let monitor_specific_highlight = ws_config.highlight_active_on_other_monitor.get();
+
         let has_min_workspace_count = ws_config.min_workspace_count.get() > 0;
 
-        if !self.should_apply_active_workspace_change(&workspace, monitor_specific) {
+        if !self.should_apply_active_workspace_change(
+            &workspace,
+            monitor_specific || monitor_specific_highlight,
+        ) {
+            if (!monitor_specific) && monitor_specific_highlight {
+                self.rebuild_buttons();
+            }
             return;
         }
 
         self.clear_urgent_windows_for_workspace(&workspace.address);
         self.stop_blink_if_no_urgent();
+        if let Some(active) = &self.active_workspace {
+            self.active_workspace_any_monitor.remove(&active.address);
+        }
+        self.active_workspace_any_monitor
+            .insert(workspace.address.clone());
+
         self.active_workspace = Some(workspace);
         self.sync_after_active_workspace_change(has_min_workspace_count);
     }
@@ -219,12 +248,22 @@ impl HyprlandWorkspaces {
         let config = self.config.config();
         let ws_config = &config.modules.hyprland_workspaces;
         let monitor_specific = ws_config.monitor_specific.get();
+        let monitor_specific_highlight = config
+            .modules
+            .hyprland_workspaces
+            .highlight_active_on_other_monitor
+            .get();
+
         let has_min_workspace_count = ws_config.min_workspace_count.get() > 0;
         let bar_monitor = self.settings.monitor_name.clone();
 
         self.focused_monitor = Some(monitor.clone());
 
-        if !should_update_for_monitor(monitor_specific, bar_monitor.as_deref(), &monitor) {
+        if !should_update_for_monitor(
+            monitor_specific || monitor_specific_highlight,
+            bar_monitor.as_deref(),
+            &monitor,
+        ) {
             return;
         }
 
@@ -246,8 +285,18 @@ impl HyprlandWorkspaces {
 
         let config = self.config.config();
         let monitor_specific = config.modules.hyprland_workspaces.monitor_specific.get();
+        let highlight_monitor_specific = config
+            .modules
+            .hyprland_workspaces
+            .highlight_active_on_other_monitor
+            .get();
 
         let monitors = hyprland.monitors.get();
+
+        self.active_workspace_any_monitor = monitors
+            .iter()
+            .map(|m| m.active_workspace.get().address)
+            .collect();
 
         let bar_monitor_state = self.settings.monitor_name.as_ref().and_then(|bar_monitor| {
             monitors
@@ -255,7 +304,9 @@ impl HyprlandWorkspaces {
                 .find(|monitor| monitor.name.get() == *bar_monitor)
         });
 
-        if monitor_specific && let Some(monitor) = bar_monitor_state {
+        if (monitor_specific || highlight_monitor_specific)
+            && let Some(monitor) = bar_monitor_state
+        {
             let active_info = monitor.active_workspace.get();
 
             self.active_workspace = Some(ActiveWorkspace::from(active_info));
@@ -324,6 +375,9 @@ impl HyprlandWorkspaces {
                     name: &workspace.name,
                     windows: workspace.windows,
                     is_active: self.is_active(&workspace.address),
+                    is_active_any_monitor: self
+                        .active_workspace_any_monitor
+                        .contains(&workspace.address),
                     is_urgent,
                     is_vertical,
                 };
@@ -403,6 +457,9 @@ impl HyprlandWorkspaces {
                 WorkspaceButtonInput::UpdateState {
                     windows: self.window_count_for_workspace(&button_address, hyprland),
                     is_active: self.is_active(&button_address),
+                    is_active_any_monitor: self
+                        .active_workspace_any_monitor
+                        .contains(&button_address),
                     is_urgent,
                     urgent_addresses: urgent_addrs,
                 },
