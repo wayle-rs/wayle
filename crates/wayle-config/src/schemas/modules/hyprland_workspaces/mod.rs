@@ -328,6 +328,16 @@ pub struct HyprlandWorkspacesConfig {
     #[default(ActiveIndicator::Background)]
     pub active_indicator: ConfigProperty<ActiveIndicator>,
 
+    /// Highlight workspaces active on other monitors with a different color.
+    ///
+    /// When true, workspaces active on a different monior are highlicted differently.
+    /// When false, workspaces active on a another monitor are not specially highlighted.
+    ///
+    /// This setting only makes sense when `monitor-specific` is false.
+    #[serde(rename = "highlight-active-on-other-monitor")]
+    #[default(true)]
+    pub highlight_active_on_other_monitor: ConfigProperty<bool>,
+
     /// Color for the active (focused) workspace.
     ///
     /// Applied to icons and labels. In `background` indicator mode,
@@ -364,6 +374,13 @@ pub struct HyprlandWorkspacesConfig {
     #[serde(rename = "border-color")]
     #[default(ColorValue::Token(CssToken::BorderDefault))]
     pub border_color: ConfigProperty<ColorValue>,
+
+    /// Active on other minitor indicator color.
+    ///
+    /// Only applies when `highlight-active-on-other-monitor` is `true`.
+    #[serde(rename = "active-on-other-monitor-color")]
+    #[default(ColorValue::Token(CssToken::Accent))]
+    pub active_on_other_monitor_color: ConfigProperty<ColorValue>,
 
     /// Per-workspace icon and color overrides.
     ///

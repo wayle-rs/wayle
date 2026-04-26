@@ -49,6 +49,7 @@ pub(crate) struct HyprlandWorkspaces {
     config: Arc<ConfigService>,
     settings: BarSettings,
     active_workspace_id: WorkspaceId,
+    active_workspace_any_monitor: HashSet<WorkspaceId>,
     focused_monitor: Option<String>,
     workspace_monitor_rules: HashMap<WorkspaceId, String>,
     urgent_windows: HashSet<Address>,
@@ -85,10 +86,15 @@ impl Component for HyprlandWorkspaces {
         let config = init.config.config();
         let workspaces_config = &config.modules.hyprland_workspaces;
         let monitor_specific = workspaces_config.monitor_specific.get();
+        let monitor_specific_highlight = workspaces_config.highlight_active_on_other_monitor.get();
         let theme_provider = config.styling.theme_provider.clone();
 
-        let active_id =
-            Self::initial_active_workspace(&init.hyprland, &init.settings, monitor_specific);
+        let active_id = Self::initial_active_workspace(
+            &init.hyprland,
+            &init.settings,
+            monitor_specific || monitor_specific_highlight,
+        );
+        let active_any_monitor = Self::initial_active_workspace_other_monitor(&init.hyprland);
         let focused_monitor = Self::initial_focused_monitor(&init.hyprland);
         let bar_scale = config.bar.scale.clone();
 
@@ -124,6 +130,7 @@ impl Component for HyprlandWorkspaces {
             config: init.config,
             settings: init.settings,
             active_workspace_id: active_id,
+            active_workspace_any_monitor: active_any_monitor,
             focused_monitor,
             workspace_monitor_rules: HashMap::new(),
             urgent_windows: HashSet::new(),
@@ -179,17 +186,27 @@ impl Component for HyprlandWorkspaces {
                 self.update_app_icons_on_title_change();
             }
             WorkspacesCmd::ActiveWorkspaceChanged(id) => {
-                let config = self.config.config();
-                let monitor_specific = config.modules.hyprland_workspaces.monitor_specific.get();
-                let has_min_workspace_count =
-                    config.modules.hyprland_workspaces.min_workspace_count.get() > 0;
+                let config_hypr = &self.config.config().modules.hyprland_workspaces;
+                let monitor_specific = config_hypr.monitor_specific.get();
+                let monitor_specific_highlight =
+                    config_hypr.highlight_active_on_other_monitor.get();
+                let has_min_workspace_count = config_hypr.min_workspace_count.get() > 0;
 
-                if !self.should_apply_active_workspace_change(id, monitor_specific) {
+                if !self.should_apply_active_workspace_change(
+                    id,
+                    monitor_specific || monitor_specific_highlight,
+                ) {
+                    if (!monitor_specific) && monitor_specific_highlight {
+                        self.rebuild_buttons();
+                    }
                     return;
                 }
 
                 self.clear_urgent_windows_for_workspace(id);
                 self.stop_blink_if_no_urgent();
+                self.active_workspace_any_monitor
+                    .remove(&self.active_workspace_id);
+                self.active_workspace_any_monitor.insert(id);
                 self.active_workspace_id = id;
                 self.sync_after_active_workspace_change(has_min_workspace_count);
             }
@@ -202,11 +219,16 @@ impl Component for HyprlandWorkspaces {
 
                 let config = self.config.config();
                 let monitor_specific = config.modules.hyprland_workspaces.monitor_specific.get();
+                let monitor_specific_highlight = config
+                    .modules
+                    .hyprland_workspaces
+                    .highlight_active_on_other_monitor
+                    .get();
                 let has_min_workspace_count =
                     config.modules.hyprland_workspaces.min_workspace_count.get() > 0;
 
                 if should_update_for_monitor(
-                    monitor_specific,
+                    monitor_specific || monitor_specific_highlight,
                     self.settings.monitor_name.as_deref(),
                     &monitor,
                 ) {

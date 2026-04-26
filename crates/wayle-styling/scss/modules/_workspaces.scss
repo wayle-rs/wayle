@@ -41,21 +41,42 @@
         &.active {
             background-color: var(--ws-override-color, var(--ws-active-color));
         }
+        &.active-other-monitor {
+            background-color: var(--ws-override-color, var(--ws-active-other-monitor-color));
+        }
     }
 
-    &.indicator-underline.active {
-        background-image: linear-gradient(
-            to top,
-            var(--ws-override-color, var(--ws-active-color)) 2px,
-            transparent 2px
-        );
-
-        &.vertical {
+    &.indicator-underline{
+        &.active {
             background-image: linear-gradient(
-                to right,
+                to top,
                 var(--ws-override-color, var(--ws-active-color)) 2px,
                 transparent 2px
             );
+
+            &.vertical {
+                background-image: linear-gradient(
+                    to right,
+                    var(--ws-override-color, var(--ws-active-color)) 2px,
+                    transparent 2px
+                );
+            }
+        }
+
+        &.active-other-monitor {
+            background-image: linear-gradient(
+                to top,
+                var(--ws-override-color, var(--ws-active-other-monitor-color)) 2px,
+                transparent 2px
+            );
+
+            &.vertical {
+                background-image: linear-gradient(
+                    to right,
+                    var(--ws-override-color, var(--ws-active-other-monitor-color)) 2px,
+                    transparent 2px
+                );
+            }
         }
     }
 
@@ -65,6 +86,24 @@
         .workspace-custom-icon,
         .workspace-divider {
             color: var(--ws-override-color, var(--ws-active-color));
+        }
+
+        &.indicator-background {
+            .workspace-label,
+            .workspace-icon,
+            .workspace-custom-icon,
+            .workspace-divider {
+                color: var(--fg-on-accent);
+            }
+        }
+    }
+
+    &.active-other-monitor {
+        .workspace-label,
+        .workspace-icon,
+        .workspace-custom-icon,
+        .workspace-divider {
+            color: var(--ws-override-color, var(--ws-active-other-monitor-color));
         }
 
         &.indicator-background {

@@ -11,6 +11,9 @@ settings-modules-hyprland-workspaces-monitor-specific = Monitor Specific
 settings-modules-hyprland-workspaces-show-special = Show Special
     .description = Include scratchpad workspaces
 
+settings-modules-hyprland-workspaces-highlight-active-on-other-monitor = Highlight Active on Other Monitor
+    .description = Use a different color for active workspaces on other monitors (only applies when { settings-modules-hyprland-workspaces-monitor-specific } is false)
+
 settings-modules-hyprland-workspaces-urgent-show = Show Urgent
     .description = Pulse animation on workspaces with urgent windows
 
@@ -58,6 +61,9 @@ settings-modules-hyprland-workspaces-active-indicator = Active Indicator
 
 settings-modules-hyprland-workspaces-active-color = Active Color
     .description = Color for focused workspace icons and labels
+
+settings-modules-hyprland-workspaces-active-on-other-monitor-color = Active on Other Monitor Color
+    .description = Color for focused workspace icons and labels active on other monitors (only used when { settings-modules-hyprland-workspaces-highlight-active-on-other-monitor } is true)
 
 settings-modules-hyprland-workspaces-occupied-color = Occupied Color
     .description = Color for occupied workspace icons and labels

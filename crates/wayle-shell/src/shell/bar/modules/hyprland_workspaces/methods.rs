@@ -134,6 +134,21 @@ impl HyprlandWorkspaces {
         }
     }
 
+    pub(super) fn initial_active_workspace_other_monitor(
+        hyprland: &Option<Arc<HyprlandService>>,
+    ) -> HashSet<WorkspaceId> {
+        let Some(hyprland) = hyprland else {
+            return HashSet::new();
+        };
+
+        hyprland
+            .monitors
+            .get()
+            .into_iter()
+            .map(|m| m.active_workspace.get().id)
+            .collect::<HashSet<WorkspaceId>>()
+    }
+
     pub(super) fn should_apply_workspace_event(&self) -> bool {
         let Some(bar_monitor) = self.settings.monitor_name.as_ref() else {
             return true;
@@ -182,10 +197,20 @@ impl HyprlandWorkspaces {
 
         let config = self.config.config();
         let monitor_specific = config.modules.hyprland_workspaces.monitor_specific.get();
+        let highlight_monitor_specific = config
+            .modules
+            .hyprland_workspaces
+            .highlight_active_on_other_monitor
+            .get();
 
         let monitors = hyprland.monitors.get();
 
-        if monitor_specific
+        self.active_workspace_any_monitor = monitors
+            .iter()
+            .map(|m| m.active_workspace.get().id)
+            .collect();
+
+        if (monitor_specific || highlight_monitor_specific)
             && let Some(bar_monitor) = &self.settings.monitor_name
             && let Some(monitor) = monitors.iter().find(|m| m.name.get() == *bar_monitor)
         {
@@ -245,6 +270,7 @@ impl HyprlandWorkspaces {
                     name: &ws.name,
                     windows: ws.windows,
                     is_active: ws.id == self.active_workspace_id,
+                    is_active_any_monitor: self.active_workspace_any_monitor.contains(&ws.id),
                     is_urgent,
                     is_vertical,
                 };
@@ -321,6 +347,7 @@ impl HyprlandWorkspaces {
                 WorkspaceButtonInput::UpdateState {
                     windows: self.window_count_for_workspace(button_id, hyprland),
                     is_active: button_id == self.active_workspace_id,
+                    is_active_any_monitor: self.active_workspace_any_monitor.contains(&button_id),
                     is_urgent,
                     urgent_addresses: urgent_addrs,
                 },
