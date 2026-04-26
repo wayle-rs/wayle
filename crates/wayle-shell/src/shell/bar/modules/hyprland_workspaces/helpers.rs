@@ -130,6 +130,7 @@ pub(super) fn format_workspace_label(
 pub(crate) enum WorkspaceState {
     Active,
     Occupied,
+    ActiveOtherMonitor,
     Empty,
 }
 
@@ -137,6 +138,7 @@ impl WorkspaceState {
     pub fn css_class(self) -> &'static str {
         match self {
             Self::Active => "active",
+            Self::ActiveOtherMonitor => "active-other-monitor",
             Self::Occupied => "occupied",
             Self::Empty => "empty",
         }
@@ -167,9 +169,15 @@ pub(crate) fn matches_ignore_patterns(id: WorkspaceId, patterns: &[String]) -> b
     false
 }
 
-pub(crate) fn determine_workspace_state(is_active: bool, windows: u16) -> WorkspaceState {
+pub(crate) fn determine_workspace_state(
+    is_active: bool,
+    is_active_on_any_monitor: bool,
+    windows: u16,
+) -> WorkspaceState {
     if is_active {
         WorkspaceState::Active
+    } else if is_active_on_any_monitor {
+        WorkspaceState::ActiveOtherMonitor
     } else if windows > 0 {
         WorkspaceState::Occupied
     } else {
@@ -434,25 +442,34 @@ mod tests {
 
         #[test]
         fn active_takes_precedence() {
-            assert_eq!(determine_workspace_state(true, 5), WorkspaceState::Active);
+            assert_eq!(
+                determine_workspace_state(true, false, 5),
+                WorkspaceState::Active
+            );
         }
 
         #[test]
         fn active_with_no_windows() {
-            assert_eq!(determine_workspace_state(true, 0), WorkspaceState::Active);
+            assert_eq!(
+                determine_workspace_state(true, true, 0),
+                WorkspaceState::Active
+            );
         }
 
         #[test]
         fn occupied_when_has_windows() {
             assert_eq!(
-                determine_workspace_state(false, 3),
+                determine_workspace_state(false, false, 3),
                 WorkspaceState::Occupied
             );
         }
 
         #[test]
         fn empty_when_no_windows() {
-            assert_eq!(determine_workspace_state(false, 0), WorkspaceState::Empty);
+            assert_eq!(
+                determine_workspace_state(false, false, 0),
+                WorkspaceState::Empty
+            );
         }
     }
 

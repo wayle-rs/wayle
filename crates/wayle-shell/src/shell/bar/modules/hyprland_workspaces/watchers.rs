@@ -149,6 +149,7 @@ fn spawn_config_watchers(
     let min_count = config.min_workspace_count.clone();
     let monitor_specific = config.monitor_specific.clone();
     let show_special = config.show_special.clone();
+    let highlight_active_on_other_monitor = config.highlight_active_on_other_monitor.clone();
     let urgent_show = config.urgent_show.clone();
     let display_mode = config.display_mode.clone();
     let label_use_name = config.label_use_name.clone();
@@ -165,6 +166,7 @@ fn spawn_config_watchers(
     let workspace_ignore = config.workspace_ignore.clone();
     let active_indicator = config.active_indicator.clone();
     let active_color = config.active_color.clone();
+    let active_on_other_color = config.active_on_other_monitor_color.clone();
     let occupied_color = config.occupied_color.clone();
     let empty_color = config.empty_color.clone();
     let container_bg_color = config.container_bg_color.clone();
@@ -182,6 +184,7 @@ fn spawn_config_watchers(
             min_count.watch(),
             monitor_specific.watch(),
             show_special.watch(),
+            highlight_active_on_other_monitor.watch(),
             urgent_show.watch(),
             display_mode.watch(),
             label_use_name.watch(),
@@ -198,6 +201,7 @@ fn spawn_config_watchers(
             workspace_ignore.watch(),
             active_indicator.watch(),
             active_color.watch(),
+            active_on_other_color.watch(),
             occupied_color.watch(),
             empty_color.watch(),
             container_bg_color.watch(),

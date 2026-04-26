@@ -27,6 +27,7 @@ pub(crate) struct ButtonBuildContext<'a> {
     pub name: &'a str,
     pub windows: u16,
     pub is_active: bool,
+    pub is_active_any_monitor: bool,
     pub is_urgent: bool,
     pub is_vertical: bool,
 }
@@ -44,6 +45,7 @@ pub(crate) struct WorkspaceButtonInit {
     pub name: String,
     pub windows: u16,
     pub is_active: bool,
+    pub is_active_any_monitor: bool,
     pub is_urgent: bool,
     pub is_vertical: bool,
 
@@ -93,6 +95,7 @@ pub(crate) enum WorkspaceButtonInput {
     UpdateState {
         windows: u16,
         is_active: bool,
+        is_active_any_monitor: bool,
         is_urgent: bool,
         urgent_addresses: HashSet<Address>,
     },
@@ -171,7 +174,8 @@ impl FactoryComponent for WorkspaceButton {
     }
 
     fn init_model(init: Self::Init, _index: &DynamicIndex, _sender: FactorySender<Self>) -> Self {
-        let state = determine_workspace_state(init.is_active, init.windows);
+        let state =
+            determine_workspace_state(init.is_active, init.is_active_any_monitor, init.windows);
         let static_classes = compute_static_css_classes(
             init.id,
             init.active_indicator.css_class(),
@@ -239,10 +243,11 @@ impl FactoryComponent for WorkspaceButton {
             WorkspaceButtonInput::UpdateState {
                 windows,
                 is_active,
+                is_active_any_monitor,
                 is_urgent,
                 urgent_addresses,
             } => {
-                self.state = determine_workspace_state(is_active, windows);
+                self.state = determine_workspace_state(is_active, is_active_any_monitor, windows);
                 self.apply_urgency(is_urgent, &urgent_addresses);
             }
         }
@@ -289,6 +294,7 @@ pub(crate) fn build_button_init(
         name: ctx.name.to_string(),
         windows: ctx.windows,
         is_active: ctx.is_active,
+        is_active_any_monitor: ctx.is_active_any_monitor,
         is_urgent: ctx.is_urgent,
         is_vertical: ctx.is_vertical,
 
