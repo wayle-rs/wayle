@@ -24,6 +24,7 @@ right = ["hyprland-workspaces"]
 | `min-workspace-count` | u8 | `0` | Minimum number of workspace buttons to display. |
 | `monitor-specific` | bool | `true` | Show only workspaces belonging to the bar's monitor. |
 | `show-special` | bool | `true` | Include special workspaces (scratchpads) in the display. |
+| `highlight-active-on-other-monitor` | bool | `true` | Highlight workspace active on current moinitor and workspaces on other monitors with a different color. |
 | `urgent-show` | bool | `true` | Pulse animation on workspaces with urgent windows. |
 | `urgent-mode` | [`UrgentMode`](/config/types#urgent-mode) | `"workspace"` | Where the urgent pulse is applied. |
 | `display-mode` | [`DisplayMode`](/config/types#display-mode) | `"label"` | What identifies each workspace button. |
@@ -41,6 +42,7 @@ right = ["hyprland-workspaces"]
 | `workspace-ignore` | array of string | `[]` | Workspaces to hide from the display. |
 | `active-indicator` | [`ActiveIndicator`](/config/types#active-indicator) | `"background"` | Visual indicator for the active workspace. |
 | `active-color` | [`ColorValue`](/config/types#color-value) | `"accent"` | Color for the active (focused) workspace. |
+| `active-on-other-monitor-color` | [`ColorValue`](/config/types#color-value) | `"accent"` | Color for workspaces active (focused) on different monitors. |
 | `occupied-color` | [`ColorValue`](/config/types#color-value) | `"fg-muted"` | Color for occupied workspaces (has windows but not focused). |
 | `empty-color` | [`ColorValue`](/config/types#color-value) | `"fg-subtle"` | Color for empty workspaces. |
 | `container-bg-color` | [`ColorValue`](/config/types#color-value) | `"bg-surface-elevated"` | Background color for the workspaces container. |
@@ -69,6 +71,14 @@ When false, all workspaces from all monitors are shown.
 Special workspaces have negative IDs in Hyprland.
 
 :::
+
+::: details More about `highlight-active-on-other-monitor`
+
+This option only has an effect when `monitor-specific` is false.
+- When false, the currently active workspace is highlighted with `active-color` on all monitors.
+- When true, the workspace active on the current monitor is indicated with `active-color`, but all workspaces active on different monitors are indicated with `active-on-other-monitor-color`.
+There will be no visual indication for the global active workspace.
+
 
 ::: details More about `urgent-show`
 
@@ -176,6 +186,14 @@ Glob patterns matching workspace IDs. Examples:
 
 Applied to icons and labels. In `background` indicator mode,
 also used as the button background.
+
+:::
+
+::: details More about `active-on-other-monitor-color`
+
+Applied to icons and labels. In `background` indicator mode,
+also used as the button background.
+Only makes a difference when `highlight-active-on-other-monitor` is true.
 
 :::
 
