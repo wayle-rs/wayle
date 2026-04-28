@@ -9,7 +9,7 @@ use wayle_hyprland::{Address, Client, WorkspaceId};
 
 use crate::shell::bar::modules::hyprland_workspaces::helpers::{
     IconContext, WorkspaceState, compute_static_css_classes, determine_workspace_state,
-    resolve_workspace_icons, workspace_id_css_class,
+    resolve_workspace_icons, workspace_id_css_class, workspace_name_css_class,
 };
 
 const WORKSPACE_LABEL_CSS: &str = "workspace-label";
@@ -70,6 +70,7 @@ pub(crate) struct WorkspaceButton {
     pub(super) state: WorkspaceState,
     pub(super) is_urgent: bool,
     pub(super) css_id_class: String,
+    pub(super) css_name_class: String,
     pub(super) static_classes: Vec<&'static str>,
 
     pub(super) display_id: WorkspaceId,
@@ -183,6 +184,7 @@ impl FactoryComponent for WorkspaceButton {
             state,
             is_urgent: init.is_urgent,
             css_id_class: workspace_id_css_class(init.id),
+            css_name_class: workspace_name_css_class(&init.name),
             static_classes,
 
             display_id: init.display_id,
@@ -256,10 +258,10 @@ pub(crate) fn build_button_init(
     urgent_addresses: HashSet<Address>,
 ) -> WorkspaceButtonInit {
     let workspace_map = config.workspace_map.get();
-    let mapped_icon = i32::try_from(ctx.id)
+    let mapped_style = i32::try_from(ctx.id)
         .ok()
-        .and_then(|style_id| workspace_map.get(&style_id))
-        .and_then(|style| style.icon.clone());
+        .and_then(|id| workspace_map.lookup(id, ctx.name));
+    let mapped_icon = mapped_style.and_then(|style| style.icon.clone());
 
     let app_icons = if config.app_icons_show.get() {
         let user_map = config.app_icon_map.get();

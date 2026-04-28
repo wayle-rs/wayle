@@ -100,37 +100,44 @@ pub struct WorkspaceStyle {
     pub color: Option<ColorValue>,
 }
 
-/// Per-workspace icon and color overrides, keyed by workspace ID.
+/// Per-workspace icon and color overrides, keyed by workspace ID or name.
 ///
-/// TOML table keys are always strings, so `"1"` parses into the workspace
-/// with ID `1`. Negative IDs refer to Hyprland's special workspaces. Keys
-/// that don't appear in the map fall back to the default behaviour set by
-/// [`HyprlandWorkspacesConfig::display_mode`].
+/// TOML table keys are always strings. Integer strings (`"1"`, `"-98"`) are
+/// matched against the workspace's numeric ID; any other string is matched
+/// against the workspace's name as reported by Hyprland.
+///
+/// Name-based keys are checked first, then numeric ID, so a name entry
+/// takes priority if both happen to match the same workspace.
+///
+/// Using name-based keys for special workspaces keeps icons and colors stable
+/// even when Hyprland reassigns the underlying numeric ID (which happens when
+/// a scratchpad is closed and reopened within the same session).
 ///
 /// ## Examples
 ///
 /// ```toml
 /// [modules.hyprland-workspaces.workspace-map]
-/// # Whole entry on one line with an inline table
+/// # Numeric ID keys (classic behaviour)
 /// 1 = { icon = "ld-globe-symbolic", color = "#4a90d9" }
 /// 2 = { icon = "ld-terminal-symbolic" }
-/// 3 = { icon = "ld-code-symbolic", color = "accent" }
 ///
-/// # Or spread the entry across its own subtable
-/// [modules.hyprland-workspaces.workspace-map.4]
-/// icon = "ld-message-square-symbolic"
-/// color = "status-success"
-///
-/// # Negative IDs target Hyprland special workspaces
-/// [modules.hyprland-workspaces.workspace-map.-99]
-/// icon = "ld-scratch-symbolic"
+/// # Name-based keys — stable across sessions and reopens
+/// "special:tilde"   = { icon = "utilities-terminal", color = "#fab387" }
+/// "special:spotify" = { icon = "spotify", color = "#1db954" }
 /// ```
 #[derive(Debug, Clone, Default, PartialEq, JsonSchema)]
 #[schemars(transparent)]
-pub struct WorkspaceMap(HashMap<i32, WorkspaceStyle>);
+pub struct WorkspaceMap(HashMap<String, WorkspaceStyle>);
+
+impl WorkspaceMap {
+    /// Look up a workspace style by name first, falling back to numeric ID.
+    pub fn lookup(&self, id: i32, name: &str) -> Option<&WorkspaceStyle> {
+        self.0.get(name).or_else(|| self.0.get(&id.to_string()))
+    }
+}
 
 impl Deref for WorkspaceMap {
-    type Target = HashMap<i32, WorkspaceStyle>;
+    type Target = HashMap<String, WorkspaceStyle>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -138,8 +145,8 @@ impl Deref for WorkspaceMap {
 }
 
 impl<'a> IntoIterator for &'a WorkspaceMap {
-    type Item = (&'a i32, &'a WorkspaceStyle);
-    type IntoIter = std::collections::hash_map::Iter<'a, i32, WorkspaceStyle>;
+    type Item = (&'a String, &'a WorkspaceStyle);
+    type IntoIter = std::collections::hash_map::Iter<'a, String, WorkspaceStyle>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
@@ -151,12 +158,7 @@ impl Serialize for WorkspaceMap {
     where
         S: Serializer,
     {
-        let string_map: HashMap<String, &WorkspaceStyle> = self
-            .0
-            .iter()
-            .map(|(key, val)| (key.to_string(), val))
-            .collect();
-        string_map.serialize(serializer)
+        self.0.serialize(serializer)
     }
 }
 
@@ -165,13 +167,8 @@ impl<'de> Deserialize<'de> for WorkspaceMap {
     where
         D: Deserializer<'de>,
     {
-        let string_map: HashMap<String, WorkspaceStyle> = HashMap::deserialize(deserializer)?;
-        let mut result = HashMap::with_capacity(string_map.len());
-        for (key, value) in string_map {
-            let id: i32 = key.parse().map_err(serde::de::Error::custom)?;
-            result.insert(id, value);
-        }
-        Ok(WorkspaceMap(result))
+        let map = HashMap::deserialize(deserializer)?;
+        Ok(WorkspaceMap(map))
     }
 }
 
@@ -367,14 +364,17 @@ pub struct HyprlandWorkspacesConfig {
 
     /// Per-workspace icon and color overrides.
     ///
-    /// Keys are workspace IDs (use negative for special workspaces).
+    /// Keys are either numeric workspace IDs or workspace name strings.
+    /// Name keys are matched first, so they take priority over ID keys.
+    /// Use name keys for special workspaces to keep icons stable across
+    /// close/reopen cycles (e.g. `"special:tilde"`).
     ///
     /// ## Example
     ///
     /// ```toml
     /// [modules.hyprland-workspaces.workspace-map]
     /// 1 = { icon = "ld-globe-symbolic", color = "#4a90d9" }
-    /// 2 = { icon = "ld-terminal-symbolic" }
+    /// "special:tilde" = { icon = "utilities-terminal", color = "#fab387" }
     /// ```
     #[serde(rename = "workspace-map")]
     #[default(WorkspaceMap::default())]

@@ -51,12 +51,14 @@ impl WorkspaceButton {
     }
 
     pub(super) fn current_css_classes(&self) -> Vec<&str> {
-        collect_button_css_classes(
+        let mut classes = collect_button_css_classes(
             &self.static_classes,
             &self.css_id_class,
             self.state,
             self.is_urgent,
-        )
+        );
+        classes.push(&self.css_name_class);
+        classes
     }
 
     pub(super) fn orientation(&self) -> gtk::Orientation {
