@@ -151,6 +151,14 @@ pub(crate) fn workspace_id_css_class(id: WorkspaceId) -> String {
     }
 }
 
+pub(crate) fn workspace_name_css_class(name: &str) -> String {
+    let safe: String = name
+        .chars()
+        .map(|c| if c.is_alphanumeric() { c } else { '-' })
+        .collect();
+    format!("workspace-name-{safe}")
+}
+
 pub(crate) fn matches_ignore_patterns(id: WorkspaceId, patterns: &[String]) -> bool {
     if patterns.is_empty() {
         return false;
