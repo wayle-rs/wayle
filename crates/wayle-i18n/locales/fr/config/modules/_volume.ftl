@@ -5,7 +5,7 @@
 settings-modules-volume-level-icons = Icônes de niveau
     .description = Icônes affichées à différents niveaux de volume, de coupé à maximum
 
-settings-modules-volume-muted-icon = Icône coupé
+settings-modules-volume-muted-icon = Icône coupée
     .description = Icône affichée lorsque la sortie audio est coupée
 
 settings-modules-volume-border-show = Afficher la bordure
@@ -59,9 +59,9 @@ settings-modules-volume-dropdown-app-icons = Icônes d'applications dans le menu
 settings-modules-volume-thresholds = Seuils
     .description = Seuils de couleur qui changent selon le niveau de valeur
 
-settings-modules-volume-icon-muted = Icône coupé
+settings-modules-volume-icon-muted = Icône coupée
     .description = Icône affichée lorsque le volume est coupé
 
 ## Variantes de AppIconSource
-enum-app-icon-source-mapped = Mappé
+enum-app-icon-source-mapped = Associé
 enum-app-icon-source-native = Natif

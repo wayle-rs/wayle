@@ -66,9 +66,9 @@ dropdown-bluetooth-type-audio-video = Audio/Vidéo
 
 ## Types d'appareils — Périphérique
 dropdown-bluetooth-type-keyboard = Clavier
-dropdown-bluetooth-type-mouse = Dispositif de pointage
-dropdown-bluetooth-type-combo-keyboard = Clavier/Dispositif de pointage
-dropdown-bluetooth-type-joystick = Manette de jeu
+dropdown-bluetooth-type-mouse = Souris
+dropdown-bluetooth-type-combo-keyboard = Clavier/Souris
+dropdown-bluetooth-type-joystick = Manche de jeu
 dropdown-bluetooth-type-gamepad = Manette
 dropdown-bluetooth-type-remote = Télécommande
 dropdown-bluetooth-type-sensing = Capteur
@@ -84,7 +84,7 @@ dropdown-bluetooth-type-scanner = Numériseur
 dropdown-bluetooth-type-printer = Imprimante
 
 ## Types d'appareils — Vestimentaire
-dropdown-bluetooth-type-wearable = Vestimentaire
+dropdown-bluetooth-type-wearable = Accessoire connecté
 dropdown-bluetooth-type-wrist-watch = Montre
 dropdown-bluetooth-type-pager = Téléavertisseur
 dropdown-bluetooth-type-jacket = Veste
@@ -96,7 +96,7 @@ dropdown-bluetooth-type-toy = Jouet
 dropdown-bluetooth-type-robot = Robot
 dropdown-bluetooth-type-vehicle = Véhicule
 dropdown-bluetooth-type-doll = Poupée
-dropdown-bluetooth-type-controller = Contrôleur
+dropdown-bluetooth-type-controller = Manette
 dropdown-bluetooth-type-game = Jeu
 
 ## Types d'appareils — Autre

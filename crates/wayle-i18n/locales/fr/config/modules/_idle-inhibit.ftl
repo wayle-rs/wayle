@@ -5,10 +5,10 @@
 settings-modules-idle-inhibit-startup-duration = Durée au démarrage
     .description = Durée en minutes au démarrage du service (0 pour indéfini)
 
-settings-modules-idle-inhibit-icon-inactive = Icône inactif
+settings-modules-idle-inhibit-icon-inactive = Icône inactive
     .description = Icône lorsque l'inhibiteur de veille est désactivé
 
-settings-modules-idle-inhibit-icon-active = Icône actif
+settings-modules-idle-inhibit-icon-active = Icône active
     .description = Icône lorsque l'inhibiteur de veille est activé
 
 settings-modules-idle-inhibit-format = Format

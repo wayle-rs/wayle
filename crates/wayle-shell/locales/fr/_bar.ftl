@@ -4,8 +4,8 @@
 bar-network-connecting = Connexion…
 bar-network-disconnected = Déconnecté
 bar-network-wired = Filaire
-bar-network-wifi-fallback = WiFi
-bar-network-no-wifi = Pas de WiFi
+bar-network-wifi-fallback = Wi-Fi
+bar-network-no-wifi = Pas de Wi-Fi
 bar-network-no-ethernet = Pas d'Ethernet
 bar-network-offline = Hors ligne
 

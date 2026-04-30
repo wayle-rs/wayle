@@ -2,10 +2,10 @@
 
 ## Configuration du module Microphone
 
-settings-modules-microphone-icon-active = Icône actif
+settings-modules-microphone-icon-active = Icône active
     .description = Icône affichée lorsque le microphone est actif (non coupé)
 
-settings-modules-microphone-icon-muted = Icône coupé
+settings-modules-microphone-icon-muted = Icône coupée
     .description = Icône affichée lorsque le microphone est coupé
 
 settings-modules-microphone-border-show = Afficher la bordure

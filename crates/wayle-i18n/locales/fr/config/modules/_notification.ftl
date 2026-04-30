@@ -5,7 +5,7 @@
 settings-modules-notification-icon-name = Icône par défaut
     .description = Icône affichée en l'absence de notifications
 
-settings-modules-notification-icon-unread = Icône non lu
+settings-modules-notification-icon-unread = Icône non lue
     .description = Icône affichée lorsque des notifications existent
 
 settings-modules-notification-icon-dnd = Icône Ne pas déranger
@@ -86,5 +86,5 @@ enum-urgency-bar-threshold-none = Aucune
 
 ## Variantes de IconSource
 enum-icon-source-automatic = Automatique
-enum-icon-source-mapped = Mappé
+enum-icon-source-mapped = Associé
 enum-icon-source-application = Application

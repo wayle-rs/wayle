@@ -14,10 +14,10 @@ dropdown-network-error = Erreur
 dropdown-network-cancel = Annuler
 dropdown-network-password-placeholder = Entrez le mot de passe
 dropdown-network-ethernet = Ethernet
-dropdown-network-wifi = WiFi
+dropdown-network-wifi = Wi-Fi
 dropdown-network-no-networks-title = Aucun réseau trouvé
-dropdown-network-no-networks-description = Assurez-vous que le WiFi est activé et relancez la recherche
-dropdown-network-no-adapter-title = Aucun adaptateur WiFi
+dropdown-network-no-networks-description = Assurez-vous que le Wi-Fi est activé et relancez la recherche
+dropdown-network-no-adapter-title = Aucun adaptateur Wi-Fi
 dropdown-network-no-adapter-description = Aucun adaptateur sans fil n'a été détecté sur ce système
 
 ## Types de sécurité

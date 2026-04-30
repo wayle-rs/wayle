@@ -3,7 +3,7 @@
 ## Configuration du module Média
 
 settings-modules-media-icon-type = Type d'icône
-    .description = Mode d'affichage de l'icône (par défaut, application, disque tournant, application mappée). Le disque tournant utilise légèrement plus de processeur en raison de l'animation
+    .description = Mode d'affichage de l'icône (par défaut, application, disque tournant, application associée). Le disque tournant utilise légèrement plus de processeur en raison de l'animation
 
 settings-modules-media-player-icons = Icônes de lecteur
     .description = Correspondances personnalisées lecteur-icône (motif glob vers nom d'icône)
@@ -70,4 +70,4 @@ settings-modules-media-scroll-down = Défilement vers le bas
 enum-media-icon-type-default = Par défaut
 enum-media-icon-type-application = Application
 enum-media-icon-type-spinning-disc = Disque tournant
-enum-media-icon-type-application-mapped = Application mappée
+enum-media-icon-type-application-mapped = Application associée

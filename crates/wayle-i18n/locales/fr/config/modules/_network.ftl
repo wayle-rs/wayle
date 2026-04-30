@@ -2,7 +2,7 @@
 
 ## Configuration du module Réseau
 
-settings-modules-network-wifi-disabled-icon = Icône Wi-Fi désactivé
+settings-modules-network-wifi-disabled-icon = Icône Wi-Fi désactivée
     .description = Icône lorsque le Wi-Fi est désactivé
 
 settings-modules-network-wifi-acquiring-icon = Icône connexion Wi-Fi
@@ -11,19 +11,19 @@ settings-modules-network-wifi-acquiring-icon = Icône connexion Wi-Fi
 settings-modules-network-wifi-offline-icon = Icône Wi-Fi hors ligne
     .description = Icône lorsque le Wi-Fi est déconnecté
 
-settings-modules-network-wifi-connected-icon = Icône Wi-Fi connecté
+settings-modules-network-wifi-connected-icon = Icône Wi-Fi connectée
     .description = Icône lorsque connecté mais la puissance du signal est indisponible
 
 settings-modules-network-wifi-signal-icons = Icônes de signal
     .description = Icônes affichées à différentes puissances de signal Wi-Fi, de faible à fort
 
-settings-modules-network-wired-connected-icon = Icône filaire connecté
+settings-modules-network-wired-connected-icon = Icône filaire connectée
     .description = Icône lorsque l'Ethernet est connecté
 
 settings-modules-network-wired-acquiring-icon = Icône connexion filaire
     .description = Icône lorsque l'Ethernet est en cours de connexion
 
-settings-modules-network-wired-disconnected-icon = Icône filaire déconnecté
+settings-modules-network-wired-disconnected-icon = Icône filaire déconnectée
     .description = Icône lorsque l'Ethernet est déconnecté
 
 settings-modules-network-border-show = Afficher la bordure

@@ -8,10 +8,10 @@ settings-modules-hyprsunset-temperature = Température
 settings-modules-hyprsunset-gamma = Gamma
     .description = Pourcentage de gamma de l'écran lorsque le filtre est activé (0-200)
 
-settings-modules-hyprsunset-icon-off = Icône désactivé
+settings-modules-hyprsunset-icon-off = Icône désactivée
     .description = Icône lorsque le filtre est désactivé
 
-settings-modules-hyprsunset-icon-on = Icône activé
+settings-modules-hyprsunset-icon-on = Icône activée
     .description = Icône lorsque le filtre est activé
 
 settings-modules-hyprsunset-format = Format

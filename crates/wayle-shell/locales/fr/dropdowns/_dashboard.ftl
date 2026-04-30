@@ -4,7 +4,7 @@ dropdown-dashboard-title = Tableau de bord
 dropdown-dashboard-open-settings = Ouvrir les paramètres
 
 ## Actions rapides
-dropdown-dashboard-wifi = WiFi
+dropdown-dashboard-wifi = Wi-Fi
 dropdown-dashboard-bluetooth = Bluetooth
 dropdown-dashboard-airplane = Mode avion
 dropdown-dashboard-dnd = Ne pas déranger
@@ -40,7 +40,7 @@ dropdown-dashboard-network = Réseau
 dropdown-dashboard-network-disconnected = Déconnecté
 dropdown-dashboard-network-connecting = Connexion…
 dropdown-dashboard-network-ethernet = Ethernet
-dropdown-dashboard-network-wifi-off = WiFi désactivé
+dropdown-dashboard-network-wifi-off = Wi-Fi désactivé
 dropdown-dashboard-network-speed-kbs = Ko/s
 dropdown-dashboard-network-speed-mbs = Mo/s
 

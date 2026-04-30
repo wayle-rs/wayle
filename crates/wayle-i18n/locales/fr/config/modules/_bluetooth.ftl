@@ -2,13 +2,13 @@
 
 ## Configuration du module Bluetooth
 
-settings-modules-bluetooth-disabled-icon = Icône désactivé
+settings-modules-bluetooth-disabled-icon = Icône désactivée
     .description = Icône lorsque le Bluetooth est désactivé ou indisponible
 
-settings-modules-bluetooth-disconnected-icon = Icône déconnecté
+settings-modules-bluetooth-disconnected-icon = Icône déconnectée
     .description = Icône lorsque le Bluetooth est activé mais aucun appareil connecté
 
-settings-modules-bluetooth-connected-icon = Icône connecté
+settings-modules-bluetooth-connected-icon = Icône connectée
     .description = Icône lorsque des appareils sont connectés
 
 settings-modules-bluetooth-searching-icon = Icône de recherche
