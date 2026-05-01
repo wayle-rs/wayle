@@ -3,7 +3,7 @@
 ## Configuration du module Mode de raccourcis
 
 settings-modules-keybind-mode-format = Format du libellé
-    .description = Chaîne de format avec variables : {"{{ mode }}"}
+    .description = Chaîne de format avec variables : {« {{ mode }} »}
 
 settings-modules-keybind-mode-icon-name = Nom de l'icône
     .description = Nom d'icône symbolique

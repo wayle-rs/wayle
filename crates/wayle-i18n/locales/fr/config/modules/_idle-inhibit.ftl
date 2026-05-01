@@ -12,7 +12,7 @@ settings-modules-idle-inhibit-icon-active = Icône active
     .description = Icône lorsque l'inhibiteur d'inactivité est activé
 
 settings-modules-idle-inhibit-format = Format
-    .description = Chaîne de format utilisant les variables : {"{{ state }}"}, {"{{ remaining }}"}, {"{{ duration }}"}
+    .description = Chaîne de format utilisant les variables : {« {{ state }} »}, {« {{ remaining }} »}, {« {{ duration }} »}
 
 settings-modules-idle-inhibit-border-show = Afficher la bordure
     .description = Afficher une bordure autour du bouton

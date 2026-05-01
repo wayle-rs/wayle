@@ -6,7 +6,7 @@ settings-modules-ram-poll-interval-ms = Intervalle de sondage
     .description = Intervalle de sondage en millisecondes
 
 settings-modules-ram-format = Format d'affichage
-    .description = Chaîne de format avec variables: {"{{ percent }}"}, {"{{ used_gib }}"}, {"{{ total_gib }}"}, {"{{ available_gib }}"}, {"{{ swap_percent }}"}, {"{{ swap_used_gib }}"}, {"{{ swap_total_gib }}"}
+    .description = Chaîne de format avec variables: {« {{ percent }} »}, {« {{ used_gib }} »}, {« {{ total_gib }} »}, {« {{ available_gib }} »}, {« {{ swap_percent }} »}, {« {{ swap_used_gib }} »}, {« {{ swap_total_gib }} »}
 
 settings-modules-ram-icon-name = Nom de l'icône
     .description = Nom d'icône symbolique

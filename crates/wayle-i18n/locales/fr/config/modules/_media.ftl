@@ -15,7 +15,7 @@ settings-modules-media-player-priority = Priorité des lecteurs
     .description = Ordre préféré des lecteurs sous forme de motifs glob correspondant aux noms de bus
 
 settings-modules-media-format = Format
-    .description = Format du libellé avec variables : {"{{ title }}"}, {"{{ artist }}"}, {"{{ album }}"}, {"{{ status }}"}, {"{{ status_icon }}"}
+    .description = Format du libellé avec variables : {« {{ title }} »}, {« {{ artist }} »}, {« {{ album }} »}, {« {{ status }} »}, {« {{ status_icon }} »}
 
 settings-modules-media-icon-name = Nom de l'icône
     .description = Nom d'icône symbolique pour le mode default

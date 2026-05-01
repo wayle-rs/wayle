@@ -6,10 +6,10 @@ settings-modules-cpu-poll-interval-ms = Intervalle de sondage
     .description = Intervalle de sondage en millisecondes
 
 settings-modules-cpu-temp-sensor = Capteur de température
-    .description = Nom du capteur pour la température (ex. : "Tctl", "auto")
+    .description = Nom du capteur pour la température (ex. : « Tctl », « auto »)
 
 settings-modules-cpu-format = Format d'affichage
-    .description = Chaîne de format avec variables: {"{{ percent }}"}, {"{{ freq_ghz }}"}, {"{{ avg_freq_ghz }}"}, {"{{ max_freq_ghz }}"}, {"{{ temp_c }}"}, {"{{ temp_f }}"}
+    .description = Chaîne de format avec variables: {« {{ percent }} »}, {« {{ freq_ghz }} »}, {« {{ avg_freq_ghz }} »}, {« {{ max_freq_ghz }} »}, {« {{ temp_c }} »}, {« {{ temp_f }} »}
 
 settings-modules-cpu-icon-name = Nom de l'icône
     .description = Nom d'icône symbolique

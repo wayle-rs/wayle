@@ -6,10 +6,10 @@ settings-modules-netstat-poll-interval-ms = Intervalle de sondage
     .description = Intervalle de sondage en millisecondes
 
 settings-modules-netstat-interface = Interface
-    .description = Interface réseau à surveiller ("auto" pour interface active)
+    .description = Interface réseau à surveiller (« auto » pour interface active)
 
 settings-modules-netstat-format = Format d'affichage
-    .description = Chaîne de format avec variables: {"{{ down_kib }}"}, {"{{ down_mib }}"}, {"{{ down_gib }}"}, {"{{ down_auto }}"}, {"{{ up_kib }}"}, {"{{ up_mib }}"}, {"{{ up_gib }}"}, {"{{ up_auto }}"}, {"{{ interface }}"}
+    .description = Chaîne de format avec variables: {« {{ down_kib }} »}, {« {{ down_mib }} »}, {« {{ down_gib }} »}, {« {{ down_auto }} »}, {« {{ up_kib }} »}, {« {{ up_mib }} »}, {« {{ up_gib }} »}, {« {{ up_auto }} »}, {« {{ interface }} »}
 
 settings-modules-netstat-icon-name = Nom de l'icône
     .description = Nom d'icône symbolique

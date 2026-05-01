@@ -3,7 +3,7 @@
 ## Configuration du module Titre de fenêtre
 
 settings-modules-window-title-format = Format du libellé
-    .description = Chaîne de format avec variables : {"{{ title }}"}, {"{{ app }}"}
+    .description = Chaîne de format avec variables : {« {{ title }} »}, {« {{ app }} »}
 
 settings-modules-window-title-icon-name = Icône secours
     .description = Icône quand aucun mappage ne correspond

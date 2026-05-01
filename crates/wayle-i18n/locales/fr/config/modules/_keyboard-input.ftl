@@ -3,7 +3,7 @@
 ## Configuration du module Disposition clavier
 
 settings-modules-keyboard-input-format = Format du libellé
-    .description = Chaîne de format avec variables: {"{{ layout }}"}
+    .description = Chaîne de format avec variables: {« {{ layout }} »}
 
 settings-modules-keyboard-input-icon-name = Nom de l'icône
     .description = Nom d'icône symbolique

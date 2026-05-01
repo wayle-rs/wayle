@@ -29,7 +29,7 @@ settings-modules-notification-popup-gap = Écart entre popups
     .description = Écart entre les popups empilés
 
 settings-modules-notification-popup-monitor = Écran cible du popup
-    .description = Écran cible : "principal" ou nom de connecteur comme "DP-1"
+    .description = Écran cible : « principal » ou nom de connecteur comme « DP-1 »
 
 settings-modules-notification-popup-duration = Durée d'affichage du popup
     .description = Durée d'affichage du popup en millisecondes

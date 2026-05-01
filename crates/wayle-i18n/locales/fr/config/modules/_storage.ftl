@@ -6,10 +6,10 @@ settings-modules-storage-poll-interval-ms = Intervalle de sondage
     .description = Intervalle de sondage en millisecondes
 
 settings-modules-storage-mount-point = Point de montage
-    .description = Point de montage à surveiller (ex. : "/", "/home")
+    .description = Point de montage à surveiller (ex. : « / », « /home »)
 
 settings-modules-storage-format = Format d'affichage
-    .description = Chaîne de format avec variables : {"{{ percent }}"}, {"{{ used_tib }}"}, {"{{ used_gib }}"}, {"{{ used_mib }}"}, {"{{ used_auto }}"}, {"{{ total_tib }}"}, {"{{ total_gib }}"}, {"{{ total_mib }}"}, {"{{ total_auto }}"}, {"{{ free_tib }}"}, {"{{ free_gib }}"}, {"{{ free_mib }}"}, {"{{ free_auto }}"}, {"{{ filesystem }}"}
+    .description = Chaîne de format avec variables : {« {{ percent }} »}, {« {{ used_tib }} »}, {« {{ used_gib }} »}, {« {{ used_mib }} »}, {« {{ used_auto }} »}, {« {{ total_tib }} »}, {« {{ total_gib }} »}, {« {{ total_mib }} »}, {« {{ total_auto }} »}, {« {{ free_tib }} »}, {« {{ free_gib }} »}, {« {{ free_mib }} »}, {« {{ free_auto }} »}, {« {{ filesystem }} »}
 
 settings-modules-storage-icon-name = Nom de l'icône
     .description = Nom d'icône symbolique

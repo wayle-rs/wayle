@@ -15,7 +15,7 @@ settings-modules-hyprsunset-icon-on = Icône activée
     .description = Icône lorsque le filtre est activé
 
 settings-modules-hyprsunset-format = Format
-    .description = Chaîne de format du libellé. Variables : {"{{ status }}"}, {"{{ temp }}"}, {"{{ gamma }}"}, {"{{ config_temp }}"}, {"{{ config_gamma }}"}
+    .description = Chaîne de format du libellé. Variables : {« {{ status }} »}, {« {{ temp }} »}, {« {{ gamma }} »}, {« {{ config_temp }} »}, {« {{ config_gamma }} »}
 
 settings-modules-hyprsunset-border-show = Afficher la bordure
     .description = Afficher une bordure autour du bouton

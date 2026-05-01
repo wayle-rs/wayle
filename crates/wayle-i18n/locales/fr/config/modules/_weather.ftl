@@ -6,13 +6,13 @@ settings-modules-weather-provider = Fournisseur
     .description = Fournisseur de données météo
 
 settings-modules-weather-location = Emplacement
-    .description = Nom de ville ou coordonnées "lat,lon"
+    .description = Nom de ville ou coordonnées « lat,lon »
 
 settings-modules-weather-units = Unité de température
     .description = Métrique (Celsius) ou impérial (Fahrenheit)
 
 settings-modules-weather-format = Format du libellé
-    .description = Chaîne de format avec variables: {"{{ temp }}"}, {"{{ temp_unit }}"}, {"{{ feels_like }}"}, {"{{ condition }}"}, {"{{ humidity }}"}, {"{{ wind_speed }}"}, {"{{ wind_dir }}"}, {"{{ high }}"}, {"{{ low }}"}
+    .description = Chaîne de format avec variables: {« {{ temp }} »}, {« {{ temp_unit }} »}, {« {{ feels_like }} »}, {« {{ condition }} »}, {« {{ humidity }} »}, {« {{ wind_speed }} »}, {« {{ wind_dir }} »}, {« {{ high }} »}, {« {{ low }} »}
 
 settings-modules-weather-refresh-interval = Intervalle d'actualisation
     .description = Intervalle de sondage en secondes

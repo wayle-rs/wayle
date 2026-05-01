@@ -3,7 +3,7 @@
 ## Configuration du module Horloge mondiale
 
 settings-modules-world-clock-format = Format
-    .description = Chaîne de format avec blocs fuseau horaire imbriqués utilisant la syntaxe {"{"}timezone strftime{"}"}
+    .description = Chaîne de format avec blocs fuseau horaire imbriqués utilisant la syntaxe {« { »}timezone strftime{« } »}
 
 settings-modules-world-clock-icon-name = Nom de l'icône
     .description = Nom d'icône symbolique
