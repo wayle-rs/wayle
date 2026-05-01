@@ -12,6 +12,25 @@ window {
     font-family: var(--font-sans);
 }
 
+popover.background {
+    background: transparent;
+
+    > arrow {
+        min-width: 0;
+        min-height: 0;
+        border: none;
+        background: none;
+    }
+
+    > contents {
+        background-color: var(--bg-elevated);
+        border-radius: var(--rounding-container);
+        border: 1px solid var(--border-default);
+        box-shadow: var(--shadow);
+        padding: var(--space-sm);
+    }
+}
+
 scrollbar {
     all: unset;
 

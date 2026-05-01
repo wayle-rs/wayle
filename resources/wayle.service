@@ -2,13 +2,14 @@
 Description=Wayle Desktop Shell
 PartOf=graphical-session.target
 After=graphical-session.target
+StartLimitIntervalSec=30
+StartLimitBurst=5
 
 [Service]
 ExecStart=/usr/bin/wayle shell
 Restart=on-failure
 RestartSec=3
-StartLimitIntervalSec=30
-StartLimitBurst=5
+Slice=session.slice
 
 [Install]
 WantedBy=graphical-session.target

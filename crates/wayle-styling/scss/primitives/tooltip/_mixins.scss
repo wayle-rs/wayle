@@ -1,10 +1,10 @@
 @mixin tooltip-base {
     background: var(--bg-active);
-    padding: var(--space-xs) var(--space-sm);
     border-radius: var(--rounding-container);
 
     label {
         color: var(--fg-default);
         font-size: var(--text-md);
+        margin: var(--space-xs) var(--space-sm);
     }
 }

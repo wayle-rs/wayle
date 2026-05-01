@@ -8,12 +8,12 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, Spacing, ThresholdEntry},
 };
 
-/// Notification module configuration.
-#[wayle_config(bar_button)]
+/// Notification center: icon in the bar, dropdown with history, DND toggle.
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-notification")]
 pub struct NotificationConfig {
     /// Icon shown when no notifications and DND is off.
     #[serde(rename = "icon-name")]
@@ -211,12 +211,15 @@ impl ModuleInfoProvider for NotificationConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("notification"),
-            icon: String::from("󰂚"),
-            description: String::from("Notification management"),
-            behavior_configs: vec![(String::from("notification"), || {
-                schema_for!(NotificationConfig)
-            })],
-            styling_configs: vec![],
+            schema: || schema_for!(NotificationConfig),
+            layout_id: Some(String::from("notification")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(NotificationConfig);

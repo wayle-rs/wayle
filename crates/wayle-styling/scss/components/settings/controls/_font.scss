@@ -1,0 +1,50 @@
+menubutton.font > button {
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--fg-default);
+}
+
+.font-picker-label {
+    color: var(--fg-default);
+}
+
+.font-picker-popover contents {
+    padding: var(--space-md);
+}
+
+image.font-picker-search-icon {
+    margin-left: var(--space-sm);
+    margin-right: var(--space-sm);
+    color: var(--fg-subtle);
+}
+
+.font-picker-popover entry {
+    border-spacing: 0;
+}
+
+.font-picker-popover entry > text {
+    margin-left: 0;
+    padding-left: 0;
+}
+
+.font-picker-scroll {
+    margin-top: var(--space-sm);
+    min-width: calc(16rem * var(--global-scale));
+    min-height: calc(18rem * var(--global-scale));
+}
+
+.font-picker-list row {
+    padding: var(--space-xs) var(--space-sm);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--fg-muted);
+    border-radius: var(--rounding-element);
+}
+
+.font-picker-list row:hover {
+    background-color: var(--bg-hover);
+}

@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Wayle Settings
+GenericName=Shell Settings
+Comment=Configure the Wayle desktop shell
+Exec=wayle-settings
+Icon=wayle-settings
+Terminal=false
+Categories=Settings;DesktopSettings;GTK;
+Keywords=wayle;settings;shell;bar;wayland;config;
+StartupNotify=true
+StartupWMClass=com.wayle.settings

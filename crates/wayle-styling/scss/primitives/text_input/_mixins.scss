@@ -2,6 +2,7 @@
     all: unset;
 
     background-color: var(--bg-overlay);
+    border: 1px solid transparent;
     border-radius: var(--rounding-element);
     padding: 0px var(--space-md);
     font-size: var(--text-md);
@@ -25,7 +26,7 @@
     }
 
     &:focus-within {
-        box-shadow: 0 0 0 var(--focus-ring-width) var(--accent);
+        border-color: var(--accent);
     }
 
     > image.left,
@@ -40,9 +41,9 @@
 }
 
 @mixin entry-error {
-    box-shadow: 0 0 0 var(--focus-ring-width) var(--status-error);
+    border-color: var(--status-error);
 }
 
 @mixin entry-warning {
-    box-shadow: 0 0 0 var(--focus-ring-width) var(--status-warning);
+    border-color: var(--status-warning);
 }

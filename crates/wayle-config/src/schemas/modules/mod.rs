@@ -126,7 +126,24 @@ pub struct ModulesConfig {
     /// World clock module.
     #[serde(rename = "world-clock")]
     pub world_clock: WorldClockConfig,
-    /// Custom user-defined modules.
+    /// Custom user-defined modules, each backed by a shell command. See
+    /// [`CustomModuleDefinition`] for all fields (id, command, interval, click
+    /// actions, icons, etc.). Reference them in a layout with `custom-<id>`.
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [[modules.custom]]
+    /// id = "gpu-temp"
+    /// command = "nvidia-smi --query-gpu=temperature.gpu --format=csv,noheader"
+    /// interval-ms = 5000
+    /// icon-name = "ld-thermometer-symbolic"
+    ///
+    /// [[modules.custom]]
+    /// id = "weather"
+    /// command = "curl -s wttr.in/?format=%t"
+    /// interval-ms = 600000
+    /// ```
     #[default(Vec::new())]
     pub custom: ConfigProperty<Vec<CustomModuleDefinition>>,
 }

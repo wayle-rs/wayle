@@ -6,6 +6,7 @@ use std::{borrow::Cow, fmt, str::FromStr};
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+use wayle_derive::wayle_enum;
 
 use super::validated::HexColor;
 
@@ -354,7 +355,7 @@ impl schemars::JsonSchema for ColorValue {
 /// Source of color palette values.
 ///
 /// Dynamic providers (Matugen, Pywal, Wallust) inject palette tokens at runtime.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[wayle_enum(default)]
 #[serde(rename_all = "lowercase")]
 pub enum ThemeProvider {
     /// Static theming using Wayle's built-in palettes.

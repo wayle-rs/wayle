@@ -3,25 +3,25 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// World clock module configuration.
-#[wayle_config(bar_button)]
+/// Multiple timezones shown together in a dropdown.
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-world-clock")]
 pub struct WorldClockConfig {
     /// Format string with embedded timezone blocks.
     ///
-    /// ## Syntax
-    ///
-    /// Use `{{ tz('timezone', 'strftime') }}` syntax to insert formatted times.
-    /// Text outside placeholders is preserved as literal text.
+    /// Use `{{ tz('timezone', 'strftime') }}` to insert a formatted time.
+    /// Anything outside a placeholder stays as literal text.
     ///
     /// ## Examples
     ///
-    /// - `"{{ tz('UTC', '%H:%M %Z') }}"` - "14:30 UTC"
-    /// - `"NYC {{ tz('America/New_York', '%H:%M') }}  TYO {{ tz('Asia/Tokyo', '%H:%M') }}"` - "NYC 09:30  TYO 23:30"
-    /// - `"{{ tz('America/New_York', '%H:%M %Z') }} | {{ tz('Europe/London', '%H:%M %Z') }}"` - "09:30 EST | 14:30 GMT"
+    /// | Format string | Renders as |
+    /// |---|---|
+    /// | `"{{ tz('UTC', '%H:%M %Z') }}"` | `14:30 UTC` |
+    /// | `"NYC {{ tz('America/New_York', '%H:%M') }}  TYO {{ tz('Asia/Tokyo', '%H:%M') }}"` | `NYC 09:30  TYO 23:30` |
+    /// | `"{{ tz('America/New_York', '%H:%M %Z') }} \| {{ tz('Europe/London', '%H:%M %Z') }}"` | `09:30 EST \| 14:30 GMT` |
     #[default(String::from("{{ tz('UTC', '%H:%M %Z') }}"))]
     pub format: ConfigProperty<String>,
 
@@ -105,12 +105,15 @@ impl ModuleInfoProvider for WorldClockConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("world-clock"),
-            icon: String::from("󱉊"),
-            description: String::from("World clock with multiple timezone support"),
-            behavior_configs: vec![(String::from("world-clock"), || {
-                schema_for!(WorldClockConfig)
-            })],
-            styling_configs: vec![],
+            schema: || schema_for!(WorldClockConfig),
+            layout_id: Some(String::from("world-clock")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(WorldClockConfig);

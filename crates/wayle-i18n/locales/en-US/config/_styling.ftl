@@ -93,3 +93,73 @@ settings-palette-green = Green
 
 settings-palette-blue = Blue
     .description = Blue semantic color
+
+
+## ThemeProvider variants
+enum-theme-provider-wayle = Wayle
+enum-theme-provider-matugen = Matugen
+enum-theme-provider-pywal = Pywal
+enum-theme-provider-wallust = Wallust
+
+## MatugenScheme variants
+enum-matugen-scheme-content = Content
+enum-matugen-scheme-expressive = Expressive
+enum-matugen-scheme-fidelity = Fidelity
+enum-matugen-scheme-fruit-salad = Fruit Salad
+enum-matugen-scheme-monochrome = Monochrome
+enum-matugen-scheme-neutral = Neutral
+enum-matugen-scheme-rainbow = Rainbow
+enum-matugen-scheme-tonal-spot = Tonal Spot
+enum-matugen-scheme-vibrant = Vibrant
+
+## WallustPalette variants
+enum-wallust-palette-dark16 = Dark 16
+enum-wallust-palette-dark = Dark
+enum-wallust-palette-darkcomp = Darkcomp
+enum-wallust-palette-darkcomp16 = Darkcomp16
+enum-wallust-palette-harddark = Harddark
+enum-wallust-palette-harddark16 = Harddark16
+enum-wallust-palette-harddarkcomp = Harddarkcomp
+enum-wallust-palette-harddarkcomp16 = Harddarkcomp16
+enum-wallust-palette-light = Light
+enum-wallust-palette-light16 = Light16
+enum-wallust-palette-lightcomp = Lightcomp
+enum-wallust-palette-lightcomp16 = Lightcomp16
+enum-wallust-palette-softdark = Softdark
+enum-wallust-palette-softdark16 = Softdark16
+enum-wallust-palette-softdarkcomp = Softdarkcomp
+enum-wallust-palette-softdarkcomp16 = Softdarkcomp16
+enum-wallust-palette-softlight = Softlight
+enum-wallust-palette-softlight16 = Softlight16
+enum-wallust-palette-softlightcomp = Softlightcomp
+enum-wallust-palette-softlightcomp16 = Softlightcomp16
+enum-wallust-palette-ansidark = Ansidark
+enum-wallust-palette-ansidark16 = Ansidark16
+
+## WallustBackend variants
+enum-wallust-backend-full = Full
+enum-wallust-backend-resized = Resized
+enum-wallust-backend-wal = Wal
+enum-wallust-backend-thumb = Thumb
+enum-wallust-backend-fastresize = Fastresize
+enum-wallust-backend-kmeans = K-Means
+
+## WallustColorspace variants
+enum-wallust-colorspace-lab = Lab
+enum-wallust-colorspace-labmixed = Labmixed
+enum-wallust-colorspace-lch = Lch
+enum-wallust-colorspace-lchmixed = Lchmixed
+enum-wallust-colorspace-lchansi = Lchansi
+
+## FontWeightClass variants
+enum-font-weight-class-normal = Normal
+enum-font-weight-class-medium = Medium
+enum-font-weight-class-semibold = Semibold
+enum-font-weight-class-bold = Bold
+
+## RoundingLevel variants
+enum-rounding-level-none = None
+enum-rounding-level-sm = Small
+enum-rounding-level-md = Medium
+enum-rounding-level-lg = Large
+enum-rounding-level-full = Full

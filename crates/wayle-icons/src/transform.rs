@@ -485,6 +485,30 @@ mod tests {
         }
 
         #[test]
+        fn strips_inkscape_cruft_from_inline_style_attributes() {
+            let svg = r##"<svg viewBox="0 0 16 16"
+                xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+                xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd">
+                <path style="display:inline;stop-color:#000000;stop-opacity:1"
+                      d="M 2 2 L 14 2 L 14 14 L 2 14 Z"/>
+            </svg>"##;
+            let result = to_symbolic(svg);
+
+            assert!(
+                result.contains("gpa:fill='foreground'"),
+                "Inkscape-exported SVG should produce recolor-capable output, got: {result}"
+            );
+            assert!(
+                !result.contains("sodipodi") && !result.contains("inkscape:"),
+                "Editor namespaces must be stripped, got: {result}"
+            );
+            assert!(
+                !result.contains("style=\""),
+                "Inline style attributes must be stripped, got: {result}"
+            );
+        }
+
+        #[test]
         fn converts_circle_to_path() {
             let svg = r#"<svg viewBox="0 0 24 24">
                 <circle cx="12" cy="12" r="8"/>

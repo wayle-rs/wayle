@@ -1,5 +1,6 @@
 mod types;
 
+use schemars::schema_for;
 pub use types::{
     BarButtonVariant, BarGroup, BarItem, BarLayout, BarModule, BorderLocation, ClassedModule,
     IconPosition, Location, ModuleRef, ShadowPreset,
@@ -8,20 +9,33 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ConfigProperty,
+    docs::{ConfigGroup, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{
         ColorValue, CssToken, FontWeightClass, Percentage, RoundingLevel, ScaleFactor, Spacing,
     },
 };
 
-/// Bar configuration.
-#[wayle_config]
+/// Bar chrome: per-monitor layout, spacing, colors, and button styling.
+#[wayle_config(i18n_prefix = "settings-bar")]
 pub struct BarConfig {
-    //
-    // === === === === === === === === === ===
-    // ===          BAR SETTINGS           ===
-    // === === === === === === === === === ===
-    //
-    /// Per-monitor bar layouts.
+    /// Per-monitor bar layouts. Each entry targets a monitor by connector name
+    /// (e.g., `"DP-1"`) or `"*"` for all monitors. See [`BarLayout`] for the
+    /// full shape, including layout inheritance via `extends`.
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [[bar.layout]]
+    /// monitor = "*"
+    /// left = ["dashboard"]
+    /// center = ["clock"]
+    /// right = ["battery", "network", "volume", "systray"]
+    ///
+    /// [[bar.layout]]
+    /// monitor = "HDMI-1"
+    /// extends = "*"
+    /// right = ["volume", "systray"]
+    /// ```
     #[default(vec![BarLayout::default()])]
     pub layout: ConfigProperty<Vec<BarLayout>>,
 
@@ -97,11 +111,6 @@ pub struct BarConfig {
     #[default(ShadowPreset::None)]
     pub shadow: ConfigProperty<ShadowPreset>,
 
-    //
-    // === === === === === === === === === === ===
-    // ===       BUTTON/MODULE SETTINGS        ===
-    // === === === === === === === === === === ===
-    //
     /// Visual style variant for bar buttons.
     #[serde(rename = "button-variant")]
     #[default(BarButtonVariant::BlockPrefix)]
@@ -207,11 +216,6 @@ pub struct BarConfig {
     #[default(RoundingLevel::default())]
     pub button_group_rounding: ConfigProperty<RoundingLevel>,
 
-    //
-    // === === === === === === === === === ===
-    // ===        DROPDOWN SETTINGS        ===
-    // === === === === === === === === === ===
-    //
     /// Enable dropdown panel shadow.
     #[serde(rename = "dropdown-shadow")]
     #[default(true)]
@@ -235,3 +239,25 @@ pub struct BarConfig {
     #[default(true)]
     pub dropdown_freeze_label: ConfigProperty<bool>,
 }
+
+impl ModuleInfoProvider for BarConfig {
+    fn module_info() -> ModuleInfo {
+        ModuleInfo {
+            name: String::from("bar"),
+            schema: || schema_for!(BarConfig),
+            layout_id: None,
+            array_entry: false,
+        }
+    }
+
+    fn groups() -> Vec<ConfigGroup> {
+        vec![
+            ConfigGroup::general(),
+            ConfigGroup::colors(),
+            ConfigGroup::prefix("Buttons", "button-"),
+            ConfigGroup::prefix("Dropdowns", "dropdown-"),
+        ]
+    }
+}
+
+crate::register_module!(BarConfig);

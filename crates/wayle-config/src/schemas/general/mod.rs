@@ -1,9 +1,13 @@
+use schemars::schema_for;
 use wayle_derive::wayle_config;
 
-use crate::ConfigProperty;
+use crate::{
+    ConfigProperty,
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
+};
 
-/// General Wayle configuration.
-#[wayle_config]
+/// Shell-wide settings that don't belong to any specific module.
+#[wayle_config(i18n_prefix = "settings-general")]
 pub struct GeneralConfig {
     /// Sans-serif font family for UI text and labels.
     #[serde(rename = "font-sans")]
@@ -23,3 +27,20 @@ pub struct GeneralConfig {
     #[default(false)]
     pub tearing_mode: ConfigProperty<bool>,
 }
+
+impl ModuleInfoProvider for GeneralConfig {
+    fn module_info() -> ModuleInfo {
+        ModuleInfo {
+            name: String::from("general"),
+            schema: || schema_for!(GeneralConfig),
+            layout_id: None,
+            array_entry: false,
+        }
+    }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::standard()
+    }
+}
+
+crate::register_module!(GeneralConfig);

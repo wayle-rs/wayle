@@ -121,3 +121,47 @@ settings-bar-dropdown-autohide = Dropdown Autohide
 
 settings-bar-dropdown-freeze-label = Freeze Label
     .description = Prevent bar button label from updating while its dropdown is open
+
+settings-bar-shadow = Shadow
+    .description = Enable drop shadow
+
+settings-bar-button-variant = Button Variant
+    .description = Visual style for bar buttons
+
+settings-bar-button-rounding = Button Rounding
+    .description = Corner rounding for bar buttons
+
+settings-bar-button-group-module-gap = Group Module Gap
+    .description = Gap between modules within a group
+
+settings-bar-button-group-rounding = Group Rounding
+    .description = Corner rounding for button groups
+
+## Location enum variants
+enum-location-top = Top
+enum-location-bottom = Bottom
+enum-location-left = Left
+enum-location-right = Right
+
+
+## ShadowPreset variants
+enum-shadow-preset-none = None
+enum-shadow-preset-drop = Drop
+enum-shadow-preset-floating = Floating
+
+## BorderLocation variants
+enum-border-location-none = None
+enum-border-location-top = Top
+enum-border-location-bottom = Bottom
+enum-border-location-left = Left
+enum-border-location-right = Right
+enum-border-location-all = All
+
+## BarButtonVariant variants
+enum-bar-button-variant-basic = Basic
+enum-bar-button-variant-block-prefix = Block Prefix
+enum-bar-button-variant-icon-square = Icon Square
+
+## IconPosition variants
+enum-icon-position-start = Start
+enum-icon-position-end = End

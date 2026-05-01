@@ -70,6 +70,7 @@ jobs:
                     clang \
                     gtk4 \
                     gtk4-layer-shell \
+                    gtksourceview5 \
                     libpulse \
                     fftw \
                     libpipewire \
@@ -100,10 +101,12 @@ jobs:
                   ARCH="${{ matrix.arch }}"
                   STAGING="wayle-${VERSION}-${ARCH}-linux"
                   mkdir -p "${STAGING}/icons" "${STAGING}/completions"
-                  cp target/release/wayle LICENSE "${STAGING}/"
+                  cp target/release/wayle target/release/wayle-settings LICENSE "${STAGING}/"
                   cp -r resources/icons/hicolor "${STAGING}/icons/"
                   cp completions.bash _wayle wayle.fish "${STAGING}/completions/"
                   cp resources/wayle.service "${STAGING}/"
+                  cp resources/com.wayle.settings.desktop "${STAGING}/"
+                  cp resources/wayle-settings.svg "${STAGING}/"
                   tar czf "${STAGING}.tar.gz" "${STAGING}"
 
             - name: Upload to release

@@ -3,7 +3,7 @@
 //! The manager handles fetching icons from CDN sources and storing them
 //! in the icon directory for GTK to discover.
 
-use std::{fs, path::Path};
+use std::{collections::BTreeSet, fs, path::Path};
 
 use futures::future::join_all;
 use tokio::fs as async_fs;
@@ -209,24 +209,35 @@ impl IconManager {
     ///
     /// Returns icon names without the `.svg` extension.
     pub fn list(&self) -> Vec<String> {
-        let icons_dir = self.registry.icons_dir();
+        let mut dirs = vec![self.registry.icons_dir()];
 
-        let Ok(entries) = fs::read_dir(&icons_dir) else {
-            return Vec::new();
-        };
+        for system_path in IconRegistry::system_icon_paths() {
+            let actions_dir = system_path.join("hicolor").join("scalable").join("actions");
 
-        entries
-            .filter_map(|entry| {
-                let entry = entry.ok()?;
+            if actions_dir.exists() {
+                dirs.push(actions_dir);
+            }
+        }
+
+        let mut icons: BTreeSet<String> = BTreeSet::new();
+
+        for dir in dirs {
+            let Ok(entries) = fs::read_dir(&dir) else {
+                continue;
+            };
+
+            for entry in entries.flatten() {
                 let path = entry.path();
 
-                if path.extension().is_some_and(|ext| ext == "svg") {
-                    path.file_stem().and_then(|s| s.to_str()).map(String::from)
-                } else {
-                    None
+                if path.extension().is_some_and(|ext| ext == "svg")
+                    && let Some(name) = path.file_stem().and_then(|stem| stem.to_str())
+                {
+                    icons.insert(name.to_owned());
                 }
-            })
-            .collect()
+            }
+        }
+
+        icons.into_iter().collect()
     }
 
     /// Checks if an icon is installed.

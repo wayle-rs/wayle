@@ -4,15 +4,15 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::{
         modules::TimeFormat,
         styling::{ColorValue, CssToken},
     },
 };
 
-/// Weather module configuration.
-#[wayle_config(bar_button)]
+/// Current conditions with hourly and daily forecasts in a dropdown.
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-weather")]
 pub struct WeatherConfig {
     /// Weather data provider.
     #[default(WeatherProvider::default())]
@@ -147,7 +147,18 @@ pub struct WeatherConfig {
 }
 
 /// Weather data provider selection.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum WeatherProvider {
     /// Open-Meteo (no API key required).
@@ -160,7 +171,18 @@ pub enum WeatherProvider {
 }
 
 /// Temperature unit for display.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum TemperatureUnit {
     /// Celsius (metric).
@@ -174,10 +196,15 @@ impl ModuleInfoProvider for WeatherConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("weather"),
-            icon: String::from("󰖐"),
-            description: String::from("Weather display with forecasts"),
-            behavior_configs: vec![(String::from("weather"), || schema_for!(WeatherConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(WeatherConfig),
+            layout_id: Some(String::from("weather")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(WeatherConfig);
