@@ -56,7 +56,7 @@ pub use notification::{
 pub use power::PowerConfig;
 pub use ram::RamConfig;
 pub use separator::SeparatorConfig;
-pub use storage::StorageConfig;
+pub use storage::{StorageConfig, StorageMountPoint};
 pub use systray::{SystrayConfig, TrayItemOverride};
 pub use types::TimeFormat;
 pub use volume::{AppIconSource, VolumeConfig};

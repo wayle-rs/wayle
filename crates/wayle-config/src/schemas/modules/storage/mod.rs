@@ -1,4 +1,6 @@
+use schemars::JsonSchema;
 use schemars::schema_for;
+use serde::{Deserialize, Serialize};
 use wayle_derive::wayle_config;
 
 use crate::{
@@ -6,6 +8,28 @@ use crate::{
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
+
+/// Storage mount targets accepted by `mount-point`.
+///
+/// Supports a single string for backwards compatibility or an array of paths.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(untagged)]
+pub enum StorageMountPoint {
+    /// Monitor a single mount path.
+    Single(String),
+    /// Monitor multiple mount paths.
+    Multiple(Vec<String>),
+}
+
+impl StorageMountPoint {
+    /// Returns normalized mount paths as a vector.
+    pub fn paths(&self) -> Vec<String> {
+        match self {
+            Self::Single(path) => vec![path.clone()],
+            Self::Multiple(paths) => paths.clone(),
+        }
+    }
+}
 
 /// Disk usage for a mount point.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-storage")]
@@ -17,10 +41,10 @@ pub struct StorageConfig {
     #[default(30000)]
     pub poll_interval_ms: ConfigProperty<u64>,
 
-    /// Mount point to monitor (e.g., `"/"`, `"/home"`).
+    /// Mount point(s) to monitor (e.g., `"/"` or `["/", "/mnt/drive1"]`).
     #[serde(rename = "mount-point")]
-    #[default(String::from("/"))]
-    pub mount_point: ConfigProperty<String>,
+    #[default(StorageMountPoint::Single(String::from("/")))]
+    pub mount_point: ConfigProperty<StorageMountPoint>,
 
     /// Format string for the label.
     ///
