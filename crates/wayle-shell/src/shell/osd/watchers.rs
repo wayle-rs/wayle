@@ -35,7 +35,7 @@ pub(super) fn spawn(
         spawn_brightness_service_watcher(sender, brightness);
     }
 
-    spawn_toggle_watchers(sender);
+    spawn_toggle_watchers(sender, config);
 }
 
 fn spawn_config_watcher(sender: &ComponentSender<Osd>, config: &Arc<ConfigService>) {
@@ -47,6 +47,7 @@ fn spawn_config_watcher(sender: &ComponentSender<Osd>, config: &Arc<ConfigServic
     let monitor = osd.monitor.clone();
     let margin = osd.margin.clone();
     let border = osd.border.clone();
+    let toggle_keys = osd.toggle_keys.clone();
     let scale = full_config.styling.scale.clone();
     let tearing_mode = full_config.general.tearing_mode.clone();
 
@@ -58,6 +59,7 @@ fn spawn_config_watcher(sender: &ComponentSender<Osd>, config: &Arc<ConfigServic
             monitor.watch(),
             margin.watch(),
             border.watch(),
+            toggle_keys.watch(),
             scale.watch(),
             tearing_mode.watch(),
         ],
@@ -130,10 +132,12 @@ fn spawn_brightness_service_watcher(
     });
 }
 
-fn spawn_toggle_watchers(sender: &ComponentSender<Osd>) {
+fn spawn_toggle_watchers(sender: &ComponentSender<Osd>, config: &Arc<ConfigService>) {
+    let toggle_keys = config.config().osd.toggle_keys.clone();
     let keyboards = toggles::find_keyboards();
 
     for mut stream in keyboards {
+        let toggle_keys = toggle_keys.clone();
         sender.command(move |out, shutdown| async move {
             let shutdown_fut = shutdown.wait();
             tokio::pin!(shutdown_fut);
@@ -144,8 +148,11 @@ fn spawn_toggle_watchers(sender: &ComponentSender<Osd>) {
 
                     event = stream.next() => {
                         let Some(result) = event else { return };
-
                         let Ok(event) = result else { return };
+
+                        if !toggle_keys.get() {
+                            continue;
+                        }
 
                         let toggle_key = toggles::detect_toggle(
                             event.event_type(),
@@ -153,14 +160,11 @@ fn spawn_toggle_watchers(sender: &ComponentSender<Osd>) {
                             event.value(),
                         );
 
-                        let Some(key) = toggle_key else {
-                            continue;
-                        };
+                        let Some(key) = toggle_key else { continue };
 
                         tokio::time::sleep(toggles::LED_DELAY).await;
 
                         let active = toggles::read_led_state(&stream, key);
-
                         let toggle = ToggleEvent { key, active };
                         let _ = out.send(OsdCmd::ToggleChanged(toggle));
                     }

@@ -28,6 +28,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 title_key: "settings-section-display",
                 items: vec![
                     toggle(&osd.enabled),
+                    toggle(&osd.toggle_keys),
                     enum_select(&osd.position),
                     number_u32(&osd.duration),
                     text_like(&osd.monitor),

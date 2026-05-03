@@ -36,6 +36,11 @@ pub struct OsdConfig {
     /// Show a border around the OSD.
     #[default(true)]
     pub border: ConfigProperty<bool>,
+
+    /// Show OSD for keyboard toggle keys (Caps Lock, Num Lock, Scroll Lock).
+    #[serde(rename = "toggle-keys")]
+    #[default(true)]
+    pub toggle_keys: ConfigProperty<bool>,
 }
 
 impl ModuleInfoProvider for OsdConfig {
