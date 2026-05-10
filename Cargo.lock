@@ -4523,8 +4523,6 @@ dependencies = [
 [[package]]
 name = "wayle-battery"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a84c4e68a9846ac0ef9bc9582595480250bfd189be6b4857965a7843766b7bb3"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -4623,8 +4621,6 @@ dependencies = [
 [[package]]
 name = "wayle-core"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "867109345d4043305fbee2df1847e8cd9ca33bac34550b541323fc17ae81e513"
 dependencies = [
  "futures",
  "schemars",
@@ -4938,8 +4934,6 @@ dependencies = [
 [[package]]
 name = "wayle-traits"
 version = "0.1.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0833629ad4481a1302cb6df07da2b438bdb1c99dc5e5844e3198d53945728a6d"
 
 [[package]]
 name = "wayle-wallpaper"
