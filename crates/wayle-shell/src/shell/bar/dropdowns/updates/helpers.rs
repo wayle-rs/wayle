@@ -26,35 +26,62 @@ pub(super) async fn run_count_command(command: &str) -> u32 {
 }
 
 /// Spawn the update command in the user's terminal.
-pub(super) fn spawn_update_in_terminal(update_command: &str) {
-    let cmd = update_command.to_string();
-    tokio::spawn(async move {
-        // Try common terminals in order of preference
-        let terminals = [
-            ("kitty", vec!["-e", "sh", "-c"]),
-            ("foot", vec!["-e", "sh", "-c"]),
-            ("alacritty", vec!["-e", "sh", "-c"]),
-            ("wezterm", vec!["start", "--", "sh", "-c"]),
-            ("xterm", vec!["-e", "sh", "-c"]),
-        ];
+/// Returns false if an update is already running.
+pub(super) fn spawn_update_in_terminal(update_command: &str) -> bool {
+    use std::sync::atomic::{AtomicBool, Ordering};
+    static RUNNING: AtomicBool = AtomicBool::new(false);
 
+    if RUNNING.swap(true, Ordering::SeqCst) {
+        tracing::debug!("update already running, ignoring click");
+        return false;
+    }
+
+    // Wrap command so terminal stays open after finish/failure
+    let wrapped = format!(
+        "{cmd}; echo ''; echo 'Press enter to close...'; read",
+        cmd = update_command
+    );
+
+    let terminals = [
+        ("kitty", vec!["-e", "sh", "-c"]),
+        ("foot", vec!["-e", "sh", "-c"]),
+        ("alacritty", vec!["-e", "sh", "-c"]),
+        ("wezterm", vec!["start", "--", "sh", "-c"]),
+        ("xterm", vec!["-e", "sh", "-c"]),
+    ];
+
+    tokio::spawn(async move {
         for (term, args) in &terminals {
-            if let Ok(path) = tokio::process::Command::new("which")
+            if let Ok(check) = tokio::process::Command::new("which")
                 .arg(term)
                 .output()
                 .await
             {
-                if path.status.success() {
+                if check.status.success() {
                     let mut full_args: Vec<&str> = args.iter().map(|s| s.as_ref()).collect();
-                    full_args.push(&cmd);
-                    let _ = tokio::process::Command::new(term)
+                    full_args.push(&wrapped);
+
+                    match tokio::process::Command::new(term)
                         .args(&full_args)
-                        .spawn();
-                    return;
+                        .spawn()
+                    {
+                        Ok(mut child) => {
+                            // Wait for terminal to close before allowing another
+                            let _ = child.wait().await;
+                            RUNNING.store(false, Ordering::SeqCst);
+                            return;
+                        }
+                        Err(e) => {
+                            tracing::warn!("failed to spawn {term}: {e}");
+                        }
+                    }
                 }
             }
         }
 
         tracing::warn!("no terminal emulator found to run update command");
+        RUNNING.store(false, Ordering::SeqCst);
     });
+
+    true
 }
