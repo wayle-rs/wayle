@@ -7,59 +7,64 @@ use crate::{
     schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
-/// GPU usage, temperature, and VRAM.
+/// System package updates indicator.
 ///
-/// Supports NVIDIA (via NVML) and AMD (via sysfs/hwmon).
-/// The module auto-detects the GPU vendor on startup.
-#[wayle_config(bar_button, i18n_prefix = "settings-modules-gpu")]
-pub struct GpuConfig {
+/// Checks for available updates from official repositories (pacman/checkupdates)
+/// and AUR (paru/yay). Displays counts in the bar and provides a dropdown
+/// with refresh and update actions.
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-updates")]
+pub struct UpdatesConfig {
     /// Polling interval in milliseconds.
     #[serde(rename = "poll-interval-ms")]
-    #[default(5000)]
+    #[default(3600000)]
     pub poll_interval_ms: ConfigProperty<u64>,
-
-    /// GPU vendor override.
-    ///
-    /// Use `"auto"` for automatic detection, or force a specific vendor:
-    /// `"nvidia"`, `"amd"`.
-    #[serde(rename = "vendor")]
-    #[default(String::from("auto"))]
-    pub vendor: ConfigProperty<String>,
-
-    /// GPU device index.
-    ///
-    /// For AMD, selects which `/sys/class/drm/card<N>` to read from.
-    /// For NVIDIA, selects the NVML device index.
-    /// Set to `0` for the first GPU, `1` for the second, etc.
-    #[serde(rename = "card-index")]
-    #[default(0)]
-    pub card_index: ConfigProperty<u32>,
 
     /// Format string for the label.
     ///
     /// ## Placeholders
     ///
-    /// - `{{ percent }}` - GPU usage (0-100)
-    /// - `{{ temp_c }}` - Temperature in Celsius
-    /// - `{{ temp_f }}` - Temperature in Fahrenheit
-    /// - `{{ vram_used_mb }}` - VRAM used in MB
-    /// - `{{ vram_total_mb }}` - VRAM total in MB
-    /// - `{{ vram_percent }}` - VRAM usage percentage
-    /// - `{{ name }}` - GPU model name
+    /// - `{{ pacman }}` - Official repository updates count
+    /// - `{{ aur }}` - AUR updates count
+    /// - `{{ flatpak }}` - Flatpak updates count
+    /// - `{{ total }}` - Total updates (pacman + aur + flatpak)
     ///
     /// ## Examples
     ///
-    /// - `"{{ percent }}%"` - "45%"
-    /// - `"{{ percent }}% {{ temp_c }}°C"` - "45% 62°C"
-    /// - `"{{ vram_used_mb }}/{{ vram_total_mb }}MB"` - "2048/8192MB"
+    /// - `"{{ total }}"` - "169"
+    /// - `"pac:{{ pacman }} aur:{{ aur }}"` - "pac:145 aur:24"
     #[serde(rename = "format")]
-    #[default(String::from("{{ percent }}%"))]
+    #[default(String::from("{{ total }}"))]
     pub format: ConfigProperty<String>,
 
     /// Icon name.
     #[serde(rename = "icon-name")]
-    #[default(String::from("ld-gpu-symbolic"))]
+    #[default(String::from("md-package_2-symbolic"))]
     pub icon_name: ConfigProperty<String>,
+
+    /// Hide module when no updates are available.
+    #[serde(rename = "hide-if-zero")]
+    #[default(false)]
+    pub hide_if_zero: ConfigProperty<bool>,
+
+    /// Command to check official repository updates.
+    #[serde(rename = "check-official-command")]
+    #[default(String::from("checkupdates 2>/dev/null | wc -l"))]
+    pub check_official_command: ConfigProperty<String>,
+
+    /// Command to check AUR updates.
+    #[serde(rename = "check-aur-command")]
+    #[default(String::from("paru -Qua 2>/dev/null | wc -l"))]
+    pub check_aur_command: ConfigProperty<String>,
+
+    /// Command to check Flatpak updates.
+    #[serde(rename = "check-flatpak-command")]
+    #[default(String::from("flatpak remote-ls --updates 2>/dev/null | wc -l"))]
+    pub check_flatpak_command: ConfigProperty<String>,
+
+    /// Command to run system update (launched in terminal).
+    #[serde(rename = "update-command")]
+    #[default(String::from("paru -Syu"))]
+    pub update_command: ConfigProperty<String>,
 
     /// Display border around button.
     #[serde(rename = "border-show")]
@@ -68,7 +73,7 @@ pub struct GpuConfig {
 
     /// Border color token.
     #[serde(rename = "border-color")]
-    #[default(ColorValue::Token(CssToken::Green))]
+    #[default(ColorValue::Token(CssToken::Blue))]
     pub border_color: ConfigProperty<ColorValue>,
 
     /// Display module icon.
@@ -83,7 +88,7 @@ pub struct GpuConfig {
 
     /// Icon container background color token.
     #[serde(rename = "icon-bg-color")]
-    #[default(ColorValue::Token(CssToken::Green))]
+    #[default(ColorValue::Token(CssToken::Blue))]
     pub icon_bg_color: ConfigProperty<ColorValue>,
 
     /// Display label.
@@ -93,7 +98,7 @@ pub struct GpuConfig {
 
     /// Label text color token.
     #[serde(rename = "label-color")]
-    #[default(ColorValue::Token(CssToken::Green))]
+    #[default(ColorValue::Token(CssToken::Blue))]
     pub label_color: ConfigProperty<ColorValue>,
 
     /// Max label characters before truncation. Set to 0 to disable.
@@ -108,7 +113,7 @@ pub struct GpuConfig {
 
     /// Action on left click.
     #[serde(rename = "left-click")]
-    #[default(ClickAction::Dropdown(String::from("sysinfo")))]
+    #[default(ClickAction::Dropdown(String::from("updates")))]
     pub left_click: ConfigProperty<ClickAction>,
 
     /// Action on right click.
@@ -131,32 +136,18 @@ pub struct GpuConfig {
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
 
-    /// Dynamic color thresholds based on GPU usage percentage.
-    ///
-    /// ## Example
-    ///
-    /// ```toml
-    /// [[modules.gpu.thresholds]]
-    /// above = 70
-    /// icon-color = "status-warning"
-    /// label-color = "status-warning"
-    ///
-    /// [[modules.gpu.thresholds]]
-    /// above = 90
-    /// icon-color = "status-error"
-    /// label-color = "status-error"
-    /// ```
+    /// Dynamic color thresholds based on total update count.
     #[serde(rename = "thresholds")]
     #[default(Vec::new())]
     pub thresholds: ConfigProperty<Vec<ThresholdEntry>>,
 }
 
-impl ModuleInfoProvider for GpuConfig {
+impl ModuleInfoProvider for UpdatesConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
-            name: String::from("gpu"),
-            schema: || schema_for!(GpuConfig),
-            layout_id: Some(String::from("gpu")),
+            name: String::from("updates"),
+            schema: || schema_for!(UpdatesConfig),
+            layout_id: Some(String::from("updates")),
             array_entry: false,
         }
     }
@@ -166,4 +157,4 @@ impl ModuleInfoProvider for GpuConfig {
     }
 }
 
-crate::register_module!(GpuConfig);
+crate::register_module!(UpdatesConfig);

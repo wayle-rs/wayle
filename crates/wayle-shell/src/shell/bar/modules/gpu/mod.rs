@@ -8,6 +8,7 @@ use std::{rc::Rc, sync::Arc};
 use gtk::prelude::*;
 use relm4::prelude::*;
 use wayle_config::{ConfigProperty, ConfigService, schemas::styling::CssToken};
+use wayle_sysinfo::SysinfoService;
 use wayle_widgets::prelude::{
     BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonInput, BarButtonOutput,
 };
@@ -22,6 +23,8 @@ pub(crate) struct GpuModule {
     bar_button: Controller<BarButton>,
     config: Arc<ConfigService>,
     dropdowns: Rc<DropdownRegistry>,
+    #[allow(dead_code)]
+    sysinfo: Arc<SysinfoService>,
 }
 
 #[relm4::component(pub(crate))]
@@ -60,7 +63,8 @@ impl Component for GpuModule {
             helpers::GpuVendor::Amd => helpers::read_amd(card_index),
             helpers::GpuVendor::Unknown => helpers::GpuData::default(),
         };
-        let initial_label = helpers::format_label(&gpu_config.format.get(), &initial_gpu);
+        let mem = init.sysinfo.memory.get();
+        let initial_label = helpers::format_label(&gpu_config.format.get(), &initial_gpu, Some(&mem));
 
         let bar_button = BarButton::builder()
             .launch(BarButtonInit {
@@ -92,12 +96,20 @@ impl Component for GpuModule {
                 BarButtonOutput::ScrollDown => GpuMsg::ScrollDown,
             });
 
-        watchers::spawn_watchers(&sender, gpu_config, vendor, card_index, nvml.map(Arc::new));
+        watchers::spawn_watchers(
+            &sender,
+            gpu_config,
+            vendor,
+            card_index,
+            nvml.map(Arc::new),
+            init.sysinfo.clone(),
+        );
 
         let model = Self {
             bar_button,
             config: init.config,
             dropdowns: init.dropdowns,
+            sysinfo: init.sysinfo,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();

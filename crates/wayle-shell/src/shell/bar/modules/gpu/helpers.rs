@@ -1,6 +1,7 @@
 use nvml_wrapper::Nvml;
 use serde_json::json;
 use tracing::warn;
+use wayle_sysinfo::types::MemoryData;
 
 /// Raw GPU data from sysfs or NVML.
 #[derive(Debug, Clone, Default)]
@@ -32,9 +33,23 @@ impl GpuData {
 /// - `{{ vram_total_mb }}` - VRAM total in MB
 /// - `{{ vram_percent }}` - VRAM usage percentage
 /// - `{{ name }}` - GPU model name
-pub(super) fn format_label(format: &str, gpu: &GpuData) -> String {
+/// - `{{ ram_used_gb }}` - System RAM used in GB (1 decimal)
+/// - `{{ ram_total_gb }}` - System RAM total in GB (1 decimal)
+/// - `{{ ram_available_gb }}` - System RAM available in GB (1 decimal)
+/// - `{{ ram_percent }}` - System RAM usage percentage (zero-padded)
+pub(super) fn format_label(format: &str, gpu: &GpuData, mem: Option<&MemoryData>) -> String {
     let temp_c = gpu.temperature_celsius.unwrap_or(0.0);
     let temp_f = temp_c * 9.0 / 5.0 + 32.0;
+
+    let (ram_used_gb, ram_total_gb, ram_available_gb, ram_percent) = match mem {
+        Some(m) => (
+            m.used_bytes as f64 / 1_073_741_824.0,
+            m.total_bytes as f64 / 1_073_741_824.0,
+            m.available_bytes as f64 / 1_073_741_824.0,
+            m.usage_percent as f64,
+        ),
+        None => (0.0, 0.0, 0.0, 0.0),
+    };
 
     let ctx = json!({
         "percent": format!("{:02.0}", gpu.usage_percent),
@@ -44,6 +59,10 @@ pub(super) fn format_label(format: &str, gpu: &GpuData) -> String {
         "vram_total_mb": gpu.vram_total_mb,
         "vram_percent": format!("{:.0}", gpu.vram_percent()),
         "name": &gpu.name,
+        "ram_used_gb": format!("{ram_used_gb:.1}"),
+        "ram_total_gb": format!("{ram_total_gb:.1}"),
+        "ram_available_gb": format!("{ram_available_gb:.1}"),
+        "ram_percent": format!("{ram_percent:02.0}"),
     });
     crate::template::render(format, ctx).unwrap_or_default()
 }
@@ -202,57 +221,101 @@ mod tests {
     #[test]
     fn format_label_replaces_percent() {
         let gpu = gpu_data(45.7, Some(55.0), 2048, 8192);
-        let result = format_label("{{ percent }}%", &gpu);
+        let result = format_label("{{ percent }}%", &gpu, None);
         assert_eq!(result, "46%");
     }
 
     #[test]
     fn format_label_percent_pads_single_digits() {
         let gpu = gpu_data(5.2, Some(55.0), 2048, 8192);
-        let result = format_label("{{ percent }}", &gpu);
+        let result = format_label("{{ percent }}", &gpu, None);
         assert_eq!(result, "05");
     }
 
     #[test]
     fn format_label_replaces_temp_c() {
         let gpu = gpu_data(50.0, Some(72.5), 2048, 8192);
-        let result = format_label("{{ temp_c }}°C", &gpu);
+        let result = format_label("{{ temp_c }}°C", &gpu, None);
         assert_eq!(result, "72°C");
     }
 
     #[test]
     fn format_label_replaces_vram() {
         let gpu = gpu_data(50.0, Some(55.0), 2048, 8192);
-        let result = format_label("{{ vram_used_mb }}/{{ vram_total_mb }}MB", &gpu);
+        let result = format_label("{{ vram_used_mb }}/{{ vram_total_mb }}MB", &gpu, None);
         assert_eq!(result, "2048/8192MB");
     }
 
     #[test]
     fn format_label_replaces_vram_percent() {
         let gpu = gpu_data(50.0, Some(55.0), 4096, 8192);
-        let result = format_label("{{ vram_percent }}%", &gpu);
+        let result = format_label("{{ vram_percent }}%", &gpu, None);
         assert_eq!(result, "50%");
     }
 
     #[test]
     fn format_label_replaces_name() {
         let gpu = gpu_data(50.0, Some(55.0), 2048, 8192);
-        let result = format_label("{{ name }}", &gpu);
+        let result = format_label("{{ name }}", &gpu, None);
         assert_eq!(result, "Test GPU");
     }
 
     #[test]
     fn format_label_with_no_temp_uses_zero() {
         let gpu = gpu_data(50.0, None, 2048, 8192);
-        let result = format_label("{{ temp_c }}°C", &gpu);
+        let result = format_label("{{ temp_c }}°C", &gpu, None);
         assert_eq!(result, "00°C");
     }
 
     #[test]
     fn format_label_multiple_placeholders() {
         let gpu = gpu_data(75.0, Some(65.0), 4096, 8192);
-        let result = format_label("{{ percent }}% {{ temp_c }}°C {{ vram_percent }}%V", &gpu);
+        let result =
+            format_label("{{ percent }}% {{ temp_c }}°C {{ vram_percent }}%V", &gpu, None);
         assert_eq!(result, "75% 65°C 50%V");
+    }
+
+    #[test]
+    fn format_label_ram_placeholders() {
+        let gpu = gpu_data(50.0, Some(55.0), 2048, 8192);
+        let mem = MemoryData {
+            used_bytes: 11_063_328_768,  // ~10.3 GB
+            total_bytes: 17_179_869_184, // 16.0 GB
+            available_bytes: 6_116_540_416,
+            usage_percent: 64.4,
+            swap_total_bytes: 0,
+            swap_used_bytes: 0,
+            swap_percent: 0.0,
+        };
+        let result = format_label(
+            "{{ ram_used_gb }}/{{ ram_total_gb }}GB",
+            &gpu,
+            Some(&mem),
+        );
+        assert_eq!(result, "10.3/16.0GB");
+    }
+
+    #[test]
+    fn format_label_ram_percent() {
+        let gpu = gpu_data(50.0, Some(55.0), 2048, 8192);
+        let mem = MemoryData {
+            used_bytes: 11_063_328_768,
+            total_bytes: 17_179_869_184,
+            available_bytes: 6_116_540_416,
+            usage_percent: 5.2,
+            swap_total_bytes: 0,
+            swap_used_bytes: 0,
+            swap_percent: 0.0,
+        };
+        let result = format_label("{{ ram_percent }}%", &gpu, Some(&mem));
+        assert_eq!(result, "05%");
+    }
+
+    #[test]
+    fn format_label_ram_none_uses_zero() {
+        let gpu = gpu_data(50.0, Some(55.0), 2048, 8192);
+        let result = format_label("{{ ram_used_gb }}/{{ ram_total_gb }}GB", &gpu, None);
+        assert_eq!(result, "0.0/0.0GB");
     }
 
     #[test]

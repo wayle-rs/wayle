@@ -23,6 +23,7 @@ mod registry;
 mod separator;
 mod storage;
 mod systray;
+mod updates;
 mod volume;
 pub(crate) mod weather;
 mod window_title;
@@ -80,6 +81,7 @@ register_modules! {
     Separator => separator::Factory,
     Storage => storage::Factory,
     Systray => systray::Factory,
+    Updates => updates::Factory,
     Volume => volume::Factory,
     Weather => weather::Factory,
     WindowTitle => window_title::Factory,

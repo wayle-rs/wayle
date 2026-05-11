@@ -3,7 +3,7 @@ use std::rc::Rc;
 use relm4::prelude::*;
 use wayle_widgets::prelude::BarSettings;
 
-use super::{GpuInit, GpuModule};
+use super::{UpdatesInit, UpdatesModule};
 use crate::shell::{
     bar::{
         dropdowns::DropdownRegistry,
@@ -21,13 +21,12 @@ impl ModuleFactory for Factory {
         dropdowns: &Rc<DropdownRegistry>,
         class: Option<String>,
     ) -> Option<ModuleInstance> {
-        let init = GpuInit {
+        let init = UpdatesInit {
             settings: settings.clone(),
-            sysinfo: services.sysinfo.clone(),
             config: services.config.clone(),
             dropdowns: dropdowns.clone(),
         };
-        let controller = dynamic_controller(GpuModule::builder().launch(init).detach());
+        let controller = dynamic_controller(UpdatesModule::builder().launch(init).detach());
         Some(ModuleInstance { controller, class })
     }
 }
