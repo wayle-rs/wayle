@@ -23,7 +23,7 @@ mod registry;
 mod separator;
 mod storage;
 mod systray;
-mod updates;
+pub(crate) mod updates;
 mod volume;
 pub(crate) mod weather;
 mod window_title;

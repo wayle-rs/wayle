@@ -63,7 +63,7 @@ pub struct UpdatesConfig {
 
     /// Command to run system update (launched in terminal).
     #[serde(rename = "update-command")]
-    #[default(String::from("paru -Syu"))]
+    #[default(String::from("paru -Syu && flatpak update -y"))]
     pub update_command: ConfigProperty<String>,
 
     /// Display border around button.

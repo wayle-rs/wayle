@@ -228,9 +228,12 @@ impl Component for UpdatesDropdown {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
+    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>, root: &Self::Root) {
         match msg {
             UpdatesDropdownInput::Refresh => {
+                // Re-show popover (GTK may close it on button activation)
+                root.popup();
+
                 self.status_text = String::from("Checking for updates...");
                 self.pacman_count = String::from("...");
                 self.aur_count = String::from("...");
@@ -254,13 +257,42 @@ impl Component for UpdatesDropdown {
 
                             let _ = out.send(UpdatesDropdownCmd::UpdateCounts { pacman, aur, flatpak });
                             let _ = out.send(UpdatesDropdownCmd::SetChecking(false));
+
+                            // Signal bar module to update its label too
+                            crate::shell::bar::modules::updates::helpers::REFRESH_NOTIFY.notify_one();
                         })
                         .drop_on_shutdown()
                 });
             }
             UpdatesDropdownInput::UpdateAll => {
                 let update_cmd = self.config.config().modules.updates.update_command.get().clone();
-                helpers::spawn_update_in_terminal(&update_cmd);
+                let official_cmd = self.config.config().modules.updates.check_official_command.get().clone();
+                let aur_cmd = self.config.config().modules.updates.check_aur_command.get().clone();
+                let flatpak_cmd = self.config.config().modules.updates.check_flatpak_command.get().clone();
+
+                sender.command(move |out, shutdown| {
+                    shutdown
+                        .register(async move {
+                            // Wait for terminal to close
+                            if helpers::spawn_update_in_terminal(&update_cmd).await {
+                                // Re-check counts after update finished
+                                let _ = out.send(UpdatesDropdownCmd::SetChecking(true));
+
+                                let (pacman, aur, flatpak) = tokio::join!(
+                                    helpers::run_count_command(&official_cmd),
+                                    helpers::run_count_command(&aur_cmd),
+                                    helpers::run_count_command(&flatpak_cmd),
+                                );
+
+                                let _ = out.send(UpdatesDropdownCmd::UpdateCounts { pacman, aur, flatpak });
+                                let _ = out.send(UpdatesDropdownCmd::SetChecking(false));
+
+                                // Signal bar module to update its label
+                                crate::shell::bar::modules::updates::helpers::REFRESH_NOTIFY.notify_one();
+                            }
+                        })
+                        .drop_on_shutdown()
+                });
             }
         }
     }

@@ -1,5 +1,5 @@
 mod factory;
-mod helpers;
+pub(crate) mod helpers;
 mod messages;
 mod watchers;
 

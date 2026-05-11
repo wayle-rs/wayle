@@ -1,4 +1,9 @@
 use serde_json::json;
+use std::sync::LazyLock;
+use tokio::sync::Notify;
+
+/// Signal for the bar module to re-poll update counts immediately.
+pub(crate) static REFRESH_NOTIFY: LazyLock<Notify> = LazyLock::new(Notify::new);
 
 /// Counts of available package updates.
 #[derive(Debug, Clone, Default)]

@@ -67,7 +67,12 @@ pub(super) fn spawn_watchers(
                     first_run = false;
 
                     let interval = Duration::from_millis(poll_ms.get());
-                    tokio::time::sleep(interval).await;
+                    tokio::select! {
+                        _ = tokio::time::sleep(interval) => {},
+                        _ = helpers::REFRESH_NOTIFY.notified() => {
+                            tracing::debug!("bar updates: refresh signal received, re-polling");
+                        },
+                    }
                 }
             })
             .drop_on_shutdown()
