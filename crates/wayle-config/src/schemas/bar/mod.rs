@@ -79,6 +79,12 @@ pub struct BarConfig {
     #[default(Location::Top)]
     pub location: ConfigProperty<Location>,
 
+    /// Reserve screen space for the bar.
+    ///
+    /// When disabled, windows may overlap the bar and the bar draws over them.
+    #[default(true)]
+    pub exclusive: ConfigProperty<bool>,
+
     /// Bar background color.
     #[default(ColorValue::Token(CssToken::BgSurface))]
     pub bg: ConfigProperty<ColorValue>,

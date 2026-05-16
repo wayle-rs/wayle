@@ -41,6 +41,7 @@ pub(crate) enum BarCmd {
     LayoutLoaded(BarLayout),
     StyleChanged,
     DropdownAutohideChanged(bool),
+    ExclusiveChanged(bool),
 }
 
 #[relm4::component(pub(crate))]
@@ -121,7 +122,7 @@ impl Component for Bar {
         root.init_layer_shell();
         root.set_layer(Layer::Top);
         root.set_keyboard_mode(KeyboardMode::None);
-        root.auto_exclusive_zone_enable();
+        Self::apply_exclusive_zone(&root, config.bar.exclusive.get());
         root.set_monitor(Some(&init.monitor));
         Self::apply_anchors(&root, location);
         Self::apply_css_classes(&root, &init.monitor, location, is_floating);
@@ -152,6 +153,7 @@ impl Component for Bar {
 
         watchers::layout::spawn(&sender, &init.monitor, &init.services.config, &ipc_state);
         watchers::dropdowns::spawn(&sender, &init.services.config);
+        watchers::exclusive::spawn(&sender, &init.services.config);
 
         let dropdowns = Rc::new(DropdownRegistry::new(&init.services));
         dropdowns.warm_all();
@@ -218,6 +220,9 @@ impl Component for Bar {
             }
             BarCmd::DropdownAutohideChanged(autohide) => {
                 self.dropdowns.set_all_autohide(autohide);
+            }
+            BarCmd::ExclusiveChanged(exclusive) => {
+                Self::apply_exclusive_zone(root, exclusive);
             }
         }
     }
