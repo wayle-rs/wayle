@@ -14,14 +14,12 @@ const APP_PREFIX: &str = "app:";
 ///
 /// Returns `None` only for [`LabelStrategy::NameOnly`] when the workspace
 /// has no name set.
-pub(super) fn label_for(
-    idx: u8,
-    name: Option<&str>,
-    strategy: LabelStrategy,
-) -> Option<String> {
+pub(super) fn label_for(idx: u8, name: Option<&str>, strategy: LabelStrategy) -> Option<String> {
     match strategy {
         LabelStrategy::Index => Some(idx.to_string()),
-        LabelStrategy::NameOrIndex => Some(name.map(String::from).unwrap_or_else(|| idx.to_string())),
+        LabelStrategy::NameOrIndex => {
+            Some(name.map(String::from).unwrap_or_else(|| idx.to_string()))
+        }
         LabelStrategy::NameOnly => name.map(String::from),
         LabelStrategy::IndexAndName => match name {
             Some(name) => Some(format!("{idx}: {name}")),
@@ -146,7 +144,10 @@ mod tests {
             label_for(3, Some("web"), LabelStrategy::Index),
             Some(String::from("3")),
         );
-        assert_eq!(label_for(3, None, LabelStrategy::Index), Some(String::from("3")));
+        assert_eq!(
+            label_for(3, None, LabelStrategy::Index),
+            Some(String::from("3"))
+        );
     }
 
     #[test]
@@ -238,8 +239,7 @@ mod tests {
             },
         );
 
-        let icon =
-            workspace_style(Some("scratch"), 5, &map).and_then(|style| style.icon.clone());
+        let icon = workspace_style(Some("scratch"), 5, &map).and_then(|style| style.icon.clone());
         assert_eq!(icon, Some(String::from("by-id")));
     }
 
@@ -344,7 +344,10 @@ mod tests {
     fn resolve_app_icon_uses_builtin_default_when_user_map_misses() {
         let map = HashMap::new();
         let icon = resolve_app_icon(Some("firefox"), None, &map, "ld-default");
-        assert_ne!(icon, "ld-default", "expected a built-in mapping for firefox");
+        assert_ne!(
+            icon, "ld-default",
+            "expected a built-in mapping for firefox"
+        );
     }
 
     #[test]

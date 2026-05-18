@@ -62,9 +62,7 @@ pub(super) fn collect_displayed(
         .partition(|snapshot| snapshot.has_windows || snapshot.is_active);
 
     for snapshot in hidden {
-        if name_as_id(&snapshot.name)
-            .is_some_and(|id| id <= ctx.min_workspace_count)
-        {
+        if name_as_id(&snapshot.name).is_some_and(|id| id <= ctx.min_workspace_count) {
             shown.push(snapshot);
         }
     }

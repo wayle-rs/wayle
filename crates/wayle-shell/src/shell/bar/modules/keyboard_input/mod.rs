@@ -9,6 +9,4 @@ mod methods;
 mod sources;
 mod watchers;
 
-pub(crate) use self::{
-    component::KeyboardInput, factory::Factory, messages::KeyboardInputInit,
-};
+pub(crate) use self::{component::KeyboardInput, factory::Factory, messages::KeyboardInputInit};

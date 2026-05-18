@@ -14,10 +14,7 @@ const WORKSPACE_ICON_EMPTY_CSS: &str = "workspace-icon-empty";
 
 impl NiriWorkspaceButton {
     pub(super) fn show_label(&self) -> bool {
-        let has_label = self
-            .label
-            .as_deref()
-            .is_some_and(|label| !label.is_empty());
+        let has_label = self.label.as_deref().is_some_and(|label| !label.is_empty());
         if !has_label {
             return false;
         }
@@ -69,9 +66,7 @@ impl NiriWorkspaceButton {
     }
 
     pub(super) fn show_divider(&self) -> bool {
-        self.show_app_icons
-            && !self.divider.is_empty()
-            && (self.show_label() || self.show_icon())
+        self.show_app_icons && !self.divider.is_empty() && (self.show_label() || self.show_icon())
     }
 
     pub(super) fn show_identity_row(&self) -> bool {
@@ -109,7 +104,6 @@ impl NiriWorkspaceButton {
             container.append(&image);
         }
     }
-
 }
 
 pub(super) fn compute_css_classes(init: &NiriWorkspaceButtonInit) -> Vec<String> {

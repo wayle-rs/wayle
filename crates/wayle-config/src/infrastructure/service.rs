@@ -180,12 +180,10 @@ impl ConfigService {
                     source,
                 })?;
 
-            file.sync_all()
-                .await
-                .map_err(|source| Error::Persistence {
-                    path: temp_path.clone(),
-                    source,
-                })?;
+            file.sync_all().await.map_err(|source| Error::Persistence {
+                path: temp_path.clone(),
+                source,
+            })?;
         }
 
         fs::rename(&temp_path, &runtime_path)
@@ -195,15 +193,13 @@ impl ConfigService {
                 source,
             })?;
 
-        let dir_path = runtime_path
-            .parent()
-            .ok_or_else(|| Error::Persistence {
-                path: runtime_path.clone(),
-                source: io::Error::new(
-                    io::ErrorKind::InvalidInput,
-                    "runtime config path has no parent directory",
-                ),
-            })?;
+        let dir_path = runtime_path.parent().ok_or_else(|| Error::Persistence {
+            path: runtime_path.clone(),
+            source: io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "runtime config path has no parent directory",
+            ),
+        })?;
 
         File::open(dir_path)
             .await

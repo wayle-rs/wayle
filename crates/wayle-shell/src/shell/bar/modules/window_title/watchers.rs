@@ -8,11 +8,7 @@ use relm4::ComponentSender;
 use wayle_config::{ConfigProperty, schemas::modules::WindowTitleConfig};
 use wayle_widgets::watch;
 
-use super::{
-    component::WindowTitle,
-    messages::WindowTitleCmd,
-    sources::FocusedWindowSource,
-};
+use super::{component::WindowTitle, messages::WindowTitleCmd, sources::FocusedWindowSource};
 
 pub(super) fn spawn_watchers(
     sender: &ComponentSender<WindowTitle>,

@@ -173,11 +173,7 @@ impl NiriWorkspaces {
         }
     }
 
-    pub(super) fn dispatch_click_action(
-        &self,
-        action: WorkspaceClickAction,
-        click_id: u64,
-    ) {
+    pub(super) fn dispatch_click_action(&self, action: WorkspaceClickAction, click_id: u64) {
         match action {
             WorkspaceClickAction::None => {}
             WorkspaceClickAction::FocusWorkspace => self.spawn_focus_id(click_id),
@@ -259,10 +255,7 @@ struct ButtonLayout {
     blink_on: bool,
 }
 
-fn any_urgent(
-    displayed: &[WorkspaceSnapshot],
-    windows: &HashMap<u64, Arc<Window>>,
-) -> bool {
+fn any_urgent(displayed: &[WorkspaceSnapshot], windows: &HashMap<u64, Arc<Window>>) -> bool {
     let displayed_ids: HashSet<u64> = displayed.iter().map(|snapshot| snapshot.id).collect();
 
     let urgent_workspace = displayed.iter().any(|snapshot| snapshot.is_urgent);
@@ -329,8 +322,7 @@ fn collect_app_icons(
             fallback,
         );
         let window_id = window.id.get();
-        if dedupe
-            && let Some(existing) = result.iter_mut().find(|init| init.icon_name == icon_name)
+        if dedupe && let Some(existing) = result.iter_mut().find(|init| init.icon_name == icon_name)
         {
             existing.window_ids.push(window_id);
             continue;
@@ -365,9 +357,14 @@ fn build_button_init(
         Vec::new()
     };
 
-    let label = helpers::label_for(snapshot.idx, snapshot.name.as_deref(), layout.label_strategy);
-    let icon = helpers::workspace_style(snapshot.name.as_deref(), snapshot.id, &layout.workspace_map)
-        .and_then(|style| style.icon.clone());
+    let label = helpers::label_for(
+        snapshot.idx,
+        snapshot.name.as_deref(),
+        layout.label_strategy,
+    );
+    let icon =
+        helpers::workspace_style(snapshot.name.as_deref(), snapshot.id, &layout.workspace_map)
+            .and_then(|style| style.icon.clone());
 
     NiriWorkspaceButtonInit {
         id: snapshot.id,

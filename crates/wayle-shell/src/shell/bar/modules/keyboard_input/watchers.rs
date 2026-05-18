@@ -46,10 +46,7 @@ async fn watch_layout_changes(
     }
 }
 
-fn spawn_config_watchers(
-    sender: &ComponentSender<KeyboardInput>,
-    config: &KeyboardInputConfig,
-) {
+fn spawn_config_watchers(sender: &ComponentSender<KeyboardInput>, config: &KeyboardInputConfig) {
     let format = config.format.clone();
     watch!(sender, [format.watch()], |out| {
         let _ = out.send(KeyboardInputCmd::FormatChanged);

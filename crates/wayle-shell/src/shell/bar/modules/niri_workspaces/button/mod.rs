@@ -197,11 +197,7 @@ impl FactoryComponent for NiriWorkspaceButton {
     }
 }
 
-fn attach_middle_click(
-    button: &gtk::Button,
-    sender: &FactorySender<NiriWorkspaceButton>,
-    id: u64,
-) {
+fn attach_middle_click(button: &gtk::Button, sender: &FactorySender<NiriWorkspaceButton>, id: u64) {
     let gesture = gtk::GestureClick::new();
     gesture.set_button(gtk::gdk::BUTTON_MIDDLE);
     let sender = sender.clone();
@@ -211,11 +207,7 @@ fn attach_middle_click(
     button.add_controller(gesture);
 }
 
-fn attach_right_click(
-    button: &gtk::Button,
-    sender: &FactorySender<NiriWorkspaceButton>,
-    id: u64,
-) {
+fn attach_right_click(button: &gtk::Button, sender: &FactorySender<NiriWorkspaceButton>, id: u64) {
     let gesture = gtk::GestureClick::new();
     gesture.set_button(gtk::gdk::BUTTON_SECONDARY);
     let sender = sender.clone();
