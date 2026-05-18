@@ -102,6 +102,7 @@ wayle-brightness = "0.1.2"
 wayle-cava = { version = "0.1.2", features = ["vendored"] }
 wayle-core = "0.1.2"
 wayle-hyprland = "0.1.2"
+wayle-niri = "0.1.0"
 wayle-media = "0.1.2"
 wayle-network = "0.1.2"
 wayle-notification = "0.1.3"

@@ -2230,6 +2230,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "niri-ipc"
+version = "25.11.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "12bd9eb4e437f5282ce853cf66837658379cb537b4b6bae687da59246005329a"
+dependencies = [
+ "serde",
+ "serde_json",
+]
+
+[[package]]
 name = "nix"
 version = "0.29.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4758,6 +4768,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "wayle-niri"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2c5150280bf60ec7f36948beeaec719358372becd79d5e8d1ff52ffc68bb60c3"
+dependencies = [
+ "derive_more",
+ "futures",
+ "niri-ipc",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tracing",
+ "wayle-core",
+ "wayle-traits",
+]
+
+[[package]]
 name = "wayle-notification"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4868,6 +4897,7 @@ dependencies = [
  "wayle-ipc",
  "wayle-media",
  "wayle-network",
+ "wayle-niri",
  "wayle-notification",
  "wayle-power-profiles",
  "wayle-styling",
