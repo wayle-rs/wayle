@@ -1,10 +1,14 @@
+//! Keyboard-input bar module: shows the active keyboard layout.
+//! Compositor-agnostic via the [`sources::KeyboardLayoutSource`] trait.
+
+mod component;
 mod factory;
 mod helpers;
-mod hyprland;
 mod messages;
+mod methods;
+mod sources;
+mod watchers;
 
 pub(crate) use self::{
-    factory::Factory,
-    hyprland::HyprlandKeyboardInput,
-    messages::{KeyboardInputCmd, KeyboardInputInit},
+    component::KeyboardInput, factory::Factory, messages::KeyboardInputInit,
 };
