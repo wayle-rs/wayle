@@ -1,5 +1,4 @@
-mod methods;
-mod watchers;
+//! The agnostic [`WindowTitle`] component: model, view, and message routing.
 
 use std::{rc::Rc, sync::Arc};
 
@@ -13,19 +12,20 @@ use wayle_widgets::prelude::{
 use super::{
     helpers::{self, IconContext},
     messages::{WindowTitleCmd, WindowTitleInit, WindowTitleMsg},
+    watchers,
 };
 use crate::shell::bar::dropdowns::{self, DropdownRegistry};
 
-pub(crate) struct HyprlandWindowTitle {
-    bar_button: Controller<BarButton>,
-    config: Arc<ConfigService>,
-    current_title: String,
-    current_class: String,
-    dropdowns: Rc<DropdownRegistry>,
+pub(crate) struct WindowTitle {
+    pub(super) bar_button: Controller<BarButton>,
+    pub(super) config: Arc<ConfigService>,
+    pub(super) current_title: String,
+    pub(super) current_app_id: String,
+    pub(super) dropdowns: Rc<DropdownRegistry>,
 }
 
 #[relm4::component(pub(crate))]
-impl Component for HyprlandWindowTitle {
+impl Component for WindowTitle {
     type Init = WindowTitleInit;
     type Input = WindowTitleMsg;
     type Output = ();
@@ -48,12 +48,17 @@ impl Component for HyprlandWindowTitle {
         let config = init.config.config();
         let window_title = &config.modules.window_title;
 
-        let (initial_title, initial_class) = methods::initial_window(&init.hyprland);
+        let (initial_title, initial_app_id) = init
+            .source
+            .snapshot()
+            .map(|window| (window.title, window.app_id))
+            .unwrap_or_default();
+
         let formatted_label =
-            helpers::format_label(&window_title.format.get(), &initial_title, &initial_class);
+            helpers::format_label(&window_title.format.get(), &initial_title, &initial_app_id);
         let initial_icon = helpers::resolve_icon(&IconContext {
             title: &initial_title,
-            class: &initial_class,
+            app_id: &initial_app_id,
             user_mappings: &window_title.icon_mappings.get(),
             fallback: &window_title.icon_name.get(),
         });
@@ -88,13 +93,13 @@ impl Component for HyprlandWindowTitle {
                 BarButtonOutput::ScrollDown => WindowTitleMsg::ScrollDown,
             });
 
-        watchers::spawn_watchers(&sender, window_title, &init.hyprland);
+        watchers::spawn_watchers(&sender, window_title, init.source);
 
         let model = Self {
             bar_button,
             config: init.config,
             current_title: initial_title,
-            current_class: initial_class,
+            current_app_id: initial_app_id,
             dropdowns: init.dropdowns,
         };
         let bar_button = model.bar_button.widget();
@@ -124,13 +129,12 @@ impl Component for HyprlandWindowTitle {
         root: &Self::Root,
     ) {
         match msg {
-            WindowTitleCmd::WindowChanged {
-                title,
-                class,
-                format,
-            } => {
+            WindowTitleCmd::WindowChanged { focused, format } => {
+                let (title, app_id) = focused
+                    .map(|window| (window.title, window.app_id))
+                    .unwrap_or_default();
                 self.current_title = title;
-                self.current_class = class;
+                self.current_app_id = app_id;
                 self.update_display(&format, root);
             }
             WindowTitleCmd::FormatChanged => {
@@ -141,7 +145,7 @@ impl Component for HyprlandWindowTitle {
                 let window_title = &self.config.config().modules.window_title;
                 let icon = helpers::resolve_icon(&IconContext {
                     title: &self.current_title,
-                    class: &self.current_class,
+                    app_id: &self.current_app_id,
                     user_mappings: &window_title.icon_mappings.get(),
                     fallback: &window_title.icon_name.get(),
                 });
