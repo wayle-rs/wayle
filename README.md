@@ -122,6 +122,10 @@ wayle panel start
 
 On a different distro? See [wayle.app/guide/getting-started](https://wayle.app/guide/getting-started) for the library-version reference.
 
+<a href="https://repology.org/project/wayle/versions">
+    <img src="https://repology.org/badge/vertical-allrepos/wayle.svg" alt="Packaging status">
+</a>
+
 ## Configuration
 
 The config file is at `~/.config/wayle/config.toml`. Changes reload on save:

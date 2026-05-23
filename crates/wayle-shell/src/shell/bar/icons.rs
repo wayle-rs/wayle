@@ -47,6 +47,7 @@ pub(crate) const DEFAULT_APP_ICON_MAP: &[(&str, &str)] = &[
     ("*vivaldi*", "si-vivaldi-symbolic"),
     ("*waterfox*", "si-firefox-symbolic"),
     ("*zen*", "si-zenbrowser-symbolic"),
+    ("*helium*", "si-heliumbrowser-symbolic"),
     // Terminals
     ("*alacritty*", "si-alacritty-symbolic"),
     ("*black-box*", "ld-terminal-symbolic"),
