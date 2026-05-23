@@ -23,6 +23,7 @@ mod registry;
 mod separator;
 mod storage;
 mod systray;
+mod triad_workspaces;
 mod volume;
 pub(crate) mod weather;
 mod window_title;
@@ -74,6 +75,7 @@ register_modules! {
     Netstat => netstat::Factory,
     Network => network::Factory,
     NiriWorkspaces => niri_workspaces::Factory,
+    TriadWorkspaces => triad_workspaces::Factory,
     Notifications => notification::Factory,
     Power => power::Factory,
     Ram => ram::Factory,

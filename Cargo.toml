@@ -10,6 +10,7 @@ members = [
 	"crates/wayle-settings",
 	"crates/wayle-shell",
 	"crates/wayle-styling",
+	"crates/wayle-triad",
 	"crates/wayle-widgets",
 	"wayle",
 ]
@@ -121,6 +122,7 @@ wayle-idle-inhibit = { path = "crates/wayle-idle-inhibit" }
 wayle-ipc = { path = "crates/wayle-ipc" }
 wayle-shell = { path = "crates/wayle-shell" }
 wayle-styling = { path = "crates/wayle-styling" }
+wayle-triad = { path = "crates/wayle-triad" }
 wayle-widgets = { path = "crates/wayle-widgets" }
 
 [workspace.lints.clippy]

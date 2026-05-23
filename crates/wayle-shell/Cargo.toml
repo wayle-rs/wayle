@@ -57,6 +57,7 @@ wayle-power-profiles.workspace = true
 wayle-styling = { workspace = true }
 wayle-sysinfo.workspace = true
 wayle-systray = { workspace = true, features = ["adapter-gtk"] }
+wayle-triad.workspace = true
 wayle-wallpaper.workspace = true
 wayle-weather.workspace = true
 wayle-widgets = { workspace = true }

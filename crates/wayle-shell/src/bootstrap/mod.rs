@@ -27,6 +27,7 @@ use wayle_notification::NotificationService;
 use wayle_power_profiles::PowerProfilesService;
 use wayle_sysinfo::SysinfoService;
 use wayle_systray::{SystemTrayService, types::TrayMode};
+use wayle_triad::TriadService;
 use wayle_wallpaper::WallpaperService;
 use zbus::{Connection, fdo::DBusProxy};
 
@@ -85,6 +86,7 @@ struct DaemonServices {
 struct OptionalServices {
     hyprland: Option<Arc<HyprlandService>>,
     niri: Option<Arc<NiriService>>,
+    triad: Option<Arc<TriadService>>,
 }
 
 pub async fn is_already_running() -> bool {
@@ -168,6 +170,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         notification: daemons.notification,
         sysinfo: core.sysinfo,
         systray: daemons.systray,
+        triad: optional.triad,
         wallpaper: core.wallpaper,
         weather,
         shell_ipc,
@@ -235,15 +238,18 @@ async fn init_core_services(
 async fn init_optional_services(timer: &StartupTimer) -> OptionalServices {
     let hyprland_task = tokio::spawn(HyprlandService::new());
     let niri_task = tokio::spawn(NiriService::new());
+    let triad_task = tokio::spawn(TriadService::new());
 
-    let (hyprland, niri) = tokio::join!(
+    let (hyprland, niri, triad) = tokio::join!(
         timer.time("Hyprland", spawned(hyprland_task)),
         timer.time("Niri", spawned(niri_task)),
+        timer.time("Triad", spawned(triad_task)),
     );
 
     OptionalServices {
         hyprland: hyprland.ok(),
         niri: niri.ok(),
+        triad: triad.ok(),
     }
 }
 

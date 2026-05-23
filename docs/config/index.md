@@ -52,6 +52,7 @@ Modules appear inside `[[bar.layout]]` arrays. Each row links to the full refere
 | [`separator`](/config/modules/separator) | A vertical rule between bar modules. |
 | [`storage`](/config/modules/storage) | Disk usage for a mount point. |
 | [`systray`](/config/modules/systray) | System tray icons via the StatusNotifierItem protocol. |
+| [`triad-workspaces`](/config/modules/triad-workspaces) | Triad workspace indicators with click-to-switch. |
 | [`volume`](/config/modules/volume) | Output volume control with a dropdown for device and app volumes. |
 | [`weather`](/config/modules/weather) | Current conditions with hourly and daily forecasts in a dropdown. |
 | [`window-title`](/config/modules/window-title) | Active window title with optional app-icon prefix. |

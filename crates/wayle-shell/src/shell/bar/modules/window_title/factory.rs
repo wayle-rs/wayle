@@ -9,7 +9,10 @@ use wayle_widgets::prelude::BarSettings;
 
 use super::{
     WindowTitle, WindowTitleInit,
-    sources::{FocusedWindowSource, HyprlandFocusedWindowSource, NiriFocusedWindowSource},
+    sources::{
+        FocusedWindowSource, HyprlandFocusedWindowSource, NiriFocusedWindowSource,
+        TriadFocusedWindowSource,
+    },
 };
 use crate::shell::{
     bar::{
@@ -53,6 +56,10 @@ fn build_source(services: &ShellServices) -> Option<Arc<dyn FocusedWindowSource>
         Compositor::Niri => {
             let niri = require_service("window-title", "niri", services.niri.clone())?;
             Some(Arc::new(NiriFocusedWindowSource::new(niri)))
+        }
+        Compositor::Triad => {
+            let triad = require_service("window-title", "triad", services.triad.clone())?;
+            Some(Arc::new(TriadFocusedWindowSource::new(triad)))
         }
         Compositor::Unknown(name) => {
             warn!(module = "window-title", compositor = %name, "unsupported compositor");

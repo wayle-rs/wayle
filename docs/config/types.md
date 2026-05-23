@@ -152,7 +152,7 @@ show = false
 
 Bar module name. Built-in modules or custom modules with a `custom-<id>` pattern.
 
-One of: `"battery"`, `"bluetooth"`, `"cava"`, `"clock"`, `"cpu"`, `"dashboard"`, `"hyprland-workspaces"`, `"hyprsunset"`, `"idle-inhibit"`, `"keybind-mode"`, `"keyboard-input"`, `"media"`, `"microphone"`, `"netstat"`, `"network"`, `"niri-workspaces"`, `"notifications"`, `"power"`, `"ram"`, `"separator"`, `"storage"`, `"systray"`, `"updates"`, `"volume"`, `"weather"`, `"window-title"`, `"world-clock"`.
+One of: `"battery"`, `"bluetooth"`, `"cava"`, `"clock"`, `"cpu"`, `"dashboard"`, `"hyprland-workspaces"`, `"hyprsunset"`, `"idle-inhibit"`, `"keybind-mode"`, `"keyboard-input"`, `"media"`, `"microphone"`, `"netstat"`, `"network"`, `"niri-workspaces"`, `"triad-workspaces"`, `"notifications"`, `"power"`, `"ram"`, `"separator"`, `"storage"`, `"systray"`, `"updates"`, `"volume"`, `"weather"`, `"window-title"`, `"world-clock"`.
 
 String matching `^custom-[a-z0-9-]+$`.
 
@@ -733,6 +733,12 @@ Custom icon and color override for tray items matching a pattern.
 | `name` | Glob pattern to match against item ID or title. |
 | `icon` | Custom icon name (symbolic icon). |
 | `color` | Custom icon color. |
+
+## TriadWorkspaceClickAction {#triad-workspace-click-action}
+
+Click/scroll action: focus:this | focus:next | focus:previous | dropdown:NAME | shell command | empty for none
+
+String.
 
 ## UrgencyBarThreshold {#urgency-bar-threshold}
 

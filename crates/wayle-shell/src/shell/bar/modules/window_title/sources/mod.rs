@@ -7,10 +7,14 @@
 
 mod hyprland;
 mod niri;
+mod triad;
 
 use futures::stream::BoxStream;
 
-pub(crate) use self::{hyprland::HyprlandFocusedWindowSource, niri::NiriFocusedWindowSource};
+pub(crate) use self::{
+    hyprland::HyprlandFocusedWindowSource, niri::NiriFocusedWindowSource,
+    triad::TriadFocusedWindowSource,
+};
 
 /// Title and app identifier of a focused window.
 ///

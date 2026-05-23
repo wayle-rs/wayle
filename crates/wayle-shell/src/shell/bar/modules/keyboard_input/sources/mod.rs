@@ -6,10 +6,14 @@
 
 mod hyprland;
 mod niri;
+mod triad;
 
 use futures::stream::BoxStream;
 
-pub(crate) use self::{hyprland::HyprlandKeyboardLayoutSource, niri::NiriKeyboardLayoutSource};
+pub(crate) use self::{
+    hyprland::HyprlandKeyboardLayoutSource, niri::NiriKeyboardLayoutSource,
+    triad::TriadKeyboardLayoutSource,
+};
 
 /// Currently active keyboard layout.
 #[derive(Debug, Clone)]

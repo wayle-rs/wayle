@@ -24,6 +24,7 @@ mod ram;
 mod separator;
 mod storage;
 mod systray;
+mod triad_workspaces;
 mod volume;
 mod weather;
 mod window_title;
@@ -62,6 +63,10 @@ pub use ram::RamConfig;
 pub use separator::SeparatorConfig;
 pub use storage::StorageConfig;
 pub use systray::{SystrayConfig, TrayItemOverride};
+pub use triad_workspaces::{
+    LabelStrategy as TriadLabelStrategy, TriadWorkspacesConfig,
+    WorkspaceClickAction as TriadWorkspaceClickAction, WorkspaceMap as TriadWorkspaceMap,
+};
 pub use types::TimeFormat;
 pub use volume::{AppIconSource, VolumeConfig};
 use wayle_derive::wayle_config;
@@ -111,6 +116,9 @@ pub struct ModulesConfig {
     /// Niri workspace switcher module.
     #[serde(rename = "niri-workspaces")]
     pub niri_workspaces: NiriWorkspacesConfig,
+    /// Triad workspace switcher module.
+    #[serde(rename = "triad-workspaces")]
+    pub triad_workspaces: TriadWorkspacesConfig,
     /// Notification center module.
     pub notification: NotificationConfig,
     /// Power menu module.

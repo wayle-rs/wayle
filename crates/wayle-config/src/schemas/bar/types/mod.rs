@@ -227,6 +227,8 @@ pub enum BarModule {
     Netstat,
     /// Niri workspace switcher.
     NiriWorkspaces,
+    /// Triad workspace switcher.
+    TriadWorkspaces,
     /// Notification center button.
     Notifications,
     /// Power menu button.
@@ -299,6 +301,7 @@ impl BarModule {
             Self::Network => "network",
             Self::Netstat => "netstat",
             Self::NiriWorkspaces => "niri-workspaces",
+            Self::TriadWorkspaces => "triad-workspaces",
             Self::Notifications => "notifications",
             Self::Power => "power",
             Self::Ram => "ram",
@@ -332,6 +335,7 @@ impl BarModule {
             "network" => Self::Network,
             "netstat" => Self::Netstat,
             "niri-workspaces" => Self::NiriWorkspaces,
+            "triad-workspaces" => Self::TriadWorkspaces,
             "notifications" => Self::Notifications,
             "power" => Self::Power,
             "ram" => Self::Ram,
@@ -416,6 +420,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "netstat",
     "network",
     "niri-workspaces",
+    "triad-workspaces",
     "notifications",
     "power",
     "ram",

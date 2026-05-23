@@ -81,3 +81,13 @@ pub(crate) fn require_niri(module: &'static str) -> bool {
         }
     }
 }
+
+pub(crate) fn require_triad(module: &'static str) -> bool {
+    match Compositor::detect() {
+        Compositor::Triad => true,
+        other => {
+            warn!(module, compositor = ?other, "module requires triad, skipping");
+            false
+        }
+    }
+}

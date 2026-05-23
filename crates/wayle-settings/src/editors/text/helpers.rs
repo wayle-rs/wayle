@@ -3,7 +3,7 @@
 use wayle_config::{
     ClickAction,
     schemas::{
-        modules::{PopupMonitor, WorkspaceClickAction},
+        modules::{PopupMonitor, TriadWorkspaceClickAction, WorkspaceClickAction},
         osd::OsdMonitor,
     },
 };
@@ -99,6 +99,34 @@ impl TextLike for WorkspaceClickAction {
             "focus:next" => Self::FocusNext,
             "focus:previous" => Self::FocusPrevious,
             "focus:last" => Self::FocusLast,
+            _ => match text.strip_prefix("dropdown:") {
+                Some(name) => Self::Dropdown(name.to_owned()),
+                None => Self::Shell(text.to_owned()),
+            },
+        }
+    }
+}
+
+impl TextLike for TriadWorkspaceClickAction {
+    fn to_entry_text(&self) -> String {
+        match self {
+            Self::None => String::new(),
+            Self::FocusWorkspace => String::from("focus:this"),
+            Self::FocusNext => String::from("focus:next"),
+            Self::FocusPrevious => String::from("focus:previous"),
+            Self::Dropdown(name) => format!("dropdown:{name}"),
+            Self::Shell(cmd) => cmd.clone(),
+        }
+    }
+
+    fn from_entry_text(text: &str) -> Self {
+        if text.is_empty() {
+            return Self::None;
+        }
+        match text {
+            "focus:this" => Self::FocusWorkspace,
+            "focus:next" => Self::FocusNext,
+            "focus:previous" => Self::FocusPrevious,
             _ => match text.strip_prefix("dropdown:") {
                 Some(name) => Self::Dropdown(name.to_owned()),
                 None => Self::Shell(text.to_owned()),

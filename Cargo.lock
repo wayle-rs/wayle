@@ -4903,6 +4903,7 @@ dependencies = [
  "wayle-styling",
  "wayle-sysinfo",
  "wayle-systray",
+ "wayle-triad",
  "wayle-wallpaper",
  "wayle-weather",
  "wayle-widgets",
@@ -4970,6 +4971,22 @@ name = "wayle-traits"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0833629ad4481a1302cb6df07da2b438bdb1c99dc5e5844e3198d53945728a6d"
+
+[[package]]
+name = "wayle-triad"
+version = "0.3.0"
+dependencies = [
+ "derive_more",
+ "futures",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tracing",
+ "wayle-core",
+]
 
 [[package]]
 name = "wayle-wallpaper"
