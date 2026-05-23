@@ -50,6 +50,7 @@ wayle-hyprland.workspace = true
 wayle-icons.workspace = true
 wayle-idle-inhibit.workspace = true
 wayle-media.workspace = true
+wayle-niri.workspace = true
 wayle-network.workspace = true
 wayle-notification.workspace = true
 wayle-power-profiles.workspace = true

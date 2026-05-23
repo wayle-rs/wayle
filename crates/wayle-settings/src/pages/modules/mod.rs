@@ -16,6 +16,7 @@ mod media;
 mod microphone;
 mod netstat;
 mod network;
+mod niri_workspaces;
 mod notification_module;
 mod power;
 mod ram;
@@ -49,6 +50,7 @@ pub(crate) fn factories() -> Vec<fn(&Config) -> LeafEntry> {
         microphone::entry,
         netstat::entry,
         network::entry,
+        niri_workspaces::entry,
         notification_module::entry,
         power::entry,
         ram::entry,
