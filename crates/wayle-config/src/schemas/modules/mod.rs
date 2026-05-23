@@ -16,6 +16,7 @@ mod media;
 mod microphone;
 mod netstat;
 mod network;
+mod niri_workspaces;
 /// Notification module configuration and popup types.
 pub mod notification;
 mod power;
@@ -49,6 +50,9 @@ pub use media::{BUILTIN_MAPPINGS, MediaConfig, MediaIconType};
 pub use microphone::MicrophoneConfig;
 pub use netstat::NetstatConfig;
 pub use network::NetworkConfig;
+pub use niri_workspaces::{
+    LabelStrategy, NiriWorkspacesConfig, WorkspaceClickAction, WorkspaceMap as NiriWorkspaceMap,
+};
 pub use notification::{
     IconSource, NotificationConfig, PopupCloseBehavior, PopupMonitor, PopupPosition, StackingOrder,
     UrgencyBarThreshold,
@@ -104,6 +108,9 @@ pub struct ModulesConfig {
     pub network: NetworkConfig,
     /// Network traffic statistics module.
     pub netstat: NetstatConfig,
+    /// Niri workspace switcher module.
+    #[serde(rename = "niri-workspaces")]
+    pub niri_workspaces: NiriWorkspacesConfig,
     /// Notification center module.
     pub notification: NotificationConfig,
     /// Power menu module.

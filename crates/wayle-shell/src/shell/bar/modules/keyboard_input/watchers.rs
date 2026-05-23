@@ -1,66 +1,52 @@
+//! Background watchers spawned during component init: layout-stream
+//! consumer plus config-property change subscriptions.
+
 use std::sync::Arc;
 
 use futures::StreamExt;
 use relm4::ComponentSender;
-use tracing::warn;
 use wayle_config::schemas::modules::KeyboardInputConfig;
-use wayle_hyprland::{HyprlandEvent, HyprlandService};
 use wayle_widgets::watch;
 
-use super::HyprlandKeyboardInput;
-use crate::shell::bar::modules::keyboard_input::KeyboardInputCmd;
+use super::{component::KeyboardInput, messages::KeyboardInputCmd, sources::KeyboardLayoutSource};
 
 pub(super) fn spawn_watchers(
-    sender: &ComponentSender<HyprlandKeyboardInput>,
+    sender: &ComponentSender<KeyboardInput>,
     config: &KeyboardInputConfig,
-    hyprland: &Option<Arc<HyprlandService>>,
+    source: Arc<dyn KeyboardLayoutSource>,
 ) {
-    spawn_layout_watcher(sender, hyprland);
+    spawn_layout_watcher(sender, source);
     spawn_config_watchers(sender, config);
 }
 
 fn spawn_layout_watcher(
-    sender: &ComponentSender<HyprlandKeyboardInput>,
-    hyprland: &Option<Arc<HyprlandService>>,
+    sender: &ComponentSender<KeyboardInput>,
+    source: Arc<dyn KeyboardLayoutSource>,
 ) {
-    let Some(hyprland) = hyprland.clone() else {
-        warn!(
-            service = "HyprlandService",
-            module = "keyboard-input",
-            "unavailable, skipping watcher"
-        );
-        return;
-    };
-
-    sender.command(move |out, shutdown| watch_layout_events(hyprland.clone(), out, shutdown));
+    sender.command(move |out, shutdown| watch_layout_changes(source, out, shutdown));
 }
 
-async fn watch_layout_events(
-    hyprland: Arc<HyprlandService>,
+async fn watch_layout_changes(
+    source: Arc<dyn KeyboardLayoutSource>,
     out: relm4::Sender<KeyboardInputCmd>,
     shutdown: relm4::ShutdownReceiver,
 ) {
-    let mut events = hyprland.events();
+    let mut changes = source.changes();
     let shutdown_fut = shutdown.wait();
     tokio::pin!(shutdown_fut);
 
     loop {
         tokio::select! {
             () = &mut shutdown_fut => return,
-            event = events.next() => {
-                let Some(HyprlandEvent::ActiveLayout { layout, .. }) = event else {
-                    continue;
-                };
+            next = changes.next() => {
+                let Some(layout) = next else { return };
                 let _ = out.send(KeyboardInputCmd::LayoutChanged(layout));
             }
         }
     }
 }
 
-fn spawn_config_watchers(
-    sender: &ComponentSender<HyprlandKeyboardInput>,
-    config: &KeyboardInputConfig,
-) {
+fn spawn_config_watchers(sender: &ComponentSender<KeyboardInput>, config: &KeyboardInputConfig) {
     let format = config.format.clone();
     watch!(sender, [format.watch()], |out| {
         let _ = out.send(KeyboardInputCmd::FormatChanged);

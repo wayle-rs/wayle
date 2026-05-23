@@ -359,9 +359,20 @@ impl HyprlandWorkspaces {
 
         let hyprland = hyprland.clone();
         tokio::spawn(async move {
-            let command = format!("workspace {}", id);
-            if let Err(e) = hyprland.dispatch(&command).await {
-                error!(error = %e, workspace = id, "Failed to switch workspace");
+            // Hyprland 0.55+ (Lua config) requires Lua dispatch syntax.
+            // Fall back to legacy format for older versions / legacy config.
+            let lua_cmd = format!("hl.dsp.focus({{workspace = {}}})", id);
+            match hyprland.dispatch(&lua_cmd).await {
+                Ok(resp) if resp.starts_with("error:") || resp.contains("Invalid dispatcher") => {
+                    let legacy_cmd = format!("workspace {}", id);
+                    if let Err(e) = hyprland.dispatch(&legacy_cmd).await {
+                        error!(error = %e, workspace = id, "Failed to switch workspace");
+                    }
+                }
+                Err(e) => {
+                    error!(error = %e, workspace = id, "Failed to switch workspace");
+                }
+                _ => {}
             }
         });
     }
