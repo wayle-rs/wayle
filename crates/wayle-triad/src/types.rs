@@ -1,6 +1,6 @@
 //! Triad state types exposed by the service.
 
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 use wayle_core::Property;
 
 /// Desktop capabilities reported by Triad.
@@ -295,7 +295,7 @@ pub(crate) struct RawState {
     pub overview: RawOverview,
     #[serde(default)]
     pub layout: RawLayoutState,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "deserialize_keyboard_layouts")]
     pub keyboard_layouts: KeyboardLayouts,
     #[serde(default)]
     pub current_keyboard_layout_idx: Option<u32>,
@@ -381,4 +381,24 @@ pub(crate) struct RawOutput {
 
 fn default_scale() -> f32 {
     1.0
+}
+
+fn deserialize_keyboard_layouts<'de, D>(deserializer: D) -> Result<KeyboardLayouts, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum KeyboardLayoutsWire {
+        Names(Vec<String>),
+        Object(KeyboardLayouts),
+    }
+
+    match KeyboardLayoutsWire::deserialize(deserializer)? {
+        KeyboardLayoutsWire::Names(names) => Ok(KeyboardLayouts {
+            names,
+            current_idx: 0,
+        }),
+        KeyboardLayoutsWire::Object(layouts) => Ok(layouts),
+    }
 }
