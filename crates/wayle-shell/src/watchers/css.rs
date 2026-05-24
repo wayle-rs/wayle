@@ -5,8 +5,9 @@ use futures::{
     stream::{self, BoxStream},
 };
 use relm4::ComponentSender;
-use wayle_config::schemas::styling::ThemeProvider;
-use wayle_styling::{STATIC_CSS, theme_css};
+use tracing::warn;
+use wayle_config::{infrastructure::paths::ConfigPaths, schemas::styling::ThemeProvider};
+use wayle_styling::{STATIC_CSS, theme_css, user_css};
 use wayle_widgets::{watch, watchers::changes_stream};
 
 use crate::shell::{Shell, ShellCmd, ShellInput, ShellServices};
@@ -53,9 +54,17 @@ pub fn spawn(sender: &ComponentSender<Shell>, services: &ShellServices) {
     );
 }
 
-fn build_css(config: &wayle_config::Config) -> String {
+pub(super) fn build_css(config: &wayle_config::Config) -> String {
     let palette = config.styling.palette();
     let theme = theme_css(&palette, &config.general, &config.bar, &config.styling);
 
-    format!("{STATIC_CSS}\n{theme}")
+    let user = match ConfigPaths::config_dir() {
+        Ok(dir) => user_css(&dir),
+        Err(err) => {
+            warn!(error = %err, "cannot resolve config dir; user styles disabled");
+            String::new()
+        }
+    };
+
+    format!("{STATIC_CSS}\n{theme}\n{user}")
 }

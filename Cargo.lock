@@ -4967,7 +4967,9 @@ version = "0.3.0"
 dependencies = [
  "grass",
  "gtk4",
+ "notify",
  "palette",
+ "relm4",
  "serde",
  "serde_json",
  "thiserror 2.0.18",

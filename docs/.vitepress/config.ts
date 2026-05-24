@@ -44,6 +44,7 @@ export default defineConfig({
             { text: 'Editing config', link: '/guide/editing-config' },
             { text: 'Bars and layouts', link: '/guide/bars-and-layouts' },
             { text: 'Themes', link: '/guide/themes' },
+            { text: 'Custom styles', link: '/guide/custom-styles' },
             { text: 'Custom icons', link: '/guide/custom-icons' },
             { text: 'Custom modules', link: '/guide/custom-modules' },
             { text: 'CLI', link: '/guide/cli' },
