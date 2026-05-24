@@ -139,13 +139,13 @@ pub(super) fn desktop_entry_icon(desktop_entry: Option<&str>) -> Option<String> 
     Some(icon.to_string()?.into())
 }
 
-fn lookup_desktop_entry(entry: &str) -> Option<gtk::gio::DesktopAppInfo> {
+fn lookup_desktop_entry(entry: &str) -> Option<gio_unix::DesktopAppInfo> {
     let candidates = [
         format!("{entry}.desktop"),
         format!("{entry}-launcher.desktop"),
     ];
     for desktop_id in &candidates {
-        if let Some(app) = gtk::gio::DesktopAppInfo::new(desktop_id) {
+        if let Some(app) = gio_unix::DesktopAppInfo::new(desktop_id) {
             return Some(app);
         }
     }
@@ -153,10 +153,10 @@ fn lookup_desktop_entry(entry: &str) -> Option<gtk::gio::DesktopAppInfo> {
     find_by_startup_wm_class(entry)
 }
 
-fn find_by_startup_wm_class(wm_class: &str) -> Option<gtk::gio::DesktopAppInfo> {
+fn find_by_startup_wm_class(wm_class: &str) -> Option<gio_unix::DesktopAppInfo> {
     let wm_class_lower = wm_class.to_lowercase();
     for app_info in gtk::gio::AppInfo::all() {
-        let Ok(desktop_app) = app_info.downcast::<gtk::gio::DesktopAppInfo>() else {
+        let Ok(desktop_app) = app_info.downcast::<gio_unix::DesktopAppInfo>() else {
             continue;
         };
         if let Some(startup_class) = desktop_app.startup_wm_class()
