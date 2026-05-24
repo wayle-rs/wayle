@@ -9,7 +9,10 @@ use wayle_derive::wayle_config;
 use crate::{
     ClickAction, ConfigProperty,
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
-    schemas::styling::{ColorValue, CssToken, Spacing, ThresholdEntry},
+    schemas::{
+        general::Layer,
+        styling::{ColorValue, CssToken, Spacing, ThresholdEntry},
+    },
 };
 
 /// Notification center: icon in the bar, dropdown with history, DND toggle.
@@ -167,6 +170,14 @@ pub struct NotificationConfig {
     #[serde(rename = "popup-monitor")]
     #[default(PopupMonitor::default())]
     pub popup_monitor: ConfigProperty<PopupMonitor>,
+
+    /// Layer-shell layer popup notifications are placed on.
+    ///
+    /// When `general.tearing-mode` is enabled, `overlay` is demoted to `top`
+    /// to allow fullscreen tearing.
+    #[serde(rename = "popup-layer")]
+    #[default(Layer::Overlay)]
+    pub popup_layer: ConfigProperty<Layer>,
 
     /// What happens when the close button on a popup is clicked.
     #[serde(rename = "popup-close-behavior")]

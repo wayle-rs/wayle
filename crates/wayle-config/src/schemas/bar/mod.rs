@@ -10,8 +10,11 @@ use wayle_derive::wayle_config;
 use crate::{
     ConfigProperty,
     docs::{ConfigGroup, ModuleInfo, ModuleInfoProvider},
-    schemas::styling::{
-        ColorValue, CssToken, FontWeightClass, Percentage, RoundingLevel, ScaleFactor, Spacing,
+    schemas::{
+        general::Layer,
+        styling::{
+            ColorValue, CssToken, FontWeightClass, Percentage, RoundingLevel, ScaleFactor, Spacing,
+        },
     },
 };
 
@@ -84,6 +87,10 @@ pub struct BarConfig {
     /// When disabled, windows may overlap the bar and the bar draws over them.
     #[default(true)]
     pub exclusive: ConfigProperty<bool>,
+
+    /// Layer-shell layer the bar is placed on.
+    #[default(Layer::Top)]
+    pub layer: ConfigProperty<Layer>,
 
     /// Bar background color.
     #[default(ColorValue::Token(CssToken::BgSurface))]

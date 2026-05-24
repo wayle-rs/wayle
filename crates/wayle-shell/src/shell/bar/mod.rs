@@ -10,13 +10,13 @@ use std::rc::Rc;
 
 use factory::*;
 use gtk::prelude::*;
-use gtk4_layer_shell::{KeyboardMode, Layer, LayerShell};
+use gtk4_layer_shell::{KeyboardMode, LayerShell};
 use relm4::{factory::FactoryVecDeque, gtk, gtk::gdk, prelude::*};
 use wayle_config::{ConfigProperty, schemas::bar::BarLayout};
 use wayle_widgets::{prelude::BarSettings, styling::InlineStyling};
 
 use self::dropdowns::DropdownRegistry;
-use crate::shell::services::ShellServices;
+use crate::shell::{helpers::layer_shell::apply_layer, services::ShellServices};
 
 pub(crate) struct Bar {
     settings: BarSettings,
@@ -42,6 +42,7 @@ pub(crate) enum BarCmd {
     StyleChanged,
     DropdownAutohideChanged(bool),
     ExclusiveChanged(bool),
+    LayerChanged,
 }
 
 #[relm4::component(pub(crate))]
@@ -120,7 +121,7 @@ impl Component for Bar {
         };
 
         root.init_layer_shell();
-        root.set_layer(Layer::Top);
+        apply_layer(&root, config.bar.layer.get(), &init.services.config);
         root.set_keyboard_mode(KeyboardMode::None);
         Self::apply_exclusive_zone(&root, config.bar.exclusive.get());
         root.set_monitor(Some(&init.monitor));
@@ -154,6 +155,7 @@ impl Component for Bar {
         watchers::layout::spawn(&sender, &init.monitor, &init.services.config, &ipc_state);
         watchers::dropdowns::spawn(&sender, &init.services.config);
         watchers::exclusive::spawn(&sender, &init.services.config);
+        watchers::layer::spawn(&sender, &init.services.config);
 
         let dropdowns = Rc::new(DropdownRegistry::new(&init.services));
         dropdowns.warm_all();
@@ -223,6 +225,10 @@ impl Component for Bar {
             }
             BarCmd::ExclusiveChanged(exclusive) => {
                 Self::apply_exclusive_zone(root, exclusive);
+            }
+            BarCmd::LayerChanged => {
+                let configured = self.services.config.config().bar.layer.get();
+                apply_layer(root, configured, &self.services.config);
             }
         }
     }

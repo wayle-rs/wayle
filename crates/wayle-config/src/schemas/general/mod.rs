@@ -1,6 +1,9 @@
+mod types;
+
 use schemars::schema_for;
 use wayle_derive::wayle_config;
 
+pub use self::types::Layer;
 use crate::{
     ConfigProperty,
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},

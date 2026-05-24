@@ -32,6 +32,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                     items: vec![
                         enum_select(&bar.location),
                         toggle(&bar.exclusive),
+                        enum_select(&bar.layer),
                         scale(&bar.scale),
                         bar_layout(&bar.layout, &config.modules.custom),
                     ],
