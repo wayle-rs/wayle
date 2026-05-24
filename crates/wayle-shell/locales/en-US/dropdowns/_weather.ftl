@@ -22,6 +22,15 @@ dropdown-weather-updated-ago = Updated { $minutes }m ago
 dropdown-weather-today = Today
 dropdown-weather-now = Now
 
+## Day Abbreviations
+dropdown-weather-day-sun = Sun
+dropdown-weather-day-mon = Mon
+dropdown-weather-day-tue = Tue
+dropdown-weather-day-wed = Wed
+dropdown-weather-day-thu = Thu
+dropdown-weather-day-fri = Fri
+dropdown-weather-day-sat = Sat
+
 ## Actions
 dropdown-weather-refresh = Refresh
 

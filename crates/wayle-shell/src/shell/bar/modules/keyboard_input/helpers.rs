@@ -1,7 +1,10 @@
+//! Pure helper for the keyboard-input module: template rendering.
+
 use std::collections::HashMap;
 
 use serde_json::json;
-use wayle_hyprland::DeviceInfo;
+
+use crate::template;
 
 pub(super) fn format_label(
     layout: &str,
@@ -13,15 +16,7 @@ pub(super) fn format_label(
         .map(String::as_str)
         .unwrap_or(layout);
     let ctx = json!({ "layout": layout, "alias": alias });
-    crate::template::render(format, ctx).unwrap_or_default()
-}
-
-pub(super) fn main_keyboard_layout(devices: &DeviceInfo) -> Option<&str> {
-    devices
-        .keyboards
-        .iter()
-        .find(|kb| kb.main)
-        .map(|kb| kb.active_keymap.as_str())
+    template::render(format, ctx).unwrap_or_default()
 }
 
 #[cfg(test)]

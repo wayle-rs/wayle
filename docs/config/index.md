@@ -45,6 +45,7 @@ Modules appear inside `[[bar.layout]]` arrays. Each row links to the full refere
 | [`microphone`](/config/modules/microphone) | Microphone input level and mute toggle. |
 | [`netstat`](/config/modules/netstat) | Network traffic counters (up/down rates). |
 | [`network`](/config/modules/network) | Network connection status with a dropdown for switching connections. |
+| [`niri-workspaces`](/config/modules/niri-workspaces) | Niri workspace indicators with click-to-switch. |
 | [`notification`](/config/modules/notification) | Notification center: icon in the bar, dropdown with history, DND toggle. |
 | [`power`](/config/modules/power) | Shutdown, reboot, and logout menu. |
 | [`ram`](/config/modules/ram) | Memory and swap usage. |

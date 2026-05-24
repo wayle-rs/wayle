@@ -98,7 +98,7 @@
         }
     }
 
-    &.urgent {
+    &.urgent:not(.urgent-application) {
         opacity: 0.5;
     }
 

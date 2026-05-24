@@ -16,7 +16,7 @@ members = [
 exclude = ["sandbox"]
 
 [workspace.package]
-version = "0.2.3"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.92"
 repository = "https://github.com/wayle-rs/wayle"
@@ -102,6 +102,7 @@ wayle-brightness = "0.1.2"
 wayle-cava = { version = "0.1.2", features = ["vendored"] }
 wayle-core = "0.1.2"
 wayle-hyprland = "0.1.2"
+wayle-niri = "0.1.0"
 wayle-media = "0.1.2"
 wayle-network = "0.1.2"
 wayle-notification = "0.1.3"

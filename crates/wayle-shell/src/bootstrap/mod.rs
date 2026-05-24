@@ -22,6 +22,7 @@ use wayle_hyprland::HyprlandService;
 use wayle_ipc::shell::APP_ID;
 use wayle_media::MediaService;
 use wayle_network::NetworkService;
+use wayle_niri::NiriService;
 use wayle_notification::NotificationService;
 use wayle_power_profiles::PowerProfilesService;
 use wayle_sysinfo::SysinfoService;
@@ -83,6 +84,7 @@ struct DaemonServices {
 
 struct OptionalServices {
     hyprland: Option<Arc<HyprlandService>>,
+    niri: Option<Arc<NiriService>>,
 }
 
 pub async fn is_already_running() -> bool {
@@ -161,6 +163,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         power_profiles,
         idle_inhibit: core.idle_inhibit,
         media: daemons.media,
+        niri: optional.niri,
         network: core.network,
         notification: daemons.notification,
         sysinfo: core.sysinfo,
@@ -231,10 +234,17 @@ async fn init_core_services(
 
 async fn init_optional_services(timer: &StartupTimer) -> OptionalServices {
     let hyprland_task = tokio::spawn(HyprlandService::new());
+    let niri_task = tokio::spawn(NiriService::new());
 
-    let hyprland = timer.time("Hyprland", spawned(hyprland_task)).await.ok();
+    let (hyprland, niri) = tokio::join!(
+        timer.time("Hyprland", spawned(hyprland_task)),
+        timer.time("Niri", spawned(niri_task)),
+    );
 
-    OptionalServices { hyprland }
+    OptionalServices {
+        hyprland: hyprland.ok(),
+        niri: niri.ok(),
+    }
 }
 
 fn spawn_deferred_bluetooth(property: DeferredService<BluetoothService>) {
