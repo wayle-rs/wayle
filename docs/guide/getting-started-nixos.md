@@ -4,34 +4,21 @@ title: Getting started on NixOS
 
 # Getting started on NixOS
 
-Requires NixOS unstable or 25.11 (the stable version requires more tweaks at the moment). Note that Wayle was added only recently, so update to the latest version before trying to install it.
+Requires NixOS unstable or 25.11. Note that Wayle was added only recently, so update to the latest version before trying to install it.
 
 ## Install package
 
-Wayle is available as `pkgs.wayle` package (only if you are on unstable). But if you use the home-manager module, you don't have to install the package manually.
+Wayle is available as `pkgs.wayle` package. But if you use the home-manager module, you don't have to install the package manually.
 
-## home-manager module
-
-Create a new folder named `wayle` somewhere in your config and put there these files:
-- `package.nix` - only if you are on NixOS 25.11; copy file from 25.11 PR ([link](https://raw.githubusercontent.com/PerchunPak/nixpkgs/refs/heads/wayle-stable/pkgs/by-name/wa/wayle/package.nix))
-- `module.nix` - only if you are on NixOS 25.11; copy home-manager module ([link](https://raw.githubusercontent.com/nix-community/home-manager/refs/heads/master/modules/services/wayle.nix))
-- `default.nix`, this is where you can configure Wayle, put this there:
+## home-manager usage
 
 ```nix
 # put this into your home-manager config
 { pkgs, lib, ... }:
 {
-  imports = [
-    ./module.nix
-    # if you are on 25.11, also add this
-    # (lib.mkAliasOptionModule [ "services" "swww" ] [ "services" "awww" ])
-  ];
-
   # then you can use it as a normal program
   services.wayle = {
     enable = true;
-    # if you are on 25.11, also add this
-    # package = pkgs.callPackage ./package.nix { };
 
     # tip: you can automatically translate your TOML config to Nix by running
     # nix-instantiate --eval --expr 'builtins.fromTOML (builtins.readFile ./config.toml)' | nixfmt
@@ -46,8 +33,6 @@ Create a new folder named `wayle` somewhere in your config and put there these f
   };
 }
 ```
-
-Then you can import the folder as a usual module (`imports = [ ./wayle ];` where `./wayle` is the path to the folder you created before)
 
 ## Settings GUI
 
