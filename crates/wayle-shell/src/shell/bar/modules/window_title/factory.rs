@@ -1,13 +1,23 @@
-use std::rc::Rc;
+//! Factory entry point: detect the compositor, build the matching
+//! [`FocusedWindowSource`], and launch the [`WindowTitle`] component.
+
+use std::{rc::Rc, sync::Arc};
 
 use relm4::prelude::*;
+use tracing::warn;
 use wayle_widgets::prelude::BarSettings;
 
-use super::{HyprlandWindowTitle, WindowTitleInit};
+use super::{
+    WindowTitle, WindowTitleInit,
+    sources::{FocusedWindowSource, HyprlandFocusedWindowSource, NiriFocusedWindowSource},
+};
 use crate::shell::{
     bar::{
         dropdowns::DropdownRegistry,
-        modules::registry::{ModuleFactory, ModuleInstance, dynamic_controller, require_hyprland},
+        modules::{
+            compositor::Compositor,
+            registry::{ModuleFactory, ModuleInstance, dynamic_controller, require_service},
+        },
     },
     services::ShellServices,
 };
@@ -21,17 +31,32 @@ impl ModuleFactory for Factory {
         dropdowns: &Rc<DropdownRegistry>,
         class: Option<String>,
     ) -> Option<ModuleInstance> {
-        if !require_hyprland("window-title") {
-            return None;
-        }
+        let source = build_source(services)?;
 
         let init = WindowTitleInit {
             settings: settings.clone(),
-            hyprland: services.hyprland.clone(),
+            source,
             config: services.config.clone(),
             dropdowns: dropdowns.clone(),
         };
-        let controller = dynamic_controller(HyprlandWindowTitle::builder().launch(init).detach());
+        let controller = dynamic_controller(WindowTitle::builder().launch(init).detach());
         Some(ModuleInstance { controller, class })
+    }
+}
+
+fn build_source(services: &ShellServices) -> Option<Arc<dyn FocusedWindowSource>> {
+    match Compositor::detect() {
+        Compositor::Hyprland => {
+            let hyprland = require_service("window-title", "hyprland", services.hyprland.clone())?;
+            Some(Arc::new(HyprlandFocusedWindowSource::new(hyprland)))
+        }
+        Compositor::Niri => {
+            let niri = require_service("window-title", "niri", services.niri.clone())?;
+            Some(Arc::new(NiriFocusedWindowSource::new(niri)))
+        }
+        Compositor::Unknown(name) => {
+            warn!(module = "window-title", compositor = %name, "unsupported compositor");
+            None
+        }
     }
 }

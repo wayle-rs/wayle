@@ -15,6 +15,7 @@ mod media;
 mod microphone;
 mod netstat;
 mod network;
+mod niri_workspaces;
 mod notification;
 mod power;
 mod ram;
@@ -72,6 +73,7 @@ register_modules! {
     Microphone => microphone::Factory,
     Netstat => netstat::Factory,
     Network => network::Factory,
+    NiriWorkspaces => niri_workspaces::Factory,
     Notifications => notification::Factory,
     Power => power::Factory,
     Ram => ram::Factory,
