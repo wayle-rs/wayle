@@ -1,5 +1,4 @@
-mod methods;
-mod watchers;
+//! The agnostic [`KeyboardInput`] component: model, view, and message routing.
 
 use std::{rc::Rc, sync::Arc};
 
@@ -13,18 +12,21 @@ use wayle_widgets::prelude::{
 use super::{
     helpers,
     messages::{KeyboardInputCmd, KeyboardInputInit, KeyboardInputMsg},
+    watchers,
 };
 use crate::shell::bar::dropdowns::{self, DropdownRegistry};
 
-pub(crate) struct HyprlandKeyboardInput {
-    bar_button: Controller<BarButton>,
-    config: Arc<ConfigService>,
-    current_layout: String,
-    dropdowns: Rc<DropdownRegistry>,
+const UNKNOWN_LAYOUT: &str = "?";
+
+pub(crate) struct KeyboardInput {
+    pub(super) bar_button: Controller<BarButton>,
+    pub(super) config: Arc<ConfigService>,
+    pub(super) current_layout: String,
+    pub(super) dropdowns: Rc<DropdownRegistry>,
 }
 
 #[relm4::component(pub(crate))]
-impl Component for HyprlandKeyboardInput {
+impl Component for KeyboardInput {
     type Init = KeyboardInputInit;
     type Input = KeyboardInputMsg;
     type Output = ();
@@ -47,7 +49,12 @@ impl Component for HyprlandKeyboardInput {
         let config = init.config.config();
         let keyboard_input = &config.modules.keyboard_input;
 
-        let initial_layout = methods::initial_layout(&init.hyprland);
+        let initial_layout = init
+            .source
+            .snapshot()
+            .map(|layout| layout.label)
+            .unwrap_or_else(|| UNKNOWN_LAYOUT.to_string());
+
         let formatted_label = helpers::format_label(
             &initial_layout,
             &keyboard_input.format.get(),
@@ -84,7 +91,7 @@ impl Component for HyprlandKeyboardInput {
                 BarButtonOutput::ScrollDown => KeyboardInputMsg::ScrollDown,
             });
 
-        watchers::spawn_watchers(&sender, keyboard_input, &init.hyprland);
+        watchers::spawn_watchers(&sender, keyboard_input, init.source);
 
         let model = Self {
             bar_button,
@@ -120,7 +127,9 @@ impl Component for HyprlandKeyboardInput {
     ) {
         match msg {
             KeyboardInputCmd::LayoutChanged(layout) => {
-                self.current_layout = layout;
+                self.current_layout = layout
+                    .map(|current| current.label)
+                    .unwrap_or_else(|| UNKNOWN_LAYOUT.to_string());
                 self.update_label(root);
             }
             KeyboardInputCmd::LayoutAliasMapChanged | KeyboardInputCmd::FormatChanged => {

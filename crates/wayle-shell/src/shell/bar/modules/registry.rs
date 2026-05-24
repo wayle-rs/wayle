@@ -65,8 +65,18 @@ pub(crate) fn require_service<T>(
 pub(crate) fn require_hyprland(module: &'static str) -> bool {
     match Compositor::detect() {
         Compositor::Hyprland => true,
-        Compositor::Unknown(name) => {
-            warn!(module, compositor = %name, "unsupported compositor, skipping module");
+        other => {
+            warn!(module, compositor = ?other, "module requires hyprland, skipping");
+            false
+        }
+    }
+}
+
+pub(crate) fn require_niri(module: &'static str) -> bool {
+    match Compositor::detect() {
+        Compositor::Niri => true,
+        other => {
+            warn!(module, compositor = ?other, "module requires niri, skipping");
             false
         }
     }

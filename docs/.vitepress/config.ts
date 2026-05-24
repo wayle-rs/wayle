@@ -111,6 +111,7 @@ export default defineConfig({
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/wayle-rs/wayle' },
+      { icon: 'discord', link: 'https://discord.gg/GYRGnNMf2c' },
     ],
 
     footer: {
