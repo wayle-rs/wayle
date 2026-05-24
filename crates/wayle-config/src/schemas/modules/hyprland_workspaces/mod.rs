@@ -6,7 +6,7 @@ use wayle_derive::{wayle_config, wayle_enum};
 
 use crate::{
     ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ScaleFactor, Spacing},
 };
 
@@ -100,10 +100,31 @@ pub struct WorkspaceStyle {
     pub color: Option<ColorValue>,
 }
 
-/// Per-workspace icon and color mappings.
+/// Per-workspace icon and color overrides, keyed by workspace ID.
 ///
-/// TOML table keys are always strings, so this type handles parsing
-/// string keys like "1" into i32 workspace IDs.
+/// TOML table keys are always strings, so `"1"` parses into the workspace
+/// with ID `1`. Negative IDs refer to Hyprland's special workspaces. Keys
+/// that don't appear in the map fall back to the default behaviour set by
+/// [`HyprlandWorkspacesConfig::display_mode`].
+///
+/// ## Examples
+///
+/// ```toml
+/// [modules.hyprland-workspaces.workspace-map]
+/// # Whole entry on one line with an inline table
+/// 1 = { icon = "ld-globe-symbolic", color = "#4a90d9" }
+/// 2 = { icon = "ld-terminal-symbolic" }
+/// 3 = { icon = "ld-code-symbolic", color = "accent" }
+///
+/// # Or spread the entry across its own subtable
+/// [modules.hyprland-workspaces.workspace-map.4]
+/// icon = "ld-message-square-symbolic"
+/// color = "status-success"
+///
+/// # Negative IDs target Hyprland special workspaces
+/// [modules.hyprland-workspaces.workspace-map.-99]
+/// icon = "ld-scratch-symbolic"
+/// ```
 #[derive(Debug, Clone, Default, PartialEq, JsonSchema)]
 #[schemars(transparent)]
 pub struct WorkspaceMap(HashMap<i32, WorkspaceStyle>);
@@ -154,7 +175,7 @@ impl<'de> Deserialize<'de> for WorkspaceMap {
     }
 }
 
-/// Hyprland workspaces module configuration.
+/// Hyprland workspace indicators with click-to-switch.
 #[wayle_config(i18n_prefix = "settings-modules-hyprland-workspaces")]
 pub struct HyprlandWorkspacesConfig {
     /// Minimum number of workspace buttons to display.
@@ -384,12 +405,15 @@ impl ModuleInfoProvider for HyprlandWorkspacesConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("hyprland-workspaces"),
-            icon: String::from("󰖯"),
-            description: String::from("Hyprland workspace indicators"),
-            behavior_configs: vec![(String::from("hyprland-workspaces"), || {
-                schema_for!(HyprlandWorkspacesConfig)
-            })],
-            styling_configs: vec![],
+            schema: || schema_for!(HyprlandWorkspacesConfig),
+            layout_id: Some(String::from("hyprland-workspaces")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::standard()
+    }
 }
+
+crate::register_module!(HyprlandWorkspacesConfig);

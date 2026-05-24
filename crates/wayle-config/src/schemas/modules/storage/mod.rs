@@ -3,11 +3,11 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
-/// Storage module configuration.
+/// Disk usage for a mount point.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-storage")]
 pub struct StorageConfig {
     /// Polling interval in milliseconds.
@@ -152,10 +152,15 @@ impl ModuleInfoProvider for StorageConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("storage"),
-            icon: String::from("󰋊"),
-            description: String::from("Disk usage for a mount point"),
-            behavior_configs: vec![(String::from("storage"), || schema_for!(StorageConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(StorageConfig),
+            layout_id: Some(String::from("storage")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(StorageConfig);

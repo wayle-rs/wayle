@@ -8,12 +8,11 @@ use wayle_derive::{wayle_config, wayle_enum};
 pub use self::icons::BUILTIN_MAPPINGS;
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Media player module configuration.
-///
+/// Now-playing title and playback controls for the active MPRIS player.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-media")]
 pub struct MediaConfig {
     /// Icon display mode.
@@ -23,14 +22,31 @@ pub struct MediaConfig {
 
     /// Custom player-to-icon mappings for application-mapped mode.
     ///
-    /// Keys are glob patterns matching MPRIS bus names, values are icon names.
-    /// These override built-in mappings when matched.
+    /// Keys are glob patterns matching MPRIS bus names, values are icon names
+    /// from the installed icon set. These override built-in mappings when
+    /// matched.
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [modules.media.player-icons]
+    /// "*spotify*" = "si-spotify-symbolic"
+    /// "*firefox*" = "ld-globe-symbolic"
+    /// "*.mpv" = "ld-play-circle-symbolic"
+    /// ```
     #[serde(rename = "player-icons")]
     #[default(HashMap::new())]
     pub player_icons: ConfigProperty<HashMap<String, String>>,
 
-    /// Player bus name patterns to exclude from discovery.
-    /// This property requires a restart to take effect.
+    /// Player bus name patterns to exclude from discovery. Requires a restart
+    /// to take effect.
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [modules.media]
+    /// players-ignored = ["*chromium*", "*discord*"]
+    /// ```
     #[serde(rename = "players-ignored")]
     #[default(Vec::new())]
     pub players_ignored: ConfigProperty<Vec<String>>,
@@ -40,6 +56,13 @@ pub struct MediaConfig {
     /// When no player is manually selected, this determines which player
     /// becomes active. Patterns are checked in order; first match wins.
     /// If no pattern matches, the first playing player is selected.
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [modules.media]
+    /// player-priority = ["*spotify*", "*firefox*"]
+    /// ```
     #[serde(rename = "player-priority")]
     #[default(Vec::new())]
     pub player_priority: ConfigProperty<Vec<String>>,
@@ -173,10 +196,15 @@ impl ModuleInfoProvider for MediaConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("media"),
-            icon: String::from("󰎆"),
-            description: String::from("Media player controls and now playing info"),
-            behavior_configs: vec![(String::from("media"), || schema_for!(MediaConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(MediaConfig),
+            layout_id: Some(String::from("media")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(MediaConfig);

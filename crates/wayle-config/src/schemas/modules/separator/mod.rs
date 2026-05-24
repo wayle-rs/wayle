@@ -7,7 +7,7 @@ use crate::{
     schemas::styling::{ColorValue, CssToken, Spacing},
 };
 
-/// Separator module configuration.
+/// A vertical rule between bar modules.
 #[wayle_config(i18n_prefix = "settings-modules-separator")]
 pub struct SeparatorConfig {
     /// Thickness of the separator line in pixels.
@@ -30,10 +30,11 @@ impl ModuleInfoProvider for SeparatorConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("separator"),
-            icon: String::from("|"),
-            description: String::from("Visual separator between modules"),
-            behavior_configs: vec![(String::from("separator"), || schema_for!(SeparatorConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(SeparatorConfig),
+            layout_id: Some(String::from("separator")),
+            array_entry: false,
         }
     }
 }
+
+crate::register_module!(SeparatorConfig);

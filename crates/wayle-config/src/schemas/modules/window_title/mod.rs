@@ -8,11 +8,11 @@ use wayle_derive::wayle_config;
 pub use self::icons::BUILTIN_MAPPINGS;
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Window title module configuration.
+/// Active window title with optional app-icon prefix.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-window-title")]
 pub struct WindowTitleConfig {
     /// Format string for the label.
@@ -36,8 +36,18 @@ pub struct WindowTitleConfig {
 
     /// Icon mappings. Glob patterns to icon names.
     ///
-    /// Patterns match window class by default. Prefix with `title:` to match
-    /// window title instead. User mappings are checked before built-in mappings.
+    /// Keys are patterns matching the window class (default) or title (when
+    /// prefixed with `title:`). Values are icon names from the installed icon
+    /// set. User mappings are checked before built-in mappings.
+    ///
+    /// ## Example
+    ///
+    /// ```toml
+    /// [modules.window-title.icon-mappings]
+    /// "*firefox*" = "ld-globe-symbolic"
+    /// "org.mozilla.*" = "ld-globe-symbolic"
+    /// "title:*YouTube*" = "ld-youtube-symbolic"
+    /// ```
     #[serde(rename = "icon-mappings")]
     #[default(HashMap::new())]
     pub icon_mappings: ConfigProperty<HashMap<String, String>>,
@@ -117,12 +127,15 @@ impl ModuleInfoProvider for WindowTitleConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("window-title"),
-            icon: String::from("󱂬"),
-            description: String::from("Active window title display"),
-            behavior_configs: vec![(String::from("window-title"), || {
-                schema_for!(WindowTitleConfig)
-            })],
-            styling_configs: vec![],
+            schema: || schema_for!(WindowTitleConfig),
+            layout_id: Some(String::from("window-title")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(WindowTitleConfig);

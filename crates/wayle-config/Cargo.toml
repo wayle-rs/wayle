@@ -11,6 +11,7 @@ license.workspace = true
 dotenvy.workspace = true
 futures.workspace = true
 glob.workspace = true
+inventory.workspace = true
 notify.workspace = true
 owo-colors = "4.2.3"
 schemars.workspace = true

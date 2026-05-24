@@ -3,11 +3,11 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Network module configuration.
+/// Network connection status with a dropdown for switching connections.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-network")]
 pub struct NetworkConfig {
     /// WiFi icon when disabled.
@@ -133,10 +133,15 @@ impl ModuleInfoProvider for NetworkConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("network"),
-            icon: String::from("󰖩"),
-            description: String::from("Network connection status"),
-            behavior_configs: vec![(String::from("network"), || schema_for!(NetworkConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(NetworkConfig),
+            layout_id: Some(String::from("network")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(NetworkConfig);

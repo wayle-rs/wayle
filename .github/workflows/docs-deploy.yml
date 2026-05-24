@@ -1,0 +1,40 @@
+name: Docs Deploy
+
+on:
+    push:
+        tags: ["v[0-9]+.[0-9]+.[0-9]+*"]
+
+permissions:
+    contents: read
+
+concurrency:
+    group: docs-deploy
+    cancel-in-progress: false
+
+jobs:
+    deploy:
+        name: Build and deploy to Cloudflare Pages
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v6
+
+            - uses: actions/setup-node@v6
+              with:
+                  node-version: "22"
+                  cache: "npm"
+                  cache-dependency-path: docs/package-lock.json
+
+            - name: Install VitePress
+              working-directory: docs
+              run: npm ci
+
+            - name: Build site
+              working-directory: docs
+              run: npm run build
+
+            - name: Deploy to Cloudflare Pages
+              uses: cloudflare/wrangler-action@v3
+              with:
+                  apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                  accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                  command: pages deploy docs/.vitepress/dist --project-name=wayle --branch=main

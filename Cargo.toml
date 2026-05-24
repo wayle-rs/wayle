@@ -16,7 +16,7 @@ members = [
 exclude = ["sandbox"]
 
 [workspace.package]
-version = "0.2.1"
+version = "0.3.0"
 edition = "2024"
 rust-version = "1.92"
 repository = "https://github.com/wayle-rs/wayle"
@@ -49,6 +49,7 @@ i18n-embed = { version = "0.16", features = [
 ] }
 i18n-embed-fl = "0.10"
 indicatif = "0.18"
+inventory = "0.3"
 libc = "0.2.176"
 libpulse-binding = "2.30.1"
 minijinja = { version = "2.15", default-features = false, features = [
@@ -70,7 +71,7 @@ rusqlite = { version = "0.38.0", features = ["bundled"] }
 rust-embed = "8"
 schemars = { version = "1.0.4", features = ["derive"] }
 serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
+serde_json = { version = "1.0.145", features = ["preserve_order"] }
 serde_json_path = "0.7"
 smithay-client-toolkit = "0.20"
 sourceview5 = "0.10.0"
@@ -85,7 +86,7 @@ thiserror = "2.0.17"
 tokio = { version = "1.47.1", features = ["full", "time"] }
 tokio-stream = { version = "0.1.17", features = ["sync"] }
 tokio-util = "0.7.16"
-toml = "0.9.7"
+toml = { version = "0.9.7", features = ["preserve_order"] }
 tracing = "0.1.41"
 tracing-appender = "0.2.3"
 tracing-attributes = "0.1.30"
@@ -101,6 +102,7 @@ wayle-brightness = "0.1.2"
 wayle-cava = { version = "0.1.2", features = ["vendored"] }
 wayle-core = "0.1.2"
 wayle-hyprland = "0.1.2"
+wayle-niri = "0.1.0"
 wayle-media = "0.1.2"
 wayle-network = "0.1.2"
 wayle-notification = "0.1.3"

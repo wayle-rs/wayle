@@ -4,14 +4,14 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::{
         modules::TimeFormat,
         styling::{ColorValue, CssToken},
     },
 };
 
-/// Weather module configuration.
+/// Current conditions with hourly and daily forecasts in a dropdown.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-weather")]
 pub struct WeatherConfig {
     /// Weather data provider.
@@ -196,10 +196,15 @@ impl ModuleInfoProvider for WeatherConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("weather"),
-            icon: String::from("󰖐"),
-            description: String::from("Weather display with forecasts"),
-            behavior_configs: vec![(String::from("weather"), || schema_for!(WeatherConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(WeatherConfig),
+            layout_id: Some(String::from("weather")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(WeatherConfig);

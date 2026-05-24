@@ -92,7 +92,37 @@ impl Default for BarLayout {
     }
 }
 
-/// A bar item: either a standalone module or a named group of modules.
+/// One entry in a bar layout section (`left`, `center`, or `right`).
+///
+/// Three shapes are accepted, all interchangeable in the same array:
+///
+/// - A plain module name: `"clock"`
+/// - A module with a CSS class for per-instance styling: `{ module = "clock", class = "primary" }`
+/// - A named group that wraps several modules in a shared container, addressable by CSS ID
+///
+/// ## Examples
+///
+/// ```toml
+/// [[bar.layout]]
+/// monitor = "*"
+///
+/// # Plain module
+/// left = ["dashboard"]
+///
+/// # Mix of plain and classed modules on the same side
+/// center = ["clock", { module = "clock", class = "secondary" }]
+///
+/// # Named group (renders inside a GTK container with CSS ID `#status`)
+/// right = [{ name = "status", modules = ["battery", "network", "volume"] }]
+///
+/// # Groups can hold classed modules too
+/// [[bar.layout]]
+/// monitor = "DP-2"
+/// left = [{ name = "clocks", modules = [
+///   { module = "clock", class = "local" },
+///   { module = "world-clock", class = "remote" }
+/// ]}]
+/// ```
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(untagged)]
 pub enum BarItem {
@@ -195,6 +225,8 @@ pub enum BarModule {
     Network,
     /// Network traffic statistics.
     Netstat,
+    /// Niri workspace switcher.
+    NiriWorkspaces,
     /// Notification center button.
     Notifications,
     /// Power menu button.
@@ -228,7 +260,7 @@ impl schemars::JsonSchema for BarModule {
 
     fn json_schema(_generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
         schemars::json_schema!({
-            "description": "Bar module name. Built-in modules or custom modules with 'custom-<id>' pattern.",
+            "description": "Bar module name. Built-in modules or custom modules with a `custom-<id>` pattern.",
             "anyOf": [
                 { "enum": BUILTIN_MODULES },
                 {
@@ -266,6 +298,7 @@ impl BarModule {
             Self::Microphone => "microphone",
             Self::Network => "network",
             Self::Netstat => "netstat",
+            Self::NiriWorkspaces => "niri-workspaces",
             Self::Notifications => "notifications",
             Self::Power => "power",
             Self::Ram => "ram",
@@ -298,6 +331,7 @@ impl BarModule {
             "microphone" => Self::Microphone,
             "network" => Self::Network,
             "netstat" => Self::Netstat,
+            "niri-workspaces" => Self::NiriWorkspaces,
             "notifications" => Self::Notifications,
             "power" => Self::Power,
             "ram" => Self::Ram,
@@ -381,6 +415,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "microphone",
     "netstat",
     "network",
+    "niri-workspaces",
     "notifications",
     "power",
     "ram",

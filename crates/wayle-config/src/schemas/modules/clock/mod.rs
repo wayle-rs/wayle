@@ -3,11 +3,11 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Clock module configuration.
+/// Time display with a calendar dropdown.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-clock")]
 pub struct ClockConfig {
     /// Format string using strftime syntax.
@@ -119,10 +119,15 @@ impl ModuleInfoProvider for ClockConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("clock"),
-            icon: String::from("󰥔"),
-            description: String::from("Clock display and calendar settings"),
-            behavior_configs: vec![(String::from("clock"), || schema_for!(ClockConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(ClockConfig),
+            layout_id: Some(String::from("clock")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(ClockConfig);

@@ -2,6 +2,7 @@ mod palette;
 mod types;
 
 pub use palette::PaletteConfig;
+use schemars::schema_for;
 pub use types::{
     ColorValue, CssToken, FontWeightClass, GapClass, HexColor, IconSizeClass, InvalidCssToken,
     InvalidHexColor, MatugenScheme, NormalizedF64, PaddingClass, Percentage, PywalContrast,
@@ -11,9 +12,13 @@ pub use types::{
 };
 use wayle_derive::wayle_config;
 
-use crate::{ConfigProperty, infrastructure::themes::Palette};
+use crate::{
+    ConfigProperty,
+    docs::{ConfigGroup, ModuleInfo, ModuleInfoProvider},
+    infrastructure::themes::Palette,
+};
 
-/// Styling configuration. Changes trigger stylesheet recompilation.
+/// Theme, palette, and rounding tokens applied shell-wide. Changes recompile the stylesheet.
 #[wayle_config(i18n_prefix = "settings-styling")]
 pub struct StylingConfig {
     /// Scale multiplier for dropdowns, popovers, and dialogs.
@@ -115,6 +120,30 @@ pub struct StylingConfig {
     #[default(Vec::new())]
     pub available: ConfigProperty<Vec<ThemeEntry>>,
 }
+
+impl ModuleInfoProvider for StylingConfig {
+    fn module_info() -> ModuleInfo {
+        ModuleInfo {
+            name: String::from("styling"),
+            schema: || schema_for!(StylingConfig),
+            layout_id: None,
+            array_entry: false,
+        }
+    }
+
+    fn groups() -> Vec<ConfigGroup> {
+        vec![
+            ConfigGroup::general(),
+            ConfigGroup::prefix("Theme provider", "theme-"),
+            ConfigGroup::prefix("Matugen", "matugen-"),
+            ConfigGroup::prefix("Wallust", "wallust-"),
+            ConfigGroup::prefix("Pywal", "pywal-"),
+            ConfigGroup::standalone("Palette", "palette"),
+        ]
+    }
+}
+
+crate::register_module!(StylingConfig);
 
 impl StylingConfig {
     /// Assembles a palette from the individual color fields.

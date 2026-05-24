@@ -3,14 +3,13 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Idle inhibitor module configuration.
+/// Toggle that prevents screen dim, lock, and suspend while active.
 ///
-/// Prevents screen dimming, lock, and suspend when active.
-/// Can control via CLI: `wayle idle on/off/duration/remaining/status`
+/// Controllable from the CLI: `wayle idle on|off|duration|remaining|status`.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-idle-inhibit")]
 pub struct IdleInhibitConfig {
     /// Duration in minutes when service starts. 0 means indefinite.
@@ -120,12 +119,15 @@ impl ModuleInfoProvider for IdleInhibitConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("idle-inhibit"),
-            icon: String::from(""),
-            description: String::from("Prevent screen dimming, lock, and suspend"),
-            behavior_configs: vec![(String::from("idle-inhibit"), || {
-                schema_for!(IdleInhibitConfig)
-            })],
-            styling_configs: vec![],
+            schema: || schema_for!(IdleInhibitConfig),
+            layout_id: Some(String::from("idle-inhibit")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(IdleInhibitConfig);

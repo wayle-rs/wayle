@@ -3,7 +3,10 @@ use std::{
     sync::{Arc, RwLock},
 };
 
-use tokio::fs;
+use tokio::{
+    fs::{self, File},
+    io::AsyncWriteExt,
+};
 use tracing::{info, instrument, warn};
 
 use super::{
@@ -162,17 +165,52 @@ impl ConfigService {
                 source,
             })?;
 
-        fs::write(&temp_path, toml_str)
-            .await
-            .map_err(|source| Error::Persistence {
+        {
+            let mut file = File::create(&temp_path)
+                .await
+                .map_err(|source| Error::Persistence {
+                    path: temp_path.clone(),
+                    source,
+                })?;
+
+            file.write_all(toml_str.as_bytes())
+                .await
+                .map_err(|source| Error::Persistence {
+                    path: temp_path.clone(),
+                    source,
+                })?;
+
+            file.sync_all().await.map_err(|source| Error::Persistence {
                 path: temp_path.clone(),
                 source,
             })?;
+        }
 
         fs::rename(&temp_path, &runtime_path)
             .await
             .map_err(|source| Error::Persistence {
                 path: runtime_path.clone(),
+                source,
+            })?;
+
+        let dir_path = runtime_path.parent().ok_or_else(|| Error::Persistence {
+            path: runtime_path.clone(),
+            source: io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "runtime config path has no parent directory",
+            ),
+        })?;
+
+        File::open(dir_path)
+            .await
+            .map_err(|source| Error::Persistence {
+                path: dir_path.to_path_buf(),
+                source,
+            })?
+            .sync_all()
+            .await
+            .map_err(|source| Error::Persistence {
+                path: dir_path.to_path_buf(),
                 source,
             })?;
 

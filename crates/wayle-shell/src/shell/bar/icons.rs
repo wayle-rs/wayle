@@ -47,6 +47,7 @@ pub(crate) const DEFAULT_APP_ICON_MAP: &[(&str, &str)] = &[
     ("*vivaldi*", "si-vivaldi-symbolic"),
     ("*waterfox*", "si-firefox-symbolic"),
     ("*zen*", "si-zenbrowser-symbolic"),
+    ("*helium*", "si-heliumbrowser-symbolic"),
     // Terminals
     ("*alacritty*", "si-alacritty-symbolic"),
     ("*black-box*", "ld-terminal-symbolic"),
@@ -123,6 +124,7 @@ pub(crate) const DEFAULT_APP_ICON_MAP: &[(&str, &str)] = &[
     ("*telegram*", "si-telegram-symbolic"),
     ("*thunderbird*", "si-thunderbird-symbolic"),
     ("*vesktop*", "si-discord-symbolic"),
+    ("equibop", "si-discord-symbolic"),
     ("*webcord*", "si-discord-symbolic"),
     ("*whatsapp*", "si-whatsapp-symbolic"),
     ("*wire*", "si-wire-symbolic"),

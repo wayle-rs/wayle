@@ -4,11 +4,11 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ScaleFactor, Spacing},
 };
 
-/// Systray module configuration.
+/// System tray icons via the StatusNotifierItem protocol.
 #[wayle_config(bar_container, i18n_prefix = "settings-modules-systray")]
 pub struct SystrayConfig {
     /// Scale multiplier for tray item icons.
@@ -69,11 +69,14 @@ impl ModuleInfoProvider for SystrayConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("systray"),
-            icon: String::from("󰆍"),
-            description: String::from("System tray icons (StatusNotifierItem)"),
-            behavior_configs: vec![(String::from("systray"), || schema_for!(SystrayConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(SystrayConfig),
+            layout_id: Some(String::from("systray")),
+            array_entry: false,
         }
+    }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::standard()
     }
 }
 
@@ -89,3 +92,5 @@ pub struct TrayItemOverride {
     /// Custom icon color.
     pub color: Option<ColorValue>,
 }
+
+crate::register_module!(SystrayConfig);
