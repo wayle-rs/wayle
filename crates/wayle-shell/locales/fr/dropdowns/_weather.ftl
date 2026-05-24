@@ -22,6 +22,15 @@ dropdown-weather-updated-ago = Mis à jour il y a { $minutes } min
 dropdown-weather-today = Aujourd'hui
 dropdown-weather-now = Maintenant
 
+## Abréviations des jours
+dropdown-weather-day-sun = dim.
+dropdown-weather-day-mon = lun.
+dropdown-weather-day-tue = mar.
+dropdown-weather-day-wed = mer.
+dropdown-weather-day-thu = jeu.
+dropdown-weather-day-fri = ven.
+dropdown-weather-day-sat = sam.
+
 ## Actions
 dropdown-weather-refresh = Actualiser
 

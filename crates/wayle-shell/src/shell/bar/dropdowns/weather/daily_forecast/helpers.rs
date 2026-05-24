@@ -34,13 +34,13 @@ pub(super) fn temp_bar_offsets(
 
 pub(super) fn day_label(date: NaiveDate) -> String {
     match date.weekday() {
-        Weekday::Sun => t!("cal-weekday-sun"),
-        Weekday::Mon => t!("cal-weekday-mon"),
-        Weekday::Tue => t!("cal-weekday-tue"),
-        Weekday::Wed => t!("cal-weekday-wed"),
-        Weekday::Thu => t!("cal-weekday-thu"),
-        Weekday::Fri => t!("cal-weekday-fri"),
-        Weekday::Sat => t!("cal-weekday-sat"),
+        Weekday::Sun => t!("dropdown-weather-day-sun"),
+        Weekday::Mon => t!("dropdown-weather-day-mon"),
+        Weekday::Tue => t!("dropdown-weather-day-tue"),
+        Weekday::Wed => t!("dropdown-weather-day-wed"),
+        Weekday::Thu => t!("dropdown-weather-day-thu"),
+        Weekday::Fri => t!("dropdown-weather-day-fri"),
+        Weekday::Sat => t!("dropdown-weather-day-sat"),
     }
 }
 
