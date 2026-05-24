@@ -3,6 +3,9 @@
 settings-osd-enabled = Enabled
     .description = Show on-screen display overlays for volume, brightness, etc.
 
+settings-osd-toggle-keys = Keyboard Toggle OSD
+    .description = Show OSD when pressing Caps Lock, Num Lock, or Scroll Lock
+
 settings-osd-position = Position
     .description = Where on screen the OSD appears (e.g. top-center, bottom-right)
 
