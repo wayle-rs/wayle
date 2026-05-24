@@ -9,8 +9,7 @@ use std::rc::Rc;
 use gtk::prelude::*;
 use relm4::prelude::*;
 use wayle_config::{
-    ClickAction,
-    ConfigProperty,
+    ClickAction, ConfigProperty,
     schemas::{
         modules::{CustomModuleDefinition, ExecutionMode},
         styling::{ColorValue, CssToken},
