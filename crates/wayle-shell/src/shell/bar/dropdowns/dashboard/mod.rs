@@ -75,6 +75,8 @@ impl Component for DashboardDropdown {
         gtk::Popover {
             set_css_classes: &["dropdown", "dashboard-dropdown"],
             set_has_arrow: false,
+            #[watch]
+            set_width_request: model.scaled_width,
 
             #[template]
             #[name = "dashboard_container"]
