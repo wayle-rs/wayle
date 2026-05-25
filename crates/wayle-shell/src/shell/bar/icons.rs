@@ -177,7 +177,7 @@ pub(crate) const DEFAULT_APP_ICON_MAP: &[(&str, &str)] = &[
     ("*olive*", "ld-film-symbolic"),
     ("*openshot*", "ld-film-symbolic"),
     ("*pitivi*", "ld-film-symbolic"),
-    ("*shortcut*", "ld-film-symbolic"),
+    ("*shotcut*", "ld-film-symbolic"),
     // Graphics & Design
     ("*darktable*", "ld-camera-symbolic"),
     ("*figma*", "si-figma-symbolic"),
