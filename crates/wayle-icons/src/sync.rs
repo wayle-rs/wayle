@@ -253,15 +253,15 @@ mod tests {
 
     #[test]
     fn picks_known_prefixes_out_of_free_text() {
-        let icons = icons_in("use ld-bell-symbolic and tb-home-symbolic together");
+        let icons = icons_in("use ld-bell-symbolic and tb-alert-triangle-symbolic together");
         assert!(icons.contains("ld-bell-symbolic"));
-        assert!(icons.contains("tb-home-symbolic"));
+        assert!(icons.contains("tb-alert-triangle-symbolic"));
     }
 
     #[test]
     fn keeps_hyphenated_slugs_intact() {
-        let icons = icons_in("ld-triangle-alert-symbolic");
-        assert!(icons.contains("ld-triangle-alert-symbolic"));
+        let icons = icons_in("ld-alert-triangle-symbolic");
+        assert!(icons.contains("ld-alert-triangle-symbolic"));
     }
 
     #[test]
@@ -276,8 +276,8 @@ mod tests {
 
     #[test]
     fn keeps_tbf_separate_from_tb() {
-        let icons = icons_in("tbf-bell-symbolic");
-        assert!(icons.contains("tbf-bell-symbolic"));
+        let icons = icons_in("tbf-circle-symbolic");
+        assert!(icons.contains("tbf-circle-symbolic"));
     }
 
     #[test]
@@ -286,11 +286,11 @@ mod tests {
             [modules.notification]
             icon-name = "ld-bell-symbolic"
             [modules.power]
-            icon-name = "tb-power-symbolic"
+            icon-name = "ld-power-symbolic"
         "#;
         let icons = extract_referenced_icons(&toml::from_str(toml_text)?);
         assert!(icons.contains("ld-bell-symbolic"));
-        assert!(icons.contains("tb-power-symbolic"));
+        assert!(icons.contains("ld-power-symbolic"));
         Ok(())
     }
 
@@ -307,7 +307,7 @@ mod tests {
     #[test]
     fn classifies_custom_icon_as_user_imported() -> Result<(), &'static str> {
         let lookup = build_sources_lookup();
-        let icon = MissingIcon::from_name("cm-mine-symbolic", &lookup)
+        let icon = MissingIcon::from_name("cm-offline-symbolic", &lookup)
             .ok_or("cm- prefix should classify")?;
         assert!(matches!(icon.origin, IconOrigin::UserImported));
         Ok(())
@@ -330,17 +330,21 @@ mod tests {
 
     #[test]
     fn find_missing_returns_only_uninstalled() {
-        let referenced: BTreeSet<String> = ["ld-a-symbolic", "tb-b-symbolic", "ld-c-symbolic"]
-            .iter()
-            .map(|name| (*name).to_owned())
-            .collect();
-        let installed: BTreeSet<String> = ["ld-a-symbolic"]
+        let referenced: BTreeSet<String> = [
+            "ld-bell-symbolic",
+            "tb-alert-triangle-symbolic",
+            "ld-power-symbolic",
+        ]
+        .iter()
+        .map(|name| (*name).to_owned())
+        .collect();
+        let installed: BTreeSet<String> = ["ld-bell-symbolic"]
             .iter()
             .map(|name| (*name).to_owned())
             .collect();
 
         let missing = find_missing(&referenced, &installed);
         let names: Vec<_> = missing.iter().map(|icon| icon.name.as_str()).collect();
-        assert_eq!(names, ["ld-c-symbolic", "tb-b-symbolic"]);
+        assert_eq!(names, ["ld-power-symbolic", "tb-alert-triangle-symbolic"]);
     }
 }
