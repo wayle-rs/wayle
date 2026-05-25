@@ -4676,6 +4676,7 @@ dependencies = [
  "tokio-stream",
  "toml 1.1.2+spec-1.1.0",
  "tracing",
+ "tracing-subscriber",
  "wayle-core",
  "wayle-derive",
 ]
@@ -4705,6 +4706,7 @@ dependencies = [
  "syn",
  "tokio",
  "toml 1.1.2+spec-1.1.0",
+ "tracing",
  "wayle-config",
 ]
 

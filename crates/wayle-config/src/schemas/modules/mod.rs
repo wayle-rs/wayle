@@ -111,8 +111,9 @@ pub struct ModulesConfig {
     /// Niri workspace switcher module.
     #[serde(rename = "niri-workspaces")]
     pub niri_workspaces: NiriWorkspacesConfig,
-    /// Notification center module. TOML key: `notifications` (alias: `notification`).
-    #[serde(rename = "notifications", alias = "notification")]
+    /// Notification center module.
+    #[serde(rename = "notifications")]
+    #[wayle(deprecated_alias = "notification")]
     pub notifications: NotificationConfig,
     /// Power menu module.
     pub power: PowerConfig,
