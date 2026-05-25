@@ -50,6 +50,13 @@ pub enum IconsCommands {
         /// Destination directory for exported icons
         destination: PathBuf,
     },
+    /// Install any icons referenced in config but not yet on disk
+    #[command(after_long_help = SYNC_HELP)]
+    Sync {
+        /// Preview what would be installed without making changes
+        #[arg(long)]
+        dry_run: bool,
+    },
 }
 
 const INSTALL_HELP: &str = concat!(
@@ -75,4 +82,17 @@ const IMPORT_HELP: &str = concat!(
     "        -> Imports all SVGs, preserves names with known prefixes\n",
     "\n",
     "Icons without a known prefix (tb-, tbf-, si-, md-, ld-) get 'cm-' added.",
+);
+
+const SYNC_HELP: &str = concat!(
+    styled_header!("Examples:"),
+    "\n",
+    "    wayle icons sync\n",
+    "        -> install every config-referenced icon not yet on disk\n",
+    "\n",
+    "    wayle icons sync --dry-run\n",
+    "        -> list what would be installed; no downloads\n",
+    "\n",
+    "Useful when sharing dotfiles across machines. User-imported `cm-` icons\n",
+    "cannot be auto-installed and are listed as skipped.",
 );
