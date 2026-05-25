@@ -24,34 +24,49 @@ pub fn should_skip(field: &Field) -> bool {
     })
 }
 
-/// Returns the TOML key for a field. Uses `#[serde(rename = "...")]` if present,
-/// otherwise falls back to the Rust field name.
+/// Returns the canonical TOML key for a field. Uses `#[serde(rename = "...")]`
+/// if present, otherwise falls back to the Rust field name. Aliases are
+/// ignored; use [`serde_keys`] for read paths that should accept aliases too.
 pub fn serde_key(field: &Field) -> String {
+    serde_keys(field).into_iter().next().unwrap_or_default()
+}
+
+/// Returns all TOML keys a field can match on read: the canonical key first
+/// (`rename` or Rust field name), followed by any `#[serde(alias = "...")]`
+/// entries in declaration order.
+pub fn serde_keys(field: &Field) -> Vec<String> {
+    let mut rename: Option<String> = None;
+    let mut aliases: Vec<String> = Vec::new();
+
     for attr in &field.attrs {
         if !attr.path().is_ident("serde") {
             continue;
         }
 
-        let mut rename = None;
-
         let _ = attr.parse_nested_meta(|meta| {
             if meta.path.is_ident("rename") {
                 let value: syn::LitStr = meta.value()?.parse()?;
                 rename = Some(value.value());
+            } else if meta.path.is_ident("alias") {
+                let value: syn::LitStr = meta.value()?.parse()?;
+                aliases.push(value.value());
             }
             Ok(())
         });
-
-        if let Some(name) = rename {
-            return name;
-        }
     }
 
-    field
-        .ident
-        .as_ref()
-        .map(|ident| ident.to_string())
-        .unwrap_or_default()
+    let canonical = rename.unwrap_or_else(|| {
+        field
+            .ident
+            .as_ref()
+            .map(|ident| ident.to_string())
+            .unwrap_or_default()
+    });
+
+    let mut keys = Vec::with_capacity(1 + aliases.len());
+    keys.push(canonical);
+    keys.extend(aliases);
+    keys
 }
 
 /// Pulls `#[default(expr)]` out of a field's attributes.

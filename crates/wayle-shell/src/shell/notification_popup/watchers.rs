@@ -18,7 +18,7 @@ pub(super) fn spawn(
     });
 
     let full_config = config.config();
-    let notif_config = full_config.modules.notification.clone();
+    let notif_config = full_config.modules.notifications.clone();
     let position = notif_config.popup_position.clone();
     let margin_x = notif_config.popup_margin_x.clone();
     let margin_y = notif_config.popup_margin_y.clone();

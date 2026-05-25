@@ -2,45 +2,45 @@
 
 ## Paramètres partagés
 
-settings-modules-notification-blocklist = Liste de blocage
+settings-modules-notifications-blocklist = Liste de blocage
     .description = Motifs glob pour les noms d'applications dont les notifications sont bloquées
 
-settings-modules-notification-icon-source = Source des icônes
+settings-modules-notifications-icon-source = Source des icônes
     .description = Méthode de résolution des icônes de notification
 
 ## Paramètres des fenêtres contextuelles
 
-settings-modules-notification-popup-position = Position de la fenêtre contextuelle
+settings-modules-notifications-popup-position = Position de la fenêtre contextuelle
     .description = Coin de l'écran où apparaissent les fenêtres contextuelles de notification
 
-settings-modules-notification-popup-max-visible = Maximum visible
+settings-modules-notifications-popup-max-visible = Maximum visible
     .description = Nombre maximal de fenêtres contextuelles affichées simultanément avant empilement
 
-settings-modules-notification-popup-stacking-order = Ordre d'empilement
+settings-modules-notifications-popup-stacking-order = Ordre d'empilement
     .description = Les nouvelles fenêtres contextuelles apparaissent au-dessus ou en dessous des existantes
 
-settings-modules-notification-popup-margin-x = Marge horizontale
+settings-modules-notifications-popup-margin-x = Marge horizontale
     .description = Distance depuis le bord gauche/droit de l'écran
 
-settings-modules-notification-popup-margin-y = Marge verticale
+settings-modules-notifications-popup-margin-y = Marge verticale
     .description = Distance depuis le bord haut/bas de l'écran
 
-settings-modules-notification-popup-gap = Écart entre fenêtres contextuelles
+settings-modules-notifications-popup-gap = Écart entre fenêtres contextuelles
     .description = Espacement entre les fenêtres contextuelles de notification empilées
 
-settings-modules-notification-popup-monitor = Moniteur des fenêtres contextuelles
+settings-modules-notifications-popup-monitor = Moniteur des fenêtres contextuelles
     .description = Moniteur affichant les fenêtres contextuelles : « primary » ou un connecteur comme « DP-1 »
 
-settings-modules-notification-popup-duration = Fermeture automatique
+settings-modules-notifications-popup-duration = Fermeture automatique
     .description = Durée de visibilité des fenêtres contextuelles avant fermeture (ms)
 
-settings-modules-notification-popup-hover-pause = Pause au survol
+settings-modules-notifications-popup-hover-pause = Pause au survol
     .description = Suspendre le minuteur de fermeture automatique au survol d'une fenêtre contextuelle
 
-settings-modules-notification-popup-close-behavior = Comportement de fermeture
+settings-modules-notifications-popup-close-behavior = Comportement de fermeture
     .description = Action lors de la fermeture d'une fenêtre contextuelle (ignorer ou marquer comme lu)
 
-settings-modules-notification-popup-urgency-bar = Barre d'urgence
+settings-modules-notifications-popup-urgency-bar = Barre d'urgence
     .description = Afficher une barre colorée sur les fenêtres contextuelles atteignant un niveau d'urgence minimal
 
 ## Temps relatif

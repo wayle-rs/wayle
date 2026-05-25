@@ -95,7 +95,7 @@ export default defineConfig({
             { text: 'microphone', link: '/config/modules/microphone' },
             { text: 'netstat', link: '/config/modules/netstat' },
             { text: 'network', link: '/config/modules/network' },
-            { text: 'notification', link: '/config/modules/notification' },
+            { text: 'notifications', link: '/config/modules/notifications' },
             { text: 'power', link: '/config/modules/power' },
             { text: 'ram', link: '/config/modules/ram' },
             { text: 'separator', link: '/config/modules/separator' },

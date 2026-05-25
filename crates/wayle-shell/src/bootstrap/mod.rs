@@ -297,7 +297,7 @@ async fn init_daemon_services(
             .priority_players(priority)
             .build(),
     );
-    let blocklist = Property::new(modules.notification.blocklist.get());
+    let blocklist = Property::new(modules.notifications.blocklist.get());
     let notification_task = tokio::spawn(
         NotificationService::builder()
             .with_daemon()

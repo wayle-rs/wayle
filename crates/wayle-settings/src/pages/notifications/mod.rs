@@ -17,7 +17,7 @@ use crate::{
 };
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
-    let notif = &config.modules.notification;
+    let notif = &config.modules.notifications;
 
     LeafEntry {
         id: "notifications",

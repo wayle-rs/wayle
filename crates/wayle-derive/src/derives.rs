@@ -5,7 +5,7 @@ use quote::quote;
 use syn::{DeriveInput, parse_macro_input};
 
 use crate::{
-    field_utils::{serde_key, should_skip},
+    field_utils::{serde_key, serde_keys, should_skip},
     validate_named_struct,
 };
 
@@ -26,16 +26,20 @@ pub fn apply_config_layer(input: TokenStream) -> TokenStream {
         .filter(|field| !should_skip(field))
         .map(|field| {
             let field_ident = &field.ident;
-            let toml_key = serde_key(field);
+            let keys = serde_keys(field);
+            let canonical = &keys[0];
 
             quote! {
-                if let Some(field_value) = table.get(#toml_key) {
-                    let child_path = if path.is_empty() {
-                        String::from(#toml_key)
-                    } else {
-                        format!("{}.{}", path, #toml_key)
-                    };
-                    self.#field_ident.apply_config_layer(field_value, &child_path);
+                for lookup_key in &[#(#keys),*] {
+                    if let Some(field_value) = table.get(*lookup_key) {
+                        let child_path = if path.is_empty() {
+                            String::from(#canonical)
+                        } else {
+                            format!("{}.{}", path, #canonical)
+                        };
+                        self.#field_ident.apply_config_layer(field_value, &child_path);
+                        break;
+                    }
                 }
             }
         });
@@ -71,16 +75,20 @@ pub fn apply_runtime_layer(input: TokenStream) -> TokenStream {
         .filter(|field| !should_skip(field))
         .map(|field| {
             let field_ident = &field.ident;
-            let toml_key = serde_key(field);
+            let keys = serde_keys(field);
+            let canonical = &keys[0];
 
             quote! {
-                if let Some(field_value) = table.get(#toml_key) {
-                    let child_path = if path.is_empty() {
-                        String::from(#toml_key)
-                    } else {
-                        format!("{}.{}", path, #toml_key)
-                    };
-                    self.#field_ident.apply_runtime_layer(field_value, &child_path)?;
+                for lookup_key in &[#(#keys),*] {
+                    if let Some(field_value) = table.get(*lookup_key) {
+                        let child_path = if path.is_empty() {
+                            String::from(#canonical)
+                        } else {
+                            format!("{}.{}", path, #canonical)
+                        };
+                        self.#field_ident.apply_runtime_layer(field_value, &child_path)?;
+                        break;
+                    }
                 }
             }
         });
@@ -195,10 +203,10 @@ pub fn clear_runtime_by_path(input: TokenStream) -> TokenStream {
         .filter(|field| !should_skip(field))
         .map(|field| {
             let field_ident = &field.ident;
-            let toml_key = serde_key(field);
+            let keys = serde_keys(field);
 
             quote! {
-                #toml_key => self.#field_ident.clear_runtime_by_path(rest),
+                #(#keys)|* => self.#field_ident.clear_runtime_by_path(rest),
             }
         });
 
