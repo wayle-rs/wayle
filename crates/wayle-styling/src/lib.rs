@@ -26,6 +26,11 @@ use wayle_config::{
 /// Static CSS compiled at build time.
 pub const STATIC_CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/style.css"));
 
+/// Wildcard widget reset.
+///
+/// Wipes GTK4's default widget styling so wayle can paint from a clean slate.
+pub const RESET_CSS: &str = "* { all: unset; }";
+
 /// Returns the SCSS source directory path.
 ///
 /// Only useful during development for hot-reload watching.
