@@ -5,8 +5,12 @@
 
 mod errors;
 mod palette_provider;
+pub mod watcher;
 
-use std::path::PathBuf;
+use std::{
+    fs,
+    path::{Path, PathBuf},
+};
 
 pub use errors::Error;
 use tracing::error;
@@ -21,6 +25,9 @@ use wayle_config::{
 
 /// Static CSS compiled at build time.
 pub const STATIC_CSS: &str = include_str!(concat!(env!("OUT_DIR"), "/style.css"));
+
+/// Priority for per-component dynamic CSS providers.
+pub const COMPONENT_CSS_PRIORITY: u32 = 1000;
 
 /// Returns the SCSS source directory path.
 ///
@@ -116,14 +123,95 @@ pub fn theme_css(
 ///
 /// Returns error if SCSS files cannot be read or compilation fails.
 pub fn compile_dev() -> Result<String, Error> {
-    use std::fs;
-
     let scss_path = scss_dir();
     let main_path = scss_path.join("main.scss");
     let main_content = fs::read_to_string(&main_path).map_err(Error::Io)?;
     let options = grass::Options::default().load_path(&scss_path);
 
     grass::from_string(&main_content, &options).map_err(Error::Compilation)
+}
+
+/// Compiles the user's optional SCSS overrides at `<config_dir>/styles/index.scss`.
+///
+/// Returns an empty string if the entry file is absent. A read or compile failure
+/// is logged via tracing and an empty string is returned, so a broken user
+/// stylesheet leaves the rest of the CSS bundle intact.
+///
+/// `<config_dir>/styles/` is on the SCSS load path, so the entry file can
+/// `@import` or `@use` sibling partials inside that directory.
+pub fn user_css(config_dir: &Path) -> String {
+    match try_user_css(config_dir) {
+        Ok(css) => css,
+        Err(err) => {
+            error!(error = %err, "user styles compilation failed");
+            String::new()
+        }
+    }
+}
+
+/// Like [`user_css`] but surfaces compilation errors instead of logging.
+///
+/// `Ok("")` means the entry file doesn't exist (no user overrides). `Ok(css)`
+/// is a successful compile. `Err` carries the read or compile error.
+///
+/// # Errors
+///
+/// Returns [`Error::Io`] on read failure, [`Error::Compilation`] on grass failure.
+pub fn try_user_css(config_dir: &Path) -> Result<String, Error> {
+    let styles_dir = config_dir.join("styles");
+    let entry_path = styles_dir.join("index.scss");
+
+    if !entry_path.exists() {
+        return Ok(String::new());
+    }
+
+    let content = fs::read_to_string(&entry_path).map_err(Error::Io)?;
+    let options = grass::Options::default().load_path(&styles_dir);
+
+    grass::from_string(&content, &options).map_err(Error::Compilation)
+}
+
+/// Returns `<config_dir>/styles/` if it exists, otherwise `None`.
+pub fn user_styles_dir(config_dir: &Path) -> Option<PathBuf> {
+    let dir = config_dir.join("styles");
+
+    if dir.is_dir() { Some(dir) } else { None }
+}
+
+/// Creates `<config_dir>/styles/` and a starter `index.scss` if either is missing.
+///
+/// A no-op once both exist; errors are logged and swallowed so failed
+/// scaffolding does not block startup.
+pub fn ensure_user_styles_scaffold(config_dir: &Path) {
+    const TEMPLATE: &str = "\
+// Custom Wayle styles. Anything here overrides the built-in styling.
+// Use @import \"name\" to bring in _name.scss from this folder.
+";
+
+    let styles_dir = config_dir.join("styles");
+
+    if let Err(err) = fs::create_dir_all(&styles_dir) {
+        error!(
+            error = %err,
+            path = %styles_dir.display(),
+            "cannot create user styles directory",
+        );
+        return;
+    }
+
+    let entry_path = styles_dir.join("index.scss");
+
+    if entry_path.exists() {
+        return;
+    }
+
+    if let Err(err) = fs::write(&entry_path, TEMPLATE) {
+        error!(
+            error = %err,
+            path = %entry_path.display(),
+            "cannot create user styles/index.scss",
+        );
+    }
 }
 
 /// Resolves the active palette based on the current theme provider.
@@ -178,14 +266,17 @@ mod tests {
 
     #[test]
     #[ignore = "requires display server"]
-    fn css_loads_into_gtk4() {
-        gtk4::init().unwrap();
+    fn css_loads_into_gtk4() -> Result<(), Box<dyn std::error::Error>> {
+        gtk4::init()?;
 
         let provider = gtk4::CssProvider::new();
 
         provider.load_from_string(STATIC_CSS);
 
-        let theme = palettes::builtins().into_iter().next().unwrap();
+        let theme = palettes::builtins()
+            .into_iter()
+            .next()
+            .ok_or("no built-in palettes")?;
         let general = GeneralConfig::default();
         let bar = BarConfig::default();
         let styling = StylingConfig::default();
@@ -195,5 +286,7 @@ mod tests {
 
         let combined = format!("{STATIC_CSS}\n{theme_str}");
         provider.load_from_string(&combined);
+
+        Ok(())
     }
 }

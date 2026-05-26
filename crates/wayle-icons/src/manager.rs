@@ -163,10 +163,16 @@ impl IconManager {
             });
         }
 
+        validate_icon_name(icon_name)?;
+
         let svg_content = response.text().await?;
         Self::validate_svg(&svg_content, slug)?;
 
-        let transformed = transform::to_symbolic(&svg_content);
+        let transformed =
+            transform::to_symbolic(&svg_content).ok_or_else(|| Error::InvalidSvg {
+                slug: slug.to_string(),
+                reason: SvgValidationError::NoExtractablePaths,
+            })?;
         let file_path = icons_dir.join(format!("{icon_name}-symbolic.svg"));
         async_fs::write(&file_path, &transformed)
             .await
@@ -261,6 +267,8 @@ impl IconManager {
     ///
     /// Returns error if the file doesn't exist, isn't a valid SVG, or cannot be written.
     pub fn import_local(&self, path: &Path, name: &str) -> Result<String> {
+        validate_icon_name(name)?;
+
         if !path.exists() {
             return Err(Error::NotFound {
                 name: path.display().to_string(),
@@ -283,7 +291,10 @@ impl IconManager {
             source,
         })?;
 
-        let transformed = transform::to_symbolic(&content);
+        let transformed = transform::to_symbolic(&content).ok_or_else(|| Error::InvalidSvg {
+            slug: name.to_string(),
+            reason: SvgValidationError::NoExtractablePaths,
+        })?;
         let icon_name = format!("{CUSTOM_PREFIX}-{name}-symbolic");
         let dest_path = icons_dir.join(format!("{icon_name}.svg"));
 
@@ -366,6 +377,8 @@ impl IconManager {
             .iter()
             .any(|p| base_name.starts_with(&format!("{p}-")));
 
+        validate_icon_name(base_name)?;
+
         let icon_name = if has_prefix {
             format!("{base_name}-symbolic")
         } else {
@@ -382,7 +395,10 @@ impl IconManager {
             reason: SvgValidationError::ParseError(err.to_string()),
         })?;
 
-        let transformed = transform::to_symbolic(&content);
+        let transformed = transform::to_symbolic(&content).ok_or_else(|| Error::InvalidSvg {
+            slug: base_name.to_string(),
+            reason: SvgValidationError::NoExtractablePaths,
+        })?;
         let dest_path = icons_dir.join(format!("{icon_name}.svg"));
 
         fs::write(&dest_path, &transformed).map_err(|source| Error::WriteError {
@@ -400,4 +416,13 @@ impl IconManager {
         })?;
         Ok(())
     }
+}
+
+fn validate_icon_name(name: &str) -> Result<()> {
+    if name.is_empty() || name.contains('/') || name.contains('\\') || name.contains("..") {
+        return Err(Error::InvalidIconName {
+            name: name.to_string(),
+        });
+    }
+    Ok(())
 }

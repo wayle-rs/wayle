@@ -18,6 +18,9 @@ settings-osd-margin = Margin
 settings-osd-border = Border
     .description = Draw a border around the OSD overlay
 
+settings-osd-layer = Layer
+    .description = Layer-shell layer the OSD is placed on. Tearing mode demotes overlay to top.
+
 
 ## OsdPosition variants
 enum-osd-position-top-left = Top Left

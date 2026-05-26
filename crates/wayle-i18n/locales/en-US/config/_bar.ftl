@@ -26,6 +26,12 @@ settings-bar-module-gap = Module Gap
 settings-bar-location = Location
     .description = Bar position on screen edge (top, bottom, left, right)
 
+settings-bar-exclusive = Exclusive
+    .description = Reserve screen space for the bar instead of drawing over windows
+
+settings-bar-layer = Layer
+    .description = Layer-shell layer the bar is placed on
+
 settings-bar-bg = Background
     .description = Bar background color
 

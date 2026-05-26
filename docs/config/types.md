@@ -386,6 +386,17 @@ What identifies each workspace's label.
 | `"name-only"` | Show only the name; unnamed workspaces show nothing. |
 | `"index-and-name"` | Show both, joined as `"1: web"`. Unnamed workspaces show the index alone. |
 
+## Layer {#layer}
+
+Layer-shell layer a window is placed on, from furthest back to furthest front.
+
+| Value | Meaning |
+|---|---|
+| `"background"` | Below everything else, used for wallpapers and ambient surfaces. |
+| `"bottom"` | Behind regular application windows. |
+| `"top"` | Above regular application windows. |
+| `"overlay"` | Above everything, including fullscreen application windows. |
+
 ## Location {#location}
 
 Bar position on screen.

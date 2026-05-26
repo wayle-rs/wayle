@@ -7,10 +7,7 @@ use std::collections::BTreeSet;
 
 use relm4::{
     gtk,
-    gtk::{
-        STYLE_PROVIDER_PRIORITY_USER, gdk::Display, prelude::*,
-        style_context_add_provider_for_display,
-    },
+    gtk::{gdk::Display, prelude::*, style_context_add_provider_for_display},
     prelude::*,
 };
 use tracing::warn;
@@ -19,6 +16,7 @@ use wayle_config::{
     infrastructure::themes::Palette,
     schemas::styling::{HexColor, PaletteConfig, ThemeEntry},
 };
+use wayle_styling::COMPONENT_CSS_PRIORITY;
 
 use super::{SWATCH_PROVIDER, SwatchStyles, ThemeSelectorControl, ThemeSelectorMsg};
 
@@ -171,7 +169,7 @@ fn init_swatch_styles() -> SwatchStyles {
     let provider = gtk::CssProvider::new();
 
     if let Some(display) = Display::default() {
-        style_context_add_provider_for_display(&display, &provider, STYLE_PROVIDER_PRIORITY_USER);
+        style_context_add_provider_for_display(&display, &provider, COMPONENT_CSS_PRIORITY);
     } else {
         warn!("no default display, theme swatch colors will not render");
     }

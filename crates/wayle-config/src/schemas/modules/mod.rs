@@ -112,7 +112,9 @@ pub struct ModulesConfig {
     #[serde(rename = "niri-workspaces")]
     pub niri_workspaces: NiriWorkspacesConfig,
     /// Notification center module.
-    pub notification: NotificationConfig,
+    #[serde(rename = "notifications")]
+    #[wayle(deprecated_alias = "notification")]
+    pub notifications: NotificationConfig,
     /// Power menu module.
     pub power: PowerConfig,
     /// RAM usage module.

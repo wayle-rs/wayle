@@ -12,12 +12,14 @@ use relm4::{gtk, gtk::prelude::*, prelude::*};
 pub(crate) use row::theme_selector;
 use wayle_config::{
     ConfigProperty,
-    schemas::styling::{PaletteConfig, ThemeEntry},
+    schemas::styling::{PaletteConfig, ScaleFactor, ThemeEntry},
 };
 use wayle_i18n::t;
 
 use self::helpers::populate_list;
 use super::{WatcherHandle, spawn_property_watcher};
+
+const BASE_MAX_HEIGHT: f32 = 384.0;
 
 struct SwatchStyles {
     provider: gtk::CssProvider,
@@ -31,20 +33,29 @@ thread_local! {
 pub(crate) struct ThemeSelectorControl {
     pub(super) available: ConfigProperty<Vec<ThemeEntry>>,
     pub(super) palette: PaletteConfig,
+    pub(super) scale: ConfigProperty<ScaleFactor>,
     pub(super) popover: gtk::Popover,
     pub(super) list_box: gtk::ListBox,
-    _watcher: WatcherHandle,
+    pub(super) scrolled: gtk::ScrolledWindow,
+    _available_watcher: WatcherHandle,
+    _scale_watcher: WatcherHandle,
 }
 
 pub(crate) struct ThemeSelectorInit {
     pub(crate) available: ConfigProperty<Vec<ThemeEntry>>,
     pub(crate) palette: PaletteConfig,
+    pub(crate) scale: ConfigProperty<ScaleFactor>,
 }
 
 #[derive(Debug)]
 pub(crate) enum ThemeSelectorMsg {
     Apply(String),
     RebuildList,
+    ScaleChanged,
+}
+
+fn scaled_max_height(scale: f32) -> i32 {
+    (BASE_MAX_HEIGHT * scale).round() as i32
 }
 
 impl SimpleComponent for ThemeSelectorControl {
@@ -95,6 +106,7 @@ impl SimpleComponent for ThemeSelectorControl {
             .child(&list_box)
             .hscrollbar_policy(gtk::PolicyType::Never)
             .propagate_natural_height(true)
+            .max_content_height(scaled_max_height(init.scale.get().value()))
             .build();
         scrolled.add_css_class("theme-preset-scroll");
 
@@ -110,9 +122,14 @@ impl SimpleComponent for ThemeSelectorControl {
 
         populate_list(&list_box, &init.available.get(), &sender);
 
-        let input_sender = sender.input_sender().clone();
-        let watcher = spawn_property_watcher(&init.available, move || {
-            input_sender.send(ThemeSelectorMsg::RebuildList).is_ok()
+        let available_sender = sender.input_sender().clone();
+        let available_watcher = spawn_property_watcher(&init.available, move || {
+            available_sender.send(ThemeSelectorMsg::RebuildList).is_ok()
+        });
+
+        let scale_sender = sender.input_sender().clone();
+        let scale_watcher = spawn_property_watcher(&init.scale, move || {
+            scale_sender.send(ThemeSelectorMsg::ScaleChanged).is_ok()
         });
 
         let popover_cleanup = popover.clone();
@@ -123,9 +140,12 @@ impl SimpleComponent for ThemeSelectorControl {
         let model = Self {
             available: init.available,
             palette: init.palette,
+            scale: init.scale,
             popover,
             list_box,
-            _watcher: watcher,
+            scrolled,
+            _available_watcher: available_watcher,
+            _scale_watcher: scale_watcher,
         };
 
         ComponentParts { model, widgets: () }
@@ -135,6 +155,7 @@ impl SimpleComponent for ThemeSelectorControl {
         match msg {
             ThemeSelectorMsg::Apply(name) => self.on_apply(name),
             ThemeSelectorMsg::RebuildList => self.on_rebuild_list(&sender),
+            ThemeSelectorMsg::ScaleChanged => self.on_scale_changed(),
         }
     }
 }

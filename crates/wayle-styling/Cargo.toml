@@ -12,7 +12,9 @@ grass.workspace = true
 
 [dependencies]
 grass.workspace = true
+notify.workspace = true
 palette.workspace = true
+relm4.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true

@@ -44,6 +44,7 @@ export default defineConfig({
             { text: 'Editing config', link: '/guide/editing-config' },
             { text: 'Bars and layouts', link: '/guide/bars-and-layouts' },
             { text: 'Themes', link: '/guide/themes' },
+            { text: 'Custom styles', link: '/guide/custom-styles' },
             { text: 'Custom icons', link: '/guide/custom-icons' },
             { text: 'Custom modules', link: '/guide/custom-modules' },
             { text: 'CLI', link: '/guide/cli' },
@@ -94,7 +95,7 @@ export default defineConfig({
             { text: 'microphone', link: '/config/modules/microphone' },
             { text: 'netstat', link: '/config/modules/netstat' },
             { text: 'network', link: '/config/modules/network' },
-            { text: 'notification', link: '/config/modules/notification' },
+            { text: 'notifications', link: '/config/modules/notifications' },
             { text: 'power', link: '/config/modules/power' },
             { text: 'ram', link: '/config/modules/ram' },
             { text: 'separator', link: '/config/modules/separator' },
@@ -111,6 +112,7 @@ export default defineConfig({
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/wayle-rs/wayle' },
+      { icon: 'discord', link: 'https://discord.gg/GYRGnNMf2c' },
     ],
 
     footer: {

@@ -2,61 +2,61 @@
 
 ## Notification Module Configuration
 
-settings-modules-notification-icon-name = Default Icon
+settings-modules-notifications-icon-name = Default Icon
     .description = Icon shown when no notifications
 
-settings-modules-notification-icon-unread = Unread Icon
+settings-modules-notifications-icon-unread = Unread Icon
     .description = Icon shown when notifications exist
 
-settings-modules-notification-icon-dnd = DND Icon
+settings-modules-notifications-icon-dnd = DND Icon
     .description = Icon shown when Do Not Disturb is active
 
-settings-modules-notification-border-show = Show Border
+settings-modules-notifications-border-show = Show Border
     .description = Display border around button
 
-settings-modules-notification-border-color = Border Color
+settings-modules-notifications-border-color = Border Color
     .description = Border color token
 
-settings-modules-notification-icon-show = Show Icon
+settings-modules-notifications-icon-show = Show Icon
     .description = Display module icon
 
-settings-modules-notification-icon-color = Icon Color
+settings-modules-notifications-icon-color = Icon Color
     .description = Icon foreground color
 
-settings-modules-notification-icon-bg-color = Icon Background
+settings-modules-notifications-icon-bg-color = Icon Background
     .description = Icon container background color
 
-settings-modules-notification-label-show = Show Label
+settings-modules-notifications-label-show = Show Label
     .description = Display notification count label
 
-settings-modules-notification-label-color = Label Color
+settings-modules-notifications-label-color = Label Color
     .description = Label text color
 
-settings-modules-notification-label-max-length = Label Max Length
+settings-modules-notifications-label-max-length = Label Max Length
     .description = Max characters before truncation
 
-settings-modules-notification-button-bg-color = Button Background
+settings-modules-notifications-button-bg-color = Button Background
     .description = Button background color
 
-settings-modules-notification-middle-click = Middle Click
+settings-modules-notifications-middle-click = Middle Click
     .description = Shell command on middle click
 
-settings-modules-notification-scroll-up = Scroll Up
+settings-modules-notifications-scroll-up = Scroll Up
     .description = Shell command on scroll up
 
-settings-modules-notification-scroll-down = Scroll Down
+settings-modules-notifications-scroll-down = Scroll Down
     .description = Shell command on scroll down
 
-settings-modules-notification-left-click = Left Click
+settings-modules-notifications-left-click = Left Click
     .description = Action on left click
 
-settings-modules-notification-right-click = Right Click
+settings-modules-notifications-right-click = Right Click
     .description = Action on right click
 
-settings-modules-notification-popup-shadow = Popup Shadow
+settings-modules-notifications-popup-shadow = Popup Shadow
     .description = Draw a shadow behind notification popups
 
-settings-modules-notification-thresholds = Thresholds
+settings-modules-notifications-thresholds = Thresholds
     .description = Color thresholds that change based on value levels
 
 

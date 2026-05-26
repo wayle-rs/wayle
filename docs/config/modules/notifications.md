@@ -1,20 +1,20 @@
 ---
-title: notification
+title: notifications
 outline: [2, 3]
 ---
 
-# notification
+# notifications
 
 <div v-pre>
 
 Notification center: icon in the bar, dropdown with history, DND toggle.
 
-Add it to your layout with `notification`:
+Add it to your layout with `notifications`:
 
 ```toml
 [[bar.layout]]
 monitor = "*"
-right = ["notification"]
+right = ["notifications"]
 ```
 
 ## General
@@ -39,6 +39,7 @@ right = ["notification"]
 | `popup-margin-y` | [`Spacing`](/config/types#spacing) | `0` | Vertical margin from screen edges. |
 | `popup-gap` | [`Spacing`](/config/types#spacing) | `8` | Gap between stacked popups. |
 | `popup-monitor` | [`PopupMonitor`](/config/types#popup-monitor) | `"primary"` | Target monitor: "primary" or a connector name like "DP-1". |
+| `popup-layer` | [`Layer`](/config/types#layer) | `"overlay"` | Layer-shell layer popup notifications are placed on. |
 | `popup-close-behavior` | [`PopupCloseBehavior`](/config/types#popup-close-behavior) | `"dismiss"` | What happens when the close button on a popup is clicked. |
 | `popup-shadow` | bool | `true` | Display drop shadow on popup cards. |
 | `popup-urgency-bar` | [`UrgencyBarThreshold`](/config/types#urgency-bar-threshold) | `"low"` | Minimum urgency level that displays a colored urgency bar. |
@@ -69,6 +70,13 @@ Applications may request a shorter timeout, which takes precedence.
 
 :::
 
+::: details More about `popup-layer`
+
+When `general.tearing-mode` is enabled, `overlay` is demoted to `top`
+to allow fullscreen tearing.
+
+:::
+
 ::: details More about `thresholds`
 
 Entries are checked in order; the last matching entry wins for each
@@ -78,12 +86,12 @@ notifications).
 #### Example
 
 ```toml
-[[modules.notification.thresholds]]
+[[modules.notifications.thresholds]]
 above = 5
 icon-color = "status-warning"
 label-color = "status-warning"
 
-[[modules.notification.thresholds]]
+[[modules.notifications.thresholds]]
 above = 20
 icon-color = "status-error"
 label-color = "status-error"
@@ -114,7 +122,7 @@ label-color = "status-error"
 ## Default configuration
 
 ```toml
-[modules.notification]
+[modules.notifications]
 icon-name = "ld-bell-symbolic"
 icon-unread = "ld-bell-dot-symbolic"
 icon-dnd = "ld-bell-off-symbolic"
@@ -143,6 +151,7 @@ popup-margin-x = 0.0
 popup-margin-y = 0.0
 popup-gap = 8.0
 popup-monitor = "primary"
+popup-layer = "overlay"
 popup-close-behavior = "dismiss"
 popup-shadow = true
 popup-urgency-bar = "low"

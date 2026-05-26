@@ -17,7 +17,7 @@ use crate::{
 };
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
-    let notif = &config.modules.notification;
+    let notif = &config.modules.notifications;
 
     LeafEntry {
         id: "notifications",
@@ -43,6 +43,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                     title_key: "settings-section-positioning",
                     items: vec![
                         text_like(&notif.popup_monitor),
+                        enum_select(&notif.popup_layer),
                         spacing(&notif.popup_margin_x),
                         spacing(&notif.popup_margin_y),
                         spacing(&notif.popup_gap),

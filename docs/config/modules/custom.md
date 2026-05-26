@@ -34,11 +34,6 @@ right = ["custom-<id>"]
 | `label-show` | bool | `true` | Display text label. |
 | `label-max-length` | u32 | `0` | Maximum label length in characters before truncation. |
 | `border-show` | bool | `false` | Display border around button. |
-| `left-click` | string | `""` | Shell command executed on left click. |
-| `right-click` | string | `""` | Shell command executed on right click. |
-| `middle-click` | string | `""` | Shell command executed on middle click. |
-| `scroll-up` | string | `""` | Shell command executed on scroll up. |
-| `scroll-down` | string | `""` | Shell command executed on scroll down. |
 | `on-action` | unknown | `null` | Shell command to run after any click/scroll action completes. |
 
 ::: details More about `id`
@@ -165,38 +160,6 @@ When exceeded, label is truncated with ellipsis. Set to `0` to disable.
 
 :::
 
-::: details More about `left-click`
-
-If `on-action` is set, it runs after this command completes.
-
-:::
-
-::: details More about `right-click`
-
-If `on-action` is set, it runs after this command completes.
-
-:::
-
-::: details More about `middle-click`
-
-If `on-action` is set, it runs after this command completes.
-
-:::
-
-::: details More about `scroll-up`
-
-Scroll events are debounced (50ms) to coalesce rapid scrolls.
-If `on-action` is set, it runs after this command completes.
-
-:::
-
-::: details More about `scroll-down`
-
-Scroll events are debounced (50ms) to coalesce rapid scrolls.
-If `on-action` is set, it runs after this command completes.
-
-:::
-
 ::: details More about `on-action`
 
 Executes after the action handler finishes, and its output updates
@@ -226,6 +189,57 @@ echo "{\"percentage\": $vol}"
 | `label-color` | [`ColorValue`](/config/types#color-value) | `"auto"` | Label text color. |
 | `button-bg-color` | [`ColorValue`](/config/types#color-value) | `"bg-surface-elevated"` | Button background color. |
 | `border-color` | [`ColorValue`](/config/types#color-value) | `"auto"` | Border color. |
+
+## Click actions
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `left-click` | [`ClickAction`](/config/types#click-action) | `""` | Action performed on left click. |
+| `right-click` | [`ClickAction`](/config/types#click-action) | `""` | Action performed on right click. |
+| `middle-click` | [`ClickAction`](/config/types#click-action) | `""` | Action performed on middle click. |
+| `scroll-up` | [`ClickAction`](/config/types#click-action) | `""` | Action performed on scroll up. |
+| `scroll-down` | [`ClickAction`](/config/types#click-action) | `""` | Action performed on scroll down. |
+
+::: details More about `left-click`
+
+Supports shell commands and dropdown toggles:
+- `"pavucontrol"` — runs a shell command
+- `"dropdown:audio"` — toggles the named dropdown panel
+- `""` — no action (default)
+
+If `on-action` is set, it runs after shell commands complete.
+
+:::
+
+::: details More about `right-click`
+
+Supports shell commands and dropdown toggles (see `left-click`).
+If `on-action` is set, it runs after shell commands complete.
+
+:::
+
+::: details More about `middle-click`
+
+Supports shell commands and dropdown toggles (see `left-click`).
+If `on-action` is set, it runs after shell commands complete.
+
+:::
+
+::: details More about `scroll-up`
+
+Supports shell commands and dropdown toggles (see `left-click`).
+Scroll events are debounced (50ms) to coalesce rapid scrolls.
+If `on-action` is set, it runs after shell commands complete.
+
+:::
+
+::: details More about `scroll-down`
+
+Supports shell commands and dropdown toggles (see `left-click`).
+Scroll events are debounced (50ms) to coalesce rapid scrolls.
+If `on-action` is set, it runs after shell commands complete.
+
+:::
 
 ## Icons
 

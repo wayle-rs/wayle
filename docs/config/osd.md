@@ -19,6 +19,14 @@ On-screen display overlay for transient events like volume and brightness.
 | `monitor` | [`OsdMonitor`](/config/types#osd-monitor) | `"primary"` | Target monitor: "primary" or a connector name like "DP-1". |
 | `margin` | [`Spacing`](/config/types#spacing) | `150` | Margin from screen edges. |
 | `border` | bool | `true` | Show a border around the OSD. |
+| `layer` | [`Layer`](/config/types#layer) | `"overlay"` | Layer-shell layer the OSD is placed on. |
+
+::: details More about `layer`
+
+When `general.tearing-mode` is enabled, `overlay` is demoted to `top`
+to allow fullscreen tearing.
+
+:::
 
 ## Default configuration
 
@@ -30,6 +38,7 @@ duration = 2500
 monitor = "primary"
 margin = 150.0
 border = true
+layer = "overlay"
 ```
 
 

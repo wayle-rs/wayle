@@ -61,6 +61,7 @@ wayle-wallpaper.workspace = true
 wayle-weather.workspace = true
 wayle-widgets = { workspace = true }
 zbus.workspace = true
+gio-unix = { version = "0.22.6", default-features = false }
 
 [dev-dependencies]
 glob.workspace = true

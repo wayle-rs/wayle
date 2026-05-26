@@ -14,7 +14,7 @@ use crate::{
 };
 
 pub(crate) fn entry(config: &Config) -> LeafEntry {
-    let module = &config.modules.notification;
+    let module = &config.modules.notifications;
 
     let fields = BarButtonFields {
         icon_show: &module.icon_show,

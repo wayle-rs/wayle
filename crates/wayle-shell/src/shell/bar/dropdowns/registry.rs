@@ -28,9 +28,25 @@ impl DropdownInstance {
     pub(crate) fn new(popover: gtk::Popover, controller: Box<dyn Any>) -> Self {
         let thaw_target: Rc<Cell<Option<relm4::Sender<BarButtonInput>>>> = Rc::default();
 
+        popover.connect_map(|popover| {
+            debug!(
+                width = popover.width(),
+                height = popover.height(),
+                autohide = popover.is_autohide(),
+                classes = ?popover.css_classes(),
+                "popover mapped"
+            );
+        });
+
         let thaw = thaw_target.clone();
         popover.connect_closed(move |popover| {
-            debug!(classes = ?popover.css_classes(), "popover closed");
+            debug!(
+                width = popover.width(),
+                height = popover.height(),
+                autohide = popover.is_autohide(),
+                classes = ?popover.css_classes(),
+                "popover closed"
+            );
             let frozen_sender = thaw.take();
 
             if let Some(sender) = &frozen_sender {
@@ -108,7 +124,12 @@ impl DropdownInstance {
         self.apply_margins(style.margins);
         self.apply_style(&style);
         set_bar_keyboard_mode(&self.popover, KeyboardMode::OnDemand);
-        debug!(classes = ?self.popover.css_classes(), "popup (widget path)");
+        debug!(
+            classes = ?self.popover.css_classes(),
+            autohide = self.popover.is_autohide(),
+            parent_size = ?self.popover.parent().map(|p| (p.width(), p.height())),
+            "popup (widget path)"
+        );
         self.popover.popup();
     }
 
@@ -153,7 +174,8 @@ impl DropdownInstance {
         set_bar_keyboard_mode(&self.popover, KeyboardMode::OnDemand);
         debug!(
             classes = ?self.popover.css_classes(),
-            size = ?(self.popover.width(), self.popover.height()),
+            autohide = self.popover.is_autohide(),
+            parent_size = ?self.popover.parent().map(|p| (p.width(), p.height())),
             "popup (button path)"
         );
         self.popover.popup();

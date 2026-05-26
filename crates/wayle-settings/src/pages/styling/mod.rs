@@ -39,7 +39,12 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-palette",
                     items: vec![
-                        theme_selector(&styling.available, palette, "settings-theme-preset"),
+                        theme_selector(
+                            &styling.available,
+                            palette,
+                            &styling.scale,
+                            "settings-theme-preset",
+                        ),
                         color(&palette.bg),
                         color(&palette.surface),
                         color(&palette.elevated),
