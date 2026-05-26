@@ -39,6 +39,9 @@ pub mod error;
 /// Icon manager for install, remove, and validation operations.
 pub mod manager;
 
+/// On-disk icon format migration.
+pub mod migrate;
+
 /// GTK IconTheme integration.
 pub mod registry;
 

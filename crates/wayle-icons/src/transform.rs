@@ -1,41 +1,38 @@
 //! SVG transformation for GTK symbolic icon compatibility.
 //!
-//! Uses `usvg` for robust SVG parsing and path manipulation.
+//! Parses an arbitrary symbolic-style SVG with `usvg` and re-emits it as a
+//! filled-path-only GTK Grappa symbolic icon. Stroked source paths are
+//! outlined into filled polygons via `tiny_skia_path::Path::stroke`, so the
+//! output never depends on GTK4's symbolic stroke renderer (which is broken
+//! across 4.21-4.23 and only repaired in 4.24).
 //!
-//! # Why This Exists
-//!
-//! GTK symbolic icons require specific attributes (`gpa:stroke`, `gpa:fill`)
-//! from the Grappa namespace for CSS color recoloring. Most icon libraries
-//! don't include these, so we transform standard SVGs into GTK-compatible format.
-//!
-//! # What This Module Does
-//!
-//! 1. **Parses SVG** using `usvg` for correct handling of all path commands
-//! 2. **Scales coordinates** from source size (typically 24x24) to 16x16
-//! 3. **Adds GTK Grappa attributes** for CSS color support
-//! 4. **Detects stroke vs fill** icons and applies appropriate attributes
+//! See [GNOME/gtk#8147](https://gitlab.gnome.org/GNOME/gtk/-/issues/8147).
 
 use std::fmt::Write;
 
 use usvg::{
-    Node, Options, Tree,
-    tiny_skia_path::{PathSegment, Transform},
+    Node, Options, Path as SvgPath, Stroke, Tree,
+    tiny_skia_path::{Path, PathSegment, PathStroker, Transform},
 };
 
 const TARGET_SIZE: f32 = 16.0;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum IconStyle {
-    Stroke,
-    Fill,
-}
+/// Stroke-outliner precision target.
+///
+/// Passed to [`tiny_skia_path::Path::stroke`] and [`tiny_skia_path::Path::dash`]
+/// as the resolution scale. Higher values produce more polygon segments on
+/// curved caps and joins, eliminating visible faceting at the 16x16 output.
+const RESOLUTION_SCALE: f32 = 4.0;
 
-pub(crate) fn to_symbolic(svg_content: &str) -> String {
-    let style = detect_icon_style(svg_content);
+/// On-disk format revision stamped onto every emitted SVG via `gpa:version`.
+///
+/// Bumped any time the geometric output shape changes so the migration code
+/// can detect stale files written by older revisions.
+pub(crate) const FORMAT_VERSION: u32 = 2;
 
-    let tree = match Tree::from_str(svg_content, &Options::default()) {
-        Ok(tree) => tree,
-        Err(_) => return build_fallback_svg(svg_content, style),
+pub(crate) fn to_symbolic(svg_content: &str) -> Option<String> {
+    let Ok(tree) = Tree::from_str(svg_content, &Options::default()) else {
+        return build_fallback_svg(svg_content);
     };
 
     let source_size = tree.size().width().max(tree.size().height());
@@ -46,29 +43,19 @@ pub(crate) fn to_symbolic(svg_content: &str) -> String {
     };
 
     let paths = extract_paths(&tree, scale);
-
     if paths.is_empty() {
-        return build_fallback_svg(svg_content, style);
+        return build_fallback_svg(svg_content);
     }
 
-    build_gtk_svg(&paths, style, scale)
-}
-
-fn detect_icon_style(content: &str) -> IconStyle {
-    if content.contains(r#"stroke="currentColor""#) {
-        IconStyle::Stroke
-    } else {
-        IconStyle::Fill
-    }
+    Some(build_gtk_svg(&paths))
 }
 
 struct ScaledPath {
     d: String,
-    stroke_width: Option<f32>,
     is_bounding_box: bool,
 }
 
-fn is_bounding_box_path(path: &usvg::tiny_skia_path::Path, target_size: f32) -> bool {
+fn is_bounding_box_path(path: &Path, target_size: f32) -> bool {
     let segments: Vec<_> = path.segments().collect();
 
     if segments.len() != 5 {
@@ -118,7 +105,7 @@ fn extract_paths(tree: &Tree, scale: f32) -> Vec<ScaledPath> {
     let mut paths = Vec::new();
     let transform = Transform::from_scale(scale, scale);
 
-    collect_paths_from_group(tree.root(), transform, &mut paths, scale);
+    collect_paths_from_group(tree.root(), transform, &mut paths);
 
     paths
 }
@@ -127,39 +114,101 @@ fn collect_paths_from_group(
     group: &usvg::Group,
     parent_transform: Transform,
     paths: &mut Vec<ScaledPath>,
-    scale: f32,
 ) {
     for node in group.children() {
         match node {
-            Node::Path(path) => {
-                let transformed = path.data().clone().transform(parent_transform);
-
-                if let Some(transformed_path) = transformed {
-                    let d = path_data_to_string(&transformed_path);
-
-                    if !d.is_empty() {
-                        let stroke_width = path.stroke().map(|s| s.width().get() * scale);
-                        let has_visible_paint = path.fill().is_some() || path.stroke().is_some();
-                        let is_bounding_box = !has_visible_paint
-                            && is_bounding_box_path(&transformed_path, TARGET_SIZE);
-                        paths.push(ScaledPath {
-                            d,
-                            stroke_width,
-                            is_bounding_box,
-                        });
-                    }
-                }
-            }
+            Node::Path(path) => process_path(path, parent_transform, paths),
             Node::Group(child_group) => {
                 let combined = parent_transform.pre_concat(child_group.transform());
-                collect_paths_from_group(child_group, combined, paths, scale);
+                collect_paths_from_group(child_group, combined, paths);
             }
             _ => {}
         }
     }
 }
 
-fn path_data_to_string(path: &usvg::tiny_skia_path::Path) -> String {
+fn process_path(source: &SvgPath, parent_transform: Transform, paths: &mut Vec<ScaledPath>) {
+    let Some(transformed) = source.data().clone().transform(parent_transform) else {
+        return;
+    };
+
+    let has_fill = source.fill().is_some();
+    let has_stroke = source.stroke().is_some();
+
+    if has_fill {
+        push_fill_geometry(&transformed, paths);
+    }
+
+    if has_stroke {
+        push_stroke_outline(&transformed, source.stroke(), &parent_transform, paths);
+    }
+
+    if !has_fill && !has_stroke {
+        push_unpainted_geometry(&transformed, paths);
+    }
+}
+
+fn push_fill_geometry(geometry: &Path, paths: &mut Vec<ScaledPath>) {
+    let d = path_data_to_string(geometry);
+    if d.is_empty() {
+        return;
+    }
+    paths.push(ScaledPath {
+        d,
+        is_bounding_box: false,
+    });
+}
+
+fn push_stroke_outline(
+    geometry: &Path,
+    stroke: Option<&Stroke>,
+    parent_transform: &Transform,
+    paths: &mut Vec<ScaledPath>,
+) {
+    let Some(outlined) = outline_stroke(geometry, stroke, parent_transform) else {
+        return;
+    };
+
+    let d = path_data_to_string(&outlined);
+    if d.is_empty() {
+        return;
+    }
+
+    paths.push(ScaledPath {
+        d,
+        is_bounding_box: false,
+    });
+}
+
+fn push_unpainted_geometry(geometry: &Path, paths: &mut Vec<ScaledPath>) {
+    let d = path_data_to_string(geometry);
+    if d.is_empty() {
+        return;
+    }
+
+    let is_bounding_box = is_bounding_box_path(geometry, TARGET_SIZE);
+    paths.push(ScaledPath { d, is_bounding_box });
+}
+
+fn outline_stroke(
+    geometry: &Path,
+    stroke: Option<&Stroke>,
+    parent_transform: &Transform,
+) -> Option<Path> {
+    let source_stroke = stroke?;
+    let mut tiny_stroke = source_stroke.to_tiny_skia();
+    let effective_scale = PathStroker::compute_resolution_scale(parent_transform);
+    tiny_stroke.width *= effective_scale;
+
+    if let Some(dash) = tiny_stroke.dash.take() {
+        let dashed = geometry.dash(&dash, RESOLUTION_SCALE)?;
+        return dashed.stroke(&tiny_stroke, RESOLUTION_SCALE);
+    }
+
+    geometry.stroke(&tiny_stroke, RESOLUTION_SCALE)
+}
+
+fn path_data_to_string(path: &Path) -> String {
     let mut result = String::with_capacity(256);
 
     for segment in path.segments() {
@@ -199,346 +248,271 @@ fn write_command(out: &mut String, cmd: char, coords: &[f32]) {
     }
 }
 
-fn build_gtk_svg(paths: &[ScaledPath], style: IconStyle, scale: f32) -> String {
+fn build_gtk_svg(paths: &[ScaledPath]) -> String {
     let mut output = String::with_capacity(512);
 
     output.push_str("<svg width='16' height='16'\n");
     output.push_str("     xmlns:gpa='https://www.gtk.org/grappa'\n");
-    output.push_str("     gpa:version='1'>\n");
+    let _ = writeln!(output, "     gpa:version='{FORMAT_VERSION}'>");
 
-    for path in paths.iter().filter(|p| !p.is_bounding_box) {
-        let path_element = build_path_element(&path.d, style, path.stroke_width, scale);
-        output.push_str(&path_element);
+    for scaled_path in paths
+        .iter()
+        .filter(|scaled_path| !scaled_path.is_bounding_box)
+    {
+        output.push_str(&build_fill_path_element(&scaled_path.d));
     }
 
     output.push_str("</svg>\n");
     output
 }
 
-fn build_path_element(d: &str, style: IconStyle, stroke_width: Option<f32>, scale: f32) -> String {
-    match style {
-        IconStyle::Stroke => {
-            let width = stroke_width.unwrap_or(2.0 * scale);
-            format!(
-                "  <path d='{d}'\n\
-                        stroke-width='{width:.2}'\n\
-                        stroke-linecap='round'\n\
-                        stroke-linejoin='round'\n\
-                        stroke='rgb(0,0,0)'\n\
-                        fill='none'\n\
-                        gpa:stroke='foreground'/>\n"
-            )
-        }
-        IconStyle::Fill => {
-            format!(
-                "  <path d='{d}'\n\
-                        stroke='none'\n\
-                        fill='rgb(0,0,0)'\n\
-                        gpa:fill='foreground'/>\n"
-            )
-        }
-    }
+fn build_fill_path_element(d: &str) -> String {
+    format!(
+        "  <path d='{d}'\n\
+                stroke='none'\n\
+                fill='rgb(0,0,0)'\n\
+                gpa:fill='foreground'/>\n"
+    )
 }
 
-fn build_fallback_svg(original: &str, style: IconStyle) -> String {
-    if let Some(d) = extract_path_d_fallback(original) {
-        let path = ScaledPath {
-            d,
-            stroke_width: None,
-            is_bounding_box: false,
-        };
-        build_gtk_svg(&[path], style, 1.0_f32)
-    } else {
-        String::from("<svg width='16' height='16'/>")
-    }
+fn build_fallback_svg(original: &str) -> Option<String> {
+    let d = extract_path_d_fallback(original)?;
+    let path = ScaledPath {
+        d,
+        is_bounding_box: false,
+    };
+    Some(build_gtk_svg(&[path]))
 }
 
 fn extract_path_d_fallback(content: &str) -> Option<String> {
-    let start = content.find("d=\"")? + 3;
-    let end = start + content[start..].find('"')?;
+    extract_quoted_attr(content, "d=\"", '"').or_else(|| extract_quoted_attr(content, "d='", '\''))
+}
+
+fn extract_quoted_attr(content: &str, prefix: &str, quote: char) -> Option<String> {
+    let start = content.find(prefix)? + prefix.len();
+    let end = start + content[start..].find(quote)?;
     Some(content[start..end].to_string())
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
-
-    mod detect_icon_style_tests {
-        use super::*;
-
-        #[test]
-        fn returns_stroke_when_stroke_currentcolor_present() {
-            let svg = r#"<svg stroke="currentColor"><path d="M0 0"/></svg>"#;
-            assert_eq!(detect_icon_style(svg), IconStyle::Stroke);
-        }
-
-        #[test]
-        fn returns_fill_when_fill_currentcolor_present() {
-            let svg = r#"<svg fill="currentColor"><path d="M0 0"/></svg>"#;
-            assert_eq!(detect_icon_style(svg), IconStyle::Fill);
-        }
-
-        #[test]
-        fn returns_fill_when_neither_stroke_nor_fill_specified() {
-            let svg = r#"<svg><path d="M0 0"/></svg>"#;
-            assert_eq!(detect_icon_style(svg), IconStyle::Fill);
-        }
-
-        #[test]
-        fn returns_stroke_when_both_present_stroke_checked_first() {
-            let svg = r#"<svg stroke="currentColor" fill="currentColor"><path/></svg>"#;
-            assert_eq!(detect_icon_style(svg), IconStyle::Stroke);
-        }
-    }
 
     mod to_symbolic_tests {
         use super::*;
 
+        fn transform(svg: &str) -> String {
+            to_symbolic(svg).expect("to_symbolic returned None for input that should produce paths")
+        }
+
         #[test]
         fn outputs_16x16_dimensions() {
-            let svg = r#"<svg viewBox="0 0 24 24"><path d="M12 12"/></svg>"#;
-            let result = to_symbolic(svg);
+            let result =
+                transform(r#"<svg viewBox="0 0 24 24"><path d="M12 12" fill="black"/></svg>"#);
 
             assert!(result.contains("width='16'"));
             assert!(result.contains("height='16'"));
         }
 
         #[test]
-        fn includes_grappa_namespace() {
-            let svg = r#"<svg viewBox="0 0 24 24"><path d="M0 0"/></svg>"#;
-            let result = to_symbolic(svg);
+        fn stamps_current_format_version() {
+            let result =
+                transform(r#"<svg viewBox="0 0 24 24"><path d="M0 0" fill="black"/></svg>"#);
 
             assert!(result.contains("xmlns:gpa='https://www.gtk.org/grappa'"));
-            assert!(result.contains("gpa:version='1'"));
+            assert!(
+                result.contains(&format!("gpa:version='{FORMAT_VERSION}'")),
+                "output must stamp current version: {result}"
+            );
         }
 
         #[test]
         fn scales_coordinates_from_24_to_16() {
-            let svg = r#"<svg viewBox="0 0 24 24"><path d="M0 0L24 24"/></svg>"#;
-            let result = to_symbolic(svg);
+            let result =
+                transform(r#"<svg viewBox="0 0 24 24"><path d="M0 0L24 24" fill="black"/></svg>"#);
 
             assert!(
                 result.contains("L16.00 16.00"),
-                "Expected L24 24 scaled to L16 16, got: {}",
-                result
+                "Expected L24 24 scaled to L16 16, got: {result}"
             );
         }
 
         #[test]
         fn handles_arc_commands_without_nan() {
-            let svg = r#"<svg viewBox="0 0 24 24" fill="currentColor">
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M20.452 3.445a11.002 11.002 0 00-2.482-1.908"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
+            </svg>"#,
+            );
 
             assert!(!result.contains("NaN"), "Arc conversion produced NaN");
             assert!(!result.contains("nan"), "Arc conversion produced nan");
         }
 
         #[test]
-        fn uses_fallback_for_invalid_svg() {
-            let invalid_svg = r#"<svg><not valid xml"#;
-            let result = to_symbolic(invalid_svg);
-
-            assert!(result.contains("width='16'"));
+        fn returns_none_when_xml_unparseable_and_no_path_d() {
+            assert_eq!(to_symbolic(r#"<svg><not valid xml"#), None);
         }
 
         #[test]
-        fn returns_empty_svg_for_completely_broken_input() {
-            let garbage = "not svg at all";
-            let result = to_symbolic(garbage);
-
-            assert_eq!(result, "<svg width='16' height='16'/>");
+        fn returns_none_for_completely_broken_input() {
+            assert_eq!(to_symbolic("not svg at all"), None);
         }
 
         #[test]
         fn accumulates_nested_group_transforms() {
-            let svg = r#"<svg viewBox="0 0 24 24">
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24">
                 <g transform="translate(6, 6)">
                     <g transform="scale(2)">
-                        <path d="M0 0L3 3"/>
+                        <path d="M0 0L3 3" fill="black"/>
                     </g>
                 </g>
-            </svg>"#;
-            let result = to_symbolic(svg);
+            </svg>"#,
+            );
 
             assert!(
                 result.contains("d='M"),
-                "Expected path in output, got: {}",
-                result
+                "Expected path in output, got: {result}"
             );
             assert!(
                 !result.contains("M0.00 0.00L3.00 3.00"),
-                "Transforms should have been applied, got raw coords: {}",
-                result
+                "Transforms should have been applied, got raw coords: {result}"
             );
         }
 
         #[test]
         fn extracts_multiple_paths_from_svg() {
-            let svg = r#"<svg viewBox="0 0 24 24">
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" fill="black">
                 <path d="M0 0L12 0"/>
                 <path d="M0 12L12 12"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
+            </svg>"#,
+            );
 
             let path_count = result.matches("<path d='").count();
             assert_eq!(
                 path_count, 2,
-                "Expected 2 paths, got {}: {}",
-                path_count, result
+                "Expected 2 paths, got {path_count}: {result}"
             );
         }
 
         #[test]
-        fn stroke_icon_gets_gpa_stroke_attribute() {
-            let svg = r#"<svg viewBox="0 0 24 24" stroke="currentColor">
+        fn output_is_always_filled_geometry() {
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" stroke="currentColor" fill="none">
                 <path d="M0 0L24 24"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
+            </svg>"#,
+            );
 
-            assert!(
-                result.contains("gpa:stroke='foreground'"),
-                "Stroke icon should have gpa:stroke attribute, got: {}",
-                result
-            );
-            assert!(
-                result.contains("stroke-linecap='round'"),
-                "Stroke icon should have linecap, got: {}",
-                result
-            );
+            assert!(result.contains("gpa:fill='foreground'"), "{result}");
+            assert!(!result.contains("gpa:stroke="), "{result}");
+            assert!(!result.contains("stroke-linecap"), "{result}");
+            assert!(result.contains("stroke='none'"), "{result}");
         }
 
         #[test]
-        fn fill_icon_gets_gpa_fill_attribute() {
-            let svg = r#"<svg viewBox="0 0 24 24" fill="currentColor">
+        fn fill_only_source_emits_fill_output() {
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" fill="currentColor">
                 <path d="M0 0L24 24"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
+            </svg>"#,
+            );
+
+            assert!(result.contains("gpa:fill='foreground'"));
+            assert!(result.contains("stroke='none'"));
+        }
+
+        #[test]
+        fn stroked_open_path_becomes_closed_outline() {
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" stroke="currentColor" fill="none"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M2 12L22 12"/>
+            </svg>"#,
+            );
 
             assert!(
-                result.contains("gpa:fill='foreground'"),
-                "Fill icon should have gpa:fill attribute, got: {}",
-                result
-            );
-            assert!(
-                result.contains("stroke='none'"),
-                "Fill icon should have stroke='none', got: {}",
-                result
+                result.matches("Z").count() >= 1,
+                "Stroke outline must produce at least one closed subpath: {result}"
             );
         }
 
         #[test]
         fn serializes_closed_paths_with_z_command() {
-            let svg = r#"<svg viewBox="0 0 24 24">
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" fill="black">
                 <path d="M0 0L24 0L24 24Z"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
-
-            assert!(
-                result.contains("Z"),
-                "Closed path should contain Z command, got: {}",
-                result
+            </svg>"#,
             );
-        }
 
-        #[test]
-        fn serializes_quadratic_bezier_curves() {
-            let svg = r#"<svg viewBox="0 0 24 24">
-                <path d="M0 0Q12 24 24 0"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
-
-            assert!(
-                result.contains("Q"),
-                "Quadratic bezier should contain Q command, got: {}",
-                result
-            );
-        }
-
-        #[test]
-        fn preserves_stroke_width_from_source() {
-            let svg = r#"<svg viewBox="0 0 24 24" stroke="currentColor">
-                <path d="M0 0L24 24" stroke-width="3"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
-
-            assert!(
-                result.contains("stroke-width='2.00'"),
-                "Stroke width 3 scaled by 16/24 should be 2.00, got: {}",
-                result
-            );
+            assert!(result.contains("Z"), "{result}");
         }
 
         #[test]
         fn converts_rect_to_path() {
-            let svg = r#"<svg viewBox="0 0 24 24">
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" fill="black">
                 <rect x="4" y="4" width="16" height="16"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
-
-            assert!(
-                result.contains("<path d='M"),
-                "Rect should be converted to path, got: {}",
-                result
+            </svg>"#,
             );
+
+            assert!(result.contains("<path d='M"), "{result}");
         }
 
         #[test]
         fn strips_inkscape_cruft_from_inline_style_attributes() {
-            let svg = r##"<svg viewBox="0 0 16 16"
+            let result = transform(
+                r##"<svg viewBox="0 0 16 16"
                 xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
                 xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd">
                 <path style="display:inline;stop-color:#000000;stop-opacity:1"
                       d="M 2 2 L 14 2 L 14 14 L 2 14 Z"/>
-            </svg>"##;
-            let result = to_symbolic(svg);
-
-            assert!(
-                result.contains("gpa:fill='foreground'"),
-                "Inkscape-exported SVG should produce recolor-capable output, got: {result}"
+            </svg>"##,
             );
+
+            assert!(result.contains("gpa:fill='foreground'"), "{result}");
             assert!(
                 !result.contains("sodipodi") && !result.contains("inkscape:"),
-                "Editor namespaces must be stripped, got: {result}"
+                "{result}"
             );
-            assert!(
-                !result.contains("style=\""),
-                "Inline style attributes must be stripped, got: {result}"
-            );
+            assert!(!result.contains("style=\""), "{result}");
+        }
+
+        #[test]
+        fn real_lucide_wifi_produces_only_filled_paths() {
+            let lucide_wifi = r#"<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-wifi"><path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.859a10 10 0 0 1 14 0"/><path d="M8.5 16.429a5 5 0 0 1 7 0"/></svg>"#;
+
+            let result = transform(lucide_wifi);
+
+            assert!(!result.contains("gpa:stroke="), "{result}");
+            assert!(!result.contains("stroke-linecap"), "{result}");
+            assert!(!result.contains("stroke-linejoin"), "{result}");
+            assert!(!result.contains("stroke-width"), "{result}");
+
+            let fill_paths = result.matches("gpa:fill='foreground'").count();
+            assert_eq!(fill_paths, 4, "one fill path per source stroke: {result}");
         }
 
         #[test]
         fn converts_circle_to_path() {
-            let svg = r#"<svg viewBox="0 0 24 24">
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" fill="black">
                 <circle cx="12" cy="12" r="8"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
-
-            assert!(
-                result.contains("<path d='M"),
-                "Circle should be converted to path, got: {}",
-                result
+            </svg>"#,
             );
+
+            assert!(result.contains("<path d='M"), "{result}");
         }
     }
 
-    mod build_path_element_tests {
+    mod build_fill_path_element_tests {
         use super::*;
 
         #[test]
-        fn stroke_style_includes_stroke_attributes() {
-            let result = build_path_element("M0 0", IconStyle::Stroke, None, 0.667);
-
-            assert!(result.contains("stroke-linecap='round'"));
-            assert!(result.contains("stroke-linejoin='round'"));
-            assert!(result.contains("fill='none'"));
-            assert!(result.contains("gpa:stroke='foreground'"));
-        }
-
-        #[test]
-        fn fill_style_includes_fill_attributes() {
-            let result = build_path_element("M0 0", IconStyle::Fill, None, 0.667);
+        fn emits_fill_attributes() {
+            let result = build_fill_path_element("M0 0");
 
             assert!(result.contains("stroke='none'"));
             assert!(result.contains("fill='rgb(0,0,0)'"));
@@ -546,29 +520,13 @@ mod tests {
         }
 
         #[test]
-        fn stroke_width_uses_provided_value_when_present() {
-            let result = build_path_element("M0 0", IconStyle::Stroke, Some(1.5), 0.667);
+        fn never_emits_stroke_attributes() {
+            let result = build_fill_path_element("M0 0");
 
-            assert!(
-                result.contains("stroke-width='1.50'"),
-                "Expected stroke-width='1.50', got: {}",
-                result
-            );
-        }
-
-        #[test]
-        fn stroke_width_uses_default_scaled_when_none() {
-            let scale = 0.5;
-            let result = build_path_element("M0 0", IconStyle::Stroke, None, scale);
-
-            let expected_width = 2.0 * scale;
-            let expected = format!("stroke-width='{:.2}'", expected_width);
-            assert!(
-                result.contains(&expected),
-                "Expected {}, got: {}",
-                expected,
-                result
-            );
+            assert!(!result.contains("stroke-width"));
+            assert!(!result.contains("stroke-linecap"));
+            assert!(!result.contains("stroke-linejoin"));
+            assert!(!result.contains("gpa:stroke="));
         }
     }
 
@@ -613,8 +571,8 @@ mod tests {
 
         #[test]
         fn wraps_extracted_path_in_gtk_svg() {
-            let svg = r#"<svg><path d="M5 5"/></svg>"#;
-            let result = build_fallback_svg(svg, IconStyle::Fill);
+            let result = build_fallback_svg(r#"<svg><path d="M5 5"/></svg>"#)
+                .expect("extractable d attribute should produce fallback SVG");
 
             assert!(result.contains("xmlns:gpa="));
             assert!(result.contains("M5 5"));
@@ -622,74 +580,69 @@ mod tests {
         }
 
         #[test]
-        fn returns_empty_svg_when_no_path_extractable() {
-            let svg = r#"<svg><rect/></svg>"#;
-            let result = build_fallback_svg(svg, IconStyle::Fill);
-
-            assert_eq!(result, "<svg width='16' height='16'/>");
+        fn returns_none_when_no_path_extractable() {
+            assert_eq!(build_fallback_svg(r#"<svg><rect/></svg>"#), None);
         }
     }
 
     mod bounding_box_tests {
         use super::*;
 
+        fn transform(svg: &str) -> String {
+            to_symbolic(svg).expect("to_symbolic returned None for input that should produce paths")
+        }
+
         #[test]
         fn filters_out_bounding_box_rectangle() {
-            let svg = r#"<svg viewBox="0 0 24 24">
-                <rect x="0" y="0" width="24" height="24" fill="none" stroke="none"/>
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" fill="none">
+                <rect x="0" y="0" width="24" height="24" stroke="none"/>
                 <circle cx="12" cy="12" r="8" stroke="currentColor"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
+            </svg>"#,
+            );
 
             let path_count = result.matches("<path d='").count();
             assert_eq!(
                 path_count, 1,
-                "Bounding box rect should be filtered, leaving only the circle: {}",
-                result
+                "Bounding box rect should be filtered, leaving only the circle: {result}"
             );
         }
 
         #[test]
         fn preserves_non_bounding_box_rectangles() {
-            let svg = r#"<svg viewBox="0 0 24 24">
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" fill="black">
                 <rect x="4" y="4" width="16" height="16"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
-
-            assert!(
-                result.contains("<path d='"),
-                "Smaller rectangle should be preserved: {}",
-                result
+            </svg>"#,
             );
+
+            assert!(result.contains("<path d='"), "{result}");
         }
 
         #[test]
         fn preserves_partial_bounding_box() {
-            let svg = r#"<svg viewBox="0 0 24 24">
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" fill="black">
                 <rect x="0" y="0" width="24" height="12"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
-
-            assert!(
-                result.contains("<path d='"),
-                "Partial bounding rect should be preserved: {}",
-                result
+            </svg>"#,
             );
+
+            assert!(result.contains("<path d='"), "{result}");
         }
 
         #[test]
         fn preserves_visible_full_size_rectangle() {
-            let svg = r#"<svg viewBox="0 0 24 24" stroke="currentColor">
+            let result = transform(
+                r#"<svg viewBox="0 0 24 24" stroke="currentColor" fill="none">
                 <rect x="0" y="0" width="24" height="24"/>
                 <circle cx="6" cy="6" r="2"/>
-            </svg>"#;
-            let result = to_symbolic(svg);
+            </svg>"#,
+            );
 
             let path_count = result.matches("<path d='").count();
             assert_eq!(
                 path_count, 2,
-                "Visible full-size rect (like dice outline) should be preserved: {}",
-                result
+                "Visible full-size rect (like dice outline) should be preserved: {result}"
             );
         }
     }

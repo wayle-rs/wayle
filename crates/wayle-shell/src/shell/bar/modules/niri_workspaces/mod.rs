@@ -23,7 +23,7 @@ pub(crate) use self::{
     factory::Factory,
     messages::{NiriWorkspacesCmd, NiriWorkspacesInit, NiriWorkspacesMsg},
 };
-use crate::shell::bar::dropdowns::DropdownRegistry;
+use crate::shell::{bar::dropdowns::DropdownRegistry, helpers::COMPONENT_CSS_PRIORITY};
 
 pub(super) const BLINK_INTERVAL: Duration = Duration::from_millis(500);
 
@@ -82,7 +82,7 @@ impl Component for NiriWorkspaces {
         gtk::style_context_add_provider_for_display(
             &root.display(),
             &css_provider,
-            gtk::STYLE_PROVIDER_PRIORITY_USER + 1,
+            COMPONENT_CSS_PRIORITY,
         );
 
         let buttons = FactoryVecDeque::builder().launch(root.clone()).forward(

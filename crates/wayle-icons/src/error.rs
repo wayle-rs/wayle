@@ -7,12 +7,15 @@ use thiserror::Error;
 pub enum SvgValidationError {
     /// SVG parsing failed.
     ParseError(String),
+    /// SVG parsed but contained no extractable path geometry.
+    NoExtractablePaths,
 }
 
 impl std::fmt::Display for SvgValidationError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::ParseError(msg) => write!(f, "{msg}"),
+            Self::NoExtractablePaths => write!(f, "no extractable paths"),
         }
     }
 }
@@ -69,6 +72,13 @@ pub enum Error {
     #[error("icon '{name}' not found")]
     NotFound {
         /// Icon name that was not found.
+        name: String,
+    },
+
+    /// Icon name contains characters that would escape the icons directory.
+    #[error("icon name '{name}' must not contain '/', '\\', or '..'")]
+    InvalidIconName {
+        /// The rejected icon name.
         name: String,
     },
 
