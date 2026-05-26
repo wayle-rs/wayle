@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use gdk4::Display;
 use gtk4::{
-    CssProvider, STYLE_PROVIDER_PRIORITY_APPLICATION, STYLE_PROVIDER_PRIORITY_USER, Window, glib,
-    prelude::ApplicationExt, style_context_add_provider_for_display,
+    CssProvider, STYLE_PROVIDER_PRIORITY_USER, Window, glib, prelude::ApplicationExt,
+    style_context_add_provider_for_display,
 };
 use relm4::{
     actions::{RelmAction, RelmActionGroup},
@@ -14,16 +14,11 @@ use relm4::{
 use tracing::{info, warn};
 use wayle_config::{ConfigService, infrastructure::paths::ConfigPaths};
 use wayle_icons::IconRegistry;
-use wayle_styling::{RESET_CSS, STATIC_CSS, ensure_user_styles_scaffold, theme_css, user_css};
+use wayle_styling::{STATIC_CSS, ensure_user_styles_scaffold, theme_css, user_css};
 
 relm4::new_action_group!(AppActionGroup, "app");
 relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
 relm4::new_stateless_action!(InspectorAction, AppActionGroup, "inspector");
-
-const RESET_PROVIDER_PRIORITY: u32 = STYLE_PROVIDER_PRIORITY_APPLICATION + 100;
-
-/// Priority for per-component dynamic CSS providers.
-pub(crate) const COMPONENT_CSS_PRIORITY: u32 = STYLE_PROVIDER_PRIORITY_USER + 1;
 
 pub(crate) fn init_icons() {
     if let Err(err) = IconRegistry::new().and_then(|r| r.init()) {
@@ -35,10 +30,6 @@ pub(crate) fn init_css_provider(
     display: &Display,
     config_service: &Arc<ConfigService>,
 ) -> CssProvider {
-    let reset_provider = CssProvider::new();
-    reset_provider.load_from_string(RESET_CSS);
-    style_context_add_provider_for_display(display, &reset_provider, RESET_PROVIDER_PRIORITY);
-
     let provider = CssProvider::new();
 
     let config = config_service.config();
