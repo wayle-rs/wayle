@@ -160,7 +160,14 @@ mod tests {
     fn aggregate_storage_multiple_mount_points_uses_average_percent() {
         let disks = vec![
             disk_data("/", 500 * GIB, 1000 * GIB, 500 * GIB, 50.0, "ext4"),
-            disk_data("/mnt/drive1", 400 * GIB, 800 * GIB, 400 * GIB, 80.0, "btrfs"),
+            disk_data(
+                "/mnt/drive1",
+                400 * GIB,
+                800 * GIB,
+                400 * GIB,
+                80.0,
+                "btrfs",
+            ),
         ];
 
         let snapshot = aggregate_storage(
