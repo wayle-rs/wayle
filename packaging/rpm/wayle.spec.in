@@ -3,9 +3,6 @@
 %global debug_package %{nil}
 %global _build_id_links none
 
-# Arch's rpm-tools lacks systemd-rpm-macros, so _userunitdir may be undefined.
-%{!?_userunitdir: %global _userunitdir %{_prefix}/lib/systemd/user}
-
 Name:           wayle
 Version:        @VERSION@
 Release:        1%{?dist}
@@ -16,6 +13,7 @@ Source0:        https://github.com/wayle-rs/wayle/releases/download/v%{version}/
 ExclusiveArch:  x86_64
 
 BuildRequires:  desktop-file-utils
+BuildRequires:  systemd-rpm-macros
 Requires:       hicolor-icon-theme
 
 %description
