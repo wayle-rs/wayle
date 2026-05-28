@@ -8,7 +8,7 @@ Version:        @VERSION@
 Release:        1%{?dist}
 Summary:        Wayland Elements - A compositor agnostic shell with extensive customization
 License:        Apache-2.0 AND BSD-2-Clause AND BSD-3-Clause AND CC0-1.0 AND CDLA-Permissive-2.0 AND ISC AND MIT AND OpenSSL AND Unicode-3.0 AND Zlib
-URL:            https://github.com/wayle-rs/wayle
+URL:            https://wayle.app/
 Source0:        https://github.com/wayle-rs/wayle/releases/download/v%{version}/wayle-%{version}-%{_arch}-linux.tar.gz
 ExclusiveArch:  x86_64
 
@@ -65,5 +65,5 @@ install -m 0644 completions/wayle.fish %{buildroot}%{_datadir}/fish/vendor_compl
 %{_datadir}/fish/vendor_completions.d/wayle.fish
 
 %changelog
-* @DATE@ Jas Singh <jaskiratpal.singh@outlook.com> - @VERSION@-1
-- Repackaged upstream binary release
+* @DATE@ @MAINTAINER@ - @VERSION@-1
+- Packaged upstream binary release
