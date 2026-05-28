@@ -1,5 +1,4 @@
-use schemars::JsonSchema;
-use schemars::schema_for;
+use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Serialize};
 use wayle_derive::wayle_config;
 
