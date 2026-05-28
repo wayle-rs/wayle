@@ -31,6 +31,7 @@ Modules appear inside `[[bar.layout]]` arrays. Each row links to the full refere
 |---|---|
 | [`battery`](/config/modules/battery) | Battery level, charging state, and a dropdown with power-profile controls. |
 | [`bluetooth`](/config/modules/bluetooth) | Bluetooth connection status with a dropdown for pairing and managing devices. |
+| [`brightness`](/config/modules/brightness) | Backlight control bar module. |
 | [`cava`](/config/modules/cava) | Audio frequency bars visualising the output stream. |
 | [`clock`](/config/modules/clock) | Time display with a calendar dropdown. |
 | [`cpu`](/config/modules/cpu) | CPU usage, frequency, and temperature. |

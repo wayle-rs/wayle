@@ -152,7 +152,7 @@ show = false
 
 Bar module name. Built-in modules or custom modules with a `custom-<id>` pattern.
 
-One of: `"battery"`, `"bluetooth"`, `"cava"`, `"clock"`, `"cpu"`, `"dashboard"`, `"hyprland-workspaces"`, `"hyprsunset"`, `"idle-inhibit"`, `"keybind-mode"`, `"keyboard-input"`, `"media"`, `"microphone"`, `"netstat"`, `"network"`, `"niri-workspaces"`, `"notifications"`, `"power"`, `"ram"`, `"separator"`, `"storage"`, `"systray"`, `"updates"`, `"volume"`, `"weather"`, `"window-title"`, `"world-clock"`.
+One of: `"battery"`, `"bluetooth"`, `"brightness"`, `"cava"`, `"clock"`, `"cpu"`, `"dashboard"`, `"hyprland-workspaces"`, `"hyprsunset"`, `"idle-inhibit"`, `"keybind-mode"`, `"keyboard-input"`, `"media"`, `"microphone"`, `"netstat"`, `"network"`, `"niri-workspaces"`, `"notifications"`, `"power"`, `"ram"`, `"separator"`, `"storage"`, `"systray"`, `"updates"`, `"volume"`, `"weather"`, `"window-title"`, `"world-clock"`.
 
 String matching `^custom-[a-z0-9-]+$`.
 
