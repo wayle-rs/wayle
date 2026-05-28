@@ -9,7 +9,7 @@ use gtk4::prelude::{BoxExt, ListModelExt, OrientableExt, WidgetExt};
 use relm4::{ComponentParts, ComponentSender, gtk, prelude::*};
 use wayle_config::schemas::{
     bar::IconPosition,
-    styling::{CssToken, ThresholdColors},
+    styling::{ColorValue, CssToken, ThresholdColors},
 };
 
 use super::{
@@ -366,22 +366,20 @@ impl BarButton {
     }
 
     pub(super) fn resolve_icon_color(&self, is_wayle_themed: bool) -> Cow<'static, str> {
-        let color = if is_wayle_themed {
-            self.colors.icon_color.get()
-        } else {
-            self.colors.icon_color.default().clone()
+        let color = match self.colors.icon_color.get() {
+            ColorValue::Custom(_) if !is_wayle_themed => self.colors.icon_color.default().clone(),
+            other => other,
         };
 
-        if color.is_auto() {
-            let token = match self.variant {
-                BarButtonVariant::Basic => self.colors.auto_icon_color,
-                BarButtonVariant::BlockPrefix | BarButtonVariant::IconSquare => {
-                    CssToken::FgOnAccent
-                }
-            };
-            Cow::Borrowed(token.css_var())
-        } else {
-            color.to_css()
+        if !color.is_auto() {
+            return color.to_css();
         }
+
+        let token = match self.variant {
+            BarButtonVariant::Basic => self.colors.auto_icon_color,
+            BarButtonVariant::BlockPrefix | BarButtonVariant::IconSquare => CssToken::FgOnAccent,
+        };
+
+        Cow::Borrowed(token.css_var())
     }
 }
