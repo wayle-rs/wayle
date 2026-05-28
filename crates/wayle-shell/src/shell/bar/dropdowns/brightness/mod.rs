@@ -79,23 +79,27 @@ impl Component for BrightnessDropdown {
                         },
                     },
 
-                    gtk::Box {
-                        set_vexpand: true,
-                        set_valign: gtk::Align::Center,
+                    #[template]
+                    EmptyState {
+                        add_css_class: "brightness-empty",
                         #[watch]
                         set_visible: model.devices.is_empty(),
-
-                        #[template]
-                        EmptyState {
-                            #[template_child]
-                            icon {
-                                add_css_class: "sm",
-                                set_icon_name: Some("ld-sun-symbolic"),
-                            },
-                            #[template_child]
-                            title {
-                                set_label: &t!("dropdown-brightness-empty-title"),
-                            },
+                        #[template_child]
+                        icon {
+                            add_css_class: "sm",
+                            set_icon_name: Some("ld-sun-symbolic"),
+                        },
+                        #[template_child]
+                        title {
+                            set_label: &t!("dropdown-brightness-empty-title"),
+                        },
+                        #[template_child]
+                        description {
+                            set_label: &t!("dropdown-brightness-empty-description"),
+                            set_wrap: true,
+                            set_wrap_mode: gtk::pango::WrapMode::WordChar,
+                            set_justify: gtk::Justification::Center,
+                            set_max_width_chars: 32,
                         },
                     },
                 },

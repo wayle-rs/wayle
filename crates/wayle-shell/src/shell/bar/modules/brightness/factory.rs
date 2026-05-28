@@ -21,8 +21,7 @@ impl ModuleFactory for Factory {
         dropdowns: &Rc<DropdownRegistry>,
         class: Option<String>,
     ) -> Option<ModuleInstance> {
-        let brightness =
-            require_service("brightness", "brightness", services.brightness.clone())?;
+        let brightness = require_service("brightness", "brightness", services.brightness.clone())?;
 
         let init = BrightnessInit {
             settings: settings.clone(),

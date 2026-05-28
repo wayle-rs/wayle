@@ -1,11 +1,18 @@
 use wayle_brightness::types::BacklightType;
 
-pub(crate) fn device_subtitle(device_name: &str, kind: BacklightType, multi: bool) -> Option<String> {
+pub(crate) fn device_subtitle(
+    device_name: &str,
+    kind: BacklightType,
+    multi: bool,
+) -> Option<String> {
     if !multi {
         return None;
     }
 
-    Some(format!("{device_name} \u{00b7} {}", backlight_type_label(kind)))
+    Some(format!(
+        "{device_name} \u{00b7} {}",
+        backlight_type_label(kind)
+    ))
 }
 
 pub(crate) fn backlight_type_label(kind: BacklightType) -> &'static str {

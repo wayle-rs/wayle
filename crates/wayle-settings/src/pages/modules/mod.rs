@@ -2,6 +2,7 @@
 
 mod battery;
 mod bluetooth;
+mod brightness;
 mod cava;
 mod clock;
 mod cpu;
@@ -36,6 +37,7 @@ pub(crate) fn factories() -> Vec<fn(&Config) -> LeafEntry> {
     vec![
         battery::entry,
         bluetooth::entry,
+        brightness::entry,
         cava::entry,
         clock::entry,
         cpu::entry,

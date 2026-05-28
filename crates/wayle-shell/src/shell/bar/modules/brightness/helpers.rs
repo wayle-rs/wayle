@@ -92,7 +92,10 @@ mod tests {
     fn format_label_default() {
         assert_eq!(format_label("{{ percent }}%", 65.0), "65%");
         assert_eq!(format_label("{{ percent }}", 100.0), "100");
-        assert_eq!(format_label("Brightness: {{ percent }}", 50.0), "Brightness: 50");
+        assert_eq!(
+            format_label("Brightness: {{ percent }}", 50.0),
+            "Brightness: 50"
+        );
     }
 
     #[test]

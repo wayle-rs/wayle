@@ -13,10 +13,7 @@ impl DropdownFactory for Factory {
         let brightness = require_service("brightness", "brightness", services.brightness.clone())?;
         let config = services.config.clone();
 
-        let init = BrightnessDropdownInit {
-            brightness,
-            config,
-        };
+        let init = BrightnessDropdownInit { brightness, config };
         let controller = BrightnessDropdown::builder().launch(init).detach();
 
         let popover = controller.widget().clone();

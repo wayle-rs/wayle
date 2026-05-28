@@ -52,3 +52,22 @@ image.brightness-device-icon-img {
         min-width: calc(var(--space-lg) * 2);
     }
 }
+
+.brightness-dropdown .empty-state.brightness-empty {
+    padding: var(--space-lg) var(--space-md);
+    border-spacing: var(--space-xs);
+
+    .title {
+        font-size: var(--text-md);
+        font-weight: var(--weight-bold);
+        color: var(--fg-muted);
+        margin-top: var(--space-sm);
+    }
+
+    .description {
+        font-size: var(--text-base);
+        font-weight: var(--weight-semibold);
+        color: var(--fg-subtle);
+        margin-top: 0;
+    }
+}
