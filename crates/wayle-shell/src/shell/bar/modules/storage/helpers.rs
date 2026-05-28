@@ -5,6 +5,8 @@ use serde_json::json;
 use wayle_config::schemas::modules::StorageMountPoint;
 use wayle_sysinfo::types::DiskData;
 
+use crate::i18n::t;
+
 #[derive(Debug, Clone, PartialEq)]
 pub(super) struct StorageSnapshot {
     pub usage_percent: f32,
@@ -35,15 +37,14 @@ pub(super) fn aggregate_storage(
         return None;
     }
 
-    let usage_percent =
-        matched.iter().map(|disk| disk.usage_percent).sum::<f32>() / matched.len() as f32;
     let used_bytes = matched.iter().map(|disk| disk.used_bytes).sum::<u64>();
     let total_bytes = matched.iter().map(|disk| disk.total_bytes).sum::<u64>();
+    let usage_percent = (used_bytes as f32 / total_bytes as f32) * 100.0;
     let available_bytes = matched.iter().map(|disk| disk.available_bytes).sum::<u64>();
     let filesystem = if matched.len() == 1 {
         matched[0].filesystem.clone()
     } else {
-        String::from("multiple")
+        t!("bar-storage-multiple")
     };
 
     Some(StorageSnapshot {
@@ -176,7 +177,7 @@ mod tests {
         )
         .expect("expected matching disks");
 
-        assert_eq!(snapshot.usage_percent, 65.0);
+        assert_eq!(snapshot.usage_percent, 50.0);
         assert_eq!(snapshot.used_bytes, 900 * GIB);
         assert_eq!(snapshot.total_bytes, 1800 * GIB);
         assert_eq!(snapshot.available_bytes, 900 * GIB);
