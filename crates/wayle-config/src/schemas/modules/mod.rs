@@ -2,6 +2,7 @@ mod types;
 
 mod battery;
 mod bluetooth;
+mod brightness;
 mod cava;
 mod clock;
 mod cpu;
@@ -31,6 +32,7 @@ mod world_clock;
 
 pub use battery::BatteryConfig;
 pub use bluetooth::BluetoothConfig;
+pub use brightness::BrightnessConfig;
 pub use cava::{
     BarCount as CavaBarCount, CavaConfig, CavaDirection, CavaInput, CavaStyle,
     Framerate as CavaFramerate, FrequencyHz,
@@ -78,6 +80,8 @@ pub struct ModulesConfig {
     pub battery: BatteryConfig,
     /// Bluetooth connection module.
     pub bluetooth: BluetoothConfig,
+    /// Backlight brightness module.
+    pub brightness: BrightnessConfig,
     /// Cava audio visualizer module.
     pub cava: CavaConfig,
     /// Clock display module.

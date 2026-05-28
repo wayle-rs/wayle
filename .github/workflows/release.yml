@@ -64,7 +64,6 @@ jobs:
             - name: Install dependencies
               run: |
                   pacman --noconfirm --needed -Syu \
-                    desktop-file-utils \
                     git \
                     github-cli \
                     rustup \
@@ -75,7 +74,6 @@ jobs:
                     libpulse \
                     fftw \
                     libpipewire \
-                    rpm-tools \
                     systemd-libs
 
             - name: Setup Rust
@@ -94,11 +92,6 @@ jobs:
             - name: Build archive
               run: ./scripts/ci/build-archive.sh target/release "${GITHUB_REF_NAME#v}" "${{ matrix.arch }}"
 
-            - name: Build packages
-              run: |
-                  VERSION="${GITHUB_REF_NAME#v}"
-                  ./scripts/ci/build-packages.sh "wayle-${VERSION}-${{ matrix.arch }}-linux.tar.gz" "${VERSION}"
-
             - name: Upload to release
               env:
                   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -107,12 +100,82 @@ jobs:
                   ARCH="${{ matrix.arch }}"
                   gh release upload "${{ github.ref_name }}" \
                     "wayle-${VERSION}-${ARCH}-linux.tar.gz" \
+                    --clobber
+
+    rpm:
+        name: RPM (${{ matrix.arch }})
+        needs: changelog
+        runs-on: ubuntu-latest
+        container:
+            image: fedora:latest
+        strategy:
+            matrix:
+                arch: [x86_64]
+        steps:
+            - name: Install dependencies
+              run: |
+                  dnf -y install \
+                    clang \
+                    cmake \
+                    fftw-devel \
+                    gcc \
+                    gh \
+                    git \
+                    gtk4-devel \
+                    gtk4-layer-shell-devel \
+                    gtksourceview5-devel \
+                    libxkbcommon-devel \
+                    make \
+                    pipewire-devel \
+                    pkgconf-pkg-config \
+                    pulseaudio-libs-devel \
+                    rpm-build \
+                    systemd-devel
+
+            - name: Checkout repository
+              uses: actions/checkout@v6
+
+            - name: Fix Git ownership
+              run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+            - name: Install RPM build dependencies
+              run: |
+                  VERSION=$(sed -n '/\[workspace\.package\]/,/\[/{/^version/p}' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+                  DATE="$(LC_ALL=C date '+%a %b %d %Y')"
+                  sed \
+                    -e "s/@VERSION@/${VERSION}/g" \
+                    -e "s/@DATE@/${DATE}/g" \
+                    packaging/rpm/wayle.spec.in >/tmp/wayle.spec
+                  dnf -y --setopt=install_weak_deps=False builddep /tmp/wayle.spec
+
+            - name: Setup Rust
+              uses: actions-rust-lang/setup-rust-toolchain@v1
+              with:
+                  toolchain: stable
+
+            - name: Build release binaries
+              run: cargo build --release --locked
+
+            - name: Build archive
+              run: ./scripts/ci/build-archive.sh target/release "${GITHUB_REF_NAME#v}" "${{ matrix.arch }}"
+
+            - name: Build RPM
+              run: |
+                  VERSION="${GITHUB_REF_NAME#v}"
+                  ./scripts/ci/build-packages.sh "wayle-${VERSION}-${{ matrix.arch }}-linux.tar.gz" "${VERSION}"
+
+            - name: Upload to release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  ARCH="${{ matrix.arch }}"
+                  gh release upload "${{ github.ref_name }}" \
                     rpmbuild/RPMS/${ARCH}/*.rpm \
                     --clobber
 
     checksums:
         name: Checksums
-        needs: [changelog, build]
+        needs: [changelog, build, rpm]
         runs-on: ubuntu-latest
         steps:
             - name: Download assets

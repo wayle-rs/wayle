@@ -56,7 +56,12 @@ pub(crate) fn require_service<T>(
     match value {
         Some(v) => Some(v),
         None => {
-            warn!(module, service, "service unavailable, skipping module");
+            warn!(
+                module,
+                service,
+                "module configured in bar layout but `{service}` service is unavailable on this system - \
+                 module will not appear; remove `{module}` from your layout or enable the service"
+            );
             None
         }
     }

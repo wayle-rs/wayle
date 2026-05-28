@@ -21,4 +21,4 @@ sed \
 	-e "s/@VERSION@/${VERSION}/g" \
 	-e "s/@DATE@/${DATE}/g" \
 	packaging/rpm/wayle.spec.in >"${TOPDIR}/SPECS/wayle.spec"
-rpmbuild --define "_topdir ${TOPDIR}" --nodeps -bb "${TOPDIR}/SPECS/wayle.spec"
+rpmbuild --define "_topdir ${TOPDIR}" -bb "${TOPDIR}/SPECS/wayle.spec"
