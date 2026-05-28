@@ -1,7 +1,7 @@
 //! [`NiriWorkspaces`] private impl methods: rebuild, border classes, action dispatch.
 
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashMap, HashSet},
     sync::Arc,
 };
 
@@ -250,7 +250,7 @@ struct ButtonLayout {
     empty_icon: String,
     app_icons_dedupe: bool,
     app_icons_fallback: String,
-    app_icon_map: HashMap<String, String>,
+    app_icon_map: BTreeMap<String, String>,
     workspace_map: NiriWorkspaceMap,
     blink_on: bool,
 }
@@ -309,7 +309,7 @@ fn collect_urgent_window_ids(windows: &[Arc<Window>]) -> HashSet<u64> {
 
 fn collect_app_icons(
     windows: &[Arc<Window>],
-    app_icon_map: &HashMap<String, String>,
+    app_icon_map: &BTreeMap<String, String>,
     fallback: &str,
     dedupe: bool,
 ) -> Vec<AppIconInit> {

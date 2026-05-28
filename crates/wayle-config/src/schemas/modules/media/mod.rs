@@ -1,6 +1,6 @@
 mod icons;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use schemars::schema_for;
 use wayle_derive::{wayle_config, wayle_enum};
@@ -35,8 +35,8 @@ pub struct MediaConfig {
     /// "*.mpv" = "ld-play-circle-symbolic"
     /// ```
     #[serde(rename = "player-icons")]
-    #[default(HashMap::new())]
-    pub player_icons: ConfigProperty<HashMap<String, String>>,
+    #[default(BTreeMap::new())]
+    pub player_icons: ConfigProperty<BTreeMap<String, String>>,
 
     /// Player bus name patterns to exclude from discovery. Requires a restart
     /// to take effect.
