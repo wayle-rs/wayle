@@ -72,7 +72,7 @@ impl TextLike for StorageMountPoint {
             .collect();
         match paths.len() {
             0 => Self::Single(String::from("/")),
-            1 => Self::Single(paths.into_iter().next().unwrap()),
+            1 => Self::Single(paths.into_iter().next().unwrap_or_default()),
             _ => Self::Multiple(paths),
         }
     }
