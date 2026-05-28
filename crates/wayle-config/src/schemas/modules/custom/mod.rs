@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 
 pub use self::types::{ExecutionMode, RestartDelay, RestartPolicy};
 use crate::{
+    ClickAction,
     docs::{ConfigGroup, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
@@ -256,37 +257,46 @@ pub struct CustomModuleDefinition {
     #[serde(rename = "border-color", default = "default_auto_color")]
     pub border_color: ColorValue,
 
-    /// Shell command executed on left click.
+    /// Action performed on left click.
     ///
-    /// If `on-action` is set, it runs after this command completes.
+    /// Supports shell commands and dropdown toggles:
+    /// - `"pavucontrol"` — runs a shell command
+    /// - `"dropdown:audio"` — toggles the named dropdown panel
+    /// - `""` — no action (default)
+    ///
+    /// If `on-action` is set, it runs after shell commands complete.
     #[serde(rename = "left-click", default)]
-    pub left_click: String,
+    pub left_click: ClickAction,
 
-    /// Shell command executed on right click.
+    /// Action performed on right click.
     ///
-    /// If `on-action` is set, it runs after this command completes.
+    /// Supports shell commands and dropdown toggles (see `left-click`).
+    /// If `on-action` is set, it runs after shell commands complete.
     #[serde(rename = "right-click", default)]
-    pub right_click: String,
+    pub right_click: ClickAction,
 
-    /// Shell command executed on middle click.
+    /// Action performed on middle click.
     ///
-    /// If `on-action` is set, it runs after this command completes.
+    /// Supports shell commands and dropdown toggles (see `left-click`).
+    /// If `on-action` is set, it runs after shell commands complete.
     #[serde(rename = "middle-click", default)]
-    pub middle_click: String,
+    pub middle_click: ClickAction,
 
-    /// Shell command executed on scroll up.
+    /// Action performed on scroll up.
     ///
+    /// Supports shell commands and dropdown toggles (see `left-click`).
     /// Scroll events are debounced (50ms) to coalesce rapid scrolls.
-    /// If `on-action` is set, it runs after this command completes.
+    /// If `on-action` is set, it runs after shell commands complete.
     #[serde(rename = "scroll-up", default)]
-    pub scroll_up: String,
+    pub scroll_up: ClickAction,
 
-    /// Shell command executed on scroll down.
+    /// Action performed on scroll down.
     ///
+    /// Supports shell commands and dropdown toggles (see `left-click`).
     /// Scroll events are debounced (50ms) to coalesce rapid scrolls.
-    /// If `on-action` is set, it runs after this command completes.
+    /// If `on-action` is set, it runs after shell commands complete.
     #[serde(rename = "scroll-down", default)]
-    pub scroll_down: String,
+    pub scroll_down: ClickAction,
 
     /// Shell command to run after any click/scroll action completes.
     ///

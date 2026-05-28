@@ -29,5 +29,8 @@ wayle-derive.workspace = true
 [features]
 default = []
 
+[dev-dependencies]
+tracing-subscriber.workspace = true
+
 [lints]
 workspace = true

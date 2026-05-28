@@ -9,6 +9,7 @@ StartLimitBurst=5
 ExecStart=/usr/bin/wayle shell
 Restart=on-failure
 RestartSec=3
+Slice=session.slice
 
 [Install]
 WantedBy=graphical-session.target

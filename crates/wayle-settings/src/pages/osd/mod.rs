@@ -29,6 +29,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 items: vec![
                     toggle(&osd.enabled),
                     enum_select(&osd.position),
+                    enum_select(&osd.layer),
                     number_u32(&osd.duration),
                     text_like(&osd.monitor),
                     spacing(&osd.margin),

@@ -1,16 +1,75 @@
 //! Config layer derive macro implementations.
 
 use proc_macro::TokenStream;
+use proc_macro2::TokenStream as TokenStream2;
 use quote::quote;
-use syn::{DeriveInput, parse_macro_input};
+use syn::{DeriveInput, Field, parse_macro_input};
 
 use crate::{
-    field_utils::{serde_key, should_skip},
+    field_utils::{serde_key, serde_keys, should_skip},
     validate_named_struct,
 };
 
+/// Parallel arrays of TOML keys and their deprecation flags, plus the
+/// canonical key. Split into parallel `Vec`s so `quote!` can interpolate
+/// each side independently inside `#( ... ),*`.
+struct FieldLookup {
+    names: Vec<String>,
+    deprecated_flags: Vec<bool>,
+    canonical: String,
+}
+
+fn field_lookup(field: &Field) -> FieldLookup {
+    let lookup_keys = serde_keys(field);
+    let canonical = lookup_keys[0].name.clone();
+    let names = lookup_keys.iter().map(|key| key.name.clone()).collect();
+    let deprecated_flags = lookup_keys.iter().map(|key| key.deprecated).collect();
+    FieldLookup {
+        names,
+        deprecated_flags,
+        canonical,
+    }
+}
+
+/// Codegen for the key-matching loop shared by both apply-layer derives.
+/// They only differ in what runs on match, so `body` is parameterized.
+/// Deprecated-alias matches also emit a `tracing::warn!`.
+fn lookup_loop(field: &Field, body: TokenStream2) -> TokenStream2 {
+    let FieldLookup {
+        names,
+        deprecated_flags,
+        canonical,
+    } = field_lookup(field);
+
+    quote! {
+        for (lookup_key, is_deprecated) in &[#( (#names, #deprecated_flags) ),*] {
+            let Some(field_value) = table.get(*lookup_key) else { continue; };
+            let child_path = if path.is_empty() {
+                String::from(#canonical)
+            } else {
+                format!("{}.{}", path, #canonical)
+            };
+            if *is_deprecated {
+                let deprecated_path = if path.is_empty() {
+                    String::from(*lookup_key)
+                } else {
+                    format!("{}.{}", path, lookup_key)
+                };
+                ::tracing::warn!(
+                    deprecated = %deprecated_path,
+                    canonical = %child_path,
+                    "deprecated config key; replace with canonical",
+                );
+            }
+            #body
+            break;
+        }
+    }
+}
+
 /// Generates the `ApplyConfigLayer` impl. Fields are matched by serde-renamed
-/// key; fields with `#[wayle(skip)]` are excluded.
+/// key; fields with `#[wayle(skip)]` are excluded. A `#[wayle(deprecated_alias)]`
+/// match emits a `tracing::warn!` event naming the canonical replacement.
 pub fn apply_config_layer(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     let struct_name = &derive_input.ident;
@@ -26,18 +85,10 @@ pub fn apply_config_layer(input: TokenStream) -> TokenStream {
         .filter(|field| !should_skip(field))
         .map(|field| {
             let field_ident = &field.ident;
-            let toml_key = serde_key(field);
-
-            quote! {
-                if let Some(field_value) = table.get(#toml_key) {
-                    let child_path = if path.is_empty() {
-                        String::from(#toml_key)
-                    } else {
-                        format!("{}.{}", path, #toml_key)
-                    };
-                    self.#field_ident.apply_config_layer(field_value, &child_path);
-                }
-            }
+            lookup_loop(
+                field,
+                quote! { self.#field_ident.apply_config_layer(field_value, &child_path); },
+            )
         });
 
     let generated = quote! {
@@ -71,18 +122,10 @@ pub fn apply_runtime_layer(input: TokenStream) -> TokenStream {
         .filter(|field| !should_skip(field))
         .map(|field| {
             let field_ident = &field.ident;
-            let toml_key = serde_key(field);
-
-            quote! {
-                if let Some(field_value) = table.get(#toml_key) {
-                    let child_path = if path.is_empty() {
-                        String::from(#toml_key)
-                    } else {
-                        format!("{}.{}", path, #toml_key)
-                    };
-                    self.#field_ident.apply_runtime_layer(field_value, &child_path)?;
-                }
-            }
+            lookup_loop(
+                field,
+                quote! { self.#field_ident.apply_runtime_layer(field_value, &child_path)?; },
+            )
         });
 
     let generated = quote! {
@@ -195,10 +238,10 @@ pub fn clear_runtime_by_path(input: TokenStream) -> TokenStream {
         .filter(|field| !should_skip(field))
         .map(|field| {
             let field_ident = &field.ident;
-            let toml_key = serde_key(field);
+            let names: Vec<String> = serde_keys(field).into_iter().map(|key| key.name).collect();
 
             quote! {
-                #toml_key => self.#field_ident.clear_runtime_by_path(rest),
+                #(#names)|* => self.#field_ident.clear_runtime_by_path(rest),
             }
         });
 

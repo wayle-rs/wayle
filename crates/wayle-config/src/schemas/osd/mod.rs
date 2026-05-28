@@ -7,7 +7,7 @@ use wayle_derive::wayle_config;
 use crate::{
     ConfigProperty,
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
-    schemas::styling::Spacing,
+    schemas::{general::Layer, styling::Spacing},
 };
 
 /// On-screen display overlay for transient events like volume and brightness.
@@ -36,6 +36,13 @@ pub struct OsdConfig {
     /// Show a border around the OSD.
     #[default(true)]
     pub border: ConfigProperty<bool>,
+
+    /// Layer-shell layer the OSD is placed on.
+    ///
+    /// When `general.tearing-mode` is enabled, `overlay` is demoted to `top`
+    /// to allow fullscreen tearing.
+    #[default(Layer::Overlay)]
+    pub layer: ConfigProperty<Layer>,
 }
 
 impl ModuleInfoProvider for OsdConfig {

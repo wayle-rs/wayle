@@ -5,6 +5,7 @@ use relm4::{gtk::prelude::*, prelude::*};
 use super::{
     ThemeSelectorControl,
     helpers::{apply_palette, populate_list},
+    scaled_max_height,
 };
 
 impl ThemeSelectorControl {
@@ -21,5 +22,10 @@ impl ThemeSelectorControl {
 
     pub(super) fn on_rebuild_list(&mut self, sender: &ComponentSender<Self>) {
         populate_list(&self.list_box, &self.available.get(), sender);
+    }
+
+    pub(super) fn on_scale_changed(&mut self) {
+        self.scrolled
+            .set_max_content_height(scaled_max_height(self.scale.get().value()));
     }
 }

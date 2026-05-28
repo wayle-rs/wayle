@@ -12,9 +12,9 @@ use relm4::{
     main_application,
 };
 use tracing::{info, warn};
-use wayle_config::ConfigService;
+use wayle_config::{ConfigService, infrastructure::paths::ConfigPaths};
 use wayle_icons::IconRegistry;
-use wayle_styling::{STATIC_CSS, theme_css};
+use wayle_styling::{STATIC_CSS, ensure_user_styles_scaffold, theme_css, user_css};
 
 relm4::new_action_group!(AppActionGroup, "app");
 relm4::new_stateless_action!(QuitAction, AppActionGroup, "quit");
@@ -35,12 +35,24 @@ pub(crate) fn init_css_provider(
     let config = config_service.config();
     let palette = config.styling.palette();
     let theme = theme_css(&palette, &config.general, &config.bar, &config.styling);
-    let css = format!("{STATIC_CSS}\n{theme}");
+
+    let user = match ConfigPaths::config_dir() {
+        Ok(dir) => {
+            ensure_user_styles_scaffold(&dir);
+            user_css(&dir)
+        }
+        Err(err) => {
+            warn!(error = %err, "cannot resolve config dir; user styles disabled");
+            String::new()
+        }
+    };
+
+    let css = format!("{STATIC_CSS}\n{theme}\n{user}");
 
     provider.load_from_string(&css);
     info!("Initial CSS loaded");
 
-    style_context_add_provider_for_display(display, &provider, STYLE_PROVIDER_PRIORITY_USER);
+    style_context_add_provider_for_display(display, &provider, STYLE_PROVIDER_PRIORITY_USER + 100);
 
     provider
 }

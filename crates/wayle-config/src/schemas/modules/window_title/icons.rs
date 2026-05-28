@@ -19,6 +19,7 @@ pub const BUILTIN_MAPPINGS: &[(&str, &str)] = &[
     ("*vivaldi*", "si-vivaldi-symbolic"),
     ("*waterfox*", "si-firefox-symbolic"),
     ("*zen*", "si-zenbrowser-symbolic"),
+    ("*helium*", "si-heliumbrowser-symbolic"),
     // Terminals
     ("*alacritty*", "si-alacritty-symbolic"),
     ("*foot*", "ld-terminal-symbolic"),

@@ -12,15 +12,16 @@ use std::{
 
 use gdk4::Display;
 use gtk::prelude::*;
-use gtk4::{
-    CssProvider, STYLE_PROVIDER_PRIORITY_USER, glib, style_context_add_provider_for_display,
-};
+use gtk4::{CssProvider, glib, style_context_add_provider_for_display};
 use relm4::{gtk, prelude::*};
 use wayle_media::{core::player::Player, types::*};
 use wayle_widgets::{WatcherToken, prelude::*};
 
 pub(crate) use self::messages::*;
-use crate::{i18n::t, shell::bar::dropdowns::media::helpers};
+use crate::{
+    i18n::t,
+    shell::{bar::dropdowns::media::helpers, helpers::COMPONENT_CSS_PRIORITY},
+};
 
 static NEXT_ART_CSS_ID: AtomicU64 = AtomicU64::new(1);
 
@@ -331,11 +332,7 @@ impl Component for PlayerView {
         let art_css_provider = CssProvider::new();
         #[allow(clippy::expect_used)]
         let display = Display::default().expect("display required for media dropdown");
-        style_context_add_provider_for_display(
-            &display,
-            &art_css_provider,
-            STYLE_PROVIDER_PRIORITY_USER + 1,
-        );
+        style_context_add_provider_for_display(&display, &art_css_provider, COMPONENT_CSS_PRIORITY);
 
         let seek_slider = DebouncedSlider::new(0.0);
         if let Some(scale) = seek_slider.scale() {

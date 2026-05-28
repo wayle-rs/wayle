@@ -24,4 +24,5 @@ pub const BUILTIN_MAPPINGS: &[(&str, &str)] = &[
     ("*opera*", "si-opera-symbolic"),
     ("*edge*", "tb-brand-edge-symbolic"),
     ("*tor*", "si-torbrowser-symbolic"),
+    ("*helium*", "si-heliumbrowser-symbolic"),
 ];

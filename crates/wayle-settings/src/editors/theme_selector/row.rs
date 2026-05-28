@@ -3,7 +3,7 @@
 use relm4::{gtk::prelude::*, prelude::*};
 use wayle_config::{
     ConfigProperty,
-    schemas::styling::{PaletteConfig, ThemeEntry},
+    schemas::styling::{PaletteConfig, ScaleFactor, ThemeEntry},
 };
 
 use crate::{
@@ -17,12 +17,14 @@ use crate::{
 pub(crate) fn theme_selector(
     available: &ConfigProperty<Vec<ThemeEntry>>,
     palette: &PaletteConfig,
+    scale: &ConfigProperty<ScaleFactor>,
     i18n_key: &'static str,
 ) -> SettingRowInit {
     let controller = ThemeSelectorControl::builder()
         .launch(ThemeSelectorInit {
             available: available.clone(),
             palette: palette.clone(),
+            scale: scale.clone(),
         })
         .detach();
 
