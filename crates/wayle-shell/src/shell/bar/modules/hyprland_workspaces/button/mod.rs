@@ -8,8 +8,8 @@ use wayle_config::schemas::modules::{ActiveIndicator, DisplayMode, HyprlandWorks
 use wayle_hyprland::{Address, Client, WorkspaceId};
 
 use crate::shell::bar::modules::hyprland_workspaces::helpers::{
-    IconContext, WorkspaceState, compute_static_css_classes, determine_workspace_state,
-    resolve_workspace_icons, workspace_id_css_class, workspace_name_css_class,
+    compute_static_css_classes, determine_workspace_state, resolve_workspace_icons,
+    workspace_id_css_class, workspace_name_css_class, IconContext, WorkspaceState,
 };
 
 const WORKSPACE_LABEL_CSS: &str = "workspace-label";
@@ -261,9 +261,7 @@ pub(crate) fn build_button_init(
     urgent_addresses: HashSet<Address>,
 ) -> WorkspaceButtonInit {
     let workspace_map = config.workspace_map.get();
-    let mapped_style = i32::try_from(ctx.id)
-        .ok()
-        .and_then(|id| workspace_map.lookup(id, ctx.name));
+    let mapped_style = workspace_map.lookup(ctx.id, ctx.name);
     let mapped_icon = mapped_style.and_then(|style| style.icon.clone());
     let mapped_label = mapped_style.and_then(|style| style.label.clone());
 

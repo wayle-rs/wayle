@@ -3,14 +3,14 @@ use std::{
     ops::Deref,
 };
 
-use schemars::{JsonSchema, schema_for};
+use schemars::{schema_for, JsonSchema};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use wayle_derive::{wayle_config, wayle_enum};
 
 use crate::{
-    ConfigProperty,
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ScaleFactor, Spacing},
+    ConfigProperty,
 };
 
 /// What identifies a workspace in the UI.
@@ -146,7 +146,7 @@ pub struct WorkspaceMap(HashMap<String, WorkspaceStyle>);
 
 impl WorkspaceMap {
     /// Look up a workspace style by name first, falling back to numeric ID.
-    pub fn lookup(&self, id: i32, name: &str) -> Option<&WorkspaceStyle> {
+    pub fn lookup(&self, id: i64, name: &str) -> Option<&WorkspaceStyle> {
         self.0.get(name).or_else(|| self.0.get(&id.to_string()))
     }
 }
