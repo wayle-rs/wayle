@@ -48,6 +48,8 @@ pub enum BarButtonInput {
     SetLabel(String),
     /// Update the tooltip.
     SetTooltip(Option<String>),
+    /// Update visibility of the button.
+    SetVisible(bool),
     /// Lock label width to prevent resize while a popover is open.
     FreezeSize,
     /// Unlock label width, restoring normal sizing.
@@ -226,6 +228,9 @@ impl Component for BarButton {
                 }
             }
             BarButtonInput::SetTooltip(tooltip) => self.tooltip = tooltip,
+            BarButtonInput::SetVisible(visible) => {
+                self.behavior.visible.set(visible);
+            }
             BarButtonInput::FreezeSize => {
                 self.size_frozen = true;
             }

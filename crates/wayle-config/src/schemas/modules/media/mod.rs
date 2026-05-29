@@ -85,6 +85,11 @@ pub struct MediaConfig {
     #[default(String::from("{{ title }} - {{ artist }}"))]
     pub format: ConfigProperty<String>,
 
+    /// Visibility mode for the module.
+    #[serde(rename = "visibility")]
+    #[default(MediaVisibility::Always)]
+    pub visibility: ConfigProperty<MediaVisibility>,
+
     /// Symbolic icon name for default mode.
     #[serde(rename = "icon-name")]
     #[default(String::from("ld-music-symbolic"))]
@@ -188,6 +193,29 @@ impl MediaIconType {
             Self::Application => "application",
             Self::SpinningDisc => "spinning-disc",
             Self::ApplicationMapped => "application-mapped",
+        }
+    }
+}
+
+/// Visibility mode for the media module.
+#[wayle_enum(default)]
+pub enum MediaVisibility {
+    /// Always show the module.
+    #[default]
+    Always,
+    /// Only show when a player is in Playing state.
+    Playing,
+    /// Only show when an active media player exists.
+    Active,
+}
+
+impl MediaVisibility {
+    /// Returns the kebab-case string representation.
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Always => "always",
+            Self::Playing => "playing",
+            Self::Active => "active",
         }
     }
 }

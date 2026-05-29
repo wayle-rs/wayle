@@ -27,6 +27,7 @@ pub(crate) enum MediaCmd {
     PlayerChanged(Option<Arc<Player>>),
     MetadataChanged,
     PlaybackStateChanged,
+    VisibilityChanged,
     UpdateIcon(String),
     IconTypeChanged,
 }

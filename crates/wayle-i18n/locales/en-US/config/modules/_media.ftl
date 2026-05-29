@@ -17,6 +17,9 @@ settings-modules-media-player-priority = Player Priority
 settings-modules-media-format = Format
     .description = Label format with placeholders: {"{{ title }}"}, {"{{ artist }}"}, {"{{ album }}"}, {"{{ status }}"}, {"{{ status_icon }}"}
 
+settings-modules-media-visibility = Visibility
+    .description = Visibility mode for the module
+
 settings-modules-media-icon-name = Icon Name
     .description = Symbolic icon name for default mode
 
@@ -71,3 +74,8 @@ enum-media-icon-type-default = Default
 enum-media-icon-type-application = Application
 enum-media-icon-type-spinning-disc = Spinning Disc
 enum-media-icon-type-application-mapped = Application Mapped
+
+## MediaVisibility variants
+enum-media-visibility-always = Always
+enum-media-visibility-playing = Playing
+enum-media-visibility-active = Active

@@ -59,6 +59,8 @@ impl Component for MediaModule {
         let config = init.config.config();
         let media_config = &config.modules.media;
 
+        let visible = Self::update_visibility(media_config, &init.media);
+
         let bar_button = BarButton::builder()
             .launch(BarButtonInit {
                 icon: media_config.icon_name.get().clone(),
@@ -77,7 +79,7 @@ impl Component for MediaModule {
                     show_icon: media_config.icon_show.clone(),
                     show_label: media_config.label_show.clone(),
                     show_border: media_config.border_show.clone(),
-                    visible: ConfigProperty::new(true),
+                    visible: ConfigProperty::new(visible),
                 },
                 settings: init.settings,
             })
@@ -127,6 +129,10 @@ impl Component for MediaModule {
                     player.is_some() && media_config.icon_type.get() == MediaIconType::SpinningDisc;
                 Self::update_disc_mode(root, use_disc);
 
+                // Update visibility when the active player changes.
+                let visible = Self::update_visibility(media_config, &self.media);
+                self.bar_button.emit(BarButtonInput::SetVisible(visible));
+
                 if let Some(player) = player {
                     let label = helpers::build_label(media_config, &player);
                     self.bar_button.emit(BarButtonInput::SetLabel(label));
@@ -154,12 +160,21 @@ impl Component for MediaModule {
                 }
             }
             MediaCmd::PlaybackStateChanged => {
+                // Update visibility when playback status (playing/paused) changes.
+                let visible = Self::update_visibility(media_config, &self.media);
+                self.bar_button.emit(BarButtonInput::SetVisible(visible));
+
                 if let Some(player) = self.media.active_player() {
                     let label = helpers::build_label(media_config, &player);
                     self.bar_button.emit(BarButtonInput::SetLabel(label));
                     let state = player.playback_state.get();
                     Self::update_spinning_state(root, state);
                 }
+            }
+            MediaCmd::VisibilityChanged => {
+                // Update visibility when the 'show-only-playing' config option is toggled.
+                let visible = Self::update_visibility(media_config, &self.media);
+                self.bar_button.emit(BarButtonInput::SetVisible(visible));
             }
             MediaCmd::UpdateIcon(icon) => {
                 self.bar_button.emit(BarButtonInput::SetIcon(icon));

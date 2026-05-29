@@ -44,6 +44,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                     title_key: "settings-section-general",
                     items: vec![
                         enum_select(&module.icon_type),
+                        enum_select(&module.visibility),
                         text(&module.format),
                         text(&module.icon_name),
                         text(&module.spinning_disc_icon),

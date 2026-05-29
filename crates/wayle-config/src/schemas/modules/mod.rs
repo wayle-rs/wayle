@@ -48,7 +48,7 @@ pub use hyprsunset::HyprsunsetConfig;
 pub use idle_inhibit::IdleInhibitConfig;
 pub use keybind_mode::KeybindModeConfig;
 pub use keyboard_input::KeyboardInputConfig;
-pub use media::{BUILTIN_MAPPINGS, MediaConfig, MediaIconType};
+pub use media::{BUILTIN_MAPPINGS, MediaConfig, MediaIconType, MediaVisibility};
 pub use microphone::MicrophoneConfig;
 pub use netstat::NetstatConfig;
 pub use network::NetworkConfig;
