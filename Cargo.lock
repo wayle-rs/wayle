@@ -4776,6 +4776,25 @@ dependencies = [
 ]
 
 [[package]]
+name = "wayle-mango"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8384db7abb3d66cf713599b91d8d4c087aa3751f289979bd9b122acb8991531b"
+dependencies = [
+ "derive_more",
+ "futures",
+ "serde",
+ "serde_json",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tracing",
+ "wayle-core",
+ "wayle-traits",
+]
+
+[[package]]
 name = "wayle-media"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4949,6 +4968,7 @@ dependencies = [
  "wayle-icons",
  "wayle-idle-inhibit",
  "wayle-ipc",
+ "wayle-mango",
  "wayle-media",
  "wayle-network",
  "wayle-niri",

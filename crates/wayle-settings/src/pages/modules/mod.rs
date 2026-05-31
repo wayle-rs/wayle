@@ -13,6 +13,7 @@ mod hyprsunset;
 mod idle_inhibit;
 mod keybind_mode;
 mod keyboard_input;
+mod mango_workspaces;
 mod media;
 mod microphone;
 mod netstat;
@@ -48,6 +49,7 @@ pub(crate) fn factories() -> Vec<fn(&Config) -> LeafEntry> {
         idle_inhibit::entry,
         keybind_mode::entry,
         keyboard_input::entry,
+        mango_workspaces::entry,
         media::entry,
         microphone::entry,
         netstat::entry,

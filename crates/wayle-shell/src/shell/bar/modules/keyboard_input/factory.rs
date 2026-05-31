@@ -9,7 +9,10 @@ use wayle_widgets::prelude::BarSettings;
 
 use super::{
     KeyboardInput, KeyboardInputInit,
-    sources::{HyprlandKeyboardLayoutSource, KeyboardLayoutSource, NiriKeyboardLayoutSource},
+    sources::{
+        HyprlandKeyboardLayoutSource, KeyboardLayoutSource, MangoKeyboardLayoutSource,
+        NiriKeyboardLayoutSource,
+    },
 };
 use crate::shell::{
     bar::{
@@ -54,6 +57,10 @@ fn build_source(services: &ShellServices) -> Option<Arc<dyn KeyboardLayoutSource
         Compositor::Niri => {
             let niri = require_service("keyboard-input", "niri", services.niri.clone())?;
             Some(Arc::new(NiriKeyboardLayoutSource::new(niri)))
+        }
+        Compositor::Mango => {
+            let mango = require_service("keyboard-input", "mango", services.mango.clone())?;
+            Some(Arc::new(MangoKeyboardLayoutSource::new(mango)))
         }
         Compositor::Unknown(name) => {
             warn!(module = "keyboard-input", compositor = %name, "unsupported compositor");

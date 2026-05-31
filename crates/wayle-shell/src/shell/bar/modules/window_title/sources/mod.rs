@@ -6,17 +6,21 @@
 //! in sibling files.
 
 mod hyprland;
+mod mango;
 mod niri;
 
 use futures::stream::BoxStream;
 
-pub(crate) use self::{hyprland::HyprlandFocusedWindowSource, niri::NiriFocusedWindowSource};
+pub(crate) use self::{
+    hyprland::HyprlandFocusedWindowSource, mango::MangoFocusedWindowSource,
+    niri::NiriFocusedWindowSource,
+};
 
 /// Title and app identifier of a focused window.
 ///
 /// An empty `title` or `app_id` inside a `Some(FocusedWindow)` means the
-/// window itself has that field unset — distinct from "no focused window,"
-/// which the source signals via `None` at the [`Option`] layer.
+/// window itself has that field unset. That is distinct from "no focused
+/// window," which the source signals via `None` at the [`Option`] layer.
 #[derive(Debug, Clone)]
 pub(crate) struct FocusedWindow {
     pub title: String,
