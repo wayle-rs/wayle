@@ -42,6 +42,7 @@ Modules appear inside `[[bar.layout]]` arrays. Each row links to the full refere
 | [`idle-inhibit`](/config/modules/idle-inhibit) | Toggle that prevents screen dim, lock, and suspend while active. |
 | [`keybind-mode`](/config/modules/keybind-mode) | Current keybind-mode indicator for modal compositors. |
 | [`keyboard-input`](/config/modules/keyboard-input) | Active keyboard layout indicator. |
+| [`mango-workspaces`](/config/modules/mango-workspaces) | MangoWM tag switcher module configuration. |
 | [`media`](/config/modules/media) | Now-playing title and playback controls for the active MPRIS player. |
 | [`microphone`](/config/modules/microphone) | Microphone input level and mute toggle. |
 | [`netstat`](/config/modules/netstat) | Network traffic counters (up/down rates). |

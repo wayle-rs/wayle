@@ -98,6 +98,8 @@ pub struct WorkspaceStyle {
     pub icon: Option<String>,
     /// Custom background color for this workspace when active.
     pub color: Option<ColorValue>,
+    /// Text shown instead of the workspace's name or index.
+    pub label: Option<String>,
 }
 
 /// Per-workspace icon and color overrides, keyed by workspace ID.
@@ -112,12 +114,13 @@ pub struct WorkspaceStyle {
 /// ```toml
 /// [modules.hyprland-workspaces.workspace-map]
 /// # Whole entry on one line with an inline table
-/// 1 = { icon = "ld-globe-symbolic", color = "#4a90d9" }
+/// 1 = { label = "Web", icon = "ld-globe-symbolic", color = "#4a90d9" }
 /// 2 = { icon = "ld-terminal-symbolic" }
 /// 3 = { icon = "ld-code-symbolic", color = "accent" }
 ///
 /// # Or spread the entry across its own subtable
 /// [modules.hyprland-workspaces.workspace-map.4]
+/// label = "Chat"
 /// icon = "ld-message-square-symbolic"
 /// color = "status-success"
 ///

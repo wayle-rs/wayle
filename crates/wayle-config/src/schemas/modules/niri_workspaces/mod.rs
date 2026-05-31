@@ -120,11 +120,12 @@ impl JsonSchema for WorkspaceClickAction {
 ///
 /// ```toml
 /// [modules.niri-workspaces.workspace-map]
-/// web = { icon = "ld-globe-symbolic", color = "#4a90d9" }
+/// web = { label = "Web", icon = "ld-globe-symbolic", color = "#4a90d9" }
 /// terminal = { icon = "ld-terminal-symbolic" }
 ///
 /// # Or target by stable id when no name is set
 /// [modules.niri-workspaces.workspace-map.5]
+/// label = "Code"
 /// icon = "ld-code-symbolic"
 /// color = "accent"
 /// ```

@@ -12,6 +12,7 @@ mod hyprsunset;
 mod idle_inhibit;
 mod keybind_mode;
 mod keyboard_input;
+mod mango_workspaces;
 mod media;
 mod microphone;
 mod netstat;
@@ -71,6 +72,7 @@ register_modules! {
     IdleInhibit => idle_inhibit::Factory,
     KeybindMode => keybind_mode::Factory,
     KeyboardInput => keyboard_input::Factory,
+    MangoWorkspaces => mango_workspaces::Factory,
     Media => media::Factory,
     Microphone => microphone::Factory,
     Netstat => netstat::Factory,
