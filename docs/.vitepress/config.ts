@@ -92,6 +92,7 @@ export default defineConfig({
             { text: 'idle-inhibit', link: '/config/modules/idle-inhibit' },
             { text: 'keybind-mode', link: '/config/modules/keybind-mode' },
             { text: 'keyboard-input', link: '/config/modules/keyboard-input' },
+            { text: 'mango-workspaces', link: '/config/modules/mango-workspaces' },
             { text: 'media', link: '/config/modules/media' },
             { text: 'microphone', link: '/config/modules/microphone' },
             { text: 'netstat', link: '/config/modules/netstat' },
