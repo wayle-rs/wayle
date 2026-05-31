@@ -4,3 +4,12 @@
 @import "daily";
 @import "sun_times";
 @import "states";
+
+.weather-scroll {
+    background: transparent;
+
+    scrollbar range trough {
+        background: transparent;
+    }
+}
+

@@ -7,6 +7,18 @@
         border-spacing: var(--space-sm);
     }
 
+    .dashboard-content-box {
+        border-spacing: var(--space-sm);
+    }
+
+    .dashboard-scroll {
+        background: transparent;
+
+        scrollbar range trough {
+            background: transparent;
+        }
+    }
+
     .dashboard-card {
         border-radius: var(--rounding-element);
         min-width: 0;
