@@ -357,14 +357,16 @@ fn build_button_init(
         Vec::new()
     };
 
-    let label = helpers::label_for(
-        snapshot.idx,
-        snapshot.name.as_deref(),
-        layout.label_strategy,
-    );
-    let icon =
-        helpers::workspace_style(snapshot.name.as_deref(), snapshot.id, &layout.workspace_map)
-            .and_then(|style| style.icon.clone());
+    let style =
+        helpers::workspace_style(snapshot.name.as_deref(), snapshot.id, &layout.workspace_map);
+    let label = style.and_then(|style| style.label.clone()).or_else(|| {
+        helpers::label_for(
+            snapshot.idx,
+            snapshot.name.as_deref(),
+            layout.label_strategy,
+        )
+    });
+    let icon = style.and_then(|style| style.icon.clone());
 
     NiriWorkspaceButtonInit {
         id: snapshot.id,

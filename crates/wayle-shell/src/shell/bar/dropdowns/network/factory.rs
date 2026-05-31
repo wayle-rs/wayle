@@ -2,7 +2,7 @@ use relm4::prelude::*;
 
 use super::{NetworkDropdown, messages::NetworkDropdownInit};
 use crate::shell::{
-    bar::dropdowns::{DropdownFactory, DropdownInstance},
+    bar::dropdowns::{DropdownFactory, DropdownInstance, require_service},
     services::ShellServices,
 };
 
@@ -10,7 +10,7 @@ pub(crate) struct Factory;
 
 impl DropdownFactory for Factory {
     fn create(services: &ShellServices) -> Option<DropdownInstance> {
-        let network = services.network.clone()?;
+        let network = require_service("network", "network", services.network.clone())?;
         let config = services.config.clone();
 
         let init = NetworkDropdownInit { network, config };

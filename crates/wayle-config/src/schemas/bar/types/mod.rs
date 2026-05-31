@@ -199,6 +199,8 @@ pub enum BarModule {
     Battery,
     /// Bluetooth connection status and devices.
     Bluetooth,
+    /// Backlight brightness control.
+    Brightness,
     /// Audio frequency visualizer.
     Cava,
     /// Current time display.
@@ -227,6 +229,8 @@ pub enum BarModule {
     Netstat,
     /// Niri workspace switcher.
     NiriWorkspaces,
+    /// MangoWM tag switcher.
+    MangoWorkspaces,
     /// Notification center button.
     Notifications,
     /// Power menu button.
@@ -285,6 +289,7 @@ impl BarModule {
         match self {
             Self::Battery => "battery",
             Self::Bluetooth => "bluetooth",
+            Self::Brightness => "brightness",
             Self::Cava => "cava",
             Self::Clock => "clock",
             Self::Cpu => "cpu",
@@ -299,6 +304,7 @@ impl BarModule {
             Self::Network => "network",
             Self::Netstat => "netstat",
             Self::NiriWorkspaces => "niri-workspaces",
+            Self::MangoWorkspaces => "mango-workspaces",
             Self::Notifications => "notifications",
             Self::Power => "power",
             Self::Ram => "ram",
@@ -318,6 +324,7 @@ impl BarModule {
         let module = match s {
             "battery" => Self::Battery,
             "bluetooth" => Self::Bluetooth,
+            "brightness" => Self::Brightness,
             "cava" => Self::Cava,
             "clock" => Self::Clock,
             "cpu" => Self::Cpu,
@@ -332,6 +339,7 @@ impl BarModule {
             "network" => Self::Network,
             "netstat" => Self::Netstat,
             "niri-workspaces" => Self::NiriWorkspaces,
+            "mango-workspaces" => Self::MangoWorkspaces,
             "notifications" => Self::Notifications,
             "power" => Self::Power,
             "ram" => Self::Ram,
@@ -402,6 +410,7 @@ impl fmt::Display for BarModule {
 const BUILTIN_MODULES: &[&str] = &[
     "battery",
     "bluetooth",
+    "brightness",
     "cava",
     "clock",
     "cpu",
@@ -412,6 +421,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "keybind-mode",
     "keyboard-input",
     "media",
+    "mango-workspaces",
     "microphone",
     "netstat",
     "network",

@@ -14,6 +14,26 @@ use wayle_widgets::prelude::{BarButton, BarButtonInput};
 
 use crate::{process, shell::services::ShellServices};
 
+/// Returns `value` unchanged, logging at debug if it is `None`.
+///
+/// Use inside dropdown factories that gate on a service dependency: instead of
+/// returning `None` silently, the helper records which dropdown failed and the
+/// service it was waiting on, so the dispatch-site catch-all has the cause
+/// already in the log before it runs.
+pub(crate) fn require_service<T>(
+    dropdown: &'static str,
+    service: &'static str,
+    value: Option<T>,
+) -> Option<T> {
+    if value.is_none() {
+        debug!(
+            dropdown,
+            service, "service unavailable, dropdown disabled on this system"
+        );
+    }
+    value
+}
+
 /// Shared dropdown instance for a dropdown name.
 ///
 /// Reuse keeps dropdown state consistent across modules that reference the same
@@ -368,7 +388,11 @@ impl DropdownRegistry {
 
         debug!(dropdown = name, "creating dropdown");
         let Some(raw) = super::create(name, &self.services) else {
-            warn!(dropdown = name, "factory returned None");
+            debug!(
+                dropdown = name,
+                "no instance created (factory declined, usually due to a missing service or dependency \
+                 -- see preceding debug log from the factory for the specific cause)"
+            );
             return None;
         };
         let instance = Rc::new(raw);
@@ -413,7 +437,11 @@ fn dispatch_action(
                 let style = dropdown_style(registry);
                 toggle(&dropdown, style);
             } else {
-                warn!(dropdown = %name, "dropdown unavailable, click dropped");
+                warn!(
+                    dropdown = %name,
+                    "click dropped: no dropdown available (dropdown is either unregistered or its \
+                     backing service is unavailable on this system)"
+                );
             }
         }
         ClickAction::Shell(cmd) => {
