@@ -1,6 +1,6 @@
 mod types;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Serialize};
@@ -201,7 +201,7 @@ pub struct CustomModuleDefinition {
     /// # Result: Uses "vol-33" (percentage-based, no alt)
     /// ```
     #[serde(rename = "icon-map", default)]
-    pub icon_map: Option<HashMap<String, String>>,
+    pub icon_map: Option<BTreeMap<String, String>>,
 
     /// Format string for dynamic CSS classes.
     ///

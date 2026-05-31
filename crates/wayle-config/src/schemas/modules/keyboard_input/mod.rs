@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use schemars::schema_for;
 use wayle_derive::wayle_config;
@@ -111,8 +111,8 @@ pub struct KeyboardInputConfig {
     /// "Czech (QWERTY)" = "Czech"
     /// ```
     #[serde(rename = "layout-alias-map")]
-    #[default(HashMap::new())]
-    pub layout_alias_map: ConfigProperty<HashMap<String, String>>,
+    #[default(BTreeMap::new())]
+    pub layout_alias_map: ConfigProperty<BTreeMap<String, String>>,
 }
 
 impl ModuleInfoProvider for KeyboardInputConfig {

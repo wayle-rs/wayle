@@ -1,7 +1,7 @@
 //! Pure helpers for the window-title module: template rendering and icon
 //! resolution. No Relm4, no GTK, no service types — easy to unit-test.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use serde_json::json;
 use wayle_config::schemas::modules::WINDOW_TITLE_BUILTIN_MAPPINGS;
@@ -26,7 +26,7 @@ pub(super) fn format_label(format: &str, title: &str, app_id: &str) -> String {
 pub(super) struct IconContext<'a> {
     pub title: &'a str,
     pub app_id: &'a str,
-    pub user_mappings: &'a HashMap<String, String>,
+    pub user_mappings: &'a BTreeMap<String, String>,
     pub fallback: &'a str,
 }
 
@@ -115,7 +115,7 @@ mod tests {
 
     #[test]
     fn resolve_icon_user_title_mapping_takes_priority() {
-        let mut mappings = HashMap::new();
+        let mut mappings = BTreeMap::new();
         mappings.insert("title:*Spotify*".to_string(), "user-spotify".to_string());
         mappings.insert("*spotify*".to_string(), "user-class-spotify".to_string());
 
@@ -131,7 +131,7 @@ mod tests {
 
     #[test]
     fn resolve_icon_user_class_mapping_over_builtin() {
-        let mut mappings = HashMap::new();
+        let mut mappings = BTreeMap::new();
         mappings.insert("*firefox*".to_string(), "my-firefox-icon".to_string());
 
         let icon = resolve_icon(&IconContext {
@@ -149,7 +149,7 @@ mod tests {
         let icon = resolve_icon(&IconContext {
             title: "Home - Firefox",
             app_id: "firefox",
-            user_mappings: &HashMap::new(),
+            user_mappings: &BTreeMap::new(),
             fallback: "fallback-icon",
         });
 
@@ -161,7 +161,7 @@ mod tests {
         let icon = resolve_icon(&IconContext {
             title: "Unknown App",
             app_id: "unknown-app-class",
-            user_mappings: &HashMap::new(),
+            user_mappings: &BTreeMap::new(),
             fallback: "fallback-icon",
         });
 
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn resolve_icon_wildcard_for_static_icon() {
-        let mut mappings = HashMap::new();
+        let mut mappings = BTreeMap::new();
         mappings.insert("*".to_string(), "my-static-icon".to_string());
 
         let icon = resolve_icon(&IconContext {

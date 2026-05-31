@@ -1,6 +1,6 @@
 mod icons;
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use schemars::schema_for;
 use wayle_derive::wayle_config;
@@ -49,8 +49,8 @@ pub struct WindowTitleConfig {
     /// "title:*YouTube*" = "ld-youtube-symbolic"
     /// ```
     #[serde(rename = "icon-mappings")]
-    #[default(HashMap::new())]
-    pub icon_mappings: ConfigProperty<HashMap<String, String>>,
+    #[default(BTreeMap::new())]
+    pub icon_mappings: ConfigProperty<BTreeMap<String, String>>,
 
     /// Display border around button.
     #[serde(rename = "border-show")]

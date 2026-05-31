@@ -1,7 +1,7 @@
 //! Pure helpers: label rendering, workspace-map lookup, ignore matching,
 //! and CSS class naming.
 
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use wayle_config::schemas::modules::{LabelStrategy, WorkspaceStyle};
 
@@ -34,7 +34,7 @@ pub(super) fn label_for(idx: u8, name: Option<&str>, strategy: LabelStrategy) ->
 pub(super) fn workspace_style<'a>(
     name: Option<&str>,
     id: u64,
-    map: &'a HashMap<String, WorkspaceStyle>,
+    map: &'a BTreeMap<String, WorkspaceStyle>,
 ) -> Option<&'a WorkspaceStyle> {
     if let Some(name) = name
         && let Some(style) = map.get(name)
@@ -92,7 +92,7 @@ pub(super) fn is_ignored(name: Option<&str>, idx: u8, id: u64, patterns: &[Strin
 pub(super) fn resolve_app_icon(
     app_id: Option<&str>,
     title: Option<&str>,
-    user_map: &HashMap<String, String>,
+    user_map: &BTreeMap<String, String>,
     fallback: &str,
 ) -> String {
     let (title_entries, app_entries): (Vec<_>, Vec<_>) = user_map
@@ -203,7 +203,7 @@ mod tests {
 
     #[test]
     fn workspace_style_prefers_name_match() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(
             String::from("web"),
             WorkspaceStyle {
@@ -227,7 +227,7 @@ mod tests {
 
     #[test]
     fn workspace_style_falls_back_to_id_when_name_missing() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(
             String::from("5"),
             WorkspaceStyle {
@@ -243,7 +243,7 @@ mod tests {
 
     #[test]
     fn workspace_style_falls_back_to_id_when_name_unmatched() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(
             String::from("5"),
             WorkspaceStyle {
@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn workspace_style_returns_none_for_no_match() {
-        let map = HashMap::new();
+        let map = BTreeMap::new();
         assert!(workspace_style(Some("web"), 5, &map).is_none());
     }
 
@@ -296,7 +296,7 @@ mod tests {
 
     #[test]
     fn resolve_app_icon_unprefixed_matches_app_id() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(String::from("*firefox*"), String::from("ld-globe"));
         assert_eq!(
             resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback"),
@@ -306,7 +306,7 @@ mod tests {
 
     #[test]
     fn resolve_app_icon_app_prefix_matches_app_id() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(String::from("app:*firefox*"), String::from("ld-globe"));
         assert_eq!(
             resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback"),
@@ -316,7 +316,7 @@ mod tests {
 
     #[test]
     fn resolve_app_icon_title_prefix_matches_title() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(String::from("title:*YouTube*"), String::from("ld-youtube"));
         assert_eq!(
             resolve_app_icon(
@@ -331,7 +331,7 @@ mod tests {
 
     #[test]
     fn resolve_app_icon_title_takes_priority_over_app() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(String::from("title:*YouTube*"), String::from("ld-youtube"));
         map.insert(String::from("*firefox*"), String::from("ld-globe"));
         assert_eq!(
@@ -347,7 +347,7 @@ mod tests {
 
     #[test]
     fn resolve_app_icon_falls_back_when_no_match() {
-        let map = HashMap::new();
+        let map = BTreeMap::new();
         assert_eq!(
             resolve_app_icon(Some("unknown.app"), Some("Unknown"), &map, "ld-default"),
             "ld-default",
@@ -356,7 +356,7 @@ mod tests {
 
     #[test]
     fn resolve_app_icon_uses_builtin_default_when_user_map_misses() {
-        let map = HashMap::new();
+        let map = BTreeMap::new();
         let icon = resolve_app_icon(Some("firefox"), None, &map, "ld-default");
         assert_ne!(
             icon, "ld-default",
@@ -366,7 +366,7 @@ mod tests {
 
     #[test]
     fn resolve_app_icon_user_map_overrides_builtin_default() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(String::from("*firefox*"), String::from("my-override"));
         assert_eq!(
             resolve_app_icon(Some("firefox"), None, &map, "ld-default"),
@@ -376,7 +376,7 @@ mod tests {
 
     #[test]
     fn resolve_app_icon_handles_missing_app_id() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(String::from("title:*Doc*"), String::from("ld-document"));
         assert_eq!(
             resolve_app_icon(None, Some("Document Reader"), &map, "fallback"),
@@ -386,7 +386,7 @@ mod tests {
 
     #[test]
     fn resolve_app_icon_handles_missing_title() {
-        let mut map = HashMap::new();
+        let mut map = BTreeMap::new();
         map.insert(String::from("*firefox*"), String::from("ld-globe"));
         assert_eq!(
             resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback"),
