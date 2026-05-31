@@ -7,6 +7,7 @@ use wayle_brightness::BrightnessService;
 use wayle_config::ConfigService;
 use wayle_core::DeferredService;
 use wayle_hyprland::HyprlandService;
+use wayle_mango::MangoService;
 use wayle_media::MediaService;
 use wayle_network::NetworkService;
 use wayle_niri::NiriService;
@@ -32,6 +33,7 @@ pub(crate) struct ShellServices {
     pub config: Arc<ConfigService>,
     pub hyprland: Option<Arc<HyprlandService>>,
     pub idle_inhibit: Arc<IdleInhibitService>,
+    pub mango: Option<Arc<MangoService>>,
     pub media: Option<Arc<MediaService>>,
     pub niri: Option<Arc<NiriService>>,
     pub network: Option<Arc<NetworkService>>,
