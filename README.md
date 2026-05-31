@@ -149,7 +149,7 @@ Every field is documented at [wayle.app/config](https://wayle.app/config/).
 
 ## Requirements
 
-A Wayland compositor that implements the `wlr-layer-shell` protocol. Compositor-specific modules currently target Hyprland and Niri; Mango and Sway support is in planned soon.
+A Wayland compositor that implements the `wlr-layer-shell` protocol. Compositor-specific modules currently target Hyprland, Niri and Mango; Sway support is in planned soon.
 
 ## Credits
 

@@ -13,6 +13,7 @@ mod hyprsunset;
 mod idle_inhibit;
 mod keybind_mode;
 mod keyboard_input;
+mod mango_workspaces;
 mod media;
 mod microphone;
 mod netstat;
@@ -48,6 +49,7 @@ pub use hyprsunset::HyprsunsetConfig;
 pub use idle_inhibit::IdleInhibitConfig;
 pub use keybind_mode::KeybindModeConfig;
 pub use keyboard_input::KeyboardInputConfig;
+pub use mango_workspaces::MangoWorkspacesConfig;
 pub use media::{BUILTIN_MAPPINGS, MediaConfig, MediaIconType};
 pub use microphone::MicrophoneConfig;
 pub use netstat::NetstatConfig;
@@ -104,6 +106,9 @@ pub struct ModulesConfig {
     /// Keyboard input module.
     #[serde(rename = "keyboard-input")]
     pub keyboard_input: KeyboardInputConfig,
+    /// MangoWM tag switcher module.
+    #[serde(rename = "mango-workspaces")]
+    pub mango_workspaces: MangoWorkspacesConfig,
     /// Media player module.
     pub media: MediaConfig,
     /// Microphone input module.

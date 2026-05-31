@@ -20,6 +20,7 @@ use wayle_config::{ConfigService, infrastructure::schema};
 use wayle_core::{DeferredService, Property};
 use wayle_hyprland::HyprlandService;
 use wayle_ipc::shell::APP_ID;
+use wayle_mango::MangoService;
 use wayle_media::MediaService;
 use wayle_network::NetworkService;
 use wayle_niri::NiriService;
@@ -84,6 +85,7 @@ struct DaemonServices {
 
 struct OptionalServices {
     hyprland: Option<Arc<HyprlandService>>,
+    mango: Option<Arc<MangoService>>,
     niri: Option<Arc<NiriService>>,
 }
 
@@ -162,6 +164,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         hyprland: optional.hyprland,
         power_profiles,
         idle_inhibit: core.idle_inhibit,
+        mango: optional.mango,
         media: daemons.media,
         niri: optional.niri,
         network: core.network,
@@ -234,15 +237,18 @@ async fn init_core_services(
 
 async fn init_optional_services(timer: &StartupTimer) -> OptionalServices {
     let hyprland_task = tokio::spawn(HyprlandService::new());
+    let mango_task = tokio::spawn(MangoService::new());
     let niri_task = tokio::spawn(NiriService::new());
 
-    let (hyprland, niri) = tokio::join!(
+    let (hyprland, mango, niri) = tokio::join!(
         timer.time("Hyprland", spawned(hyprland_task)),
+        timer.time("Mango", spawned(mango_task)),
         timer.time("Niri", spawned(niri_task)),
     );
 
     OptionalServices {
         hyprland: hyprland.ok(),
+        mango: mango.ok(),
         niri: niri.ok(),
     }
 }

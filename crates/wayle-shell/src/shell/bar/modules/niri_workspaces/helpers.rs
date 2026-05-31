@@ -100,36 +100,46 @@ pub(super) fn resolve_app_icon(
         .partition(|(pattern, _)| pattern.starts_with(TITLE_PREFIX));
 
     if let Some(title) = title
-        && let Some(icon) = glob::find_match(
-            title_entries.iter().map(|(pattern, icon)| {
-                let stripped = pattern.strip_prefix(TITLE_PREFIX).unwrap_or(pattern);
-                (stripped, icon.as_str())
-            }),
-            title,
-        )
+        && let Some(icon) = match_prefixed(&title_entries, TITLE_PREFIX, title)
     {
         return icon.to_string();
     }
 
-    if let Some(app_id) = app_id
-        && let Some(icon) = glob::find_match(
-            app_entries.iter().map(|(pattern, icon)| {
-                let stripped = pattern.strip_prefix(APP_PREFIX).unwrap_or(pattern);
-                (stripped, icon.as_str())
-            }),
-            app_id,
-        )
-    {
+    let Some(app_id) = app_id else {
+        return fallback.to_string();
+    };
+
+    if let Some(icon) = match_prefixed(&app_entries, APP_PREFIX, app_id) {
         return icon.to_string();
     }
 
-    if let Some(app_id) = app_id
-        && let Some(icon) = glob::find_match(DEFAULT_APP_ICON_MAP.iter().copied(), app_id)
-    {
+    if let Some(icon) = glob::find_match(DEFAULT_APP_ICON_MAP.iter().copied(), app_id) {
         return icon.to_string();
     }
 
     fallback.to_string()
+}
+
+/// Matches `query` against `entries`, stripping `prefix` from each pattern
+/// first, and returns the matched icon name.
+///
+/// ```text
+/// prefix:  "app:"
+/// entries: [("app:*firefox*", "ld-globe")]
+/// query:   "org.mozilla.firefox"
+/// returns: Some("ld-globe")
+/// ```
+fn match_prefixed<'a>(
+    entries: &[(&'a String, &'a String)],
+    prefix: &str,
+    query: &str,
+) -> Option<&'a str> {
+    let candidates = entries.iter().map(|(pattern, icon)| {
+        let stripped = pattern.strip_prefix(prefix).unwrap_or(pattern);
+        (stripped, icon.as_str())
+    });
+
+    glob::find_match(candidates, query)
 }
 
 #[cfg(test)]
@@ -199,6 +209,7 @@ mod tests {
             WorkspaceStyle {
                 icon: Some(String::from("by-name")),
                 color: None,
+                label: None,
             },
         );
         map.insert(
@@ -206,6 +217,7 @@ mod tests {
             WorkspaceStyle {
                 icon: Some(String::from("by-id")),
                 color: None,
+                label: None,
             },
         );
 
@@ -221,6 +233,7 @@ mod tests {
             WorkspaceStyle {
                 icon: Some(String::from("by-id")),
                 color: Some(ColorValue::Transparent),
+                label: None,
             },
         );
 
@@ -236,6 +249,7 @@ mod tests {
             WorkspaceStyle {
                 icon: Some(String::from("by-id")),
                 color: None,
+                label: None,
             },
         );
 
