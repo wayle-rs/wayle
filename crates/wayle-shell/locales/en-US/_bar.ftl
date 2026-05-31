@@ -35,7 +35,7 @@ bar-hyprsunset-on = On
 bar-hyprsunset-off = Off
 
 ## Storage
-bar-storage-multiple = multiple
+bar-storage-multiple = Multiple
 
 ## Media
 bar-media-playing = Playing
