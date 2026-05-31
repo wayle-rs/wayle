@@ -81,6 +81,7 @@ export default defineConfig({
           items: [
             { text: 'battery', link: '/config/modules/battery' },
             { text: 'bluetooth', link: '/config/modules/bluetooth' },
+            { text: 'brightness', link: '/config/modules/brightness' },
             { text: 'cava', link: '/config/modules/cava' },
             { text: 'clock', link: '/config/modules/clock' },
             { text: 'cpu', link: '/config/modules/cpu' },
@@ -95,6 +96,7 @@ export default defineConfig({
             { text: 'microphone', link: '/config/modules/microphone' },
             { text: 'netstat', link: '/config/modules/netstat' },
             { text: 'network', link: '/config/modules/network' },
+            { text: 'niri-workspaces', link: '/config/modules/niri-workspaces' },
             { text: 'notifications', link: '/config/modules/notifications' },
             { text: 'power', link: '/config/modules/power' },
             { text: 'ram', link: '/config/modules/ram' },
