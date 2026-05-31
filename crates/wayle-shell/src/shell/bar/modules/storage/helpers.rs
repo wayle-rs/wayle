@@ -181,7 +181,7 @@ mod tests {
         assert_eq!(snapshot.used_bytes, 900 * GIB);
         assert_eq!(snapshot.total_bytes, 1800 * GIB);
         assert_eq!(snapshot.available_bytes, 900 * GIB);
-        assert_eq!(snapshot.filesystem, "multiple");
+        assert_eq!(snapshot.filesystem, "Multiple");
     }
 
     #[test]
