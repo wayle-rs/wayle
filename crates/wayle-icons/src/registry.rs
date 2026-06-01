@@ -9,7 +9,10 @@ use gtk4::{gdk, glib};
 use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use tracing::{debug, info, warn};
 
-use crate::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    migrate,
+};
 
 const SYSTEM_ICONS_PATH: &str = "/usr/share/wayle/icons";
 
@@ -122,6 +125,7 @@ impl IconRegistry {
     /// - No display is available (GTK not initialized)
     pub fn init(&self) -> Result<()> {
         self.ensure_setup()?;
+        migrate::run(&self.icons_dir());
         self.register_with_gtk()?;
         self.start_watcher();
 

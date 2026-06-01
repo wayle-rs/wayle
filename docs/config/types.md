@@ -152,7 +152,7 @@ show = false
 
 Bar module name. Built-in modules or custom modules with a `custom-<id>` pattern.
 
-One of: `"battery"`, `"bluetooth"`, `"cava"`, `"clock"`, `"cpu"`, `"dashboard"`, `"hyprland-workspaces"`, `"hyprsunset"`, `"idle-inhibit"`, `"keybind-mode"`, `"keyboard-input"`, `"media"`, `"microphone"`, `"netstat"`, `"network"`, `"notifications"`, `"power"`, `"ram"`, `"separator"`, `"storage"`, `"systray"`, `"updates"`, `"volume"`, `"weather"`, `"window-title"`, `"world-clock"`.
+One of: `"battery"`, `"bluetooth"`, `"brightness"`, `"cava"`, `"clock"`, `"cpu"`, `"dashboard"`, `"hyprland-workspaces"`, `"hyprsunset"`, `"idle-inhibit"`, `"keybind-mode"`, `"keyboard-input"`, `"media"`, `"mango-workspaces"`, `"microphone"`, `"netstat"`, `"network"`, `"niri-workspaces"`, `"notifications"`, `"power"`, `"ram"`, `"separator"`, `"storage"`, `"systray"`, `"updates"`, `"volume"`, `"weather"`, `"window-title"`, `"world-clock"`.
 
 String matching `^custom-[a-z0-9-]+$`.
 
@@ -374,6 +374,28 @@ Source for resolving notification icons.
 | `"automatic"` | Use per-notification images when provided, otherwise Wayle's mapped icon. |
 | `"mapped"` | Always use Wayle's mapped icons regardless of what the app provides. |
 | `"application"` | Use the full application icon chain, falling back to mapped if unavailable. |
+
+## LabelStrategy {#label-strategy}
+
+What identifies each workspace's label.
+
+| Value | Meaning |
+|---|---|
+| `"index"` | Always show the index (e.g. `1`, `2`, `3`). |
+| `"name-or-index"` | Show the name when set, fall back to the index. |
+| `"name-only"` | Show only the name; unnamed workspaces show nothing. |
+| `"index-and-name"` | Show both, joined as `"1: web"`. Unnamed workspaces show the index alone. |
+
+## Layer {#layer}
+
+Layer-shell layer a window is placed on, from furthest back to furthest front.
+
+| Value | Meaning |
+|---|---|
+| `"background"` | Below everything else, used for wallpapers and ambient surfaces. |
+| `"bottom"` | Behind regular application windows. |
+| `"top"` | Above regular application windows. |
+| `"overlay"` | Above everything, including fullscreen application windows. |
 
 ## Location {#location}
 
@@ -812,6 +834,12 @@ Weather data provider selection.
 | `"visual-crossing"` | Visual Crossing (requires API key). |
 | `"weather-api"` | WeatherAPI.com (requires API key). |
 
+## WorkspaceClickAction {#workspace-click-action}
+
+Click/scroll action: focus:this | focus:next | focus:previous | focus:last | dropdown:NAME | shell command | empty for none
+
+String.
+
 ## WorkspaceMap {#workspace-map}
 
 Per-workspace icon and color overrides, keyed by workspace ID.
@@ -826,12 +854,13 @@ that don't appear in the map fall back to the default behaviour set by
 ```toml
 [modules.hyprland-workspaces.workspace-map]
 # Whole entry on one line with an inline table
-1 = { icon = "ld-globe-symbolic", color = "#4a90d9" }
+1 = { label = "Web", icon = "ld-globe-symbolic", color = "#4a90d9" }
 2 = { icon = "ld-terminal-symbolic" }
 3 = { icon = "ld-code-symbolic", color = "accent" }
 
 # Or spread the entry across its own subtable
 [modules.hyprland-workspaces.workspace-map.4]
+label = "Chat"
 icon = "ld-message-square-symbolic"
 color = "status-success"
 
@@ -848,6 +877,7 @@ Per-workspace styling override.
 |---|---|
 | `icon` | Custom icon for this workspace. |
 | `color` | Custom background color for this workspace when active. |
+| `label` | Text shown instead of the workspace's name or index. |
 
 
 </div>

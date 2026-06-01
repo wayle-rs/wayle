@@ -1,27 +1,22 @@
-use std::collections::HashMap;
+//! Pure helper for the keyboard-input module: template rendering.
+
+use std::collections::BTreeMap;
 
 use serde_json::json;
-use wayle_hyprland::DeviceInfo;
+
+use crate::template;
 
 pub(super) fn format_label(
     layout: &str,
     format: &str,
-    layout_alias_map: &HashMap<String, String>,
+    layout_alias_map: &BTreeMap<String, String>,
 ) -> String {
     let alias = layout_alias_map
         .get(layout)
         .map(String::as_str)
         .unwrap_or(layout);
     let ctx = json!({ "layout": layout, "alias": alias });
-    crate::template::render(format, ctx).unwrap_or_default()
-}
-
-pub(super) fn main_keyboard_layout(devices: &DeviceInfo) -> Option<&str> {
-    devices
-        .keyboards
-        .iter()
-        .find(|kb| kb.main)
-        .map(|kb| kb.active_keymap.as_str())
+    template::render(format, ctx).unwrap_or_default()
 }
 
 #[cfg(test)]
@@ -30,13 +25,13 @@ mod tests {
 
     #[test]
     fn format_layout_only() {
-        assert_eq!(format_label("us", "{{ layout }}", &HashMap::new()), "us");
+        assert_eq!(format_label("us", "{{ layout }}", &BTreeMap::new()), "us");
     }
 
     #[test]
     fn format_with_prefix() {
         assert_eq!(
-            format_label("de", "KB: {{ layout }}", &HashMap::new()),
+            format_label("de", "KB: {{ layout }}", &BTreeMap::new()),
             "KB: de"
         );
     }
@@ -44,7 +39,7 @@ mod tests {
     #[test]
     fn format_multiple_placeholders() {
         assert_eq!(
-            format_label("us", "{{ layout }} | {{ alias }}", &HashMap::new()),
+            format_label("us", "{{ layout }} | {{ alias }}", &BTreeMap::new()),
             "us | us"
         );
     }
@@ -55,7 +50,7 @@ mod tests {
             format_label(
                 "us",
                 "{{ layout }} | {{ alias }}",
-                &HashMap::from([("us".to_string(), "US".to_string())])
+                &BTreeMap::from([("us".to_string(), "US".to_string())])
             ),
             "us | US"
         );
@@ -67,7 +62,7 @@ mod tests {
             format_label(
                 "us",
                 "{{ alias }}",
-                &HashMap::from([
+                &BTreeMap::from([
                     ("us".to_string(), "US".to_string()),
                     ("de".to_string(), "DE".to_string()),
                 ])
@@ -82,7 +77,7 @@ mod tests {
             format_label(
                 "cz",
                 "{{ alias }}",
-                &HashMap::from([
+                &BTreeMap::from([
                     ("us".to_string(), "US".to_string()),
                     ("de".to_string(), "DE".to_string()),
                 ])

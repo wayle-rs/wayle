@@ -12,8 +12,8 @@ use tokio::{
     time::{Instant, sleep_until},
 };
 use tracing::{debug, error, info};
-use wayle_config::ConfigService;
-use wayle_styling::{compile_dev, scss_dir, theme_css};
+use wayle_config::{ConfigService, infrastructure::paths::ConfigPaths};
+use wayle_styling::{compile_dev, scss_dir, theme_css, user_css};
 
 use crate::app::{SettingsApp, SettingsAppMsg};
 
@@ -117,7 +117,16 @@ fn recompile(sender: &relm4::Sender<SettingsAppMsg>, config_service: &ConfigServ
     match compile_dev() {
         Ok(static_css) => {
             let theme = theme_css(&palette, &config.general, &config.bar, &config.styling);
-            let css = format!("{static_css}\n{theme}");
+
+            let user = match ConfigPaths::config_dir() {
+                Ok(dir) => user_css(&dir),
+                Err(err) => {
+                    error!(error = %err, "cannot resolve config dir; user styles disabled");
+                    String::new()
+                }
+            };
+
+            let css = format!("{static_css}\n{theme}\n{user}");
             debug!("SCSS recompiled for settings");
             let _ = sender.send(SettingsAppMsg::DevCssRecompiled(css));
         }

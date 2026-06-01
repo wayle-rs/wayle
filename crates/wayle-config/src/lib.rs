@@ -154,4 +154,48 @@ mod tests {
             "serde(skip) fields should not appear"
         );
     }
+
+    #[test]
+    fn notification_singular_key_is_back_compat_alias() -> Result<(), toml::de::Error> {
+        let toml_input: toml::Value = toml::from_str(
+            r#"
+            [modules.notification]
+            icon-name = "ld-bell-from-singular-key"
+            "#,
+        )?;
+
+        let config = Config::default();
+        config.apply_config_layer(&toml_input, "");
+        config.commit_config_reload();
+
+        assert_eq!(
+            config.modules.notifications.icon_name.get(),
+            "ld-bell-from-singular-key",
+            "[modules.notification] (legacy singular key) should be honored as alias for [modules.notifications]"
+        );
+
+        Ok(())
+    }
+
+    #[test]
+    fn notification_plural_key_is_canonical() -> Result<(), toml::de::Error> {
+        let toml_input: toml::Value = toml::from_str(
+            r#"
+            [modules.notifications]
+            icon-name = "ld-bell-from-plural-key"
+            "#,
+        )?;
+
+        let config = Config::default();
+        config.apply_config_layer(&toml_input, "");
+        config.commit_config_reload();
+
+        assert_eq!(
+            config.modules.notifications.icon_name.get(),
+            "ld-bell-from-plural-key",
+            "[modules.notifications] (canonical plural key) should populate the field"
+        );
+
+        Ok(())
+    }
 }

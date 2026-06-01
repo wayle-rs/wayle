@@ -14,7 +14,8 @@ use super::{
 use crate::{
     i18n::t,
     shell::helpers::layer_shell::{
-        apply_monitor_by_connector, apply_primary_monitor, apply_tearing_layer, reset_anchors,
+        apply_layer as apply_window_layer, apply_monitor_by_connector, apply_primary_monitor,
+        reset_anchors,
     },
 };
 
@@ -278,7 +279,8 @@ impl Osd {
     }
 
     pub(super) fn apply_layer(&self, root: &gtk::Window) {
-        apply_tearing_layer(root, &self.config);
+        let configured = self.config.config().osd.layer.get();
+        apply_window_layer(root, configured, &self.config);
     }
 
     pub(super) fn schedule_dismiss(

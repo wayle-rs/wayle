@@ -49,7 +49,9 @@ wildcard.workspace = true
 wayle-hyprland.workspace = true
 wayle-icons.workspace = true
 wayle-idle-inhibit.workspace = true
+wayle-mango.workspace = true
 wayle-media.workspace = true
+wayle-niri.workspace = true
 wayle-network.workspace = true
 wayle-notification.workspace = true
 wayle-power-profiles.workspace = true
@@ -60,6 +62,7 @@ wayle-wallpaper.workspace = true
 wayle-weather.workspace = true
 wayle-widgets = { workspace = true }
 zbus.workspace = true
+gio-unix = { version = "0.22.6", default-features = false }
 
 [dev-dependencies]
 glob.workspace = true

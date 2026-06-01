@@ -3,7 +3,7 @@ use std::sync::Arc;
 use gtk4_layer_shell::{Edge, Layer, LayerShell};
 use relm4::gtk;
 use tracing::warn;
-use wayle_config::ConfigService;
+use wayle_config::{ConfigService, schemas::general::Layer as ConfigLayer};
 
 use super::monitors::current_monitors;
 
@@ -20,13 +20,37 @@ pub(crate) fn reset_anchors(root: &gtk::Window) {
     root.set_margin(Edge::Right, 0);
 }
 
-/// Switches between `Overlay` and `Top` layer for tearing mode compatibility.
-pub(crate) fn apply_tearing_layer(root: &gtk::Window, config: &Arc<ConfigService>) {
+/// Maps a config [`ConfigLayer`] to a layer-shell [`Layer`].
+pub(crate) fn to_gtk_layer(layer: ConfigLayer) -> Layer {
+    match layer {
+        ConfigLayer::Background => Layer::Background,
+        ConfigLayer::Bottom => Layer::Bottom,
+        ConfigLayer::Top => Layer::Top,
+        ConfigLayer::Overlay => Layer::Overlay,
+    }
+}
+
+/// Returns the layer to actually use after honoring `general.tearing-mode`.
+///
+/// Tearing-mode demotes `Overlay` to `Top` so fullscreen tearing works; other
+/// layers pass through unchanged.
+pub(crate) fn effective_layer(configured: ConfigLayer, tearing: bool) -> ConfigLayer {
+    if tearing && configured == ConfigLayer::Overlay {
+        ConfigLayer::Top
+    } else {
+        configured
+    }
+}
+
+/// Applies the configured layer, honoring `general.tearing-mode`.
+pub(crate) fn apply_layer(
+    root: &gtk::Window,
+    configured: ConfigLayer,
+    config: &Arc<ConfigService>,
+) {
     let tearing = config.config().general.tearing_mode.get();
-
-    let layer = if tearing { Layer::Top } else { Layer::Overlay };
-
-    root.set_layer(layer);
+    let layer = effective_layer(configured, tearing);
+    root.set_layer(to_gtk_layer(layer));
 }
 
 /// Resolves and applies a monitor by connector name, falling back to primary.

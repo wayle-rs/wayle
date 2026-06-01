@@ -33,6 +33,7 @@ jobs:
                         - 'wayle/**'
                         - 'resources/**'
                         - 'scripts/**'
+                        - 'packaging/**'
                         - 'Cargo.*'
                         - '.github/workflows/ci.yml'
 
@@ -147,17 +148,88 @@ jobs:
             - name: Build workspace
               run: cargo build --workspace
 
+            - name: Build archive
+              id: archive
+              run: |
+                  VERSION=$(sed -n '/\[workspace\.package\]/,/\[/{/^version/p}' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+                  ./scripts/ci/build-archive.sh target/debug "${VERSION}" x86_64
+                  echo "archive=wayle-${VERSION}-x86_64-linux.tar.gz" >> "$GITHUB_OUTPUT"
+                  echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+    rpm:
+        name: RPM
+        needs: changes
+        if: needs.changes.outputs.code == 'true'
+        runs-on: ubuntu-latest
+        container:
+            image: fedora:latest
+        steps:
+            - name: Install dependencies
+              run: |
+                  dnf -y install \
+                    clang \
+                    cmake \
+                    fftw-devel \
+                    gcc \
+                    git \
+                    gtk4-devel \
+                    gtk4-layer-shell-devel \
+                    gtksourceview5-devel \
+                    libxkbcommon-devel \
+                    make \
+                    pipewire-devel \
+                    pkgconf-pkg-config \
+                    pulseaudio-libs-devel \
+                    rpm-build \
+                    systemd-devel
+
+            - name: Checkout repository
+              uses: actions/checkout@v6
+
+            - name: Fix Git ownership
+              run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+            - name: Install RPM build dependencies
+              run: |
+                  VERSION=$(sed -n '/\[workspace\.package\]/,/\[/{/^version/p}' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+                  DATE="$(LC_ALL=C date '+%a %b %d %Y')"
+                  sed \
+                    -e "s/@VERSION@/${VERSION}/g" \
+                    -e "s/@DATE@/${DATE}/g" \
+                    packaging/rpm/wayle.spec.in >/tmp/wayle.spec
+                  dnf -y --setopt=install_weak_deps=False builddep /tmp/wayle.spec
+
+            - name: Setup Rust
+              uses: actions-rust-lang/setup-rust-toolchain@v1
+              with:
+                  toolchain: stable
+
+            - name: Build workspace
+              run: cargo build --workspace --locked
+
+            - name: Build archive
+              id: archive
+              run: |
+                  VERSION=$(sed -n '/\[workspace\.package\]/,/\[/{/^version/p}' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+                  ./scripts/ci/build-archive.sh target/debug "${VERSION}" x86_64
+                  echo "archive=wayle-${VERSION}-x86_64-linux.tar.gz" >> "$GITHUB_OUTPUT"
+                  echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+            - name: Build RPM
+              run: ./scripts/ci/build-packages.sh "${{ steps.archive.outputs.archive }}" "${{ steps.archive.outputs.version }}"
+
     ci-status:
         name: CI Status
         if: always()
-        needs: [lint, test, build]
+        needs: [lint, test, build, rpm]
         runs-on: ubuntu-latest
         steps:
             - name: Check results
               run: |
                   if [[ "${{ needs.lint.result }}" == "failure" || \
                         "${{ needs.test.result }}" == "failure" || \
-                        "${{ needs.build.result }}" == "failure" ]]; then
+                        "${{ needs.build.result }}" == "failure" || \
+                        "${{ needs.rpm.result }}" == "failure" ]]; then
                     echo "One or more checks failed"
                     exit 1
                   fi

@@ -2,6 +2,7 @@
 
 mod battery;
 mod bluetooth;
+mod brightness;
 mod cava;
 mod clock;
 mod cpu;
@@ -12,10 +13,12 @@ mod hyprsunset;
 mod idle_inhibit;
 mod keybind_mode;
 mod keyboard_input;
+mod mango_workspaces;
 mod media;
 mod microphone;
 mod netstat;
 mod network;
+mod niri_workspaces;
 mod notification_module;
 mod power;
 mod ram;
@@ -35,6 +38,7 @@ pub(crate) fn factories() -> Vec<fn(&Config) -> LeafEntry> {
     vec![
         battery::entry,
         bluetooth::entry,
+        brightness::entry,
         cava::entry,
         clock::entry,
         cpu::entry,
@@ -45,10 +49,12 @@ pub(crate) fn factories() -> Vec<fn(&Config) -> LeafEntry> {
         idle_inhibit::entry,
         keybind_mode::entry,
         keyboard_input::entry,
+        mango_workspaces::entry,
         media::entry,
         microphone::entry,
         netstat::entry,
         network::entry,
+        niri_workspaces::entry,
         notification_module::entry,
         power::entry,
         ram::entry,

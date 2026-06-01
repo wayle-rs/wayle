@@ -2,6 +2,7 @@ mod types;
 
 mod battery;
 mod bluetooth;
+mod brightness;
 mod cava;
 mod clock;
 mod cpu;
@@ -12,10 +13,12 @@ mod hyprsunset;
 mod idle_inhibit;
 mod keybind_mode;
 mod keyboard_input;
+mod mango_workspaces;
 mod media;
 mod microphone;
 mod netstat;
 mod network;
+mod niri_workspaces;
 /// Notification module configuration and popup types.
 pub mod notification;
 mod power;
@@ -30,6 +33,7 @@ mod world_clock;
 
 pub use battery::BatteryConfig;
 pub use bluetooth::BluetoothConfig;
+pub use brightness::BrightnessConfig;
 pub use cava::{
     BarCount as CavaBarCount, CavaConfig, CavaDirection, CavaInput, CavaStyle,
     Framerate as CavaFramerate, FrequencyHz,
@@ -45,10 +49,14 @@ pub use hyprsunset::HyprsunsetConfig;
 pub use idle_inhibit::IdleInhibitConfig;
 pub use keybind_mode::KeybindModeConfig;
 pub use keyboard_input::KeyboardInputConfig;
+pub use mango_workspaces::MangoWorkspacesConfig;
 pub use media::{BUILTIN_MAPPINGS, MediaConfig, MediaIconType};
 pub use microphone::MicrophoneConfig;
 pub use netstat::NetstatConfig;
 pub use network::NetworkConfig;
+pub use niri_workspaces::{
+    LabelStrategy, NiriWorkspacesConfig, WorkspaceClickAction, WorkspaceMap as NiriWorkspaceMap,
+};
 pub use notification::{
     IconSource, NotificationConfig, PopupCloseBehavior, PopupMonitor, PopupPosition, StackingOrder,
     UrgencyBarThreshold,
@@ -56,7 +64,7 @@ pub use notification::{
 pub use power::PowerConfig;
 pub use ram::RamConfig;
 pub use separator::SeparatorConfig;
-pub use storage::StorageConfig;
+pub use storage::{StorageConfig, StorageMountPoint};
 pub use systray::{SystrayConfig, TrayItemOverride};
 pub use types::TimeFormat;
 pub use volume::{AppIconSource, VolumeConfig};
@@ -74,6 +82,8 @@ pub struct ModulesConfig {
     pub battery: BatteryConfig,
     /// Bluetooth connection module.
     pub bluetooth: BluetoothConfig,
+    /// Backlight brightness module.
+    pub brightness: BrightnessConfig,
     /// Cava audio visualizer module.
     pub cava: CavaConfig,
     /// Clock display module.
@@ -96,6 +106,9 @@ pub struct ModulesConfig {
     /// Keyboard input module.
     #[serde(rename = "keyboard-input")]
     pub keyboard_input: KeyboardInputConfig,
+    /// MangoWM tag switcher module.
+    #[serde(rename = "mango-workspaces")]
+    pub mango_workspaces: MangoWorkspacesConfig,
     /// Media player module.
     pub media: MediaConfig,
     /// Microphone input module.
@@ -104,8 +117,13 @@ pub struct ModulesConfig {
     pub network: NetworkConfig,
     /// Network traffic statistics module.
     pub netstat: NetstatConfig,
+    /// Niri workspace switcher module.
+    #[serde(rename = "niri-workspaces")]
+    pub niri_workspaces: NiriWorkspacesConfig,
     /// Notification center module.
-    pub notification: NotificationConfig,
+    #[serde(rename = "notifications")]
+    #[wayle(deprecated_alias = "notification")]
+    pub notifications: NotificationConfig,
     /// Power menu module.
     pub power: PowerConfig,
     /// RAM usage module.

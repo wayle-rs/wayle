@@ -3,7 +3,11 @@
 use wayle_config::Config;
 
 use crate::{
-    editors::{number::number_u64, text::text, toml_editor::toml_editor},
+    editors::{
+        number::number_u64,
+        text::{text, text_like},
+        toml_editor::toml_editor,
+    },
     pages::{
         nav::LeafEntry,
         sections::bar_button::{
@@ -44,7 +48,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                     title_key: "settings-section-general",
                     items: vec![
                         number_u64(&module.poll_interval_ms),
-                        text(&module.mount_point),
+                        text_like(&module.mount_point),
                         text(&module.format),
                         text(&module.icon_name),
                         toml_editor(&module.thresholds, "thresholds", &config.styling.palette.bg),

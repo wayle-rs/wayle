@@ -215,6 +215,8 @@ pub fn format_tooltip(
 
 #[cfg(test)]
 mod tests {
+    use wayle_config::ClickAction;
+
     use super::*;
 
     #[test]
@@ -321,7 +323,7 @@ mod tests {
 
     #[test]
     fn resolve_icon_from_alt() {
-        let mut icon_map = std::collections::HashMap::new();
+        let mut icon_map = std::collections::BTreeMap::new();
         icon_map.insert("muted".to_string(), "muted-icon".to_string());
         icon_map.insert("default".to_string(), "default-icon".to_string());
 
@@ -340,7 +342,7 @@ mod tests {
 
     #[test]
     fn resolve_icon_alt_overrides_percentage() {
-        let mut icon_map = std::collections::HashMap::new();
+        let mut icon_map = std::collections::BTreeMap::new();
         icon_map.insert("muted".to_string(), "muted-icon".to_string());
 
         let definition = CustomModuleDefinition {
@@ -393,11 +395,11 @@ mod tests {
             button_bg_color: ColorValue::Auto,
             border_show: false,
             border_color: ColorValue::Auto,
-            left_click: String::new(),
-            right_click: String::new(),
-            middle_click: String::new(),
-            scroll_up: String::new(),
-            scroll_down: String::new(),
+            left_click: ClickAction::None,
+            right_click: ClickAction::None,
+            middle_click: ClickAction::None,
+            scroll_up: ClickAction::None,
+            scroll_down: ClickAction::None,
             on_action: None,
         }
     }

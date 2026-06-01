@@ -1,9 +1,10 @@
 use glib::{Propagation, object::IsA};
 use gtk4::{
     EventControllerScroll, EventControllerScrollFlags, GestureClick, Widget,
-    prelude::{GestureSingleExt, WidgetExt},
+    prelude::{EventControllerExt, GestureSingleExt, WidgetExt},
 };
 use relm4::Sender;
+use tracing::debug;
 
 use super::types::BarButtonOutput;
 
@@ -12,12 +13,18 @@ pub(super) fn attach_click_gesture(widget: &impl IsA<Widget>, sender: Sender<Bar
     click.set_button(0);
 
     click.connect_pressed(move |gesture, _n_press, _x, _y| {
-        let event = match gesture.current_button() {
+        let button = gesture.current_button();
+        let event = match button {
             1 => BarButtonOutput::LeftClick,
             2 => BarButtonOutput::MiddleClick,
             3 => BarButtonOutput::RightClick,
             _ => return,
         };
+        debug!(
+            button,
+            classes = ?gesture.widget().map(|widget| widget.css_classes()),
+            "bar button click"
+        );
         let _ = sender.send(event);
     });
 
@@ -32,7 +39,7 @@ pub(super) fn attach_scroll_controller(
     let scroll = EventControllerScroll::new(EventControllerScrollFlags::VERTICAL);
     let threshold = 0.5 / sensitivity.max(0.1);
 
-    scroll.connect_scroll(move |_controller, _dx, dy| {
+    scroll.connect_scroll(move |controller, _dx, dy| {
         if dy.abs() < threshold {
             return Propagation::Proceed;
         }
@@ -41,6 +48,11 @@ pub(super) fn attach_scroll_controller(
         } else {
             BarButtonOutput::ScrollDown
         };
+        debug!(
+            dy,
+            classes = ?controller.widget().map(|widget| widget.css_classes()),
+            "bar button scroll"
+        );
         let _ = sender.send(event);
         Propagation::Stop
     });

@@ -31,6 +31,7 @@ Modules appear inside `[[bar.layout]]` arrays. Each row links to the full refere
 |---|---|
 | [`battery`](/config/modules/battery) | Battery level, charging state, and a dropdown with power-profile controls. |
 | [`bluetooth`](/config/modules/bluetooth) | Bluetooth connection status with a dropdown for pairing and managing devices. |
+| [`brightness`](/config/modules/brightness) | Backlight control bar module. |
 | [`cava`](/config/modules/cava) | Audio frequency bars visualising the output stream. |
 | [`clock`](/config/modules/clock) | Time display with a calendar dropdown. |
 | [`cpu`](/config/modules/cpu) | CPU usage, frequency, and temperature. |
@@ -41,11 +42,13 @@ Modules appear inside `[[bar.layout]]` arrays. Each row links to the full refere
 | [`idle-inhibit`](/config/modules/idle-inhibit) | Toggle that prevents screen dim, lock, and suspend while active. |
 | [`keybind-mode`](/config/modules/keybind-mode) | Current keybind-mode indicator for modal compositors. |
 | [`keyboard-input`](/config/modules/keyboard-input) | Active keyboard layout indicator. |
+| [`mango-workspaces`](/config/modules/mango-workspaces) | MangoWM tag switcher module configuration. |
 | [`media`](/config/modules/media) | Now-playing title and playback controls for the active MPRIS player. |
 | [`microphone`](/config/modules/microphone) | Microphone input level and mute toggle. |
 | [`netstat`](/config/modules/netstat) | Network traffic counters (up/down rates). |
 | [`network`](/config/modules/network) | Network connection status with a dropdown for switching connections. |
-| [`notification`](/config/modules/notification) | Notification center: icon in the bar, dropdown with history, DND toggle. |
+| [`niri-workspaces`](/config/modules/niri-workspaces) | Niri workspace indicators with click-to-switch. |
+| [`notifications`](/config/modules/notifications) | Notification center: icon in the bar, dropdown with history, DND toggle. |
 | [`power`](/config/modules/power) | Shutdown, reboot, and logout menu. |
 | [`ram`](/config/modules/ram) | Memory and swap usage. |
 | [`separator`](/config/modules/separator) | A vertical rule between bar modules. |
