@@ -61,6 +61,19 @@ impl FileWatcher {
 
         info!(?config_dir, "Config directory watcher started");
 
+        let config_path = ConfigPaths::main_config();
+        if let Ok(canonical_path) = config_path.canonicalize() {
+            if let Some(canonical_dir) = canonical_path.parent() {
+                if canonical_dir != config_dir {
+                    if let Err(e) = watcher.watch(canonical_dir, RecursiveMode::NonRecursive) {
+                        tracing::warn!(error = %e, ?canonical_dir, "failed to watch canonical config folder");
+                    } else {
+                        info!(?canonical_dir, "Canonical config folder watcher started");
+                    }
+                }
+            }
+        }
+
         let file_watcher = Self {
             config_service,
             secrets_tx,
