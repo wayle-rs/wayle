@@ -38,6 +38,11 @@ pub struct MediaConfig {
     #[default(BTreeMap::new())]
     pub player_icons: ConfigProperty<BTreeMap<String, String>>,
 
+    /// Hide the module when no active media player is available.
+    #[serde(rename = "hide-when-inactive")]
+    #[default(false)]
+    pub hide_when_inactive: ConfigProperty<bool>,
+
     /// Player bus name patterns to exclude from discovery. Requires a restart
     /// to take effect.
     ///

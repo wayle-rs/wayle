@@ -42,6 +42,11 @@ pub(super) fn spawn_watchers(
     watch!(sender, [config.icon_type.watch()], |out| {
         let _ = out.send(MediaCmd::IconTypeChanged);
     });
+
+    let hide_when_inactive = config.hide_when_inactive.clone();
+    watch!(sender, [hide_when_inactive.watch()], |out| {
+        let _ = out.send(MediaCmd::HideWhenInactiveChanged);
+    });
 }
 
 pub(super) fn spawn_player_watchers(

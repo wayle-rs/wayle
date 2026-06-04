@@ -29,4 +29,5 @@ pub(crate) enum MediaCmd {
     PlaybackStateChanged,
     UpdateIcon(String),
     IconTypeChanged,
+    HideWhenInactiveChanged,
 }

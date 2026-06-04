@@ -5,6 +5,9 @@
 settings-modules-media-icon-type = Type d'icône
     .description = Mode d'affichage de l'icône (par défaut, application, disque tournant, application associée). Le disque tournant utilise légèrement plus de processeur en raison de l'animation
 
+settings-modules-media-hide-when-inactive = Masquer si inactif
+    .description = Masque le module lorsqu'aucun lecteur multimédia actif n'est disponible
+
 settings-modules-media-player-icons = Icônes de lecteur
     .description = Correspondances personnalisées lecteur-icône (motif glob vers nom d'icône)
 

@@ -3,7 +3,7 @@
 use wayle_config::Config;
 
 use crate::{
-    editors::{enum_select::enum_select, text::text, toml_editor::toml_editor},
+    editors::{enum_select::enum_select, text::text, toggle::toggle, toml_editor::toml_editor},
     pages::{
         nav::LeafEntry,
         sections::bar_button::{
@@ -43,6 +43,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-general",
                     items: vec![
+                        toggle(&module.hide_when_inactive),
                         enum_select(&module.icon_type),
                         text(&module.format),
                         text(&module.icon_name),

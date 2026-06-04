@@ -30,6 +30,7 @@ use crate::shell::bar::dropdowns::{self, DropdownRegistry};
 pub(crate) struct MediaModule {
     bar_button: Controller<BarButton>,
     config: Arc<ConfigService>,
+    visible: ConfigProperty<bool>,
     active_player_watcher_token: WatcherToken,
     media: Arc<MediaService>,
     dropdowns: Rc<DropdownRegistry>,
@@ -59,6 +60,13 @@ impl Component for MediaModule {
         let config = init.config.config();
         let media_config = &config.modules.media;
 
+        let visible = if media_config.hide_when_inactive.get() {
+            init.media.active_player().is_some()
+        } else {
+            true
+        };
+        let visible = ConfigProperty::new(visible);
+
         let bar_button = BarButton::builder()
             .launch(BarButtonInit {
                 icon: media_config.icon_name.get().clone(),
@@ -77,7 +85,7 @@ impl Component for MediaModule {
                     show_icon: media_config.icon_show.clone(),
                     show_label: media_config.label_show.clone(),
                     show_border: media_config.border_show.clone(),
-                    visible: ConfigProperty::new(true),
+                    visible: visible.clone(),
                 },
                 settings: init.settings,
             })
@@ -94,6 +102,7 @@ impl Component for MediaModule {
         let model = Self {
             bar_button,
             config: init.config,
+            visible,
             active_player_watcher_token: WatcherToken::new(),
             media: init.media,
             dropdowns: init.dropdowns,
@@ -128,6 +137,10 @@ impl Component for MediaModule {
                 Self::update_disc_mode(root, use_disc);
 
                 if let Some(player) = player {
+                    if media_config.hide_when_inactive.get() {
+                        self.visible.set(true);
+                    }
+
                     let label = helpers::build_label(media_config, &player);
                     self.bar_button.emit(BarButtonInput::SetLabel(label));
 
@@ -140,6 +153,10 @@ impl Component for MediaModule {
                     let token = self.active_player_watcher_token.reset();
                     watchers::spawn_player_watchers(&sender, &player, token);
                 } else {
+                    if media_config.hide_when_inactive.get() {
+                        self.visible.set(false);
+                    }
+
                     self.bar_button
                         .emit(BarButtonInput::SetLabel(String::from("--")));
                     self.bar_button
@@ -175,6 +192,14 @@ impl Component for MediaModule {
 
                     let state = player.playback_state.get();
                     Self::update_spinning_state(root, state);
+                }
+            }
+            MediaCmd::HideWhenInactiveChanged => {
+                let no_player = self.media.active_player().is_none();
+                if media_config.hide_when_inactive.get() && no_player {
+                    self.visible.set(false);
+                } else {
+                    self.visible.set(true);
                 }
             }
         }
