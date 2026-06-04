@@ -93,6 +93,7 @@ tracing-attributes = "0.1.30"
 tracing-subscriber = { version = "0.3.20", features = ["env-filter", "json"] }
 unic-langid = "0.9"
 wildcard = "0.3"
+indexmap = "2"
 zbus = { version = "5.11.0", default-features = false, features = ["tokio"] }
 
 wayle-audio = "0.1.3"

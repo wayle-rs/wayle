@@ -1,4 +1,5 @@
 mod bar;
+mod dock;
 mod helpers;
 mod notification_popup;
 mod osd;
@@ -23,6 +24,7 @@ use crate::{startup::StartupTimer, watchers};
 pub(crate) struct Shell {
     css_provider: CssProvider,
     bars: helpers::monitors::BarMap,
+    docks: helpers::monitors::DockMap,
     services: ShellServices,
     _notification_popup: Option<Controller<NotificationPopupHost>>,
     _osd: Option<Controller<Osd>>,
@@ -82,6 +84,7 @@ impl Component for Shell {
 
         let css_provider = helpers::init_css_provider(&display, &init.services.config);
         let bars = helpers::monitors::create_bars(&init.services);
+        let docks = helpers::monitors::create_docks(&init.services);
         helpers::monitors::schedule_deferred_sync_if_needed(bars.len(), &sender);
 
         let elapsed = start.elapsed();
@@ -108,6 +111,7 @@ impl Component for Shell {
         let model = Shell {
             css_provider,
             bars,
+            docks,
             services: init.services,
             _notification_popup: notification_popup,
             _osd: osd,
@@ -153,15 +157,18 @@ impl Component for Shell {
                 expected_count,
                 attempt,
             } => {
-                helpers::monitors::sync(
-                    &mut self.bars,
-                    &self.services,
-                    expected_count,
-                    attempt,
-                    |expected, attempt| {
-                        helpers::monitors::schedule_retry(expected, attempt, &sender);
-                    },
-                );
+                let monitors = helpers::monitors::current_monitors();
+                let found_count = monitors.len() as u32;
+
+                if found_count < expected_count && attempt < helpers::monitors::MAX_SYNC_RETRIES {
+                    helpers::monitors::schedule_retry(expected_count, attempt, &sender);
+                    return;
+                }
+
+                helpers::monitors::reconcile_bars(&mut self.bars, &self.services, monitors.clone());
+                helpers::monitors::reconcile_docks(&mut self.docks, &self.services, monitors);
+
+                helpers::monitors::sync_ipc_state(&self.services, &self.bars);
             }
         }
     }
@@ -174,7 +181,13 @@ impl Shell {
         }
         self.bars.clear();
         self.bars = helpers::monitors::create_bars(&self.services);
-        info!("Bars recreated for location change");
+
+        for controller in self.docks.values() {
+            controller.widget().destroy();
+        }
+        self.docks.clear();
+        self.docks = helpers::monitors::create_docks(&self.services);
+        info!("Bars and docks recreated for location change");
     }
 
     fn toggle_osd(&mut self, enabled: bool) {

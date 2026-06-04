@@ -4943,6 +4943,7 @@ dependencies = [
  "gtk4-layer-shell",
  "i18n-embed",
  "i18n-embed-fl",
+ "indexmap",
  "indicatif",
  "minijinja",
  "notify",

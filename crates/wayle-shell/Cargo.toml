@@ -9,6 +9,8 @@ license.workspace = true
 build = "build.rs"
 
 [dependencies]
+indexmap = "2"
+
 # gtk4-layer-shell MUST be first - it shims libwayland calls
 gtk4-layer-shell.workspace = true
 gtk4.workspace = true

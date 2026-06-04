@@ -14,13 +14,15 @@ use tracing::{debug, info, warn};
 use crate::shell::{
     ShellCmd,
     bar::{Bar, BarInit},
+    dock::{Dock, DockInit},
     services::ShellServices,
 };
 
 pub(crate) type Connector = String;
 pub(crate) type BarMap = HashMap<Connector, Controller<Bar>>;
+pub(crate) type DockMap = HashMap<Connector, Controller<Dock>>;
 
-const MAX_SYNC_RETRIES: u32 = 5;
+pub(crate) const MAX_SYNC_RETRIES: u32 = 5;
 const BASE_RETRY_DELAY_MS: u64 = 50;
 const RETRY_BACKOFF_FACTOR: u64 = 2;
 
@@ -141,7 +143,7 @@ pub(crate) fn schedule_retry<C: Component<CommandOutput = ShellCmd>>(
 }
 
 #[allow(clippy::cognitive_complexity)]
-fn reconcile_bars(
+pub(crate) fn reconcile_bars(
     bars: &mut BarMap,
     services: &ShellServices,
     monitors: Vec<(Connector, gdk::Monitor)>,
@@ -183,7 +185,7 @@ fn reconcile_bars(
     debug!(bar_count = bars.len(), "Bar reconciliation complete");
 }
 
-fn sync_ipc_state(services: &ShellServices, bars: &BarMap) {
+pub(crate) fn sync_ipc_state(services: &ShellServices, bars: &BarMap) {
     let connectors: Vec<String> = bars.keys().cloned().collect();
     let ipc = services.shell_ipc.state();
 
@@ -196,4 +198,62 @@ fn sync_ipc_state(services: &ShellServices, bars: &BarMap) {
     }
 
     ipc.connectors.set(connectors);
+}
+
+pub(crate) fn create_docks(services: &ShellServices) -> DockMap {
+    let mut docks = HashMap::new();
+
+    for (connector, monitor) in current_monitors() {
+        debug!(connector = %connector, "Creating dock");
+        let dock = Dock::builder()
+            .launch(DockInit {
+                monitor,
+                services: services.clone(),
+            })
+            .detach();
+        docks.insert(connector, dock);
+    }
+
+    info!(count = docks.len(), "Docks created");
+    docks
+}
+
+pub(crate) fn reconcile_docks(
+    docks: &mut DockMap,
+    services: &ShellServices,
+    monitors: Vec<(Connector, gdk::Monitor)>,
+) {
+    let active: HashSet<&str> = monitors
+        .iter()
+        .map(|(connector, _)| connector.as_str())
+        .collect();
+    debug!(?active, "Reconciling docks");
+
+    let stale: Vec<String> = docks
+        .keys()
+        .filter(|connector| !active.contains(connector.as_str()))
+        .cloned()
+        .collect();
+
+    for connector in stale {
+        docks.remove(&connector);
+        info!(connector = %connector, "Removed dock for disconnected monitor");
+    }
+
+    for (connector, monitor) in monitors {
+        let Entry::Vacant(entry) = docks.entry(connector) else {
+            continue;
+        };
+
+        info!(connector = %entry.key(), "Creating dock for new monitor");
+        let dock = Dock::builder()
+            .launch(DockInit {
+                monitor,
+                services: services.clone(),
+            })
+            .detach();
+        entry.insert(dock);
+    }
+
+    debug!(dock_count = docks.len(), "Dock reconciliation complete");
 }
