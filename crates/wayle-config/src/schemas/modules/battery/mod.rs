@@ -8,6 +8,12 @@ use crate::{
 };
 
 /// Battery level, charging state, and a dropdown with power-profile controls.
+///
+/// ::: warning
+///
+/// This module uses `upower` (D-Bus) for battery information. Ensure `upower` daemon is running and exposes a battery device (verify with `upower --battery` or `upower --dump`).
+///
+/// :::
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-battery")]
 pub struct BatteryConfig {
     /// Icons for battery levels from empty to full.
