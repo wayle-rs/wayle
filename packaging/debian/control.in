@@ -17,6 +17,14 @@ Depends:
  ${shlibs:Depends},
  ${misc:Depends},
  hicolor-icon-theme
+Suggests:
+ dbus-user-session,
+ bluez,
+ network-manager,
+ upower,
+ power-profiles-daemon,
+ pipewire-pulse,
+ wireplumber
 Description: Wayland Elements desktop shell
  Wayland Elements is a compositor agnostic shell with extensive customization.
  It includes a bar, notifications, OSD, wallpaper, and device controls.

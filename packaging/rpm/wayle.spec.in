@@ -15,6 +15,12 @@ ExclusiveArch:  x86_64
 BuildRequires:  desktop-file-utils
 BuildRequires:  systemd-rpm-macros
 Requires:       hicolor-icon-theme
+Suggests:       pipewire-pulseaudio
+Suggests:       wireplumber
+Suggests:       NetworkManager
+Suggests:       bluez
+Suggests:       upower
+Suggests:       power-profiles-daemon
 
 %description
 Wayland Elements - A compositor agnostic shell with extensive customization
