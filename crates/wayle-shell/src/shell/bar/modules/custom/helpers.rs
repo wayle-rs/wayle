@@ -323,7 +323,7 @@ mod tests {
 
     #[test]
     fn resolve_icon_from_alt() {
-        let mut icon_map = std::collections::HashMap::new();
+        let mut icon_map = std::collections::BTreeMap::new();
         icon_map.insert("muted".to_string(), "muted-icon".to_string());
         icon_map.insert("default".to_string(), "default-icon".to_string());
 
@@ -342,7 +342,7 @@ mod tests {
 
     #[test]
     fn resolve_icon_alt_overrides_percentage() {
-        let mut icon_map = std::collections::HashMap::new();
+        let mut icon_map = std::collections::BTreeMap::new();
         icon_map.insert("muted".to_string(), "muted-icon".to_string());
 
         let definition = CustomModuleDefinition {

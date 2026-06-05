@@ -1,6 +1,6 @@
 //! Niri workspace switcher configuration.
 
-use std::{collections::HashMap, ops::Deref};
+use std::{collections::BTreeMap, ops::Deref};
 
 use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -120,21 +120,22 @@ impl JsonSchema for WorkspaceClickAction {
 ///
 /// ```toml
 /// [modules.niri-workspaces.workspace-map]
-/// web = { icon = "ld-globe-symbolic", color = "#4a90d9" }
+/// web = { label = "Web", icon = "ld-globe-symbolic", color = "#4a90d9" }
 /// terminal = { icon = "ld-terminal-symbolic" }
 ///
 /// # Or target by stable id when no name is set
 /// [modules.niri-workspaces.workspace-map.5]
+/// label = "Code"
 /// icon = "ld-code-symbolic"
 /// color = "accent"
 /// ```
 #[derive(Debug, Clone, Default, PartialEq, Serialize, Deserialize, JsonSchema)]
 #[serde(transparent)]
 #[schemars(transparent)]
-pub struct WorkspaceMap(HashMap<String, WorkspaceStyle>);
+pub struct WorkspaceMap(BTreeMap<String, WorkspaceStyle>);
 
 impl Deref for WorkspaceMap {
-    type Target = HashMap<String, WorkspaceStyle>;
+    type Target = BTreeMap<String, WorkspaceStyle>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -143,7 +144,7 @@ impl Deref for WorkspaceMap {
 
 impl<'a> IntoIterator for &'a WorkspaceMap {
     type Item = (&'a String, &'a WorkspaceStyle);
-    type IntoIter = std::collections::hash_map::Iter<'a, String, WorkspaceStyle>;
+    type IntoIter = std::collections::btree_map::Iter<'a, String, WorkspaceStyle>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
@@ -339,8 +340,8 @@ pub struct NiriWorkspacesConfig {
     /// "title:*YouTube*" = "ld-youtube-symbolic"
     /// ```
     #[serde(rename = "app-icon-map")]
-    #[default(HashMap::new())]
-    pub app_icon_map: ConfigProperty<HashMap<String, String>>,
+    #[default(BTreeMap::new())]
+    pub app_icon_map: ConfigProperty<BTreeMap<String, String>>,
 
     /// Action on left click.
     #[serde(rename = "left-click")]

@@ -3,7 +3,7 @@ mod helpers;
 mod messages;
 mod watchers;
 
-use std::{path::Path, rc::Rc, sync::Arc};
+use std::{rc::Rc, sync::Arc};
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -49,13 +49,10 @@ impl Component for StorageModule {
         let storage_config = &config.modules.storage;
 
         let disks = init.sysinfo.disks.get();
-        let target = storage_config.mount_point.get();
-        let target_path = Path::new(&target);
+        let mount_points = storage_config.mount_point.get();
 
-        let initial_label = disks
-            .iter()
-            .find(|d| d.mount_point == target_path)
-            .map(|d| helpers::format_label(&storage_config.format.get(), d))
+        let initial_label = helpers::aggregate_storage(&disks, &mount_points)
+            .map(|snapshot| helpers::format_label(&storage_config.format.get(), &snapshot))
             .unwrap_or_else(|| String::from("--"));
 
         let bar_button = BarButton::builder()

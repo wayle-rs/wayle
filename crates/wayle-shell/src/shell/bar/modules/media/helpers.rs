@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::BTreeMap;
 
 use gtk::{gio::prelude::AppInfoExt, glib::prelude::Cast as _, prelude::IconExt};
 use relm4::gtk;
@@ -48,7 +48,7 @@ pub(crate) struct IconContext<'a> {
     pub(crate) icon_type: MediaIconType,
     pub(crate) icon_name: &'a str,
     pub(crate) spinning_disc_icon: &'a str,
-    pub(crate) player_icons: &'a HashMap<String, String>,
+    pub(crate) player_icons: &'a BTreeMap<String, String>,
     pub(crate) bus_name: &'a str,
     pub(crate) desktop_entry: Option<&'a str>,
 }
@@ -236,7 +236,7 @@ mod tests {
             icon_type: MediaIconType::Default,
             icon_name: "my-icon-symbolic",
             spinning_disc_icon: "disc-symbolic",
-            player_icons: &HashMap::new(),
+            player_icons: &BTreeMap::new(),
             bus_name: "org.mpris.MediaPlayer2.spotify",
             desktop_entry: Some("spotify"),
         });
@@ -250,7 +250,7 @@ mod tests {
             icon_type: MediaIconType::Application,
             icon_name: "fallback-symbolic",
             spinning_disc_icon: "disc-symbolic",
-            player_icons: &HashMap::new(),
+            player_icons: &BTreeMap::new(),
             bus_name: "org.mpris.MediaPlayer2.spotify",
             desktop_entry: Some("spotify"),
         });
@@ -264,7 +264,7 @@ mod tests {
             icon_type: MediaIconType::Application,
             icon_name: "fallback-symbolic",
             spinning_disc_icon: "disc-symbolic",
-            player_icons: &HashMap::new(),
+            player_icons: &BTreeMap::new(),
             bus_name: "org.mpris.MediaPlayer2.unknown",
             desktop_entry: None,
         });
@@ -278,7 +278,7 @@ mod tests {
             icon_type: MediaIconType::SpinningDisc,
             icon_name: "fallback-symbolic",
             spinning_disc_icon: "ld-disc-3-symbolic",
-            player_icons: &HashMap::new(),
+            player_icons: &BTreeMap::new(),
             bus_name: "org.mpris.MediaPlayer2.spotify",
             desktop_entry: Some("spotify"),
         });
@@ -288,7 +288,7 @@ mod tests {
 
     #[test]
     fn resolve_icon_mapped_mode_user_config_priority() {
-        let mut player_icons = HashMap::new();
+        let mut player_icons = BTreeMap::new();
         player_icons.insert(
             "*spotify*".to_string(),
             "custom-spotify-symbolic".to_string(),
@@ -312,7 +312,7 @@ mod tests {
             icon_type: MediaIconType::ApplicationMapped,
             icon_name: "fallback-symbolic",
             spinning_disc_icon: "disc-symbolic",
-            player_icons: &HashMap::new(),
+            player_icons: &BTreeMap::new(),
             bus_name: "org.mpris.MediaPlayer2.spotify.instance123",
             desktop_entry: Some("spotify"),
         });
@@ -326,7 +326,7 @@ mod tests {
             icon_type: MediaIconType::ApplicationMapped,
             icon_name: "fallback-symbolic",
             spinning_disc_icon: "disc-symbolic",
-            player_icons: &HashMap::new(),
+            player_icons: &BTreeMap::new(),
             bus_name: "org.mpris.MediaPlayer2.unknown_player",
             desktop_entry: Some("unknown_player"),
         });
@@ -340,7 +340,7 @@ mod tests {
             icon_type: MediaIconType::ApplicationMapped,
             icon_name: "fallback-symbolic",
             spinning_disc_icon: "disc-symbolic",
-            player_icons: &HashMap::new(),
+            player_icons: &BTreeMap::new(),
             bus_name: "org.mpris.MediaPlayer2.mystery",
             desktop_entry: None,
         });

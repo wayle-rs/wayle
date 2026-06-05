@@ -3,7 +3,7 @@
 use wayle_config::{
     ClickAction,
     schemas::{
-        modules::{PopupMonitor, WorkspaceClickAction},
+        modules::{PopupMonitor, StorageMountPoint, WorkspaceClickAction},
         osd::OsdMonitor,
     },
 };
@@ -55,6 +55,28 @@ macro_rules! impl_monitor_text_like {
 
 impl_monitor_text_like!(OsdMonitor);
 impl_monitor_text_like!(PopupMonitor);
+
+impl TextLike for StorageMountPoint {
+    fn to_entry_text(&self) -> String {
+        match self {
+            Self::Single(path) => path.clone(),
+            Self::Multiple(paths) => paths.join(", "),
+        }
+    }
+
+    fn from_entry_text(text: &str) -> Self {
+        let paths: Vec<String> = text
+            .split(',')
+            .map(|s| s.trim().to_owned())
+            .filter(|s| !s.is_empty())
+            .collect();
+        match paths.len() {
+            0 => Self::Single(String::from("/")),
+            1 => Self::Single(paths.into_iter().next().unwrap_or_default()),
+            _ => Self::Multiple(paths),
+        }
+    }
+}
 
 impl TextLike for ClickAction {
     fn to_entry_text(&self) -> String {

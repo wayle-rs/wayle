@@ -5,11 +5,15 @@
 //! trait is that boundary, with per-compositor impls in sibling files.
 
 mod hyprland;
+mod mango;
 mod niri;
 
 use futures::stream::BoxStream;
 
-pub(crate) use self::{hyprland::HyprlandKeyboardLayoutSource, niri::NiriKeyboardLayoutSource};
+pub(crate) use self::{
+    hyprland::HyprlandKeyboardLayoutSource, mango::MangoKeyboardLayoutSource,
+    niri::NiriKeyboardLayoutSource,
+};
 
 /// Currently active keyboard layout.
 #[derive(Debug, Clone)]

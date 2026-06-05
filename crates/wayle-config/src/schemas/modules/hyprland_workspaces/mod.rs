@@ -1,4 +1,4 @@
-use std::{collections::HashMap, ops::Deref};
+use std::{collections::BTreeMap, ops::Deref};
 
 use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
@@ -98,6 +98,8 @@ pub struct WorkspaceStyle {
     pub icon: Option<String>,
     /// Custom background color for this workspace when active.
     pub color: Option<ColorValue>,
+    /// Text shown instead of the workspace's name or index.
+    pub label: Option<String>,
 }
 
 /// Per-workspace icon and color overrides, keyed by workspace ID.
@@ -112,12 +114,13 @@ pub struct WorkspaceStyle {
 /// ```toml
 /// [modules.hyprland-workspaces.workspace-map]
 /// # Whole entry on one line with an inline table
-/// 1 = { icon = "ld-globe-symbolic", color = "#4a90d9" }
+/// 1 = { label = "Web", icon = "ld-globe-symbolic", color = "#4a90d9" }
 /// 2 = { icon = "ld-terminal-symbolic" }
 /// 3 = { icon = "ld-code-symbolic", color = "accent" }
 ///
 /// # Or spread the entry across its own subtable
 /// [modules.hyprland-workspaces.workspace-map.4]
+/// label = "Chat"
 /// icon = "ld-message-square-symbolic"
 /// color = "status-success"
 ///
@@ -127,10 +130,10 @@ pub struct WorkspaceStyle {
 /// ```
 #[derive(Debug, Clone, Default, PartialEq, JsonSchema)]
 #[schemars(transparent)]
-pub struct WorkspaceMap(HashMap<i32, WorkspaceStyle>);
+pub struct WorkspaceMap(BTreeMap<i32, WorkspaceStyle>);
 
 impl Deref for WorkspaceMap {
-    type Target = HashMap<i32, WorkspaceStyle>;
+    type Target = BTreeMap<i32, WorkspaceStyle>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -139,7 +142,7 @@ impl Deref for WorkspaceMap {
 
 impl<'a> IntoIterator for &'a WorkspaceMap {
     type Item = (&'a i32, &'a WorkspaceStyle);
-    type IntoIter = std::collections::hash_map::Iter<'a, i32, WorkspaceStyle>;
+    type IntoIter = std::collections::btree_map::Iter<'a, i32, WorkspaceStyle>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
@@ -151,7 +154,7 @@ impl Serialize for WorkspaceMap {
     where
         S: Serializer,
     {
-        let string_map: HashMap<String, &WorkspaceStyle> = self
+        let string_map: BTreeMap<String, &WorkspaceStyle> = self
             .0
             .iter()
             .map(|(key, val)| (key.to_string(), val))
@@ -165,8 +168,8 @@ impl<'de> Deserialize<'de> for WorkspaceMap {
     where
         D: Deserializer<'de>,
     {
-        let string_map: HashMap<String, WorkspaceStyle> = HashMap::deserialize(deserializer)?;
-        let mut result = HashMap::with_capacity(string_map.len());
+        let string_map: BTreeMap<String, WorkspaceStyle> = BTreeMap::deserialize(deserializer)?;
+        let mut result = BTreeMap::new();
         for (key, value) in string_map {
             let id: i32 = key.parse().map_err(serde::de::Error::custom)?;
             result.insert(id, value);
@@ -397,8 +400,8 @@ pub struct HyprlandWorkspacesConfig {
     /// "title:*YouTube*" = "ld-youtube-symbolic"
     /// ```
     #[serde(rename = "app-icon-map")]
-    #[default(HashMap::new())]
-    pub app_icon_map: ConfigProperty<HashMap<String, String>>,
+    #[default(BTreeMap::new())]
+    pub app_icon_map: ConfigProperty<BTreeMap<String, String>>,
 }
 
 impl ModuleInfoProvider for HyprlandWorkspacesConfig {
