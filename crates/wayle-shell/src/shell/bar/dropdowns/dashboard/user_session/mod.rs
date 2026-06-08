@@ -1,3 +1,4 @@
+mod factory;
 mod messages;
 mod watchers;
 
@@ -5,12 +6,21 @@ use std::{env, path::PathBuf, sync::Arc};
 
 use gtk::{CssProvider, gdk::Display, prelude::*, style_context_add_provider_for_display};
 use relm4::{gtk, prelude::*};
-use wayle_config::ConfigService;
-use wayle_widgets::prelude::IconButton;
+use wayle_config::{
+    ConfigService, schemas::bar::dropdowns::dashboard::user_session::SessionAction,
+};
 
 pub(crate) use self::messages::UserSessionInit;
 use self::messages::{UserSessionCmd, UserSessionInput};
-use crate::{i18n::t, process, shell::helpers::COMPONENT_CSS_PRIORITY};
+use crate::{
+    process,
+    shell::{
+        bar::dropdowns::dashboard::user_session::factory::{
+            SessionActionFactory, SessionActionFactoryInit,
+        },
+        helpers::COMPONENT_CSS_PRIORITY,
+    },
+};
 
 pub(crate) struct UserSessionSection {
     username: String,
@@ -18,6 +28,7 @@ pub(crate) struct UserSessionSection {
     face_path: PathBuf,
     face_css_provider: CssProvider,
     config: Arc<ConfigService>,
+    session_actions: FactoryVecDeque<SessionActionFactory>,
 }
 
 impl UserSessionSection {
@@ -29,6 +40,15 @@ impl UserSessionSection {
             String::from(".user-avatar { background-image: none; }")
         };
         self.face_css_provider.load_from_string(&css);
+    }
+
+    fn update_session_actions(&mut self, actions: &[SessionAction]) {
+        let mut guard = self.session_actions.guard();
+        guard.clear();
+
+        for (i, session_action) in actions.iter().copied().enumerate() {
+            guard.insert(i, SessionActionFactoryInit { session_action });
+        }
     }
 }
 
@@ -90,54 +110,6 @@ impl Component for UserSessionSection {
                     add_css_class: "session-actions",
                     set_hexpand: true,
                     set_halign: gtk::Align::End,
-
-                    #[template]
-                    #[name = "lock_btn"]
-                    IconButton {
-                        add_css_class: "session-btn",
-                        set_tooltip_text: Some(&t!("dropdown-dashboard-lock")),
-                        connect_clicked => UserSessionInput::Lock,
-
-                        gtk::Image {
-                            set_icon_name: Some("ld-lock-symbolic"),
-                        },
-                    },
-
-                    #[template]
-                    #[name = "logout_btn"]
-                    IconButton {
-                        add_css_class: "session-btn",
-                        set_tooltip_text: Some(&t!("dropdown-dashboard-logout")),
-                        connect_clicked => UserSessionInput::Logout,
-
-                        gtk::Image {
-                            set_icon_name: Some("ld-log-out-symbolic"),
-                        },
-                    },
-
-                    #[template]
-                    #[name = "reboot_btn"]
-                    IconButton {
-                        add_css_class: "session-btn",
-                        set_tooltip_text: Some(&t!("dropdown-dashboard-reboot")),
-                        connect_clicked => UserSessionInput::Reboot,
-
-                        gtk::Image {
-                            set_icon_name: Some("ld-refresh-cw-symbolic"),
-                        },
-                    },
-
-                    #[template]
-                    #[name = "power_off_btn"]
-                    IconButton {
-                        set_css_classes: &["icon", "session-btn", "danger"],
-                        set_tooltip_text: Some(&t!("dropdown-dashboard-power-off")),
-                        connect_clicked => UserSessionInput::PowerOff,
-
-                        gtk::Image {
-                            set_icon_name: Some("ld-power-symbolic"),
-                        },
-                    },
                 },
             },
         }
@@ -166,17 +138,37 @@ impl Component for UserSessionSection {
 
         watchers::spawn_face_watcher(&sender, &face_path);
 
-        let model = Self {
+        let session_actions = FactoryVecDeque::builder()
+            .launch(gtk::Box::default())
+            .detach();
+
+        let user_session_actions = init
+            .config
+            .config()
+            .modules
+            .dashboard
+            .user_session
+            .actions
+            .get();
+
+        let mut model = Self {
             username: init.username,
             has_face,
             face_path,
             face_css_provider,
             config: init.config,
+            session_actions,
         };
 
         model.update_face_css();
+        model.update_session_actions(&user_session_actions);
 
         let widgets = view_output!();
+
+        widgets
+            .session_actions
+            .append(model.session_actions.widget());
+
         ComponentParts { model, widgets }
     }
 
