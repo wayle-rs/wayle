@@ -29,7 +29,6 @@ pub(super) struct FilterContext<'a> {
     pub monitor_specific: bool,
     pub bar_monitor: Option<&'a str>,
     pub hide_trailing_empty: bool,
-    pub min_workspace_count: usize,
     pub ignore_patterns: &'a [String],
 }
 
@@ -67,10 +66,6 @@ pub(super) fn collect_displayed(
 
     shown.sort_by_key(sort_key);
     shown
-}
-
-fn name_as_id(name: &Option<String>) -> Option<usize> {
-    name.as_deref()?.parse().ok()
 }
 
 fn visible_on_monitor(snapshot: &WorkspaceSnapshot, ctx: &FilterContext<'_>) -> bool {
