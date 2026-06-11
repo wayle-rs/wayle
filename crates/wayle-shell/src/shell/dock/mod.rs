@@ -316,77 +316,8 @@ impl Dock {
     fn handle_dock_item_action(&self, app_id: &str, action: DockItemInput) {
         match action {
             DockItemInput::Click => {
-                if let Some(ref hyprland) = self.services.hyprland {
-                    let class_windows: Vec<String> = hyprland
-                        .clients
-                        .get()
-                        .iter()
-                        .filter(|c| c.class.get() == app_id)
-                        .map(|c| c.address.get().to_string())
-                        .collect();
-
-                    if !class_windows.is_empty() {
-                        let hyprland = hyprland.clone();
-                        let app_id = app_id.to_string();
-                        let class_windows = class_windows.clone();
-                        tokio::spawn(async move {
-                            let focused = hyprland.active_window().await;
-                            let is_focused = focused
-                                .as_ref()
-                                .map(|f| f.address.get().to_string())
-                                .is_some_and(|addr| class_windows.contains(&addr));
-
-                            if !is_focused {
-                                let _ = hyprland
-                                    .dispatch(&format!("focuswindow,class:^{}$", app_id))
-                                    .await;
-                            }
-                        });
-                    } else {
-                        let hyprland = hyprland.clone();
-                        let app_id = app_id.to_string();
-                        tokio::spawn(async move {
-                            let _ = hyprland
-                                .dispatch(&format!("exec,xdg-open {}-launcher.desktop", app_id))
-                                .await;
-                        });
-                    }
-                } else if let Some(ref niri) = self.services.niri {
-                    let focused_id = niri.focused_window_id.get();
-
-                    let app_windows: Vec<_> = niri
-                        .windows
-                        .get()
-                        .iter()
-                        .filter(|(_, w)| w.app_id.get().as_deref() == Some(app_id))
-                        .map(|(id, w)| (*id, w.clone()))
-                        .collect();
-
-                    if !app_windows.is_empty() {
-                        let niri = niri.clone();
-                        let app_windows = app_windows.clone();
-                        let focused_id = focused_id;
-                        tokio::spawn(async move {
-                            let is_focused = if let Some(focused_id) = focused_id {
-                                app_windows.iter().any(|(wid, _)| *wid == focused_id)
-                            } else {
-                                false
-                            };
-                            if !is_focused {
-                                if let Some((id, _)) = app_windows.first() {
-                                    let _ = niri.focus_window(*id).await;
-                                }
-                            }
-                        });
-                    } else {
-                        let niri = niri.clone();
-                        let app_id = app_id.to_string();
-                        tokio::spawn(async move {
-                            let _ = niri
-                                .spawn(vec![format!("/usr/bin/xdg-open {}.desktop", app_id)])
-                                .await;
-                        });
-                    }
+                if let Some(ref adapter) = self.adapter {
+                    adapter.focus_app(app_id);
                 }
             }
             DockItemInput::RightClick => {

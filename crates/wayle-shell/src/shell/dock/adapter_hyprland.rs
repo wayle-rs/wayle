@@ -48,4 +48,37 @@ impl DockAdapter for HyprlandDockAdapter {
         tracing::debug!(app_count = apps.len(), "Computed Hyprland running apps");
         apps
     }
+
+    fn focus_app(&self, app_id: &str) {
+        let hyprland = self.hyprland.clone();
+        let app_id = app_id.to_string();
+        tokio::spawn(async move {
+            let class_windows: Vec<String> = hyprland
+                .clients
+                .get()
+                .iter()
+                .filter(|c| c.class.get() == app_id)
+                .map(|c| c.address.get().to_string())
+                .collect();
+
+            if class_windows.is_empty() {
+                let _ = hyprland
+                    .dispatch(&format!("exec,xdg-open {}-launcher.desktop", app_id))
+                    .await;
+                return;
+            }
+
+            let focused = hyprland.active_window().await;
+            let is_focused = focused
+                .as_ref()
+                .map(|f| f.address.get().to_string())
+                .is_some_and(|addr| class_windows.contains(&addr));
+
+            if !is_focused {
+                let _ = hyprland
+                    .dispatch(&format!("focuswindow,class:^{}$", app_id))
+                    .await;
+            }
+        });
+    }
 }

@@ -7,10 +7,14 @@ use wayle_niri::NiriService;
 
 use super::DockAppData;
 
-/// Trait for compositor-specific dock data retrieval.
+/// Trait for compositor-specific dock data retrieval and actions.
 pub trait DockAdapter {
     /// Compute the current list of running apps from compositor state.
     fn compute_running_apps(&self) -> Vec<DockAppData>;
+
+    /// Focus windows belonging to `app_id`. If no windows exist,
+    /// launch the app. Spawns a task, returns immediately.
+    fn focus_app(&self, app_id: &str);
 }
 
 /// Niri-specific dock adapter.
@@ -71,6 +75,40 @@ impl DockAdapter for NiriDockAdapter {
         tracing::debug!(app_count = apps.len(), "Computed Niri running apps");
         apps
     }
+
+    fn focus_app(&self, app_id: &str) {
+        let niri = self.niri.clone();
+        let app_id = app_id.to_string();
+        tokio::spawn(async move {
+            let focused_id = niri.focused_window_id.get();
+            let app_windows: Vec<(u64,)> = niri
+                .windows
+                .get()
+                .iter()
+                .filter(|(_, w)| w.app_id.get().as_deref() == Some(app_id.as_str()))
+                .map(|(id, _)| (*id,))
+                .collect();
+
+            if app_windows.is_empty() {
+                let _ = niri
+                    .spawn(vec![format!("/usr/bin/xdg-open {}.desktop", app_id)])
+                    .await;
+                return;
+            }
+
+            let is_focused = if let Some(focused_id) = focused_id {
+                app_windows.iter().any(|(wid,)| *wid == focused_id)
+            } else {
+                false
+            };
+
+            if !is_focused {
+                if let Some((id,)) = app_windows.first() {
+                    let _ = niri.focus_window(*id).await;
+                }
+            }
+        });
+    }
 }
 
 /// Enum holding whichever compositor adapter is active.
@@ -87,14 +125,21 @@ impl DockAdapterRef {
             DockAdapterRef::Hyprland(a) => a.compute_running_apps(),
         }
     }
-    
+
+    pub fn focus_app(&self, app_id: &str) {
+        match self {
+            DockAdapterRef::Niri(a) => a.focus_app(app_id),
+            DockAdapterRef::Hyprland(a) => a.focus_app(app_id),
+        }
+    }
+
     pub(crate) fn niri(&self) -> Option<Arc<NiriService>> {
         match self {
             DockAdapterRef::Niri(a) => Some(a.niri()),
             DockAdapterRef::Hyprland(_) => None,
         }
     }
-    
+
     pub(crate) fn hyprland(&self) -> Option<Arc<wayle_hyprland::HyprlandService>> {
         match self {
             DockAdapterRef::Niri(_) => None,
