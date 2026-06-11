@@ -1,6 +1,12 @@
+mod adapter;
+mod adapter_hyprland;
+mod event_watcher;
 mod factory;
 mod settings;
 mod watchers;
+
+use std::collections::HashMap;
+pub(crate) use adapter::DockAdapterRef;
 
 use factory::*;
 use gtk::prelude::*;
@@ -15,6 +21,23 @@ use wayle_widgets::watch;
 use self::watchers::{config, css};
 use crate::shell::services::ShellServices;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct DockAppData {
+    pub app_id: String,
+    pub is_active: bool,
+    pub window_count: u32,
+}
+
+/// Running application information for dock items.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct DockItemData {
+    pub app_id: String,
+    pub is_pinned: bool,
+    pub is_running: bool,
+    pub is_active: bool,
+    pub window_count: u32,
+}
+
 pub(crate) struct Dock {
     settings: settings::DockSettings,
     services: ShellServices,
@@ -24,6 +47,9 @@ pub(crate) struct Dock {
     dock_visibility: DockVisibility,
     dock_position: DockPosition,
     dock_box: gtk::Box,
+    running_apps: wayle_core::Property<Vec<DockAppData>>,
+    adapter: Option<DockAdapterRef>,
+    app_order: indexmap::IndexMap<String, ()>,
 }
 
 pub(crate) struct DockInit {
@@ -61,6 +87,7 @@ impl Component for Dock {
             #[name = "dock_box"]
             gtk::Box {
                 add_css_class: "dock-section",
+                set_size_request: (1, 1),
             }
         }
     }
@@ -102,7 +129,7 @@ impl Component for Dock {
 
         let widgets = view_output!();
         let items = FactoryVecDeque::builder()
-            .launch(gtk::Box::default())
+            .launch(widgets.dock_box.clone())
             .forward(
                 sender.input_sender(),
                 |output: (String, factory::DockItemInput)| {
@@ -118,26 +145,33 @@ impl Component for Dock {
         css::spawn(&sender, &init.services);
         config::spawn(&sender, &init.services);
 
-        let dock_state = init.services.dock.state();
-        let pinned_stream = dock_state.pinned_apps.watch();
-        let running_stream = dock_state.running_apps.watch();
-        watch!(sender, [pinned_stream, running_stream], |out| {
-            let _ = out.send(DockCmd::DockItemsChanged);
-        });
-
         let mut model = Self {
             settings,
-            services: init.services,
+            services: init.services.clone(),
             css_provider,
             last_css: String::new(),
             items,
             dock_visibility: visibility,
             dock_position: position,
             dock_box: widgets.dock_box.clone(),
+            running_apps: wayle_core::Property::new(Vec::new()),
+            adapter: build_adapter(&init.services),
+            app_order: indexmap::IndexMap::new(),
         };
 
-        // model.last_css = model.build_css();
-        // model.css_provider.load_from_string(&model.last_css);
+        if let Some(ref adapter) = model.adapter {
+            let initial_apps = adapter.compute_running_apps();
+            model.running_apps.set(initial_apps.clone());
+            for app in &initial_apps {
+                model.app_order.insert(app.app_id.clone(), ());
+            }
+            event_watcher::spawn(&sender, &init.services, adapter.clone());
+        }
+
+        let pinned_stream = config.dock.pinned_apps.watch();
+        watch!(sender, [pinned_stream], |out| {
+            let _ = out.send(DockCmd::DockItemsChanged);
+        });
 
         let dock_items_widget = model.items.widget();
         dock_items_widget.set_hexpand(false);
@@ -183,18 +217,42 @@ impl Component for Dock {
                 }
             }
             DockCmd::DockItemsChanged => {
+                if let Some(ref adapter) = self.adapter {
+                    let new_apps: Vec<DockAppData> = adapter.compute_running_apps();
+                    let mut app_map: std::collections::HashMap<String, DockAppData> =
+                        new_apps.into_iter().map(|a| (a.app_id.clone(), a)).collect();
+                    let old_apps = self.running_apps.get();
+                    let mut ordered: Vec<DockAppData> = Vec::new();
+                    for app in old_apps.iter() {
+                        if let Some(updated) = app_map.remove(&app.app_id) {
+                            ordered.push(updated);
+                        }
+                    }
+                    ordered.extend(app_map.into_values());
+                    self.running_apps.set(ordered);
+                }
                 self.rebuild_all_items();
-                let nat_width = self.dock_box
-                    .measure(gtk::Orientation::Horizontal, -1).1;
-                let nat_height = self.dock_box
-                    .measure(gtk::Orientation::Vertical, -1).1;
-                root.set_size_request(nat_width, nat_height);
-                root.auto_exclusive_zone_enable();
             }
             DockCmd::MonitorInvalidated => {
                 root.destroy();
             }
         }
+    }
+}
+
+fn build_adapter(services: &ShellServices) -> Option<DockAdapterRef> {
+    if let Some(ref niri) = services.niri {
+        Some(DockAdapterRef::Niri(
+            crate::shell::dock::adapter::NiriDockAdapter::new(niri.clone()),
+        ))
+    } else if let Some(ref hyprland) = services.hyprland {
+        Some(DockAdapterRef::Hyprland(
+            crate::shell::dock::adapter_hyprland::HyprlandDockAdapter::new(
+                hyprland.clone(),
+            ),
+        ))
+    } else {
+        None
     }
 }
 
@@ -312,6 +370,7 @@ impl Dock {
             }
             DockPosition::Right => {
                 window.set_anchor(gtk4_layer_shell::Edge::Right, true);
+                window.set_anchor(gtk4_layer_shell::Edge::Right, true);
                 window.set_anchor(gtk4_layer_shell::Edge::Top, true);
                 window.set_anchor(gtk4_layer_shell::Edge::Bottom, true);
             }
@@ -352,7 +411,7 @@ impl Dock {
         let bg_opacity = dock.background_opacity.get().value() as f64 / 100.0;
 
         let (r, g, b) = Self::hex_to_rgb(&bg);
-        let bg_rgba = format!("rgba({}, {}, {}, {})", r, g, b, bg_opacity);
+        let _bg_rgba = format!("rgba({}, {}, {}, {})", r, g, b, bg_opacity);
 
         format!(
             ".dock {{ \
@@ -392,12 +451,66 @@ impl Dock {
         (r, g, b)
     }
 
+    fn build_dock_items(&self) -> Vec<DockItemData> {
+        let config = self.services.config.config();
+        let pinned: Vec<String> = config.dock.pinned_apps.get();
+        let running: Vec<DockAppData> = self.running_apps.get();
+
+        let running_map: HashMap<&str, &DockAppData> =
+            running.iter().map(|a| (a.app_id.as_str(), a)).collect();
+
+        let mut items: Vec<DockItemData> = pinned
+            .iter()
+            .filter_map(|app_id| {
+                running_map.get(app_id.as_str()).copied().map(|ra| DockItemData {
+                    app_id: app_id.clone(),
+                    is_pinned: true,
+                    is_running: true,
+                    is_active: ra.is_active,
+                    window_count: ra.window_count,
+                })
+            })
+            .collect();
+
+        let running_ids: HashMap<&str, ()> =
+            running.iter().map(|a| (a.app_id.as_str(), ())).collect();
+
+        for app_id in &pinned {
+            if !running_ids.contains_key(app_id.as_str()) {
+                items.push(DockItemData {
+                    app_id: app_id.clone(),
+                    is_pinned: true,
+                    is_running: false,
+                    is_active: false,
+                    window_count: 0,
+                });
+            }
+        }
+
+        let pinned_set: HashMap<&str, ()> =
+            pinned.iter().map(|s| (s.as_str(), ())).collect();
+
+        for app in running.iter() {
+            if !pinned_set.contains_key(app.app_id.as_str()) {
+                items.push(DockItemData {
+                    app_id: app.app_id.clone(),
+                    is_pinned: false,
+                    is_running: true,
+                    is_active: app.is_active,
+                    window_count: app.window_count,
+                });
+            }
+        }
+
+        items
+    }
+
     fn rebuild_all_items(&mut self) {
         let settings = self.settings.clone();
         let config = self.services.config.config();
         let show_running = config.dock.show_running.get();
 
-        let dock_items = self.services.dock.get_items();
+        let dock_items = self.build_dock_items();
 
         let new_items: Vec<factory::DockItemInit> = dock_items
             .into_iter()

@@ -1,9 +1,7 @@
 //! Shell-specific services that run alongside the UI.
 
-pub mod dock_service;
 pub mod idle_inhibit;
 pub mod shell_ipc;
 
-pub use dock_service::DockService;
 pub use idle_inhibit::IdleInhibitService;
 pub use shell_ipc::ShellIpcService;

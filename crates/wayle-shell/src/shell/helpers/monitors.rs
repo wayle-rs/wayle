@@ -22,7 +22,7 @@ pub(crate) type Connector = String;
 pub(crate) type BarMap = HashMap<Connector, Controller<Bar>>;
 pub(crate) type DockMap = HashMap<Connector, Controller<Dock>>;
 
-pub(crate) const MAX_SYNC_RETRIES: u32 = 5;
+const MAX_SYNC_RETRIES: u32 = 5;
 const BASE_RETRY_DELAY_MS: u64 = 50;
 const RETRY_BACKOFF_FACTOR: u64 = 2;
 
@@ -98,6 +98,7 @@ pub(crate) fn schedule_deferred_sync_if_needed<C: Component<CommandOutput = Shel
 
 pub(crate) fn sync(
     bars: &mut BarMap,
+    docks: &mut DockMap,
     services: &ShellServices,
     expected_count: u32,
     attempt: u32,
@@ -120,7 +121,8 @@ pub(crate) fn sync(
         );
     }
 
-    reconcile_bars(bars, services, monitors);
+    reconcile_bars(bars, services, monitors.clone());
+    reconcile_docks(docks, services, monitors);
 }
 
 pub(crate) fn schedule_retry<C: Component<CommandOutput = ShellCmd>>(
@@ -143,7 +145,7 @@ pub(crate) fn schedule_retry<C: Component<CommandOutput = ShellCmd>>(
 }
 
 #[allow(clippy::cognitive_complexity)]
-pub(crate) fn reconcile_bars(
+fn reconcile_bars(
     bars: &mut BarMap,
     services: &ShellServices,
     monitors: Vec<(Connector, gdk::Monitor)>,
@@ -185,7 +187,7 @@ pub(crate) fn reconcile_bars(
     debug!(bar_count = bars.len(), "Bar reconciliation complete");
 }
 
-pub(crate) fn sync_ipc_state(services: &ShellServices, bars: &BarMap) {
+fn sync_ipc_state(services: &ShellServices, bars: &BarMap) {
     let connectors: Vec<String> = bars.keys().cloned().collect();
     let ipc = services.shell_ipc.state();
 
@@ -218,7 +220,7 @@ pub(crate) fn create_docks(services: &ShellServices) -> DockMap {
     docks
 }
 
-pub(crate) fn reconcile_docks(
+fn reconcile_docks(
     docks: &mut DockMap,
     services: &ShellServices,
     monitors: Vec<(Connector, gdk::Monitor)>,

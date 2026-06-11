@@ -146,7 +146,7 @@ impl Component for Shell {
             }
 
             ShellCmd::LocationChanged => {
-                self.recreate_bars();
+                self.recreate_bars_and_docs();
             }
 
             ShellCmd::OsdEnabledChanged(enabled) => {
@@ -157,25 +157,23 @@ impl Component for Shell {
                 expected_count,
                 attempt,
             } => {
-                let monitors = helpers::monitors::current_monitors();
-                let found_count = monitors.len() as u32;
-
-                if found_count < expected_count && attempt < helpers::monitors::MAX_SYNC_RETRIES {
-                    helpers::monitors::schedule_retry(expected_count, attempt, &sender);
-                    return;
-                }
-
-                helpers::monitors::reconcile_bars(&mut self.bars, &self.services, monitors.clone());
-                helpers::monitors::reconcile_docks(&mut self.docks, &self.services, monitors);
-
-                helpers::monitors::sync_ipc_state(&self.services, &self.bars);
+                helpers::monitors::sync(
+                    &mut self.bars,
+                    &mut self.docks,
+                    &self.services,
+                    expected_count,
+                    attempt,
+                    |expected, attempt| {
+                        helpers::monitors::schedule_retry(expected, attempt, &sender);
+                    },
+                );
             }
         }
     }
 }
 
 impl Shell {
-    fn recreate_bars(&mut self) {
+    fn recreate_bars_and_docs(&mut self) {
         for controller in self.bars.values() {
             controller.widget().destroy();
         }

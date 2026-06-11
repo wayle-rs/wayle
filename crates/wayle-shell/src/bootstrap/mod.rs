@@ -32,7 +32,7 @@ use wayle_wallpaper::WallpaperService;
 use zbus::{Connection, fdo::DBusProxy};
 
 use crate::{
-    services::{DockService, IdleInhibitService, ShellIpcService},
+    services::{IdleInhibitService, ShellIpcService},
     shell::ShellServices,
     startup::StartupTimer,
     watchers::build_extractor_config,
@@ -153,24 +153,6 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         }
     };
 
-    let dock = timer.time_sync("Dock", || {
-        let config = config_service.config();
-        let pinned_apps: Vec<String> = config.dock.pinned_apps.get().clone();
-        DockService::new(
-            pinned_apps,
-            optional.hyprland.clone(),
-            optional.niri.clone(),
-        )
-    });
-
-    let (dock_tx, mut dock_rx) = tokio::sync::mpsc::unbounded_channel();
-    dock.spawn_event_watcher(dock_tx);
-    tokio::spawn(async move {
-        while let Some(()) = dock_rx.recv().await {
-            debug!("Dock items updated");
-        }
-    });
-
     timer.mark_services_done();
 
     let services = ShellServices {
@@ -179,7 +161,6 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         bluetooth,
         brightness: core.brightness,
         config: config_service,
-        dock: Arc::new(dock),
         hyprland: optional.hyprland,
         power_profiles,
         idle_inhibit: core.idle_inhibit,
