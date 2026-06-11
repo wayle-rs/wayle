@@ -240,6 +240,62 @@ impl Component for Dock {
     }
 }
 
+fn build_dock_items(
+    services: &ShellServices,
+    running: &[DockAppData],
+) -> Vec<DockItemData> {
+    let config = services.config.config();
+    let pinned: Vec<String> = config.dock.pinned_apps.get();
+
+    let running_map: HashMap<&str, &DockAppData> =
+        running.iter().map(|a| (a.app_id.as_str(), a)).collect();
+
+    let mut items: Vec<DockItemData> = pinned
+        .iter()
+        .filter_map(|app_id| {
+            running_map.get(app_id.as_str()).copied().map(|ra| DockItemData {
+                app_id: app_id.clone(),
+                is_pinned: true,
+                is_running: true,
+                is_active: ra.is_active,
+                window_count: ra.window_count,
+            })
+        })
+        .collect();
+
+    let running_ids: HashMap<&str, ()> =
+        running.iter().map(|a| (a.app_id.as_str(), ())).collect();
+
+    for app_id in &pinned {
+        if !running_ids.contains_key(app_id.as_str()) {
+            items.push(DockItemData {
+                app_id: app_id.clone(),
+                is_pinned: true,
+                is_running: false,
+                is_active: false,
+                window_count: 0,
+            });
+        }
+    }
+
+    let pinned_set: HashMap<&str, ()> =
+        pinned.iter().map(|s| (s.as_str(), ())).collect();
+
+    for app in running.iter() {
+        if !pinned_set.contains_key(app.app_id.as_str()) {
+            items.push(DockItemData {
+                app_id: app.app_id.clone(),
+                is_pinned: false,
+                is_running: true,
+                is_active: app.is_active,
+                window_count: app.window_count,
+            });
+        }
+    }
+
+    items
+}
+
 fn build_adapter(services: &ShellServices) -> Option<DockAdapterRef> {
     if let Some(ref niri) = services.niri {
         Some(DockAdapterRef::Niri(
@@ -370,7 +426,6 @@ impl Dock {
             }
             DockPosition::Right => {
                 window.set_anchor(gtk4_layer_shell::Edge::Right, true);
-                window.set_anchor(gtk4_layer_shell::Edge::Right, true);
                 window.set_anchor(gtk4_layer_shell::Edge::Top, true);
                 window.set_anchor(gtk4_layer_shell::Edge::Bottom, true);
             }
@@ -452,57 +507,8 @@ impl Dock {
     }
 
     fn build_dock_items(&self) -> Vec<DockItemData> {
-        let config = self.services.config.config();
-        let pinned: Vec<String> = config.dock.pinned_apps.get();
-        let running: Vec<DockAppData> = self.running_apps.get();
-
-        let running_map: HashMap<&str, &DockAppData> =
-            running.iter().map(|a| (a.app_id.as_str(), a)).collect();
-
-        let mut items: Vec<DockItemData> = pinned
-            .iter()
-            .filter_map(|app_id| {
-                running_map.get(app_id.as_str()).copied().map(|ra| DockItemData {
-                    app_id: app_id.clone(),
-                    is_pinned: true,
-                    is_running: true,
-                    is_active: ra.is_active,
-                    window_count: ra.window_count,
-                })
-            })
-            .collect();
-
-        let running_ids: HashMap<&str, ()> =
-            running.iter().map(|a| (a.app_id.as_str(), ())).collect();
-
-        for app_id in &pinned {
-            if !running_ids.contains_key(app_id.as_str()) {
-                items.push(DockItemData {
-                    app_id: app_id.clone(),
-                    is_pinned: true,
-                    is_running: false,
-                    is_active: false,
-                    window_count: 0,
-                });
-            }
-        }
-
-        let pinned_set: HashMap<&str, ()> =
-            pinned.iter().map(|s| (s.as_str(), ())).collect();
-
-        for app in running.iter() {
-            if !pinned_set.contains_key(app.app_id.as_str()) {
-                items.push(DockItemData {
-                    app_id: app.app_id.clone(),
-                    is_pinned: false,
-                    is_running: true,
-                    is_active: app.is_active,
-                    window_count: app.window_count,
-                });
-            }
-        }
-
-        items
+        let running = self.running_apps.get();
+        build_dock_items(&self.services, &running)
     }
 
     fn rebuild_all_items(&mut self) {
