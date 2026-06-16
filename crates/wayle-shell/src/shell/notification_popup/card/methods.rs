@@ -39,12 +39,26 @@ impl NotificationPopupCard {
             }
 
             ResolvedIcon::File(path) => {
-                if let Some(texture) = load_scaled_file_icon(path, POPUP_ICON_TEXTURE_SIZE_PX) {
+                let path = path.clone();
+                let icon = icon.clone();
+                let icon_container = icon_container.clone();
+
+                spawn_local(async move {
+                    let texture = gio::spawn_blocking(move || {
+                        load_scaled_file_icon(&path, DROPDOWN_ICON_TEXTURE_SIZE_PX)
+                    })
+                    .await
+                    .ok()
+                    .flatten();
+
+                    let Some(texture) = texture else {
+                        icon.set_icon_name(Some("ld-bell-symbolic"));
+                        return;
+                    };
+
                     icon.set_paintable(Some(&texture));
                     icon_container.add_css_class("file-icon");
-                } else {
-                    icon.set_icon_name(Some("ld-bell-symbolic"));
-                }
+                });
             }
         }
     }
