@@ -1,5 +1,5 @@
 use gtk::prelude::*;
-use relm4::{gtk, spawn_local};
+use relm4::{gtk, gtk::gio, spawn_local};
 use wayle_config::schemas::modules::notification::{PopupCloseBehavior, UrgencyBarThreshold};
 use wayle_notification::core::types::Action;
 
@@ -45,7 +45,7 @@ impl NotificationPopupCard {
 
                 spawn_local(async move {
                     let texture = gio::spawn_blocking(move || {
-                        load_scaled_file_icon(&path, DROPDOWN_ICON_TEXTURE_SIZE_PX)
+                        load_scaled_file_icon(&path, POPUP_ICON_TEXTURE_SIZE_PX)
                     })
                     .await
                     .ok()

@@ -2,7 +2,7 @@ use std::path::Path;
 
 #[allow(deprecated)]
 use gtk4::prelude::StyleContextExt;
-use gtk4::{gdk, gio, glib::idle_add_local_once};
+use gtk4::{gio, glib::idle_add_local_once};
 use relm4::{
     gtk::{self, prelude::*},
     prelude::*,
