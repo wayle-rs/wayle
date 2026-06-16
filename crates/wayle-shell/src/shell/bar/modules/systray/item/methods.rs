@@ -238,8 +238,7 @@ impl SystrayItem {
     }
 
     fn apply_icon(&self, image: &gtk::Image, icon_name: Option<&str>) {
-        image.set_icon_name(None);
-        image.set_paintable(None::<&gdk::Texture>);
+        image.clear();
 
         if let Some(name) = icon_name {
             let theme_path = self.item.icon_theme_path.get();
