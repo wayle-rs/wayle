@@ -9,8 +9,8 @@ use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher, event::EventKind
 use relm4::ComponentSender;
 use tokio::sync::mpsc;
 use tracing::{debug, error, info};
-use wayle_config::ConfigService;
-use wayle_styling::{compile_dev, scss_dir, theme_css};
+use wayle_config::{ConfigService, infrastructure::paths::ConfigPaths};
+use wayle_styling::{compile_dev, scss_dir, theme_css, user_css};
 
 use crate::shell::{Shell, ShellCmd, ShellServices};
 
@@ -107,7 +107,16 @@ fn recompile_css(cmd_sender: &relm4::Sender<ShellCmd>, config_service: &ConfigSe
     match compile_dev() {
         Ok(static_css) => {
             let theme = theme_css(&palette, &config.general, &config.bar, &config.styling);
-            let css = format!("{static_css}\n{theme}");
+
+            let user = match ConfigPaths::config_dir() {
+                Ok(dir) => user_css(&dir),
+                Err(err) => {
+                    error!(error = %err, "cannot resolve config dir; user styles disabled");
+                    String::new()
+                }
+            };
+
+            let css = format!("{static_css}\n{theme}\n{user}");
             debug!("SCSS recompiled");
             let _ = cmd_sender.send(ShellCmd::CssRecompiled(css));
         }

@@ -9,6 +9,12 @@ outline: [2, 3]
 
 Battery level, charging state, and a dropdown with power-profile controls.
 
+::: warning
+
+This module uses `upower` (D-Bus) for battery information. Ensure `upower` daemon is running and exposes a battery device (verify with `upower --battery` or `upower --dump`).
+
+:::
+
 Add it to your layout with `battery`:
 
 ```toml

@@ -63,6 +63,7 @@ pub(crate) enum SettingsAppMsg {
 #[derive(Debug)]
 pub(crate) enum SettingsAppCmd {
     CssReloadNeeded,
+    CssRecompiled(String),
 }
 
 #[relm4::component(pub(crate))]
@@ -105,6 +106,11 @@ impl Component for SettingsApp {
         watchers::spawn_palette_watcher(&sender);
         watchers::spawn_theme_watcher(&sender, &config_service);
         watchers::spawn_scss_dev_watcher(&sender, &config_service);
+        wayle_styling::watcher::spawn(
+            &sender,
+            Arc::clone(&config_service),
+            SettingsAppCmd::CssRecompiled,
+        );
 
         let config = config_service.config();
         update_wayle_scheme(&config.styling.palette);
@@ -180,6 +186,10 @@ impl Component for SettingsApp {
         match msg {
             SettingsAppCmd::CssReloadNeeded => {
                 sender.input(SettingsAppMsg::ReloadCss);
+            }
+
+            SettingsAppCmd::CssRecompiled(css) => {
+                self.css_provider.load_from_string(&css);
             }
         }
     }

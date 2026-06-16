@@ -47,16 +47,20 @@ impl Config {
         })?;
 
         let mut detector = CircularDetector::new();
-        Self::load_merged_toml(&canonical_path, &mut detector)
+        Self::load_merged_toml(&canonical_path, path, &mut detector)
     }
 
-    fn load_merged_toml(path: &Path, detector: &mut CircularDetector) -> Result<Value, Error> {
+    fn load_merged_toml(
+        path: &Path,
+        import_base: &Path,
+        detector: &mut CircularDetector,
+    ) -> Result<Value, Error> {
         detector.detect_circular_import(path)?;
         detector.push_to_chain(path);
 
         let main_config_content = fs::read_to_string(path)?;
         let import_paths = Self::extract_import_paths(&main_config_content)?;
-        let imported_configs = Self::load_all_imports(path, &import_paths, detector)?;
+        let imported_configs = Self::load_all_imports(import_base, &import_paths, detector)?;
 
         let main_config: Value =
             toml::from_str(&main_config_content).map_err(|source| Error::TomlParse {

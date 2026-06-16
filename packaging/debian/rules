@@ -1,0 +1,41 @@
+#!/usr/bin/make -f
+
+%:
+	dh $@
+
+override_dh_auto_build:
+
+# The archive already contains built binaries, so there is no useful DWARF
+# multifile optimization for debhelper to perform here.
+override_dh_dwz:
+
+# Do not emit a separate dbgsym package for repackaged upstream binaries.
+override_dh_strip:
+	dh_strip --no-automatic-dbgsym
+
+override_dh_auto_install:
+	install -d debian/wayle/usr/bin
+	install -m 0755 wayle debian/wayle/usr/bin/wayle
+	install -m 0755 wayle-settings debian/wayle/usr/bin/wayle-settings
+
+	install -d debian/wayle/usr/lib/systemd/user
+	install -m 0644 wayle.service debian/wayle/usr/lib/systemd/user/wayle.service
+
+	install -d debian/wayle/usr/share/applications
+	install -m 0644 com.wayle.settings.desktop debian/wayle/usr/share/applications/com.wayle.settings.desktop
+	desktop-file-validate debian/wayle/usr/share/applications/com.wayle.settings.desktop
+
+	install -d debian/wayle/usr/share/icons/hicolor/scalable/apps
+	install -m 0644 wayle-settings.svg debian/wayle/usr/share/icons/hicolor/scalable/apps/wayle-settings.svg
+
+	install -d debian/wayle/usr/share/icons/hicolor/scalable/actions
+	install -m 0644 icons/hicolor/scalable/actions/*.svg debian/wayle/usr/share/icons/hicolor/scalable/actions/
+
+	install -d debian/wayle/usr/share/bash-completion/completions
+	install -m 0644 completions/completions.bash debian/wayle/usr/share/bash-completion/completions/wayle
+
+	install -d debian/wayle/usr/share/zsh/vendor-completions
+	install -m 0644 completions/_wayle debian/wayle/usr/share/zsh/vendor-completions/_wayle
+
+	install -d debian/wayle/usr/share/fish/vendor_completions.d
+	install -m 0644 completions/wayle.fish debian/wayle/usr/share/fish/vendor_completions.d/wayle.fish

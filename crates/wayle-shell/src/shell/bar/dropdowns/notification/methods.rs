@@ -9,7 +9,7 @@ impl NotificationDropdown {
         let notifications = self.notification.notifications.get();
         self.has_notifications = !notifications.is_empty();
 
-        let icon_source = self.config.config().modules.notification.icon_source.get();
+        let icon_source = self.config.config().modules.notifications.icon_source.get();
 
         let new_groups = group_by_app(&notifications);
         let new_keys: Vec<Option<String>> = new_groups
@@ -26,7 +26,7 @@ impl NotificationDropdown {
         let notifications = self.notification.notifications.get();
         self.has_notifications = !notifications.is_empty();
 
-        let icon_source = self.config.config().modules.notification.icon_source.get();
+        let icon_source = self.config.config().modules.notifications.icon_source.get();
 
         let grouped = group_by_app(&notifications);
 

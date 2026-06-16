@@ -51,7 +51,9 @@ fn generate_schema_for<T: JsonSchema>(id: &str) -> Option<String> {
     }
 }
 
-const TOMBI_CONFIG: &str = r#"[schema]
+const TOMBI_CONFIG: &str = r#"toml-version = "v1.1.0"
+
+[schema]
 enabled = true
 
 [[schemas]]

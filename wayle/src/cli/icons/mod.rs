@@ -16,6 +16,8 @@ pub mod remove;
 pub mod setup;
 /// List available icon sources
 pub mod sources;
+/// Install icons referenced by config but not yet on disk
+pub mod sync;
 
 use commands::IconsCommands;
 
@@ -39,5 +41,6 @@ pub async fn execute(command: IconsCommands) -> CliAction {
         } => list::execute(source, interactive),
         IconsCommands::Open => open::execute(),
         IconsCommands::Export { destination } => export::execute(destination),
+        IconsCommands::Sync { dry_run } => sync::execute(dry_run).await,
     }
 }

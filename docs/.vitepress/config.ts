@@ -44,6 +44,7 @@ export default defineConfig({
             { text: 'Editing config', link: '/guide/editing-config' },
             { text: 'Bars and layouts', link: '/guide/bars-and-layouts' },
             { text: 'Themes', link: '/guide/themes' },
+            { text: 'Custom styles', link: '/guide/custom-styles' },
             { text: 'Custom icons', link: '/guide/custom-icons' },
             { text: 'Custom modules', link: '/guide/custom-modules' },
             { text: 'CLI', link: '/guide/cli' },
@@ -80,6 +81,7 @@ export default defineConfig({
           items: [
             { text: 'battery', link: '/config/modules/battery' },
             { text: 'bluetooth', link: '/config/modules/bluetooth' },
+            { text: 'brightness', link: '/config/modules/brightness' },
             { text: 'cava', link: '/config/modules/cava' },
             { text: 'clock', link: '/config/modules/clock' },
             { text: 'cpu', link: '/config/modules/cpu' },
@@ -90,11 +92,13 @@ export default defineConfig({
             { text: 'idle-inhibit', link: '/config/modules/idle-inhibit' },
             { text: 'keybind-mode', link: '/config/modules/keybind-mode' },
             { text: 'keyboard-input', link: '/config/modules/keyboard-input' },
+            { text: 'mango-workspaces', link: '/config/modules/mango-workspaces' },
             { text: 'media', link: '/config/modules/media' },
             { text: 'microphone', link: '/config/modules/microphone' },
             { text: 'netstat', link: '/config/modules/netstat' },
             { text: 'network', link: '/config/modules/network' },
-            { text: 'notification', link: '/config/modules/notification' },
+            { text: 'niri-workspaces', link: '/config/modules/niri-workspaces' },
+            { text: 'notifications', link: '/config/modules/notifications' },
             { text: 'power', link: '/config/modules/power' },
             { text: 'ram', link: '/config/modules/ram' },
             { text: 'separator', link: '/config/modules/separator' },
@@ -111,6 +115,7 @@ export default defineConfig({
 
     socialLinks: [
       { icon: 'github', link: 'https://github.com/wayle-rs/wayle' },
+      { icon: 'discord', link: 'https://discord.gg/GYRGnNMf2c' },
     ],
 
     footer: {

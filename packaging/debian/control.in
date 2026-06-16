@@ -1,0 +1,30 @@
+Source: wayle
+Section: utils
+Priority: optional
+Maintainer: @MAINTAINER@
+Build-Depends:
+ debhelper-compat (= 13),
+ desktop-file-utils
+Standards-Version: 4.7.0
+Rules-Requires-Root: no
+Homepage: https://wayle.app/
+Vcs-Git: https://github.com/wayle-rs/wayle.git
+Vcs-Browser: https://github.com/wayle-rs/wayle
+
+Package: wayle
+Architecture: amd64 arm64
+Depends:
+ ${shlibs:Depends},
+ ${misc:Depends},
+ hicolor-icon-theme
+Suggests:
+ dbus-user-session,
+ bluez,
+ network-manager,
+ upower,
+ power-profiles-daemon,
+ pipewire-pulse,
+ wireplumber
+Description: Wayland Elements desktop shell
+ Wayland Elements is a compositor agnostic shell with extensive customization.
+ It includes a bar, notifications, OSD, wallpaper, and device controls.

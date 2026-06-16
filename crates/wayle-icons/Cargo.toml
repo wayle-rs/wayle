@@ -14,6 +14,7 @@ notify.workspace = true
 reqwest.workspace = true
 thiserror.workspace = true
 tokio.workspace = true
+toml.workspace = true
 tracing.workspace = true
 usvg = "0.46"
 

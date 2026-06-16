@@ -20,7 +20,9 @@ use super::{
         load_icon_from_theme_path, load_scaled_texture_from_file, select_best_pixmap,
     },
 };
-use crate::shell::bar::modules::systray::helpers::find_override;
+use crate::shell::{
+    bar::modules::systray::helpers::find_override, helpers::COMPONENT_CSS_PRIORITY,
+};
 
 impl SystrayItem {
     pub(super) fn request_menu_show(&self, sender: &FactorySender<Self>) {
@@ -222,7 +224,7 @@ impl SystrayItem {
             #[allow(deprecated)]
             image
                 .style_context()
-                .add_provider(provider, gtk::STYLE_PROVIDER_PRIORITY_USER + 1);
+                .add_provider(provider, COMPONENT_CSS_PRIORITY);
             self.icon_color_provider_attached = true;
         }
     }

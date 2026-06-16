@@ -123,14 +123,17 @@ pub fn derive_enum_variants(input: TokenStream) -> TokenStream {
     enum_variants::derive(input)
 }
 
-/// Derives [`ApplyConfigLayer`], loading config.toml values into each field's
-/// config layer by matching serde-renamed TOML keys.
+/// Loads `config.toml` into each field's config layer. Keys come from
+/// `#[serde(rename)]` (or the field name), plus optional aliases:
+/// `#[serde(alias)]` matches silently, `#[wayle(deprecated_alias)]` matches
+/// and fires a `tracing::warn!` naming the canonical key. Use the
+/// deprecated form when renaming a field but keeping the old name working.
 ///
 /// ```ignore
-/// #[derive(ApplyConfigLayer)]
-/// pub struct ClockConfig {
-///     #[serde(rename = "format")]
-///     pub format: ConfigProperty<String>,
+/// pub struct ModulesConfig {
+///     #[serde(rename = "notifications")]
+///     #[wayle(deprecated_alias = "notification")]
+///     pub notifications: NotificationConfig,
 /// }
 /// ```
 #[proc_macro_derive(ApplyConfigLayer, attributes(wayle))]

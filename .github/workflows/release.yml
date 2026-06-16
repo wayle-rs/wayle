@@ -89,25 +89,8 @@ jobs:
             - name: Build release binaries
               run: cargo build --release --locked
 
-            - name: Generate completions
-              run: |
-                  target/release/wayle completions bash > completions.bash
-                  target/release/wayle completions zsh > _wayle
-                  target/release/wayle completions fish > wayle.fish
-
-            - name: Create archive
-              run: |
-                  VERSION="${GITHUB_REF_NAME#v}"
-                  ARCH="${{ matrix.arch }}"
-                  STAGING="wayle-${VERSION}-${ARCH}-linux"
-                  mkdir -p "${STAGING}/icons" "${STAGING}/completions"
-                  cp target/release/wayle target/release/wayle-settings LICENSE "${STAGING}/"
-                  cp -r resources/icons/hicolor "${STAGING}/icons/"
-                  cp completions.bash _wayle wayle.fish "${STAGING}/completions/"
-                  cp resources/wayle.service "${STAGING}/"
-                  cp resources/com.wayle.settings.desktop "${STAGING}/"
-                  cp resources/wayle-settings.svg "${STAGING}/"
-                  tar czf "${STAGING}.tar.gz" "${STAGING}"
+            - name: Build archive
+              run: ./scripts/ci/build-archive.sh target/release "${GITHUB_REF_NAME#v}" "${{ matrix.arch }}"
 
             - name: Upload to release
               env:
@@ -119,9 +102,144 @@ jobs:
                     "wayle-${VERSION}-${ARCH}-linux.tar.gz" \
                     --clobber
 
+    ubuntu:
+        name: Package (Ubuntu ${{ matrix.arch }})
+        needs: changelog
+        runs-on: ubuntu-latest
+        container:
+            image: ubuntu:latest
+        strategy:
+            matrix:
+                arch: [x86_64]
+        steps:
+            - name: Install dependencies
+              run: |
+                  apt-get update
+                  apt-get install -y --no-install-recommends \
+                    build-essential \
+                    ca-certificates \
+                    clang \
+                    cmake \
+                    curl \
+                    debhelper \
+                    desktop-file-utils \
+                    dpkg-dev \
+                    gh \
+                    git \
+                    libfftw3-dev \
+                    libgtk-4-dev \
+                    libgtk4-layer-shell-dev \
+                    libgtksourceview-5-dev \
+                    libpipewire-0.3-dev \
+                    libpulse-dev \
+                    libudev-dev \
+                    libxkbcommon-dev \
+                    pkg-config
+
+            - name: Checkout repository
+              uses: actions/checkout@v6
+
+            - name: Fix Git ownership
+              run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+            - name: Setup Rust
+              uses: actions-rust-lang/setup-rust-toolchain@v1
+              with:
+                  toolchain: stable
+
+            - name: Build release binaries
+              run: cargo build --release --locked
+
+            - name: Build archive
+              run: ./scripts/ci/build-archive.sh target/release "${GITHUB_REF_NAME#v}" "${{ matrix.arch }}"
+
+            - name: Build Ubuntu package
+              run: |
+                  VERSION="${GITHUB_REF_NAME#v}"
+                  ./scripts/ci/build-packages.sh "wayle-${VERSION}-${{ matrix.arch }}-linux.tar.gz" "${VERSION}" deb
+
+            - name: Upload to release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  gh release upload "${{ github.ref_name }}" \
+                    debbuild/DEBS/*/*.deb \
+                    --clobber
+
+    fedora:
+        name: Package (Fedora ${{ matrix.arch }})
+        needs: changelog
+        runs-on: ubuntu-latest
+        container:
+            image: fedora:latest
+        strategy:
+            matrix:
+                arch: [x86_64]
+        steps:
+            - name: Install dependencies
+              run: |
+                  dnf -y install \
+                    clang \
+                    cmake \
+                    fftw-devel \
+                    gcc \
+                    gh \
+                    git \
+                    gtk4-devel \
+                    gtk4-layer-shell-devel \
+                    gtksourceview5-devel \
+                    libxkbcommon-devel \
+                    make \
+                    pipewire-devel \
+                    pkgconf-pkg-config \
+                    pulseaudio-libs-devel \
+                    rpm-build \
+                    systemd-devel
+
+            - name: Checkout repository
+              uses: actions/checkout@v6
+
+            - name: Fix Git ownership
+              run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
+
+            - name: Install RPM build dependencies
+              run: |
+                  VERSION=$(sed -n '/\[workspace\.package\]/,/\[/{/^version/p}' Cargo.toml | sed 's/.*"\(.*\)".*/\1/')
+                  DATE="$(LC_ALL=C date '+%a %b %d %Y')"
+                  sed \
+                    -e "s/@VERSION@/${VERSION}/g" \
+                    -e "s/@DATE@/${DATE}/g" \
+                    packaging/rpm/wayle.spec.in >/tmp/wayle.spec
+                  dnf -y --setopt=install_weak_deps=False builddep /tmp/wayle.spec
+
+            - name: Setup Rust
+              uses: actions-rust-lang/setup-rust-toolchain@v1
+              with:
+                  toolchain: stable
+
+            - name: Build release binaries
+              run: cargo build --release --locked
+
+            - name: Build archive
+              run: ./scripts/ci/build-archive.sh target/release "${GITHUB_REF_NAME#v}" "${{ matrix.arch }}"
+
+            - name: Build Fedora package
+              run: |
+                  VERSION="${GITHUB_REF_NAME#v}"
+                  ./scripts/ci/build-packages.sh "wayle-${VERSION}-${{ matrix.arch }}-linux.tar.gz" "${VERSION}" rpm
+
+            - name: Upload to release
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  ARCH="${{ matrix.arch }}"
+                  gh release upload "${{ github.ref_name }}" \
+                    rpmbuild/RPMS/${ARCH}/*.rpm \
+                    --clobber
+
     checksums:
         name: Checksums
-        needs: [changelog, build]
+        needs: [changelog, build, ubuntu, fedora]
         runs-on: ubuntu-latest
         steps:
             - name: Download assets
@@ -131,10 +249,12 @@ jobs:
                   gh release download "${{ github.ref_name }}" \
                     --repo "${{ github.repository }}" \
                     --pattern "*.tar.gz" \
+                    --pattern "*.deb" \
+                    --pattern "*.rpm" \
                     --dir release
 
             - name: Generate SHA256SUMS
-              run: cd release && sha256sum *.tar.gz > ../SHA256SUMS
+              run: cd release && sha256sum *.tar.gz *.deb *.rpm > ../SHA256SUMS
 
             - name: Upload checksums
               env:

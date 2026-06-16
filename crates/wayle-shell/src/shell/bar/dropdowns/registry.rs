@@ -14,6 +14,26 @@ use wayle_widgets::prelude::{BarButton, BarButtonInput};
 
 use crate::{process, shell::services::ShellServices};
 
+/// Returns `value` unchanged, logging at debug if it is `None`.
+///
+/// Use inside dropdown factories that gate on a service dependency: instead of
+/// returning `None` silently, the helper records which dropdown failed and the
+/// service it was waiting on, so the dispatch-site catch-all has the cause
+/// already in the log before it runs.
+pub(crate) fn require_service<T>(
+    dropdown: &'static str,
+    service: &'static str,
+    value: Option<T>,
+) -> Option<T> {
+    if value.is_none() {
+        debug!(
+            dropdown,
+            service, "service unavailable, dropdown disabled on this system"
+        );
+    }
+    value
+}
+
 /// Shared dropdown instance for a dropdown name.
 ///
 /// Reuse keeps dropdown state consistent across modules that reference the same
@@ -28,9 +48,25 @@ impl DropdownInstance {
     pub(crate) fn new(popover: gtk::Popover, controller: Box<dyn Any>) -> Self {
         let thaw_target: Rc<Cell<Option<relm4::Sender<BarButtonInput>>>> = Rc::default();
 
+        popover.connect_map(|popover| {
+            debug!(
+                width = popover.width(),
+                height = popover.height(),
+                autohide = popover.is_autohide(),
+                classes = ?popover.css_classes(),
+                "popover mapped"
+            );
+        });
+
         let thaw = thaw_target.clone();
         popover.connect_closed(move |popover| {
-            debug!(classes = ?popover.css_classes(), "popover closed");
+            debug!(
+                width = popover.width(),
+                height = popover.height(),
+                autohide = popover.is_autohide(),
+                classes = ?popover.css_classes(),
+                "popover closed"
+            );
             let frozen_sender = thaw.take();
 
             if let Some(sender) = &frozen_sender {
@@ -108,7 +144,12 @@ impl DropdownInstance {
         self.apply_margins(style.margins);
         self.apply_style(&style);
         set_bar_keyboard_mode(&self.popover, KeyboardMode::OnDemand);
-        debug!(classes = ?self.popover.css_classes(), "popup (widget path)");
+        debug!(
+            classes = ?self.popover.css_classes(),
+            autohide = self.popover.is_autohide(),
+            parent_size = ?self.popover.parent().map(|p| (p.width(), p.height())),
+            "popup (widget path)"
+        );
         self.popover.popup();
     }
 
@@ -153,7 +194,8 @@ impl DropdownInstance {
         set_bar_keyboard_mode(&self.popover, KeyboardMode::OnDemand);
         debug!(
             classes = ?self.popover.css_classes(),
-            size = ?(self.popover.width(), self.popover.height()),
+            autohide = self.popover.is_autohide(),
+            parent_size = ?self.popover.parent().map(|p| (p.width(), p.height())),
             "popup (button path)"
         );
         self.popover.popup();
@@ -346,7 +388,11 @@ impl DropdownRegistry {
 
         debug!(dropdown = name, "creating dropdown");
         let Some(raw) = super::create(name, &self.services) else {
-            warn!(dropdown = name, "factory returned None");
+            debug!(
+                dropdown = name,
+                "no instance created (factory declined, usually due to a missing service or dependency \
+                 -- see preceding debug log from the factory for the specific cause)"
+            );
             return None;
         };
         let instance = Rc::new(raw);
@@ -391,7 +437,11 @@ fn dispatch_action(
                 let style = dropdown_style(registry);
                 toggle(&dropdown, style);
             } else {
-                warn!(dropdown = %name, "dropdown unavailable, click dropped");
+                warn!(
+                    dropdown = %name,
+                    "click dropped: no dropdown available (dropdown is either unregistered or its \
+                     backing service is unavailable on this system)"
+                );
             }
         }
         ClickAction::Shell(cmd) => {

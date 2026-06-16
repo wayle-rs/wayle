@@ -9,11 +9,14 @@ use wayle_derive::wayle_config;
 use crate::{
     ClickAction, ConfigProperty,
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
-    schemas::styling::{ColorValue, CssToken, Spacing, ThresholdEntry},
+    schemas::{
+        general::Layer,
+        styling::{ColorValue, CssToken, Spacing, ThresholdEntry},
+    },
 };
 
 /// Notification center: icon in the bar, dropdown with history, DND toggle.
-#[wayle_config(bar_button, i18n_prefix = "settings-modules-notification")]
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-notifications")]
 pub struct NotificationConfig {
     /// Icon shown when no notifications and DND is off.
     #[serde(rename = "icon-name")]
@@ -168,6 +171,14 @@ pub struct NotificationConfig {
     #[default(PopupMonitor::default())]
     pub popup_monitor: ConfigProperty<PopupMonitor>,
 
+    /// Layer-shell layer popup notifications are placed on.
+    ///
+    /// When `general.tearing-mode` is enabled, `overlay` is demoted to `top`
+    /// to allow fullscreen tearing.
+    #[serde(rename = "popup-layer")]
+    #[default(Layer::Overlay)]
+    pub popup_layer: ConfigProperty<Layer>,
+
     /// What happens when the close button on a popup is clicked.
     #[serde(rename = "popup-close-behavior")]
     #[default(PopupCloseBehavior::default())]
@@ -192,12 +203,12 @@ pub struct NotificationConfig {
     /// ## Example
     ///
     /// ```toml
-    /// [[modules.notification.thresholds]]
+    /// [[modules.notifications.thresholds]]
     /// above = 5
     /// icon-color = "status-warning"
     /// label-color = "status-warning"
     ///
-    /// [[modules.notification.thresholds]]
+    /// [[modules.notifications.thresholds]]
     /// above = 20
     /// icon-color = "status-error"
     /// label-color = "status-error"
@@ -210,9 +221,9 @@ pub struct NotificationConfig {
 impl ModuleInfoProvider for NotificationConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
-            name: String::from("notification"),
+            name: String::from("notifications"),
             schema: || schema_for!(NotificationConfig),
-            layout_id: Some(String::from("notification")),
+            layout_id: Some(String::from("notifications")),
             array_entry: false,
         }
     }

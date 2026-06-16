@@ -21,6 +21,8 @@ Bar chrome: per-monitor layout, spacing, colors, and button styling.
 | `padding-ends` | [`Spacing`](/config/types#spacing) | `0.5` | Internal spacing at bar ends. |
 | `module-gap` | [`Spacing`](/config/types#spacing) | `0.5` | Gap between modules and groups on the bar. |
 | `location` | [`Location`](/config/types#location) | `"top"` | Bar position on screen edge. |
+| `exclusive` | bool | `true` | Reserve screen space for the bar. |
+| `layer` | [`Layer`](/config/types#layer) | `"top"` | Layer-shell layer the bar is placed on. |
 | `background-opacity` | [`Percentage`](/config/types#percentage) | `100` | Bar background opacity (0-100). |
 | `border-location` | [`BorderLocation`](/config/types#border-location) | `"none"` | Border placement for bar. |
 | `border-width` | u8 | `1` | Border width for bar (pixels). |
@@ -67,6 +69,12 @@ right = ["volume", "systray"]
 ::: details More about `padding-ends`
 
 - **Orientation**: Left/right (horizontal bar), top/bottom (vertical bar)
+
+:::
+
+::: details More about `exclusive`
+
+When disabled, windows may overlap the bar and the bar draws over them.
 
 :::
 
@@ -130,6 +138,8 @@ padding = 0.3499999940395355
 padding-ends = 0.5
 module-gap = 0.5
 location = "top"
+exclusive = true
+layer = "top"
 bg = "bg-surface"
 background-opacity = 100
 border-location = "none"

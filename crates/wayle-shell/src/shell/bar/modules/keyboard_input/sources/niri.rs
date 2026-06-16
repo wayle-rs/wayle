@@ -4,7 +4,10 @@
 
 use std::sync::Arc;
 
-use futures::{StreamExt, stream::BoxStream};
+use futures::{
+    StreamExt,
+    stream::{self, BoxStream},
+};
 use wayle_niri::{Event, NiriService};
 
 use super::{CurrentLayout, KeyboardLayoutSource};
@@ -26,11 +29,13 @@ impl KeyboardLayoutSource for NiriKeyboardLayoutSource {
 
     fn changes(&self) -> BoxStream<'static, Option<CurrentLayout>> {
         let service = Arc::clone(&self.service);
-        let mapped = service.events().filter_map(move |event| {
+        let initial = current_layout_from(&service);
+        let updates = service.events().filter_map(move |event| {
             let layout = translate_event(&service, event);
             async move { layout }
         });
-        Box::pin(mapped)
+
+        Box::pin(stream::once(async move { initial }).chain(updates))
     }
 }
 
