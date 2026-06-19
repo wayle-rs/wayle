@@ -97,7 +97,7 @@ impl ParsedOutput {
         let mut ctx = self
             .json
             .clone()
-            .and_then(|v| if v.is_object() { Some(v) } else { None })
+            .filter(|v| v.is_object())
             .unwrap_or_else(|| Value::Object(serde_json::Map::new()));
 
         if let Value::Object(map) = &mut ctx {
