@@ -6,6 +6,7 @@ mod settings;
 mod watchers;
 
 use std::collections::HashMap;
+use adapter::OpenPopoverTracker;
 pub(crate) use adapter::DockAdapterRef;
 
 use factory::*;
@@ -21,7 +22,7 @@ use wayle_widgets::watch;
 use self::watchers::{config, css};
 use crate::shell::services::ShellServices;
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct DockAppData {
     pub app_id: String,
     pub is_active: bool,
@@ -40,16 +41,15 @@ pub(crate) struct DockItemData {
 
 pub(crate) struct Dock {
     settings: settings::DockSettings,
+    open_popover: OpenPopoverTracker,
     services: ShellServices,
     css_provider: gtk::CssProvider,
     last_css: String,
     items: FactoryVecDeque<DockItem>,
     dock_visibility: DockVisibility,
     dock_position: DockPosition,
-    dock_box: gtk::Box,
     running_apps: wayle_core::Property<Vec<DockAppData>>,
     adapter: Option<DockAdapterRef>,
-    app_order: indexmap::IndexMap<String, ()>,
 }
 
 pub(crate) struct DockInit {
@@ -62,7 +62,6 @@ pub(crate) enum DockCmd {
     StyleChanged,
     PositionChanged,
     DockItemsChanged,
-    MonitorInvalidated,
 }
 
 #[derive(Debug)]
@@ -103,6 +102,8 @@ impl Component for Dock {
         let size = config.dock.size.get();
 
         let monitor_name = init.monitor.connector().map(|s| s.to_string());
+
+        let open_popover = adapter::create_open_popover_tracker();
 
         let settings = settings::DockSettings {
             theme_provider: config.styling.theme_provider.clone(),
@@ -145,26 +146,22 @@ impl Component for Dock {
         css::spawn(&sender, &init.services);
         config::spawn(&sender, &init.services);
 
-        let mut model = Self {
+        let model = Self {
             settings,
+            open_popover: open_popover.clone(),
             services: init.services.clone(),
             css_provider,
             last_css: String::new(),
             items,
             dock_visibility: visibility,
             dock_position: position,
-            dock_box: widgets.dock_box.clone(),
             running_apps: wayle_core::Property::new(Vec::new()),
             adapter: build_adapter(&init.services),
-            app_order: indexmap::IndexMap::new(),
         };
 
         if let Some(ref adapter) = model.adapter {
             let initial_apps = adapter.compute_running_apps();
             model.running_apps.set(initial_apps.clone());
-            for app in &initial_apps {
-                model.app_order.insert(app.app_id.clone(), ());
-            }
             event_watcher::spawn(&sender, &init.services, adapter.clone());
         }
 
@@ -196,7 +193,7 @@ impl Component for Dock {
 
     fn update_cmd(&mut self, msg: DockCmd, _sender: ComponentSender<Self>, root: &Self::Root) {
         match msg {
-            DockCmd::StyleChanged => {
+              DockCmd::StyleChanged => {
                 let config = self.services.config.config();
                 let visibility = config.dock.visibility.get();
                 self.dock_visibility = visibility;
@@ -206,6 +203,7 @@ impl Component for Dock {
                     self.last_css = new_css;
                 }
                 root.set_visible(matches!(visibility, DockVisibility::AlwaysVisible));
+                self.rebuild_all_items();
             }
             DockCmd::PositionChanged => {
                 let config = self.services.config.config();
@@ -223,18 +221,24 @@ impl Component for Dock {
                         new_apps.into_iter().map(|a| (a.app_id.clone(), a)).collect();
                     let old_apps = self.running_apps.get();
                     let mut ordered: Vec<DockAppData> = Vec::new();
+                    let mut changed = false;
                     for app in old_apps.iter() {
                         if let Some(updated) = app_map.remove(&app.app_id) {
+                            changed = changed || updated != *app;
                             ordered.push(updated);
+                        } else {
+                            changed = true;
                         }
                     }
+                    if !app_map.is_empty() {
+                        changed = true;
+                    }
                     ordered.extend(app_map.into_values());
-                    self.running_apps.set(ordered);
+                    if changed {
+                        self.running_apps.set(ordered);
+                        self.rebuild_all_items();
+                    }
                 }
-                self.rebuild_all_items();
-            }
-            DockCmd::MonitorInvalidated => {
-                root.destroy();
             }
         }
     }
@@ -313,22 +317,9 @@ fn build_adapter(services: &ShellServices) -> Option<DockAdapterRef> {
 }
 
 impl Dock {
-    fn handle_dock_item_action(&self, app_id: &str, action: DockItemInput) {
-        match action {
-            DockItemInput::Click => {
-                if let Some(ref adapter) = self.adapter {
-                    adapter.focus_app(app_id);
-                }
-            }
-            DockItemInput::RightClick => {
-                tracing::debug!("Dock item right-click: {}", app_id);
-            }
-            DockItemInput::HoverEnter => {
-                tracing::debug!("Dock item hover enter: {}", app_id);
-            }
-            DockItemInput::HoverLeave => {
-                tracing::debug!("Dock item hover leave: {}", app_id);
-            }
+    fn handle_dock_item_action(&self, app_id: &str, _: DockItemInput) {
+        if let Some(ref adapter) = self.adapter {
+            adapter.focus_app(app_id);
         }
     }
 
@@ -397,32 +388,57 @@ impl Dock {
         let bg_opacity = dock.background_opacity.get().value() as f64 / 100.0;
 
         let (r, g, b) = Self::hex_to_rgb(&bg);
-        let _bg_rgba = format!("rgba({}, {}, {}, {})", r, g, b, bg_opacity);
+        let bg_rgba = format!("rgba({}, {}, {}, {})", r, g, b, bg_opacity);
 
         format!(
             ".dock {{ \
             background: none; \
-            border-radius: 18px;
+            border-radius: 18px; \
             }} \
             .dock .dock-section {{ \
-            background-color: red; \
+            background-color: {}; \
             border-radius: 18px; \
             padding: 4px 6px; \
             margin: 0; \
             }} \
             .dock .dock-item {{ \
-            background-color: red; \
+            background-color: transparent; \
             min-width: 24px; \
             min-height: 24px; \
             padding: 0; \
             margin: 4px 2px; \
             border: none; \
             border-radius: 10px; \
+            transition: background-color 0.15s ease; \
             }} \
             .dock .dock-item:hover {{ \
             background-color: rgba(255, 255, 255, 0.1); \
             border-radius: 12px; \
-            }}"
+            }} \
+            .dock .dock-item.active {{ \
+            background-color: rgba(255, 255, 255, 0.15); \
+            }} \
+            .dock .dock-window-popover {{ \
+            border-radius: 12px; \
+            padding: 6px; \
+            }} \
+            .dock .dock-popover-content {{ \
+            padding: 4px; \
+            }} \
+            .dock .dock-window-item {{ \
+            background-color: transparent; \
+            border: none; \
+            border-radius: 6px; \
+            padding: 4px 10px; \
+            margin: 2px 0; \
+            font-size: 13px; \
+            color: #ffffff; \
+            text-align: start; \
+            }} \
+            .dock .dock-window-item:hover {{ \
+            background-color: rgba(255, 255, 255, 0.1); \
+            }}",
+            bg_rgba
         )
     }
 
@@ -458,6 +474,8 @@ impl Dock {
                 is_running: item.is_running,
                 is_active: item.is_active,
                 settings: settings.clone(),
+                adapter: self.adapter.clone(),
+                open_popover: self.open_popover.clone(),
             })
             .collect();
 

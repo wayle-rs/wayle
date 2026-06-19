@@ -1,11 +1,56 @@
 //! Compositor-agnostic dock adapter trait and Niri implementation.
 
+use std::rc::Rc;
 use std::sync::Arc;
 
 use indexmap::IndexMap;
+use relm4::gtk::prelude::*;
+use relm4::gtk;
 use wayle_niri::NiriService;
 
 use super::DockAppData;
+
+/// Shared state for tracking the currently open dock popover across all
+/// dock items. Since all GTK operations run on the main thread, Rc<RefCell<...>>
+/// is sufficient (no Arc/Mutex needed).
+///
+/// This replaces the previous static registry approach which failed because
+/// gtk::Popover is not Send+Sync and cannot be stored in a static Mutex.
+pub type OpenPopoverTracker = Rc<std::cell::RefCell<Option<Rc<gtk::Popover>>>>;
+
+/// Create a new popover tracker.
+pub fn create_open_popover_tracker() -> OpenPopoverTracker {
+    Rc::new(std::cell::RefCell::new(None))
+}
+
+/// Close the currently tracked popover (if any is still visible), then clear.
+pub fn close_tracked_open(tracker: &OpenPopoverTracker) {
+    if let Some(ref current) = *tracker.borrow() {
+        if current.is_visible() {
+            current.popdown();
+        }
+    }
+}
+
+/// Set the currently open popover in the tracker.
+pub fn set_open_popover(tracker: &OpenPopoverTracker, popover: &gtk::Popover) {
+    // Unparent the old popover if it's still parented (prevents GTK warnings
+    // about popup() on already-parented popovers)
+    if let Some(ref old) = *tracker.borrow() {
+        if old.parent().is_some() {
+            old.unparent();
+        }
+    }
+    let new_ref = Rc::new(popover.clone());
+    *tracker.borrow_mut() = Some(new_ref);
+}
+
+/// Window info for the dock window popover.
+#[derive(Debug, Clone)]
+pub struct DockWindow {
+    pub identifier: String,
+    pub title: String,
+}
 
 /// Trait for compositor-specific dock data retrieval and actions.
 pub trait DockAdapter {
@@ -15,26 +60,30 @@ pub trait DockAdapter {
     /// Focus windows belonging to `app_id`. If no windows exist,
     /// launch the app. Spawns a task, returns immediately.
     fn focus_app(&self, app_id: &str);
+
+    /// Get the list of windows for `app_id`.
+    fn get_windows(&self, app_id: &str) -> Vec<DockWindow>;
+
+    /// Focus a specific window by its identifier (u64 for Niri,
+    /// address for Hyprland).
+    fn focus_window(&self, identifier: &str);
 }
 
 /// Niri-specific dock adapter.
 pub struct NiriDockAdapter {
-    niri: Arc<NiriService>,
+    pub(crate) niri: Arc<NiriService>,
 }
 
 impl NiriDockAdapter {
     pub fn new(niri: Arc<NiriService>) -> Self {
         Self { niri }
     }
-    
-    pub(crate) fn niri(&self) -> Arc<NiriService> {
-        self.niri.clone()
-    }
 }
 
 impl DockAdapter for NiriDockAdapter {
     fn compute_running_apps(&self) -> Vec<DockAppData> {
         let windows = self.niri.windows.get();
+        tracing::debug!(" --> niri windows: {:#?}", windows);
         let focused_id = self.niri.focused_window_id.get();
 
         let mut groups: IndexMap<String, (u32, bool)> = IndexMap::new();
@@ -72,6 +121,7 @@ impl DockAdapter for NiriDockAdapter {
             })
             .collect();
 
+        tracing::debug!(" --> niri apps: {:#?}", apps);
         tracing::debug!(app_count = apps.len(), "Computed Niri running apps");
         apps
     }
@@ -109,6 +159,29 @@ impl DockAdapter for NiriDockAdapter {
             }
         });
     }
+
+    fn get_windows(&self, app_id: &str) -> Vec<DockWindow> {
+        self.niri
+            .windows
+            .get()
+            .iter()
+            .filter(|(_, w)| w.app_id.get().as_deref() == Some(app_id))
+            .map(|(id, w)| DockWindow {
+                identifier: id.to_string(),
+                title: w.title.get().unwrap_or_default(),
+            })
+            .collect()
+    }
+
+    fn focus_window(&self, identifier: &str) {
+        let niri = self.niri.clone();
+        let window_id: u64 = identifier.parse().unwrap_or(0);
+        tokio::spawn(async move {
+            if window_id != 0 {
+                let _ = niri.focus_window(window_id).await;
+            }
+        });
+    }
 }
 
 /// Enum holding whichever compositor adapter is active.
@@ -133,17 +206,17 @@ impl DockAdapterRef {
         }
     }
 
-    pub(crate) fn niri(&self) -> Option<Arc<NiriService>> {
+    pub fn get_windows(&self, app_id: &str) -> Vec<DockWindow> {
         match self {
-            DockAdapterRef::Niri(a) => Some(a.niri()),
-            DockAdapterRef::Hyprland(_) => None,
+            DockAdapterRef::Niri(a) => a.get_windows(app_id),
+            DockAdapterRef::Hyprland(a) => a.get_windows(app_id),
         }
     }
 
-    pub(crate) fn hyprland(&self) -> Option<Arc<wayle_hyprland::HyprlandService>> {
+    pub fn focus_window(&self, identifier: &str) {
         match self {
-            DockAdapterRef::Niri(_) => None,
-            DockAdapterRef::Hyprland(a) => Some(a.hyprland()),
+            DockAdapterRef::Niri(a) => a.focus_window(identifier),
+            DockAdapterRef::Hyprland(a) => a.focus_window(identifier),
         }
     }
 }
@@ -157,7 +230,7 @@ impl Clone for DockAdapterRef {
             DockAdapterRef::Hyprland(hyprland) => {
                 DockAdapterRef::Hyprland(
                     crate::shell::dock::adapter_hyprland::HyprlandDockAdapter::new(
-                        hyprland.hyprland(),
+                        hyprland.hyprland.clone(),
                     ),
                 )
             }

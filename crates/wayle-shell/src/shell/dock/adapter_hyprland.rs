@@ -5,20 +5,16 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 use wayle_hyprland::HyprlandService;
 
-use super::adapter::DockAdapter;
+use super::adapter::{DockAdapter, DockWindow};
 use super::DockAppData;
 
 pub struct HyprlandDockAdapter {
-    hyprland: Arc<HyprlandService>,
+    pub(crate) hyprland: Arc<HyprlandService>,
 }
 
 impl HyprlandDockAdapter {
     pub fn new(hyprland: Arc<HyprlandService>) -> Self {
         Self { hyprland }
-    }
-    
-    pub(crate) fn hyprland(&self) -> Arc<HyprlandService> {
-        self.hyprland.clone()
     }
 }
 
@@ -79,6 +75,29 @@ impl DockAdapter for HyprlandDockAdapter {
                     .dispatch(&format!("focuswindow,class:^{}$", app_id))
                     .await;
             }
+        });
+    }
+
+    fn get_windows(&self, app_id: &str) -> Vec<DockWindow> {
+        self.hyprland
+            .clients
+            .get()
+            .iter()
+            .filter(|c| c.class.get() == app_id)
+            .map(|c| DockWindow {
+                identifier: c.address.get().to_string(),
+                title: c.title.get().to_string(),
+            })
+            .collect()
+    }
+
+    fn focus_window(&self, identifier: &str) {
+        let hyprland = self.hyprland.clone();
+        let identifier = identifier.to_string();
+        tokio::spawn(async move {
+            let _ = hyprland
+                .dispatch(&format!("focuswindow,address:{}", identifier))
+                .await;
         });
     }
 }

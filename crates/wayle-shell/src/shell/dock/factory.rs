@@ -1,6 +1,11 @@
-use gtk::prelude::*;
-use relm4::prelude::*;
+use std::rc::Rc;
 
+use relm4::gtk::prelude::*;
+use relm4::gtk;
+use relm4::prelude::*;
+use tracing::debug;
+
+use super::adapter::{self, DockAdapterRef};
 use super::settings::DockSettings;
 use crate::shell::bar::icons::resolve_app_icon;
 
@@ -10,6 +15,10 @@ pub(crate) struct DockItem {
     is_running: bool,
     is_active: bool,
     settings: DockSettings,
+    adapter: Option<DockAdapterRef>,
+    open_popover: super::OpenPopoverTracker,
+    content: Rc<gtk::Box>,
+    popover: gtk::Popover,
     _root: gtk::Button,
 }
 
@@ -20,14 +29,13 @@ pub(crate) struct DockItemInit {
     pub(crate) is_running: bool,
     pub(crate) is_active: bool,
     pub(crate) settings: DockSettings,
+    pub(crate) adapter: Option<DockAdapterRef>,
+    pub(crate) open_popover: super::OpenPopoverTracker,
 }
 
 #[derive(Debug)]
 pub(crate) enum DockItemInput {
     Click,
-    RightClick,
-    HoverEnter,
-    HoverLeave,
 }
 
 #[relm4::factory(pub(crate))]
@@ -48,7 +56,6 @@ impl FactoryComponent for DockItem {
             gtk::Box {
                 set_orientation: gtk::Orientation::Vertical,
                 set_spacing: 2,
-                // set_homogeneous: true,
 
                 #[name = "icon_image"]
                 gtk::Image {
@@ -66,7 +73,7 @@ impl FactoryComponent for DockItem {
                         add_css_class: "dock-indicator",
                         set_hexpand: true,
                         set_vexpand: false,
-                        set_halign: gtk::Align::Center,
+                        set_halign: gtk::Align:: Center,
                         set_valign: gtk::Align::End,
                     }
                 }
@@ -75,12 +82,19 @@ impl FactoryComponent for DockItem {
     }
 
     fn init_model(init: Self::Init, _index: &DynamicIndex, _sender: FactorySender<Self>) -> Self {
+        let content = Rc::new(gtk::Box::new(gtk::Orientation::Vertical, 0));
+        let popover = gtk::Popover::new();
+
         Self {
             app_id: init.app_id,
             is_pinned: init.is_pinned,
             is_running: init.is_running,
             is_active: init.is_active,
             settings: init.settings,
+            adapter: init.adapter,
+            open_popover: init.open_popover,
+            content,
+            popover,
             _root: gtk::Button::new(),
         }
     }
@@ -97,20 +111,118 @@ impl FactoryComponent for DockItem {
         self._root = root.clone();
         self.update_model(&widgets);
 
+        self.popover.set_has_arrow(false);
+
+        // Content box as popover child - populated on hover
+        let content = self.content.clone();
+        content.add_css_class("dock-popover-content");
+        content.set_size_request(180, -1);
+        self.popover.add_css_class("dock-window-popover");
+        self.popover.set_child(Some(&*content));
+
+        // Left-click - close popover first (if open), then focus app
         let sender_clone = sender.clone();
+        let tracker = self.open_popover.clone();
         root.connect_clicked(move |_| {
+            // Unparent the tracked popover to close it without triggering
+            // synchronous leave events that would RecCell-panic.
+            if let Some(ref old) = *tracker.borrow() {
+                if old.parent().is_some() {
+                    old.unparent();
+                }
+            }
+            *tracker.borrow_mut() = None;
             sender_clone.input(DockItemInput::Click);
         });
 
-        let right_click = gtk::GestureClick::builder().button(3).build();
-        right_click.connect_released({
-            let sender = sender.clone();
-            move |gesture, _, _, _| {
-                gesture.set_state(gtk::EventSequenceState::Claimed);
-                sender.input(DockItemInput::RightClick);
+        // Hover - show window list synchronously
+        let motion = gtk::EventControllerMotion::new();
+        let content_hover = self.content.clone();
+        let popover_hover = self.popover.clone();
+        let adapter = self.adapter.clone();
+        let app_id = self.app_id.clone();
+        let tracker = self.open_popover.clone();
+        let root_hover = root.clone();
+
+        motion.connect_enter(move |_controller, _x, _y| {
+            if *tracker.borrow() != None {
+                return;
             }
+
+            debug!(app_id = %app_id, "dock item hover enter");
+
+            let windows = adapter.as_ref()
+                .map(|a| a.get_windows(&app_id))
+                .unwrap_or_default();
+
+            if windows.is_empty() {
+                debug!(app_id = %app_id, "no windows found, skipping popover");
+                return;
+            }
+
+            debug!(app_id = %app_id, window_count = windows.len(), "showing popover");
+
+            // Clear existing content
+            while let Some(child) = content_hover.first_child() {
+                content_hover.remove(&child);
+            }
+
+            for win in windows.iter() {
+                let identifier = win.identifier.clone();
+                let adapter = adapter.clone();
+                let btn = gtk::Button::new();
+                btn.add_css_class("dock-window-item");
+                btn.set_label(&win.title);
+                btn.set_halign(gtk::Align::Start);
+                btn.set_valign(gtk::Align::Center);
+                btn.connect_clicked(move |_| {
+                    if let Some(ref a) = adapter {
+                        a.focus_window(&identifier);
+                    }
+                });
+                content_hover.append(&btn);
+            }
+
+            if popover_hover.parent().is_some() {
+                popover_hover.unparent();
+            }
+            popover_hover.set_parent(&root_hover);
+
+            adapter::set_open_popover(&tracker, &popover_hover);
+
+            popover_hover.popup();
         });
-        root.add_controller(right_click);
+
+        let content_leave = self.content.clone();
+        let app_id_leave = self.app_id.clone();
+        let tracker_leave = self.open_popover.clone();
+        let popover_leave = self.popover.clone();
+
+        motion.connect_leave(move |_| {
+            // popup() triggers a motion leave event as GTK moves focus
+            // from the button to the popover surface. If the tracker is set,
+            // we're in the middle of popup() and shouldn't close.
+            if let Ok(current) = tracker_leave.try_borrow() {
+                if current.is_some() {
+                    return;
+                }
+            } else {
+                return;
+            }
+            debug!(app_id = %app_id_leave, "motion leave (no active popover)");
+            popover_leave.popdown();
+            // Unparent so the popover can be reparented on next hover
+            if popover_leave.parent().as_ref().is_some() {
+                popover_leave.unparent();
+            }
+            while let Some(child) = content_leave.first_child() {
+                content_leave.remove(&child);
+            }
+            // Clear the tracker since we're closing this popover.
+            *tracker_leave.borrow_mut() = None;
+        });
+
+        root.add_controller(motion);
 
         widgets
     }
@@ -120,16 +232,6 @@ impl FactoryComponent for DockItem {
             DockItemInput::Click => {
                 let app_id = self.app_id.clone();
                 let _ = sender.output((app_id, DockItemInput::Click));
-            }
-            DockItemInput::RightClick => {
-                let app_id = self.app_id.clone();
-                let _ = sender.output((app_id, DockItemInput::RightClick));
-            }
-            DockItemInput::HoverEnter => {
-                let _ = sender.output((self.app_id.clone(), DockItemInput::HoverEnter));
-            }
-            DockItemInput::HoverLeave => {
-                let _ = sender.output((self.app_id.clone(), DockItemInput::HoverLeave));
             }
         }
     }
@@ -142,7 +244,6 @@ impl DockItem {
             .set_pixel_size(self.settings.size.get() as i32);
 
         let icon_name = resolve_app_icon(&self.app_id);
-
         widgets.icon_image.set_icon_name(Some(&icon_name));
 
         widgets.indicator_revealer.set_reveal_child(self.is_running);

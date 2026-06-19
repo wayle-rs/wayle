@@ -22,10 +22,10 @@ pub(crate) fn spawn(
 
     match &adapter {
         DockAdapterRef::Niri(niri) => {
-            spawn_niri_watcher(niri.niri(), tx);
+            spawn_niri_watcher(niri.niri.clone(), tx);
         }
         DockAdapterRef::Hyprland(hyprland) => {
-            spawn_hyprland_watcher(hyprland.hyprland(), tx);
+            spawn_hyprland_watcher(hyprland.hyprland.clone(), tx);
         }
     }
 
