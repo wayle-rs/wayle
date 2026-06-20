@@ -95,6 +95,7 @@ impl FactoryComponent for LayoutCard {
                     add_css_class: "layout-monitor-input",
                     set_placeholder_text: Some("DP-1"),
                     set_hexpand: false,
+                    set_text: &self.monitor,
                     connect_changed => LayoutCardMsg::MonitorChanged,
                 },
 
@@ -108,6 +109,7 @@ impl FactoryComponent for LayoutCard {
                     add_css_class: "layout-extends-input",
                     set_placeholder_text: Some(&t("settings-layout-extends-none")),
                     set_hexpand: false,
+                    set_text: self.extends.as_deref().unwrap_or(""),
                     connect_changed => LayoutCardMsg::ExtendsChanged,
                 },
 
@@ -121,6 +123,7 @@ impl FactoryComponent for LayoutCard {
                     add_css_class: "layout-show-toggle",
                     set_valign: gtk::Align::Center,
                     set_cursor_from_name: Some("pointer"),
+                    set_active: self.show,
                     connect_state_set[sender] => move |_switch, active| {
                         sender.input(LayoutCardMsg::ShowToggled(active));
                         glib::Propagation::Proceed
@@ -175,12 +178,6 @@ impl FactoryComponent for LayoutCard {
         sender: FactorySender<Self>,
     ) -> Self::Widgets {
         let widgets = view_output!();
-
-        widgets.monitor_entry.set_text(&self.monitor);
-        widgets
-            .extends_entry
-            .set_text(self.extends.as_deref().unwrap_or(""));
-        widgets.show_switch.set_active(self.show);
 
         self.monitor_entry = widgets.monitor_entry.clone();
         self.extends_entry = widgets.extends_entry.clone();
