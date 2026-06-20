@@ -50,6 +50,7 @@ fn main() {
             Commands::Systray { command } => cli::systray::execute(command).await,
             Commands::Wallpaper { command } => cli::wallpaper::execute(command).await,
             Commands::Idle { command } => cli::idle::execute(command).await,
+            Commands::Window { command } => cli::window::execute(command).await,
             Commands::Shell | Commands::Completions { .. } => unreachable!(),
         }
     });

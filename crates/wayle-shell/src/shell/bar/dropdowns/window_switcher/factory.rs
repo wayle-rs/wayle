@@ -19,6 +19,7 @@ impl DropdownFactory for Factory {
         let init = WindowSwitcherDropdownInit {
             service,
             config: services.config.clone(),
+            ipc_state: services.shell_ipc.state(),
         };
         let controller = WindowSwitcherDropdown::builder().launch(init).detach();
 

@@ -4,4 +4,4 @@ pub mod idle_inhibit;
 pub mod shell_ipc;
 
 pub use idle_inhibit::IdleInhibitService;
-pub use shell_ipc::ShellIpcService;
+pub use shell_ipc::{ShellIpcService, ShellIpcState};

@@ -34,6 +34,9 @@ pub(crate) struct WindowSwitcherDropdown {
     scaled_height: i32,
     rows: FactoryVecDeque<WindowRow>,
     ordered_keys: Vec<u32>,
+    /// Selection driven by Mod+Tab cycling, separate from mouse clicks
+    /// (which activate immediately). `None` when not cycling.
+    highlighted_index: Option<usize>,
 }
 
 #[relm4::component(pub(crate))]
@@ -122,7 +125,7 @@ impl Component for WindowSwitcherDropdown {
 
         let scale = init.config.config().styling.scale.get().value();
 
-        watchers::spawn_watchers(&sender, &init.service, &init.config);
+        watchers::spawn_watchers(&sender, &init.service, &init.config, &init.ipc_state);
 
         let mut model = Self {
             service: init.service,
@@ -131,6 +134,7 @@ impl Component for WindowSwitcherDropdown {
             scaled_height: scaled_dimension(BASE_HEIGHT, scale),
             rows,
             ordered_keys: Vec::new(),
+            highlighted_index: None,
         };
         model.rebuild_rows();
 
@@ -152,12 +156,18 @@ impl Component for WindowSwitcherDropdown {
         &mut self,
         msg: WindowSwitcherDropdownCmd,
         _sender: ComponentSender<Self>,
-        _root: &Self::Root,
+        root: &Self::Root,
     ) {
         match msg {
             WindowSwitcherDropdownCmd::ToplevelsChanged
             | WindowSwitcherDropdownCmd::ConfigChanged => {
                 self.rebuild_rows();
+            }
+            WindowSwitcherDropdownCmd::CycleStep => {
+                self.cycle_step();
+            }
+            WindowSwitcherDropdownCmd::CycleCommit => {
+                self.cycle_commit(root);
             }
         }
     }

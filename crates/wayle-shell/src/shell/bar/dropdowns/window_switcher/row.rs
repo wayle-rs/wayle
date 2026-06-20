@@ -17,10 +17,20 @@ pub(super) struct WindowRow {
     is_highlighted: bool,
 }
 
+/// Toggles the highlight overlay without touching title/app-id/active
+/// state - sent in place of a full row rebuild while cycling, since
+/// clearing and re-pushing every `WindowRow` on each Mod+Tab step was
+/// disruptive enough to the `ListBox` to make the popover's autohide
+/// close it mid-cycle.
+#[derive(Debug)]
+pub(super) enum WindowRowMsg {
+    SetHighlighted(bool),
+}
+
 #[relm4::factory(pub(super))]
 impl FactoryComponent for WindowRow {
     type Init = WindowInfo;
-    type Input = ();
+    type Input = WindowRowMsg;
     type Output = ();
     type CommandOutput = ();
     type ParentWidget = gtk::ListBox;
@@ -65,7 +75,13 @@ impl FactoryComponent for WindowRow {
             title: init.title,
             app_id: init.app_id,
             is_active: init.is_active,
-            is_highlighted: false,
+            is_highlighted: init.is_highlighted,
+        }
+    }
+
+    fn update(&mut self, msg: Self::Input, _sender: FactorySender<Self>) {
+        match msg {
+            WindowRowMsg::SetHighlighted(value) => self.is_highlighted = value,
         }
     }
 }

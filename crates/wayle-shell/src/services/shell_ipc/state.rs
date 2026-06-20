@@ -15,6 +15,18 @@ pub struct ShellIpcState {
     /// All active monitor connectors. Updated by the shell when bars are
     /// created or destroyed.
     pub connectors: Property<Vec<String>>,
+
+    /// Incremented on each `wayle window cycle-step` call. The window
+    /// switcher dropdown watches this to advance its highlighted selection
+    /// (opening itself if not already visible). A counter rather than an
+    /// `Option<()>` so consecutive identical calls each still notify
+    /// watchers.
+    pub window_cycle_step: Property<u64>,
+
+    /// Incremented on each `wayle window cycle-commit` call. The window
+    /// switcher dropdown watches this to activate the highlighted window
+    /// and close itself.
+    pub window_cycle_commit: Property<u64>,
 }
 
 impl ShellIpcState {
@@ -22,6 +34,8 @@ impl ShellIpcState {
         Self {
             hidden_bars: Property::new(HashSet::new()),
             connectors: Property::new(Vec::new()),
+            window_cycle_step: Property::new(0),
+            window_cycle_commit: Property::new(0),
         }
     }
 }

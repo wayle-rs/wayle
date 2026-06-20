@@ -378,6 +378,16 @@ impl DropdownRegistry {
         }
     }
 
+    /// Whether the named dropdown's popover is currently visible.
+    ///
+    /// Creates the dropdown if it doesn't exist yet (mirrors `dispatch_click`),
+    /// so a caller doesn't need to special-case "never opened" vs "closed".
+    /// A dropdown that fails to create (missing service) reports `false`.
+    pub(crate) fn is_dropdown_visible(&self, name: &str) -> bool {
+        self.get_or_create(name)
+            .is_some_and(|instance| instance.popover.is_visible())
+    }
+
     #[allow(clippy::cognitive_complexity)]
     fn get_or_create(&self, name: &str) -> Option<Rc<DropdownInstance>> {
         let mut cache = self.cache.borrow_mut();

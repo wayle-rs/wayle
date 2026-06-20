@@ -11,7 +11,7 @@ use crate::cli::{
     icons::commands::IconsCommands, idle::commands::IdleCommands, media::commands::MediaCommands,
     notify::commands::NotifyCommands, panel::commands::PanelCommands,
     power::commands::PowerCommands, systray::commands::SystrayCommands,
-    wallpaper::commands::WallpaperCommands,
+    wallpaper::commands::WallpaperCommands, window::commands::WindowCommands,
 };
 
 fn get_styles() -> Styles {
@@ -97,6 +97,12 @@ pub enum Commands {
         /// Idle subcommand to execute.
         #[command(subcommand)]
         command: IdleCommands,
+    },
+    /// Window switcher control commands
+    Window {
+        /// Window subcommand to execute.
+        #[command(subcommand)]
+        command: WindowCommands,
     },
     /// Run the desktop shell in the foreground
     Shell,

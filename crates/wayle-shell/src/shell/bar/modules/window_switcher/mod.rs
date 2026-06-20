@@ -14,7 +14,7 @@ use std::{rc::Rc, sync::Arc};
 
 use gtk::prelude::*;
 use relm4::prelude::*;
-use wayle_config::{ConfigProperty, ConfigService, schemas::styling::CssToken};
+use wayle_config::{ClickAction, ConfigProperty, ConfigService, schemas::styling::CssToken};
 use wayle_widgets::prelude::{
     BarButton, BarButtonBehavior, BarButtonColors, BarButtonInit, BarButtonInput, BarButtonOutput,
 };
@@ -24,6 +24,8 @@ pub(crate) use self::{
     messages::{WindowSwitcherCmd, WindowSwitcherInit, WindowSwitcherMsg},
 };
 use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+
+const WINDOW_SWITCHER_DROPDOWN: &str = "window-switcher";
 
 pub(crate) struct WindowSwitcherModule {
     bar_button: Controller<BarButton>,
@@ -90,7 +92,7 @@ impl Component for WindowSwitcherModule {
                 BarButtonOutput::ScrollDown => WindowSwitcherMsg::ScrollDown,
             });
 
-        watchers::spawn_watchers(&sender, switcher_config, &init.service);
+        watchers::spawn_watchers(&sender, switcher_config, &init.service, &init.ipc_state);
 
         let model = Self {
             bar_button,
@@ -129,6 +131,22 @@ impl Component for WindowSwitcherModule {
             }
             WindowSwitcherCmd::UpdateIcon(icon) => {
                 self.bar_button.emit(BarButtonInput::SetIcon(icon));
+            }
+            WindowSwitcherCmd::EnsureDropdownOpen => {
+                // Cycling advances the dropdown's own highlight state
+                // independently (it watches the same IPC property); this
+                // only handles the parenting/positioning that only the
+                // bar module can do, by routing through the same
+                // click-dispatch path a real click would take. Skipped
+                // when already open so repeated Tab presses don't
+                // re-toggle it closed.
+                if !self.dropdowns.is_dropdown_visible(WINDOW_SWITCHER_DROPDOWN) {
+                    dropdowns::dispatch_click_widget(
+                        &ClickAction::Dropdown(WINDOW_SWITCHER_DROPDOWN.to_string()),
+                        &self.dropdowns,
+                        self.bar_button.widget(),
+                    );
+                }
             }
         }
     }

@@ -32,6 +32,7 @@ impl ModuleFactory for Factory {
             service,
             config: services.config.clone(),
             dropdowns: dropdowns.clone(),
+            ipc_state: services.shell_ipc.state(),
         };
         let controller = dynamic_controller(WindowSwitcherModule::builder().launch(init).detach());
         Some(ModuleInstance { controller, class })
