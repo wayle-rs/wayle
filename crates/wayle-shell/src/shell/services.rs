@@ -6,6 +6,7 @@ use wayle_bluetooth::BluetoothService;
 use wayle_brightness::BrightnessService;
 use wayle_config::ConfigService;
 use wayle_core::DeferredService;
+use wayle_ext_workspace::ExtWorkspaceService;
 use wayle_hyprland::HyprlandService;
 use wayle_mango::MangoService;
 use wayle_media::MediaService;
@@ -31,6 +32,7 @@ pub(crate) struct ShellServices {
     pub bluetooth: DeferredService<BluetoothService>,
     pub brightness: Option<Arc<BrightnessService>>,
     pub config: Arc<ConfigService>,
+    pub ext_workspaces: Option<Arc<ExtWorkspaceService>>,
     pub hyprland: Option<Arc<HyprlandService>>,
     pub idle_inhibit: Arc<IdleInhibitService>,
     pub mango: Option<Arc<MangoService>>,

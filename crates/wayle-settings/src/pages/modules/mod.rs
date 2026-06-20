@@ -8,6 +8,7 @@ mod clock;
 mod cpu;
 mod custom;
 mod dashboard;
+mod ext_workspaces;
 mod hyprland_workspaces;
 mod hyprsunset;
 mod idle_inhibit;
@@ -44,6 +45,7 @@ pub(crate) fn factories() -> Vec<fn(&Config) -> LeafEntry> {
         cpu::entry,
         custom::entry,
         dashboard::entry,
+        ext_workspaces::entry,
         hyprland_workspaces::entry,
         hyprsunset::entry,
         idle_inhibit::entry,

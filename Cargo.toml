@@ -101,6 +101,7 @@ wayle-bluetooth = "0.1.2"
 wayle-brightness = "0.1.2"
 wayle-cava = { version = "0.1.2", features = ["vendored"] }
 wayle-core = "0.1.2"
+wayle-ext-workspace = "0.1.0"
 wayle-hyprland = "0.2.2"
 wayle-mango = "0.1.1"
 wayle-niri = "0.1.0"
@@ -123,6 +124,11 @@ wayle-ipc = { path = "crates/wayle-ipc" }
 wayle-shell = { path = "crates/wayle-shell" }
 wayle-styling = { path = "crates/wayle-styling" }
 wayle-widgets = { path = "crates/wayle-widgets" }
+
+# TEMPORARY (local dev only): wayle-ext-workspace is not yet published to
+# crates.io. Remove this patch once it ships from wayle-rs/wayle-services.
+[patch.crates-io]
+wayle-ext-workspace = { path = "../wayle-services/wayle-ext-workspace" }
 
 [workspace.lints.clippy]
 cognitive_complexity = "warn"

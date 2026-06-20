@@ -211,6 +211,9 @@ pub enum BarModule {
     Dashboard,
     /// Compositor keybind mode indicator (submaps in Hyprland, modes in Sway/River).
     KeybindMode,
+    /// Generic Wayland workspace switcher (`ext-workspace-v1`), works on any
+    /// compositor advertising the protocol (e.g. Sway).
+    ExtWorkspaces,
     /// Hyprland workspace switcher.
     HyprlandWorkspaces,
     /// Idle inhibitor to prevent screen timeout.
@@ -295,6 +298,7 @@ impl BarModule {
             Self::Cpu => "cpu",
             Self::Dashboard => "dashboard",
             Self::KeybindMode => "keybind-mode",
+            Self::ExtWorkspaces => "ext-workspaces",
             Self::HyprlandWorkspaces => "hyprland-workspaces",
             Self::IdleInhibit => "idle-inhibit",
             Self::Hyprsunset => "hyprsunset",
@@ -330,6 +334,7 @@ impl BarModule {
             "cpu" => Self::Cpu,
             "dashboard" => Self::Dashboard,
             "keybind-mode" => Self::KeybindMode,
+            "ext-workspaces" => Self::ExtWorkspaces,
             "hyprland-workspaces" => Self::HyprlandWorkspaces,
             "idle-inhibit" => Self::IdleInhibit,
             "hyprsunset" => Self::Hyprsunset,
@@ -415,6 +420,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "clock",
     "cpu",
     "dashboard",
+    "ext-workspaces",
     "hyprland-workspaces",
     "hyprsunset",
     "idle-inhibit",

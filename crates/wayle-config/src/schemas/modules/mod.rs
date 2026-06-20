@@ -8,6 +8,7 @@ mod clock;
 mod cpu;
 mod custom;
 mod dashboard;
+mod ext_workspaces;
 mod hyprland_workspaces;
 mod hyprsunset;
 mod idle_inhibit;
@@ -42,6 +43,7 @@ pub use clock::ClockConfig;
 pub use cpu::CpuConfig;
 pub use custom::{CustomModuleDefinition, ExecutionMode, RestartDelay, RestartPolicy};
 pub use dashboard::DashboardConfig;
+pub use ext_workspaces::{ExtWorkspaceMap, ExtWorkspacesConfig};
 pub use hyprland_workspaces::{
     ActiveIndicator, DisplayMode, HyprlandWorkspacesConfig, Numbering, UrgentMode, WorkspaceStyle,
 };
@@ -92,6 +94,9 @@ pub struct ModulesConfig {
     pub cpu: CpuConfig,
     /// Dashboard module.
     pub dashboard: DashboardConfig,
+    /// Generic Wayland workspace switcher module (`ext-workspace-v1`).
+    #[serde(rename = "ext-workspaces")]
+    pub ext_workspaces: ExtWorkspacesConfig,
     /// Hyprland workspace switcher module.
     #[serde(rename = "hyprland-workspaces")]
     pub hyprland_workspaces: HyprlandWorkspacesConfig,
