@@ -138,23 +138,21 @@ impl FactoryComponent for SystrayItem {
     fn update(&mut self, msg: Self::Input, _sender: relm4::prelude::FactorySender<Self>) {
         match msg {
             SystrayItemMsg::LeftClick => {
-                let item = self.item.clone();
-                let item_is_menu = item.item_is_menu.get();
-                tokio::spawn(async move {
-                    let result = if item_is_menu {
-                        item.context_menu(Coordinates::new(0, 0)).await
-                    } else {
-                        item.activate(Coordinates::new(0, 0)).await
-                    };
-                    if let Err(error) = result {
-                        warn!(
-                            id = %item.id.get(),
-                            bus_name = %item.bus_name.get(),
-                            error = %error,
-                            "systray activate failed"
-                        );
-                    }
-                });
+                if self.item.item_is_menu.get() {
+                    self.request_menu_show(&_sender);
+                } else {
+                    let item = self.item.clone();
+                    tokio::spawn(async move {
+                        if let Err(error) = item.activate(Coordinates::new(0, 0)).await {
+                            warn!(
+                                id = %item.id.get(),
+                                bus_name = %item.bus_name.get(),
+                                error = %error,
+                                "systray activate failed"
+                            );
+                        }
+                    });
+                }
             }
             SystrayItemMsg::RightClick => {
                 self.request_menu_show(&_sender);
