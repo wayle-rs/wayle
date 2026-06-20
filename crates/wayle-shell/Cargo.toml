@@ -43,6 +43,7 @@ wayle-brightness.workspace = true
 wayle-cava.workspace = true
 wayle-config.workspace = true
 wayle-core.workspace = true
+wayle-ext-workspace.workspace = true
 wayle-ipc.workspace = true
 minijinja.workspace = true
 wildcard.workspace = true
