@@ -7,7 +7,7 @@ use wayle_derive::wayle_config;
 use crate::{
     ClickAction, ConfigProperty,
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
-    schemas::styling::ColorValue,
+    schemas::styling::{ColorValue, CssToken},
 };
 
 /// Open-window counter with a dropdown listing every window, backed by the
@@ -88,8 +88,12 @@ pub struct WindowSwitcherConfig {
     pub label_color: ConfigProperty<ColorValue>,
 
     /// Button background color token.
+    ///
+    /// Deliberately not `Auto` (which resolves to the same accent token as
+    /// the default `label-color`/`icon-bg-color`): an accent-on-accent
+    /// background would make the count label invisible.
     #[serde(rename = "button-bg-color")]
-    #[default(ColorValue::Auto)]
+    #[default(ColorValue::Token(CssToken::BgSurfaceElevated))]
     pub button_bg_color: ConfigProperty<ColorValue>,
 
     /// Action on left click. Defaults to opening the window list dropdown.

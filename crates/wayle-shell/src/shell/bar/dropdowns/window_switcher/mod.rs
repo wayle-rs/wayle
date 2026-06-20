@@ -1,7 +1,8 @@
-//! Window switcher dropdown: lists every open window, click-to-activate.
-//!
-//! Highlight-driven keyboard cycling (Mod+Tab via Sway) is wired in a
-//! later step; for now this only handles direct mouse clicks.
+//! Window switcher dropdown: lists every open window, click-to-activate,
+//! or Mod1+Tab/Tab to cycle and Return to confirm (see `~/.config/sway/config`
+//! for the bindings - a `mode` block is required because Sway never fires a
+//! binding for a bare modifier press or release once another key has been
+//! pressed while it was held).
 
 mod factory;
 mod messages;

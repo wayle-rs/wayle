@@ -3,7 +3,8 @@
 //!
 //! The two activation paths are intentionally separate: clicking a row
 //! activates it immediately, while Mod+Tab cycling only moves a
-//! `highlighted_index` and activates on commit (Mod release).
+//! `highlighted_index` and activates on commit (Return key, via Sway's
+//! "altTab" mode).
 
 use gtk::prelude::*;
 use relm4::gtk;
@@ -107,7 +108,7 @@ impl WindowSwitcherDropdown {
         self.set_row_highlight(Some(next), true);
     }
 
-    /// Activates the highlighted window (Mod release) and closes the
+    /// Activates the highlighted window (Return key) and closes the
     /// popover.
     ///
     /// `popdown()` is safe to call here even in the edge case where a
