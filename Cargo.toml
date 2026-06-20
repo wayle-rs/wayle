@@ -114,6 +114,7 @@ wayle-systray = "0.1.3"
 wayle-traits = "0.1.2"
 wayle-wallpaper = "0.1.3"
 wayle-weather = "0.1.2"
+wayle-wlr-toplevel = "0.1.0"
 
 wayle-config = { path = "crates/wayle-config" }
 wayle-derive = { path = "crates/wayle-derive" }
@@ -125,10 +126,12 @@ wayle-shell = { path = "crates/wayle-shell" }
 wayle-styling = { path = "crates/wayle-styling" }
 wayle-widgets = { path = "crates/wayle-widgets" }
 
-# TEMPORARY (local dev only): wayle-ext-workspace is not yet published to
-# crates.io. Remove this patch once it ships from wayle-rs/wayle-services.
+# TEMPORARY (local dev only): wayle-ext-workspace/wayle-wlr-toplevel are not
+# yet published to crates.io. Remove these patches once they ship from
+# wayle-rs/wayle-services.
 [patch.crates-io]
 wayle-ext-workspace = { path = "../wayle-services/wayle-ext-workspace" }
+wayle-wlr-toplevel = { path = "../wayle-services/wayle-wlr-toplevel" }
 
 [workspace.lints.clippy]
 cognitive_complexity = "warn"

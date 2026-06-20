@@ -24,7 +24,10 @@ pub(super) fn spawn_watchers(
     spawn_config_watcher(sender, config, theme_provider, settings);
 }
 
-fn spawn_service_watcher(sender: &ComponentSender<ExtWorkspaces>, service: &Arc<ExtWorkspaceService>) {
+fn spawn_service_watcher(
+    sender: &ComponentSender<ExtWorkspaces>,
+    service: &Arc<ExtWorkspaceService>,
+) {
     let workspaces = service.workspaces.clone();
     let groups = service.groups.clone();
     watch!(sender, [workspaces.watch(), groups.watch()], |out| {

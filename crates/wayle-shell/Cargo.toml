@@ -61,6 +61,7 @@ wayle-sysinfo.workspace = true
 wayle-systray = { workspace = true, features = ["adapter-gtk"] }
 wayle-wallpaper.workspace = true
 wayle-weather.workspace = true
+wayle-wlr-toplevel.workspace = true
 wayle-widgets = { workspace = true }
 zbus.workspace = true
 gio-unix = { version = "0.22.6", default-features = false }

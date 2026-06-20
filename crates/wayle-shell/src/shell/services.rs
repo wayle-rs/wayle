@@ -18,6 +18,7 @@ use wayle_sysinfo::SysinfoService;
 use wayle_systray::SystemTrayService;
 use wayle_wallpaper::WallpaperService;
 use wayle_weather::WeatherService;
+use wayle_wlr_toplevel::WlrToplevelService;
 
 use crate::services::{IdleInhibitService, ShellIpcService};
 
@@ -45,5 +46,6 @@ pub(crate) struct ShellServices {
     pub systray: Option<Arc<SystemTrayService>>,
     pub wallpaper: Option<Arc<WallpaperService>>,
     pub weather: Arc<WeatherService>,
+    pub wlr_toplevel: Option<Arc<WlrToplevelService>>,
     pub shell_ipc: Arc<ShellIpcService>,
 }

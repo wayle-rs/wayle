@@ -64,7 +64,11 @@ impl ExtWorkspaces {
             let mut guard = self.buttons.guard();
             guard.clear();
             for snapshot in &displayed {
-                let style = helpers::workspace_style(snapshot.name.as_deref(), snapshot.key, &workspace_map);
+                let style = helpers::workspace_style(
+                    snapshot.name.as_deref(),
+                    snapshot.key,
+                    &workspace_map,
+                );
                 let label = style
                     .and_then(|style| style.label.clone())
                     .or_else(|| Some(helpers::label_for(snapshot.key, snapshot.name.as_deref())));
@@ -175,10 +179,7 @@ impl ExtWorkspaces {
             return;
         }
 
-        let current_idx = displayed
-            .iter()
-            .position(|ws| ws.is_active)
-            .unwrap_or(0);
+        let current_idx = displayed.iter().position(|ws| ws.is_active).unwrap_or(0);
         let new_idx = calculate_navigation_index(current_idx, direction, displayed.len());
 
         if let Some(ws) = displayed.get(new_idx) {

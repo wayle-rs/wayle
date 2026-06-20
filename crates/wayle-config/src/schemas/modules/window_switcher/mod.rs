@@ -23,7 +23,7 @@ use crate::{
 pub struct WindowSwitcherConfig {
     /// Icon shown in the bar.
     #[serde(rename = "icon")]
-    #[default(String::from("ld-layout-grid-symbolic"))]
+    #[default(String::from("ld-app-window-symbolic"))]
     pub icon: ConfigProperty<String>,
 
     /// Display the open-window count label next to the icon.

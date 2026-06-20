@@ -125,11 +125,7 @@ impl FactoryComponent for ExtWorkspaceButton {
     }
 }
 
-fn attach_middle_click(
-    button: &gtk::Button,
-    sender: &FactorySender<ExtWorkspaceButton>,
-    key: u32,
-) {
+fn attach_middle_click(button: &gtk::Button, sender: &FactorySender<ExtWorkspaceButton>, key: u32) {
     let gesture = gtk::GestureClick::new();
     gesture.set_button(gtk::gdk::BUTTON_MIDDLE);
     let sender = sender.clone();

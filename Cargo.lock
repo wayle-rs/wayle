@@ -5006,6 +5006,7 @@ dependencies = [
  "wayle-wallpaper",
  "wayle-weather",
  "wayle-widgets",
+ "wayle-wlr-toplevel",
  "wildcard",
  "zbus",
 ]
@@ -5130,6 +5131,18 @@ dependencies = [
  "tracing",
  "wayle-config",
  "wayle-core 0.1.2 (registry+https://github.com/rust-lang/crates.io-index)",
+]
+
+[[package]]
+name = "wayle-wlr-toplevel"
+version = "0.1.0"
+dependencies = [
+ "derive_more",
+ "thiserror 2.0.18",
+ "tracing",
+ "wayland-client",
+ "wayland-protocols-wlr",
+ "wayle-core 0.1.2",
 ]
 
 [[package]]
