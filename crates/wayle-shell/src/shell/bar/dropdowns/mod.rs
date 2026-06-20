@@ -9,6 +9,7 @@ mod network;
 mod notification;
 mod registry;
 mod weather;
+mod window_switcher;
 
 pub(crate) use self::registry::{
     DropdownFactory, DropdownInstance, DropdownRegistry, dispatch_click, dispatch_click_widget,
@@ -50,4 +51,5 @@ register_dropdowns! {
     "network" => network::Factory,
     "notification" => notification::Factory,
     "weather" => weather::Factory,
+    "window-switcher" => window_switcher::Factory,
 }
