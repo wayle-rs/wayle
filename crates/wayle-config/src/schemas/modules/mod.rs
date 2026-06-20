@@ -29,6 +29,7 @@ mod storage;
 mod systray;
 mod volume;
 mod weather;
+mod window_switcher;
 mod window_title;
 mod world_clock;
 
@@ -72,6 +73,7 @@ pub use types::TimeFormat;
 pub use volume::{AppIconSource, VolumeConfig};
 use wayle_derive::wayle_config;
 pub use weather::{TemperatureUnit, WeatherConfig, WeatherProvider};
+pub use window_switcher::WindowSwitcherConfig;
 pub use window_title::{BUILTIN_MAPPINGS as WINDOW_TITLE_BUILTIN_MAPPINGS, WindowTitleConfig};
 pub use world_clock::WorldClockConfig;
 
@@ -143,6 +145,9 @@ pub struct ModulesConfig {
     pub volume: VolumeConfig,
     /// Weather display module.
     pub weather: WeatherConfig,
+    /// Window switcher module (`wlr-foreign-toplevel-management-v1`).
+    #[serde(rename = "window-switcher")]
+    pub window_switcher: WindowSwitcherConfig,
     /// Window title module.
     #[serde(rename = "window-title")]
     pub window_title: WindowTitleConfig,
