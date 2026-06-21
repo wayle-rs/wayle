@@ -149,10 +149,10 @@ impl Component for WindowSwitcherDropdown {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, root: &Self::Root) {
         match msg {
             WindowSwitcherDropdownMsg::RowClicked(index) => {
-                self.activate_row(index as usize);
+                self.activate_row(index as usize, root);
             }
         }
     }

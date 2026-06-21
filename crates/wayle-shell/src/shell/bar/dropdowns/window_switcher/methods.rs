@@ -13,7 +13,23 @@ use gtk::prelude::*;
 use relm4::gtk;
 
 use super::{WindowSwitcherDropdown, messages::WindowInfo, row::WindowRowMsg};
-use crate::glob;
+use crate::{glob, process};
+
+/// Best-effort reset of Sway's `"altTab"` binding mode back to `"default"`.
+///
+/// Sway only exits the mode via the `Return`/`Escape` bindings in
+/// `~/.config/sway/config` - clicking a row, or any other way the popover
+/// closes, leaves Sway stuck in `"altTab"` with no visual indicator. While
+/// stuck, every keybinding *not* defined in that mode (i.e. almost all of
+/// them) is silently swallowed and falls through to the focused window as
+/// plain text instead of triggering its binding. Calling this from every
+/// exit path removes Return/Escape as the single point of failure.
+/// No-ops quietly on non-Sway compositors (`SWAYSOCK` unset).
+fn reset_sway_mode() {
+    if std::env::var_os("SWAYSOCK").is_some() {
+        process::run_if_set("swaymsg mode default");
+    }
+}
 
 impl WindowSwitcherDropdown {
     pub(super) fn rebuild_rows(&mut self) {
@@ -63,12 +79,14 @@ impl WindowSwitcherDropdown {
         }
     }
 
-    pub(super) fn activate_row(&mut self, index: usize) {
+    pub(super) fn activate_row(&mut self, index: usize, popover: &gtk::Popover) {
         self.highlighted_index = None;
         self.cycle_origin_key = None;
         if let Some(key) = self.ordered_keys.get(index).copied() {
             self.service.activate_toplevel(key);
         }
+        reset_sway_mode();
+        popover.popdown();
     }
 
     /// Advances the highlighted selection.
@@ -135,6 +153,7 @@ impl WindowSwitcherDropdown {
             }
         }
         self.cycle_origin_key = None;
+        reset_sway_mode();
         popover.popdown();
     }
 
@@ -152,6 +171,7 @@ impl WindowSwitcherDropdown {
         if let Some(key) = self.cycle_origin_key.take() {
             self.service.activate_toplevel(key);
         }
+        reset_sway_mode();
         popover.popdown();
     }
 
