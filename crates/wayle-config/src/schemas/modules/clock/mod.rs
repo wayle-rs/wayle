@@ -1,11 +1,31 @@
 use schemars::schema_for;
-use wayle_derive::wayle_config;
+use wayle_derive::{wayle_config, wayle_enum};
 
 use crate::{
     ClickAction, ConfigProperty,
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
+
+/// First day of the week shown in the calendar dropdown.
+#[wayle_enum(default)]
+pub enum WeekStart {
+    /// Week starts on Monday.
+    Monday,
+    /// Week starts on Tuesday.
+    Tuesday,
+    /// Week starts on Wednesday.
+    Wednesday,
+    /// Week starts on Thursday.
+    Thursday,
+    /// Week starts on Friday.
+    Friday,
+    /// Week starts on Saturday.
+    Saturday,
+    /// Week starts on Sunday.
+    #[default]
+    Sunday,
+}
 
 /// Time display with a calendar dropdown.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-clock")]
@@ -113,6 +133,11 @@ pub struct ClockConfig {
     #[serde(rename = "dropdown-show-seconds")]
     #[default(false)]
     pub dropdown_show_seconds: ConfigProperty<bool>,
+
+    /// First day of the week in the calendar dropdown.
+    #[serde(rename = "dropdown-week-start")]
+    #[default(WeekStart::Sunday)]
+    pub dropdown_week_start: ConfigProperty<WeekStart>,
 }
 
 impl ModuleInfoProvider for ClockConfig {

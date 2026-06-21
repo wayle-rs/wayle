@@ -4,7 +4,7 @@ pub mod helpers;
 pub mod messages;
 mod methods;
 
-use chrono::{Datelike, Months, NaiveDate};
+use chrono::{Datelike, Months, NaiveDate, Weekday};
 use gtk::prelude::*;
 use relm4::{gtk, prelude::*};
 
@@ -21,6 +21,7 @@ pub struct Calendar {
     months: [String; 12],
     month_year_pattern: String,
     weekdays: [String; 7],
+    first_weekday: Weekday,
     grid: gtk::Grid,
 }
 
@@ -112,6 +113,7 @@ impl Component for Calendar {
             months: init.labels.months,
             month_year_pattern,
             weekdays: init.labels.weekdays,
+            first_weekday: init.first_weekday,
             grid: grid.clone(),
         };
 

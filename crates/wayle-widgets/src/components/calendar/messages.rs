@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::{NaiveDate, Weekday};
 
 /// Localized strings for the calendar widget.
 pub struct CalendarLabels {
@@ -19,6 +19,8 @@ pub struct CalendarLabels {
 pub struct CalendarInit {
     /// Date to highlight as "today".
     pub today: NaiveDate,
+    /// First day of the week (leftmost column).
+    pub first_weekday: Weekday,
     /// Localized strings for weekdays, months, and navigation.
     pub labels: CalendarLabels,
 }

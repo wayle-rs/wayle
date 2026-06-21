@@ -1,6 +1,19 @@
-use chrono::{DateTime, Datelike, Local};
+use chrono::{DateTime, Datelike, Local, Weekday};
+use wayle_config::schemas::modules::WeekStart;
 
 use crate::i18n::t;
+
+pub(super) fn week_start_to_weekday(week_start: WeekStart) -> Weekday {
+    match week_start {
+        WeekStart::Monday => Weekday::Mon,
+        WeekStart::Tuesday => Weekday::Tue,
+        WeekStart::Wednesday => Weekday::Wed,
+        WeekStart::Thursday => Weekday::Thu,
+        WeekStart::Friday => Weekday::Fri,
+        WeekStart::Saturday => Weekday::Sat,
+        WeekStart::Sunday => Weekday::Sun,
+    }
+}
 
 pub(super) fn is_12h_format(format_str: &str) -> bool {
     format_str.contains("%I") || format_str.contains("%p")

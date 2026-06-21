@@ -1,4 +1,4 @@
-use chrono::Datelike;
+use chrono::{Datelike, Weekday};
 use gtk::prelude::*;
 use relm4::{ComponentSender, gtk};
 
@@ -10,12 +10,13 @@ use crate::components::calendar::{
 impl Calendar {
     pub(super) fn rebuild_grid(&self, sender: &ComponentSender<Self>) {
         clear_grid(&self.grid);
-        attach_weekday_headers(&self.grid, &self.weekdays);
+        attach_weekday_headers(&self.grid, &self.weekdays, self.first_weekday);
         attach_day_cells(
             &self.grid,
             self.displayed_month,
             self.today,
             self.selected_day,
+            self.first_weekday,
             sender,
         );
     }
@@ -27,13 +28,19 @@ fn clear_grid(grid: &gtk::Grid) {
     }
 }
 
-fn attach_weekday_headers(grid: &gtk::Grid, weekdays: &[String; 7]) {
-    for (col, weekday_name) in weekdays.iter().enumerate() {
-        let label = gtk::Label::new(Some(weekday_name));
+fn attach_weekday_headers(grid: &gtk::Grid, weekdays: &[String; 7], first_weekday: Weekday) {
+    // `weekdays` is canonically ordered from Sunday (index 0). Rotate by the
+    // first weekday's offset so the leftmost column matches the configured day.
+    let first_offset = first_weekday.num_days_from_sunday() as usize;
+
+    for col in 0..7 {
+        let day_index = (first_offset + col) % 7;
+        let label = gtk::Label::new(Some(&weekdays[day_index]));
         label.add_css_class("cal-weekday");
         label.set_hexpand(true);
 
-        let is_weekend = col == 0 || col == 6;
+        // Weekend is Sunday (0) or Saturday (6), independent of column position.
+        let is_weekend = day_index == 0 || day_index == 6;
         if is_weekend {
             label.add_css_class("weekend");
         }
@@ -47,9 +54,10 @@ fn attach_day_cells(
     displayed_month: chrono::NaiveDate,
     today: chrono::NaiveDate,
     selected_day: Option<chrono::NaiveDate>,
+    first_weekday: Weekday,
     sender: &ComponentSender<Calendar>,
 ) {
-    let cells = build_month_grid(displayed_month, today, selected_day);
+    let cells = build_month_grid(displayed_month, today, selected_day, first_weekday);
 
     for (idx, cell) in cells.iter().enumerate() {
         let col = (idx % 7) as i32;
