@@ -22,6 +22,17 @@ pub trait ShellIpc {
 
     async fn bar_toggle(&self, monitor: &str) -> Result<()>;
 
+    /// Advances the window switcher's selection, opening it if closed.
+    async fn window_cycle_step(&self) -> Result<()>;
+
+    /// Activates the window switcher's currently highlighted selection and
+    /// closes it.
+    async fn window_cycle_commit(&self) -> Result<()>;
+
+    /// Cancels the window switcher's cycle, restoring the previously
+    /// active window and closing it.
+    async fn window_cycle_cancel(&self) -> Result<()>;
+
     #[zbus(property)]
     fn bar_hidden(&self) -> Result<Vec<String>>;
 

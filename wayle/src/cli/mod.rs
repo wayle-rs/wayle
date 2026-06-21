@@ -23,6 +23,8 @@ pub mod style;
 pub mod systray;
 /// Wallpaper control commands
 pub mod wallpaper;
+/// Window switcher control commands
+pub mod window;
 
 /// Result type for CLI operations that return output text
 pub type CliResult = Result<String, String>;

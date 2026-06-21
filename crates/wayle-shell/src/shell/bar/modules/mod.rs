@@ -7,6 +7,7 @@ mod compositor;
 mod cpu;
 mod custom;
 mod dashboard;
+mod ext_workspaces;
 mod hyprland_workspaces;
 mod hyprsunset;
 mod idle_inhibit;
@@ -27,6 +28,7 @@ mod storage;
 mod systray;
 mod volume;
 pub(crate) mod weather;
+mod window_switcher;
 mod window_title;
 mod world_clock;
 
@@ -67,6 +69,7 @@ register_modules! {
     Clock => clock::Factory,
     Cpu => cpu::Factory,
     Dashboard => dashboard::Factory,
+    ExtWorkspaces => ext_workspaces::Factory,
     HyprlandWorkspaces => hyprland_workspaces::Factory,
     Hyprsunset => hyprsunset::Factory,
     IdleInhibit => idle_inhibit::Factory,
@@ -86,6 +89,7 @@ register_modules! {
     Systray => systray::Factory,
     Volume => volume::Factory,
     Weather => weather::Factory,
+    WindowSwitcher => window_switcher::Factory,
     WindowTitle => window_title::Factory,
     WorldClock => world_clock::Factory,
 }

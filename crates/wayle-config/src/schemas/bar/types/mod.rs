@@ -211,6 +211,9 @@ pub enum BarModule {
     Dashboard,
     /// Compositor keybind mode indicator (submaps in Hyprland, modes in Sway/River).
     KeybindMode,
+    /// Generic Wayland workspace switcher (`ext-workspace-v1`), works on any
+    /// compositor advertising the protocol (e.g. Sway).
+    ExtWorkspaces,
     /// Hyprland workspace switcher.
     HyprlandWorkspaces,
     /// Idle inhibitor to prevent screen timeout.
@@ -249,6 +252,10 @@ pub enum BarModule {
     Volume,
     /// Weather conditions display.
     Weather,
+    /// Open-window counter with a switcher dropdown
+    /// (`wlr-foreign-toplevel-management-v1`). Distinct from `WindowTitle`,
+    /// which only displays the focused window's title.
+    WindowSwitcher,
     /// Active window title.
     WindowTitle,
     /// World clock with multiple timezones.
@@ -295,6 +302,7 @@ impl BarModule {
             Self::Cpu => "cpu",
             Self::Dashboard => "dashboard",
             Self::KeybindMode => "keybind-mode",
+            Self::ExtWorkspaces => "ext-workspaces",
             Self::HyprlandWorkspaces => "hyprland-workspaces",
             Self::IdleInhibit => "idle-inhibit",
             Self::Hyprsunset => "hyprsunset",
@@ -314,6 +322,7 @@ impl BarModule {
             Self::Updates => "updates",
             Self::Volume => "volume",
             Self::Weather => "weather",
+            Self::WindowSwitcher => "window-switcher",
             Self::WindowTitle => "window-title",
             Self::WorldClock => "world-clock",
             Self::Custom(_) => unreachable!("Custom modules use dynamic serialization"),
@@ -330,6 +339,7 @@ impl BarModule {
             "cpu" => Self::Cpu,
             "dashboard" => Self::Dashboard,
             "keybind-mode" => Self::KeybindMode,
+            "ext-workspaces" => Self::ExtWorkspaces,
             "hyprland-workspaces" => Self::HyprlandWorkspaces,
             "idle-inhibit" => Self::IdleInhibit,
             "hyprsunset" => Self::Hyprsunset,
@@ -349,6 +359,7 @@ impl BarModule {
             "updates" => Self::Updates,
             "volume" => Self::Volume,
             "weather" => Self::Weather,
+            "window-switcher" => Self::WindowSwitcher,
             "window-title" => Self::WindowTitle,
             "world-clock" => Self::WorldClock,
             _ => return None,
@@ -415,6 +426,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "clock",
     "cpu",
     "dashboard",
+    "ext-workspaces",
     "hyprland-workspaces",
     "hyprsunset",
     "idle-inhibit",
@@ -435,6 +447,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "updates",
     "volume",
     "weather",
+    "window-switcher",
     "window-title",
     "world-clock",
 ];

@@ -8,6 +8,7 @@ mod clock;
 mod cpu;
 mod custom;
 mod dashboard;
+mod ext_workspaces;
 mod hyprland_workspaces;
 mod hyprsunset;
 mod idle_inhibit;
@@ -28,6 +29,7 @@ mod storage;
 mod systray;
 mod volume;
 mod weather;
+mod window_switcher;
 mod window_title;
 mod world_clock;
 
@@ -42,6 +44,7 @@ pub use clock::ClockConfig;
 pub use cpu::CpuConfig;
 pub use custom::{CustomModuleDefinition, ExecutionMode, RestartDelay, RestartPolicy};
 pub use dashboard::DashboardConfig;
+pub use ext_workspaces::{ExtWorkspaceMap, ExtWorkspacesConfig};
 pub use hyprland_workspaces::{
     ActiveIndicator, DisplayMode, HyprlandWorkspacesConfig, Numbering, UrgentMode, WorkspaceStyle,
 };
@@ -70,6 +73,7 @@ pub use types::TimeFormat;
 pub use volume::{AppIconSource, VolumeConfig};
 use wayle_derive::wayle_config;
 pub use weather::{TemperatureUnit, WeatherConfig, WeatherProvider};
+pub use window_switcher::WindowSwitcherConfig;
 pub use window_title::{BUILTIN_MAPPINGS as WINDOW_TITLE_BUILTIN_MAPPINGS, WindowTitleConfig};
 pub use world_clock::WorldClockConfig;
 
@@ -92,6 +96,9 @@ pub struct ModulesConfig {
     pub cpu: CpuConfig,
     /// Dashboard module.
     pub dashboard: DashboardConfig,
+    /// Generic Wayland workspace switcher module (`ext-workspace-v1`).
+    #[serde(rename = "ext-workspaces")]
+    pub ext_workspaces: ExtWorkspacesConfig,
     /// Hyprland workspace switcher module.
     #[serde(rename = "hyprland-workspaces")]
     pub hyprland_workspaces: HyprlandWorkspacesConfig,
@@ -138,6 +145,9 @@ pub struct ModulesConfig {
     pub volume: VolumeConfig,
     /// Weather display module.
     pub weather: WeatherConfig,
+    /// Window switcher module (`wlr-foreign-toplevel-management-v1`).
+    #[serde(rename = "window-switcher")]
+    pub window_switcher: WindowSwitcherConfig,
     /// Window title module.
     #[serde(rename = "window-title")]
     pub window_title: WindowTitleConfig,

@@ -18,6 +18,7 @@ use wayle_bluetooth::BluetoothService;
 use wayle_brightness::BrightnessService;
 use wayle_config::{ConfigService, infrastructure::schema};
 use wayle_core::{DeferredService, Property};
+use wayle_ext_workspace::ExtWorkspaceService;
 use wayle_hyprland::HyprlandService;
 use wayle_ipc::shell::APP_ID;
 use wayle_mango::MangoService;
@@ -29,6 +30,7 @@ use wayle_power_profiles::PowerProfilesService;
 use wayle_sysinfo::SysinfoService;
 use wayle_systray::{SystemTrayService, types::TrayMode};
 use wayle_wallpaper::WallpaperService;
+use wayle_wlr_toplevel::WlrToplevelService;
 use zbus::{Connection, fdo::DBusProxy};
 
 use crate::{
@@ -84,9 +86,11 @@ struct DaemonServices {
 }
 
 struct OptionalServices {
+    ext_workspaces: Option<Arc<ExtWorkspaceService>>,
     hyprland: Option<Arc<HyprlandService>>,
     mango: Option<Arc<MangoService>>,
     niri: Option<Arc<NiriService>>,
+    wlr_toplevel: Option<Arc<WlrToplevelService>>,
 }
 
 pub async fn is_already_running() -> bool {
@@ -161,6 +165,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         bluetooth,
         brightness: core.brightness,
         config: config_service,
+        ext_workspaces: optional.ext_workspaces,
         hyprland: optional.hyprland,
         power_profiles,
         idle_inhibit: core.idle_inhibit,
@@ -173,6 +178,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         systray: daemons.systray,
         wallpaper: core.wallpaper,
         weather,
+        wlr_toplevel: optional.wlr_toplevel,
         shell_ipc,
     };
 
@@ -236,20 +242,26 @@ async fn init_core_services(
 }
 
 async fn init_optional_services(timer: &StartupTimer) -> OptionalServices {
+    let ext_workspaces_task = tokio::task::spawn_blocking(ExtWorkspaceService::new);
     let hyprland_task = tokio::spawn(HyprlandService::new());
     let mango_task = tokio::spawn(MangoService::new());
     let niri_task = tokio::spawn(NiriService::new());
+    let wlr_toplevel_task = tokio::task::spawn_blocking(WlrToplevelService::new);
 
-    let (hyprland, mango, niri) = tokio::join!(
+    let (ext_workspaces, hyprland, mango, niri, wlr_toplevel) = tokio::join!(
+        timer.time("ExtWorkspace", spawned(ext_workspaces_task)),
         timer.time("Hyprland", spawned(hyprland_task)),
         timer.time("Mango", spawned(mango_task)),
         timer.time("Niri", spawned(niri_task)),
+        timer.time("WlrToplevel", spawned(wlr_toplevel_task)),
     );
 
     OptionalServices {
+        ext_workspaces: ext_workspaces.ok(),
         hyprland: hyprland.ok(),
         mango: mango.ok(),
         niri: niri.ok(),
+        wlr_toplevel: wlr_toplevel.ok(),
     }
 }
 

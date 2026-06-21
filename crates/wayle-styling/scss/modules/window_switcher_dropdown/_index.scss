@@ -1,0 +1,56 @@
+.window-switcher-list {
+    background: transparent;
+    padding: var(--space-sm) 0;
+}
+
+.window-switcher-row {
+    border-radius: var(--rounding-element);
+    transition: background var(--duration-fast);
+
+    &:hover {
+        background: var(--bg-overlay);
+    }
+
+    &:focus-visible {
+        background: var(--bg-overlay);
+        outline: var(--focus-ring-width) solid var(--accent);
+        outline-offset: calc(-0.125rem * var(--global-scale));
+    }
+
+    .window-switcher-row-content {
+        padding: var(--space-xs) var(--space-sm);
+        min-height: calc(2.5rem * var(--global-scale));
+    }
+
+    .window-switcher-row-title {
+        font-size: var(--text-md);
+        font-weight: var(--weight-medium);
+        color: var(--fg-default);
+    }
+
+    .window-switcher-row-subtitle {
+        font-size: var(--text-md);
+        color: var(--fg-subtle);
+    }
+
+    // The window currently focused in the compositor, regardless of
+    // whether a Mod+Tab cycle is in progress.
+    &.active {
+        .window-switcher-row-title {
+            color: var(--accent);
+            font-weight: var(--weight-semibold);
+        }
+    }
+
+    // Mod+Tab cycle target, about to be activated on release - more
+    // prominent than `.active` since it's the imminent action rather
+    // than just informational.
+    &.highlighted {
+        background: var(--accent-subtle);
+
+        .window-switcher-row-title,
+        .window-switcher-row-subtitle {
+            color: var(--accent);
+        }
+    }
+}

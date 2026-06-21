@@ -101,6 +101,7 @@ wayle-bluetooth = "0.1.2"
 wayle-brightness = "0.1.2"
 wayle-cava = { version = "0.1.2", features = ["vendored"] }
 wayle-core = "0.1.2"
+wayle-ext-workspace = "0.1.0"
 wayle-hyprland = "0.2.2"
 wayle-mango = "0.1.1"
 wayle-niri = "0.1.0"
@@ -113,6 +114,7 @@ wayle-systray = "0.1.3"
 wayle-traits = "0.1.2"
 wayle-wallpaper = "0.1.3"
 wayle-weather = "0.1.2"
+wayle-wlr-toplevel = "0.1.0"
 
 wayle-config = { path = "crates/wayle-config" }
 wayle-derive = { path = "crates/wayle-derive" }
@@ -123,6 +125,13 @@ wayle-ipc = { path = "crates/wayle-ipc" }
 wayle-shell = { path = "crates/wayle-shell" }
 wayle-styling = { path = "crates/wayle-styling" }
 wayle-widgets = { path = "crates/wayle-widgets" }
+
+# TEMPORARY (local dev only): wayle-ext-workspace/wayle-wlr-toplevel are not
+# yet published to crates.io. Remove these patches once they ship from
+# wayle-rs/wayle-services.
+[patch.crates-io]
+wayle-ext-workspace = { path = "../wayle-services/wayle-ext-workspace" }
+wayle-wlr-toplevel = { path = "../wayle-services/wayle-wlr-toplevel" }
 
 [workspace.lints.clippy]
 cognitive_complexity = "warn"

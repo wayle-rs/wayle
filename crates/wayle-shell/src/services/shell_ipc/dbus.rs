@@ -36,6 +36,26 @@ impl ShellIpcDaemon {
         self.bar.toggle(monitor)
     }
 
+    /// Advances the window switcher's selection, opening it if closed.
+    pub async fn window_cycle_step(&self) {
+        let next = self.state.window_cycle_step.get().wrapping_add(1);
+        self.state.window_cycle_step.set(next);
+    }
+
+    /// Activates the window switcher's currently highlighted selection and
+    /// closes it.
+    pub async fn window_cycle_commit(&self) {
+        let next = self.state.window_cycle_commit.get().wrapping_add(1);
+        self.state.window_cycle_commit.set(next);
+    }
+
+    /// Cancels the window switcher's cycle, restoring the previously active
+    /// window and closing it.
+    pub async fn window_cycle_cancel(&self) {
+        let next = self.state.window_cycle_cancel.get().wrapping_add(1);
+        self.state.window_cycle_cancel.set(next);
+    }
+
     /// Currently hidden monitor connectors.
     #[zbus(property)]
     pub async fn bar_hidden(&self) -> Vec<String> {
