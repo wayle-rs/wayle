@@ -7,7 +7,9 @@ mod watchers;
 
 use std::collections::HashMap;
 use adapter::OpenPopoverTracker;
+use tracing::{debug, info};
 pub(crate) use adapter::DockAdapterRef;
+use adapter::DockAdapter;
 
 use factory::*;
 use gtk::prelude::*;
@@ -81,6 +83,7 @@ pub(crate) enum DockCmd {
 #[derive(Debug)]
 pub(crate) enum DockInput {
     DockItemAction(String, DockItemInput),
+    InitialReady,
 }
 
 #[relm4::component(pub(crate))]
@@ -175,8 +178,16 @@ impl Component for Dock {
 
         if let Some(ref adapter) = model.adapter {
             let initial_apps = adapter.compute_running_apps();
+            debug!(
+                dock = "init",
+                initial_app_count = initial_apps.len(),
+                app_ids = ?initial_apps.iter().map(|a| &a.app_id).collect::<Vec<_>>(),
+                "Initial running apps computed"
+            );
             model.running_apps.set(initial_apps.clone());
             event_watcher::spawn(&sender, &init.services, adapter.clone());
+            info!(dock = "init", event_watcher = "spawned", "Event watcher started");
+            sender.input(DockInput::InitialReady);
         }
 
         let pinned_stream = config.dock.pinned_apps.watch();
@@ -192,6 +203,14 @@ impl Component for Dock {
         widgets.dock_box.append(dock_items_widget);
         root.auto_exclusive_zone_enable();
 
+        debug!(
+            dock = "init",
+            visibility = ?visibility,
+            monitor_connector = ?init.monitor.connector(),
+            dock_visible = matches!(visibility, DockVisibility::AlwaysVisible),
+            "Dock window visibility set"
+        );
+
         root.set_visible(matches!(visibility, DockVisibility::AlwaysVisible));
 
         ComponentParts { model, widgets }
@@ -201,6 +220,10 @@ impl Component for Dock {
         match msg {
             DockInput::DockItemAction(app_id, action) => {
                 self.handle_dock_item_action(&app_id, action);
+            }
+            DockInput::InitialReady => {
+                debug!(dock = "init", "InitialReady: running apps set, building dock items");
+                self.rebuild_all_items();
             }
         }
     }
@@ -229,6 +252,7 @@ impl Component for Dock {
                 }
             }
             DockCmd::DockItemsChanged => {
+                debug!(dock = "cmd", cmd = "DockItemsChanged", "Handling DockItemsChanged command");
                 self.rebuild_all_items_from_compositor();
             }
             DockCmd::DockItemsChangedWithEvent(event) => {
@@ -494,6 +518,12 @@ impl Dock {
     fn rebuild_all_items_from_compositor(&mut self) {
         if let Some(ref adapter) = self.adapter {
             let new_apps: Vec<DockAppData> = adapter.compute_running_apps();
+            debug!(
+                dock = "rebuild",
+                new_app_count = new_apps.len(),
+                app_ids = ?new_apps.iter().map(|a| &a.app_id).collect::<Vec<_>>(),
+                "Rebuilding dock items from compositor state"
+            );
             let mut app_map: std::collections::HashMap<String, DockAppData> =
                 new_apps.into_iter().map(|a| (a.app_id.clone(), a)).collect();
             let old_apps = self.running_apps.get();
@@ -512,13 +542,27 @@ impl Dock {
             }
             ordered.extend(app_map.into_values());
             if changed {
+                debug!(
+                    dock = "rebuild",
+                    old_app_count = old_apps.len(),
+                    new_app_count = ordered.len(),
+                    "Running apps changed, rebuilding dock items"
+                );
                 self.running_apps.set(ordered);
                 self.rebuild_all_items();
+            } else {
+                debug!(dock = "rebuild", "No change in running apps, skipping rebuild");
             }
         }
     }
 
     fn incremental_update_focus(&mut self, focused_id: Option<String>) {
+        debug!(
+            dock = "focus",
+            focused_app_id = ?focused_id,
+            app_count = self.running_apps.get().len(),
+            "Incremental focus update"
+        );
         let mut old_apps = self.running_apps.get();
         let mut changed = false;
         if let Some(ref focused_id) = focused_id {

@@ -191,29 +191,29 @@ pub enum DockAdapterRef {
     Hyprland(crate::shell::dock::adapter_hyprland::HyprlandDockAdapter),
 }
 
-impl DockAdapterRef {
-    pub fn compute_running_apps(&self) -> Vec<DockAppData> {
+impl DockAdapter for DockAdapterRef {
+    fn compute_running_apps(&self) -> Vec<DockAppData> {
         match self {
             DockAdapterRef::Niri(a) => a.compute_running_apps(),
             DockAdapterRef::Hyprland(a) => a.compute_running_apps(),
         }
     }
 
-    pub fn focus_app(&self, app_id: &str) {
+    fn focus_app(&self, app_id: &str) {
         match self {
             DockAdapterRef::Niri(a) => a.focus_app(app_id),
             DockAdapterRef::Hyprland(a) => a.focus_app(app_id),
         }
     }
 
-    pub fn get_windows(&self, app_id: &str) -> Vec<DockWindow> {
+    fn get_windows(&self, app_id: &str) -> Vec<DockWindow> {
         match self {
             DockAdapterRef::Niri(a) => a.get_windows(app_id),
             DockAdapterRef::Hyprland(a) => a.get_windows(app_id),
         }
     }
 
-    pub fn focus_window(&self, identifier: &str) {
+    fn focus_window(&self, identifier: &str) {
         match self {
             DockAdapterRef::Niri(a) => a.focus_window(identifier),
             DockAdapterRef::Hyprland(a) => a.focus_window(identifier),

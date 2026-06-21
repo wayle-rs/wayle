@@ -5,7 +5,7 @@ use relm4::gtk;
 use relm4::prelude::*;
 use tracing::debug;
 
-use super::adapter::{self, DockAdapterRef};
+use super::adapter::{self, DockAdapter, DockAdapterRef};
 use super::settings::DockSettings;
 use crate::shell::bar::icons::resolve_app_icon;
 
