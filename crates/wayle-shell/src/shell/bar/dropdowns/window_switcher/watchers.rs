@@ -36,6 +36,11 @@ pub(super) fn spawn_watchers(
         let _ = out.send(WindowSwitcherDropdownCmd::CycleCommit);
     });
 
+    let cycle_cancel = ipc_state.window_cycle_cancel.clone();
+    watch!(sender, [cycle_cancel.watch().skip(1)], |out| {
+        let _ = out.send(WindowSwitcherDropdownCmd::CycleCancel);
+    });
+
     let (tx, rx) = mpsc::unbounded_channel();
     config
         .config()

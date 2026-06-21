@@ -2,6 +2,7 @@
 
 /// Window subcommand definitions.
 pub mod commands;
+mod cycle_cancel;
 mod cycle_commit;
 mod cycle_step;
 
@@ -18,5 +19,6 @@ pub async fn execute(command: WindowCommands) -> CliAction {
     match command {
         WindowCommands::CycleStep => cycle_step::execute().await,
         WindowCommands::CycleCommit => cycle_commit::execute().await,
+        WindowCommands::CycleCancel => cycle_cancel::execute().await,
     }
 }

@@ -38,6 +38,9 @@ pub(crate) struct WindowSwitcherDropdown {
     /// Selection driven by Mod+Tab cycling, separate from mouse clicks
     /// (which activate immediately). `None` when not cycling.
     highlighted_index: Option<usize>,
+    /// Window that was active when the current cycle started, restored by
+    /// `cycle_cancel` (Escape). `None` when not cycling.
+    cycle_origin_key: Option<u32>,
 }
 
 #[relm4::component(pub(crate))]
@@ -136,6 +139,7 @@ impl Component for WindowSwitcherDropdown {
             rows,
             ordered_keys: Vec::new(),
             highlighted_index: None,
+            cycle_origin_key: None,
         };
         model.rebuild_rows();
 
@@ -169,6 +173,9 @@ impl Component for WindowSwitcherDropdown {
             }
             WindowSwitcherDropdownCmd::CycleCommit => {
                 self.cycle_commit(root);
+            }
+            WindowSwitcherDropdownCmd::CycleCancel => {
+                self.cycle_cancel(root);
             }
         }
     }

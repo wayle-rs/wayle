@@ -1,10 +1,13 @@
 //! [`WindowSwitcherDropdown`] private impl methods: rebuilding the row
 //! list, mouse-click activation, and keyboard-cycle navigation.
 //!
-//! The two activation paths are intentionally separate: clicking a row
-//! activates it immediately, while Mod+Tab cycling only moves a
-//! `highlighted_index` and activates on commit (Return key, via Sway's
-//! "altTab" mode).
+//! Clicking a row, cycling with Tab, and committing with Return all
+//! activate the highlighted window immediately - matching classic
+//! alt-tab, where the preview already reflects the real focus and Return
+//! just confirms/closes. `cycle_cancel` (Escape) is the only path that
+//! does *not* activate; it restores the originally-active window and
+//! closes the popover, so backing out of a cycle doesn't leave focus on
+//! whatever was last previewed.
 
 use gtk::prelude::*;
 use relm4::gtk;
@@ -62,6 +65,7 @@ impl WindowSwitcherDropdown {
 
     pub(super) fn activate_row(&mut self, index: usize) {
         self.highlighted_index = None;
+        self.cycle_origin_key = None;
         if let Some(key) = self.ordered_keys.get(index).copied() {
             self.service.activate_toplevel(key);
         }
@@ -86,11 +90,13 @@ impl WindowSwitcherDropdown {
         if self.highlighted_index.is_none() {
             // Start of a new cycle: begin from the active window so the
             // first Tab moves to the next one, matching classic alt-tab.
+            // Remember it so `cycle_cancel` can restore it.
             self.highlighted_index = self.ordered_keys.iter().position(|key| {
                 self.service
                     .toplevel(*key)
                     .is_some_and(|toplevel| toplevel.is_activated())
             });
+            self.cycle_origin_key = self.highlighted_key();
         }
 
         if self.ordered_keys.is_empty() {
@@ -106,6 +112,12 @@ impl WindowSwitcherDropdown {
         self.highlighted_index = Some(next);
         self.set_row_highlight(previous, false);
         self.set_row_highlight(Some(next), true);
+
+        // Activate immediately so the preview reflects real focus, like
+        // classic alt-tab - not just on commit.
+        if let Some(key) = self.ordered_keys.get(next).copied() {
+            self.service.activate_toplevel(key);
+        }
     }
 
     /// Activates the highlighted window (Return key) and closes the
@@ -121,6 +133,24 @@ impl WindowSwitcherDropdown {
             if let Some(key) = self.ordered_keys.get(index).copied() {
                 self.service.activate_toplevel(key);
             }
+        }
+        self.cycle_origin_key = None;
+        popover.popdown();
+    }
+
+    /// Cancels the in-progress cycle (Escape), restoring whichever window
+    /// was active before it started, and closes the popover.
+    ///
+    /// Without this, Escape only exited Sway's `"altTab"` mode - the
+    /// popover stayed open with its layer-shell surface stuck in
+    /// `KeyboardMode::OnDemand`, and the window already activated by the
+    /// last `cycle_step` stayed focused instead of reverting.
+    pub(super) fn cycle_cancel(&mut self, popover: &gtk::Popover) {
+        if let Some(index) = self.highlighted_index.take() {
+            self.set_row_highlight(Some(index), false);
+        }
+        if let Some(key) = self.cycle_origin_key.take() {
+            self.service.activate_toplevel(key);
         }
         popover.popdown();
     }

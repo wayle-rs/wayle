@@ -27,6 +27,11 @@ pub struct ShellIpcState {
     /// switcher dropdown watches this to activate the highlighted window
     /// and close itself.
     pub window_cycle_commit: Property<u64>,
+
+    /// Incremented on each `wayle window cycle-cancel` call. The window
+    /// switcher dropdown watches this to restore the window that was
+    /// active before the cycle started and close itself.
+    pub window_cycle_cancel: Property<u64>,
 }
 
 impl ShellIpcState {
@@ -36,6 +41,7 @@ impl ShellIpcState {
             connectors: Property::new(Vec::new()),
             window_cycle_step: Property::new(0),
             window_cycle_commit: Property::new(0),
+            window_cycle_cancel: Property::new(0),
         }
     }
 }

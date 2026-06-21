@@ -12,4 +12,8 @@ pub enum WindowCommands {
     /// Activate the window switcher's currently highlighted selection and
     /// close it.
     CycleCommit,
+
+    /// Cancel the window switcher's cycle, restoring the previously active
+    /// window, and close it. Intended to be bound to Escape.
+    CycleCancel,
 }

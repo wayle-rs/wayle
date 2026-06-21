@@ -29,6 +29,10 @@ pub trait ShellIpc {
     /// closes it.
     async fn window_cycle_commit(&self) -> Result<()>;
 
+    /// Cancels the window switcher's cycle, restoring the previously
+    /// active window and closing it.
+    async fn window_cycle_cancel(&self) -> Result<()>;
+
     #[zbus(property)]
     fn bar_hidden(&self) -> Result<Vec<String>>;
 

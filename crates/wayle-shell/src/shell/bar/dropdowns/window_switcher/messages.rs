@@ -32,4 +32,5 @@ pub(crate) enum WindowSwitcherDropdownCmd {
     ConfigChanged,
     CycleStep,
     CycleCommit,
+    CycleCancel,
 }

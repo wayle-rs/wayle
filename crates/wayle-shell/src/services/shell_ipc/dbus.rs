@@ -49,6 +49,13 @@ impl ShellIpcDaemon {
         self.state.window_cycle_commit.set(next);
     }
 
+    /// Cancels the window switcher's cycle, restoring the previously active
+    /// window and closing it.
+    pub async fn window_cycle_cancel(&self) {
+        let next = self.state.window_cycle_cancel.get().wrapping_add(1);
+        self.state.window_cycle_cancel.set(next);
+    }
+
     /// Currently hidden monitor connectors.
     #[zbus(property)]
     pub async fn bar_hidden(&self) -> Vec<String> {
