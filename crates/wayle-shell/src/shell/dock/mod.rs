@@ -116,34 +116,27 @@ impl Component for Dock {
         let config = init.services.config.config();
         let position = config.dock.position.get();
         let visibility = config.dock.visibility.get();
-        let size = config.dock.size.get();
-
         let monitor_name = init.monitor.connector().map(|s| s.to_string());
 
+        // Phase 1: Config reads
         let open_popover = adapter::create_open_popover_tracker();
-
         let settings = settings::DockSettings {
             theme_provider: config.styling.theme_provider.clone(),
             icon_position: config.bar.button_icon_position.clone(),
             item_rounding: config.dock.item_rounding.clone(),
             item_padding: config.dock.item_padding.clone(),
-            size: ConfigProperty::new(size),
+            size: ConfigProperty::new(config.dock.size.get()),
             monitor_name: monitor_name.clone(),
         };
+        let adapter = build_adapter(&init.services);
+        let css_provider = gtk::CssProvider::new();
 
-        root.init_layer_shell();
-        root.set_layer(gtk4_layer_shell::Layer::Top);
-        root.set_keyboard_mode(KeyboardMode::None);
-        root.set_monitor(Some(&init.monitor));
-        root.set_hexpand(false);
-        root.set_vexpand(false);
-        Self::apply_dock_anchors(&root, position);
-        Self::apply_dock_css_classes(&root, Some(&init.monitor), position);
+        // Phase 2: UI setup
+        Self::setup_dock_window(&root, &init.monitor, position);
 
-        let window = root.clone();
-        init.monitor.connect_invalidate(move |_| {
-            window.destroy();
-        });
+        #[allow(deprecated)]
+        root.style_context()
+            .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
 
         let widgets = view_output!();
         let items = FactoryVecDeque::builder()
@@ -155,14 +148,7 @@ impl Component for Dock {
                 },
             );
 
-        let css_provider = gtk::CssProvider::new();
-
-        #[allow(deprecated)]
-        root.style_context()
-            .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
-        css::spawn(&sender, &init.services);
-        config::spawn(&sender, &init.services);
-
+        // Phase 3: Model + watchers
         let model = Self {
             settings,
             open_popover: open_popover.clone(),
@@ -173,8 +159,16 @@ impl Component for Dock {
             dock_visibility: visibility,
             dock_position: position,
             running_apps: wayle_core::Property::new(Vec::new()),
-            adapter: build_adapter(&init.services),
+            adapter,
         };
+
+        let dock_items_widget = model.items.widget();
+        dock_items_widget.set_hexpand(false);
+        dock_items_widget.set_vexpand(false);
+        dock_items_widget.set_halign(gtk::Align::Center);
+        widgets.dock_box.set_halign(gtk::Align::Center);
+        widgets.dock_box.append(dock_items_widget);
+        root.auto_exclusive_zone_enable();
 
         if let Some(ref adapter) = model.adapter {
             let initial_apps = adapter.compute_running_apps();
@@ -187,7 +181,6 @@ impl Component for Dock {
             model.running_apps.set(initial_apps.clone());
             event_watcher::spawn(&sender, &init.services, adapter.clone());
             info!(dock = "init", event_watcher = "spawned", "Event watcher started");
-            sender.input(DockInput::InitialReady);
         }
 
         let pinned_stream = config.dock.pinned_apps.watch();
@@ -195,13 +188,8 @@ impl Component for Dock {
             let _ = out.send(DockCmd::DockItemsChanged);
         });
 
-        let dock_items_widget = model.items.widget();
-        dock_items_widget.set_hexpand(false);
-        dock_items_widget.set_vexpand(false);
-        dock_items_widget.set_halign(gtk::Align::Center);
-        widgets.dock_box.set_halign(gtk::Align::Center);
-        widgets.dock_box.append(dock_items_widget);
-        root.auto_exclusive_zone_enable();
+        css::spawn(&sender, &init.services);
+        config::spawn(&sender, &init.services);
 
         debug!(
             dock = "init",
@@ -212,6 +200,10 @@ impl Component for Dock {
         );
 
         root.set_visible(matches!(visibility, DockVisibility::AlwaysVisible));
+
+        if model.adapter.is_some() {
+            sender.input(DockInput::InitialReady);
+        }
 
         ComponentParts { model, widgets }
     }
@@ -400,6 +392,26 @@ impl Dock {
             DockPosition::Right => "dock-right",
         };
         window.add_css_class(class);
+    }
+
+    fn setup_dock_window(
+        window: &gtk::Window,
+        monitor: &gdk::Monitor,
+        position: DockPosition,
+    ) {
+        window.init_layer_shell();
+        window.set_layer(gtk4_layer_shell::Layer::Top);
+        window.set_keyboard_mode(KeyboardMode::None);
+        window.set_monitor(Some(monitor));
+        window.set_hexpand(false);
+        window.set_vexpand(false);
+        Self::apply_dock_anchors(window, position);
+        Self::apply_dock_css_classes(window, Some(monitor), position);
+
+        let win = window.clone();
+        monitor.connect_invalidate(move |_| {
+            win.destroy();
+        });
     }
 
     fn build_css(&self) -> String {
