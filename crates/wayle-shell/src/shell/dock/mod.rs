@@ -57,11 +57,25 @@ pub(crate) struct DockInit {
     pub(crate) services: ShellServices,
 }
 
+/// Dock-relevant compositor event type.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) enum DockEvent {
+    /// Window focus changed — dock should update active state.
+    ActiveWindowChanged(Option<String>),
+    /// A new window appeared.
+    WindowOpened,
+    /// A window was closed.
+    WindowClosed,
+    /// Generic change that requires full rebuild (resize, move, layout, etc).
+    WindowsChanged,
+}
+
 #[derive(Debug)]
 pub(crate) enum DockCmd {
     StyleChanged,
     PositionChanged,
     DockItemsChanged,
+    DockItemsChangedWithEvent(DockEvent),
 }
 
 #[derive(Debug)]
@@ -215,28 +229,18 @@ impl Component for Dock {
                 }
             }
             DockCmd::DockItemsChanged => {
-                if let Some(ref adapter) = self.adapter {
-                    let new_apps: Vec<DockAppData> = adapter.compute_running_apps();
-                    let mut app_map: std::collections::HashMap<String, DockAppData> =
-                        new_apps.into_iter().map(|a| (a.app_id.clone(), a)).collect();
-                    let old_apps = self.running_apps.get();
-                    let mut ordered: Vec<DockAppData> = Vec::new();
-                    let mut changed = false;
-                    for app in old_apps.iter() {
-                        if let Some(updated) = app_map.remove(&app.app_id) {
-                            changed = changed || updated != *app;
-                            ordered.push(updated);
-                        } else {
-                            changed = true;
-                        }
+                self.rebuild_all_items_from_compositor();
+            }
+            DockCmd::DockItemsChangedWithEvent(event) => {
+                match event {
+                    DockEvent::ActiveWindowChanged(focused_id) => {
+                        self.incremental_update_focus(focused_id);
                     }
-                    if !app_map.is_empty() {
-                        changed = true;
+                    DockEvent::WindowOpened | DockEvent::WindowClosed => {
+                        self.rebuild_all_items_from_compositor();
                     }
-                    ordered.extend(app_map.into_values());
-                    if changed {
-                        self.running_apps.set(ordered);
-                        self.rebuild_all_items();
+                    DockEvent::WindowsChanged => {
+                        self.rebuild_all_items_from_compositor();
                     }
                 }
             }
@@ -484,6 +488,55 @@ impl Dock {
 
         for item in new_items {
             guard.push_back(item);
+        }
+    }
+
+    fn rebuild_all_items_from_compositor(&mut self) {
+        if let Some(ref adapter) = self.adapter {
+            let new_apps: Vec<DockAppData> = adapter.compute_running_apps();
+            let mut app_map: std::collections::HashMap<String, DockAppData> =
+                new_apps.into_iter().map(|a| (a.app_id.clone(), a)).collect();
+            let old_apps = self.running_apps.get();
+            let mut ordered: Vec<DockAppData> = Vec::new();
+            let mut changed = false;
+            for app in old_apps.iter() {
+                if let Some(updated) = app_map.remove(&app.app_id) {
+                    changed = changed || updated != *app;
+                    ordered.push(updated);
+                } else {
+                    changed = true;
+                }
+            }
+            if !app_map.is_empty() {
+                changed = true;
+            }
+            ordered.extend(app_map.into_values());
+            if changed {
+                self.running_apps.set(ordered);
+                self.rebuild_all_items();
+            }
+        }
+    }
+
+    fn incremental_update_focus(&mut self, focused_id: Option<String>) {
+        let mut old_apps = self.running_apps.get();
+        let mut changed = false;
+        if let Some(ref focused_id) = focused_id {
+            for app in old_apps.iter_mut() {
+                if app.app_id == *focused_id {
+                    if !app.is_active {
+                        app.is_active = true;
+                        changed = true;
+                    }
+                } else if app.is_active {
+                    app.is_active = false;
+                    changed = true;
+                }
+            }
+        }
+        if changed {
+            self.running_apps.set(old_apps);
+            self.rebuild_all_items();
         }
     }
 }

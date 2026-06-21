@@ -8,8 +8,7 @@ use wayle_hyprland::{HyprlandEvent, HyprlandService};
 use wayle_niri::{Event as NiriEvent, NiriService};
 
 use super::adapter::DockAdapterRef;
-use super::Dock;
-use super::DockCmd;
+use super::{Dock, DockCmd, DockEvent};
 
 /// Spawn an async task that subscribes to compositor events and
 /// triggers DockCmd::DockItemsChanged when running apps change.
@@ -36,8 +35,9 @@ pub(crate) fn spawn(
         loop {
             tokio::select! {
                 () = &mut shutdown_fut => break,
-                Some(_) = rx.recv() => {
-                    let _ = out.send(DockCmd::DockItemsChanged);
+                Some(evt) = rx.recv() => {
+                    tracing::debug!("dock event: {:?}", evt);
+                    let _ = out.send(DockCmd::DockItemsChangedWithEvent(evt));
                 }
             }
         }
@@ -46,25 +46,27 @@ pub(crate) fn spawn(
 
 fn spawn_niri_watcher(
     niri: Arc<NiriService>,
-    tx: tokio::sync::mpsc::UnboundedSender<()>,
+    tx: tokio::sync::mpsc::UnboundedSender<DockEvent>,
 ) {
+    let niri = Arc::new(niri);
     tokio::spawn(async move {
         let mut events = niri.events();
         let mut windows_changed = niri.windows.watch();
+        let niri = niri.clone();
 
         loop {
             tokio::select! {
                 event = events.next() => {
                     if let Some(event) = event {
-                        if needs_niri_update(&event) {
-                            let _ = tx.send(());
+                        if let Some(dock_event) = niri_event_to_dock_event(&event, &niri) {
+                            let _ = tx.send(dock_event);
                         }
                     } else {
                         break;
                     }
                 }
                 Some(_) = windows_changed.next() => {
-                    let _ = tx.send(());
+                    let _ = tx.send(DockEvent::WindowsChanged);
                 }
             }
         }
@@ -73,51 +75,77 @@ fn spawn_niri_watcher(
 
 fn spawn_hyprland_watcher(
     hyprland: Arc<HyprlandService>,
-    tx: tokio::sync::mpsc::UnboundedSender<()>,
+    tx: tokio::sync::mpsc::UnboundedSender<DockEvent>,
 ) {
+    let hyprland = Arc::new(hyprland);
     tokio::spawn(async move {
         let mut events = hyprland.events();
         let mut clients_changed = hyprland.clients.watch();
+        let hyprland = hyprland.clone();
 
         loop {
             tokio::select! {
                 event = events.next() => {
                     if let Some(event) = event {
-                        if needs_hyprland_update(&event) {
-                            let _ = tx.send(());
+                        if let Some(dock_event) = hyprland_event_to_dock_event(&event, &hyprland) {
+                            let _ = tx.send(dock_event);
                         }
                     } else {
                         break;
                     }
                 }
                 Some(_) = clients_changed.next() => {
-                    let _ = tx.send(());
+                    let _ = tx.send(DockEvent::WindowsChanged);
                 }
             }
         }
     });
 }
 
-fn needs_niri_update(event: &NiriEvent) -> bool {
-    matches!(
-        event,
-        NiriEvent::WindowsChanged { .. }
-            | NiriEvent::WindowOpenedOrChanged { .. }
-            | NiriEvent::WindowClosed { .. }
-            | NiriEvent::WindowFocusChanged { .. }
-            | NiriEvent::WindowLayoutsChanged { .. }
-    )
+fn niri_event_to_dock_event(
+    event: &NiriEvent,
+    niri: &Arc<NiriService>,
+) -> Option<DockEvent> {
+    match event {
+        NiriEvent::WindowOpenedOrChanged { .. } => Some(DockEvent::WindowOpened),
+        NiriEvent::WindowClosed { .. } => Some(DockEvent::WindowClosed),
+        NiriEvent::WindowFocusChanged { .. }
+        | NiriEvent::WindowLayoutsChanged { .. } => {
+            let focused_id = niri.focused_window_id.get();
+            let focused_app = focused_id.and_then(|fid| {
+                niri.windows.get().iter()
+                    .find(|(_, w)| w.id.get() == fid)
+                    .and_then(|(_, w)| w.app_id.get())
+            });
+            Some(DockEvent::ActiveWindowChanged(focused_app))
+        }
+        NiriEvent::WindowsChanged { .. } => Some(DockEvent::WindowsChanged),
+        _ => None,
+    }
 }
 
-fn needs_hyprland_update(event: &HyprlandEvent) -> bool {
-    matches!(
-        event,
-        HyprlandEvent::OpenWindow { .. }
-            | HyprlandEvent::CloseWindow { .. }
-            | HyprlandEvent::MoveWindow { .. }
-            | HyprlandEvent::MoveWindowV2 { .. }
-            | HyprlandEvent::ActiveWindow { .. }
-            | HyprlandEvent::ActiveWindowV2 { .. }
-            | HyprlandEvent::Minimized { .. }
-    )
+fn hyprland_event_to_dock_event(
+    event: &HyprlandEvent,
+    hyprland: &Arc<HyprlandService>,
+) -> Option<DockEvent> {
+    match event {
+        HyprlandEvent::OpenWindow { .. } => Some(DockEvent::WindowOpened),
+        HyprlandEvent::CloseWindow { .. } => Some(DockEvent::WindowClosed),
+        HyprlandEvent::ActiveWindow { class, .. } => {
+            Some(DockEvent::ActiveWindowChanged(Some(class.clone())))
+        }
+        HyprlandEvent::ActiveWindowV2 { address } => {
+            let clients = hyprland.clients.get();
+            let focused_app = clients.iter()
+                .find(|c| c.address.get() == *address)
+                .map(|c| c.class.get());
+            Some(DockEvent::ActiveWindowChanged(focused_app))
+        }
+        HyprlandEvent::Minimized { .. } => {
+            Some(DockEvent::WindowsChanged)
+        }
+        HyprlandEvent::MoveWindow { .. }
+        | HyprlandEvent::MoveWindowV2 { .. } => Some(DockEvent::WindowsChanged),
+        _ => None,
+    }
 }
