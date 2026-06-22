@@ -4,7 +4,7 @@ Release:        1%{?dist}
 Summary:        Wayland Elements - A compositor agnostic desktop shell
 License:        MIT
 URL:            https://wayle.app/
-Source0:        %{name}-%{version}.tar.gz
+Source0:        https://github.com/wayle-rs/wayle/archive/v%{version}/wayle-%{version}.tar.gz
 
 BuildRequires:  curl
 BuildRequires:  gcc
