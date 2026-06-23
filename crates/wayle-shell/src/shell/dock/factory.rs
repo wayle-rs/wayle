@@ -4,6 +4,7 @@ use relm4::gtk::prelude::*;
 use relm4::gtk;
 use relm4::prelude::*;
 use tracing::debug;
+use wayle_config::schemas::dock::DockPosition;
 
 use super::adapter::{self, DockAdapter, DockAdapterRef};
 use super::settings::DockSettings;
@@ -46,7 +47,7 @@ impl FactoryComponent for DockItem {
     type CommandOutput = ();
     type ParentWidget = gtk::Box;
 
-    view! {
+   view! {
         #[root]
         gtk::Button {
             add_css_class: "dock-item",
@@ -73,7 +74,7 @@ impl FactoryComponent for DockItem {
                         add_css_class: "dock-indicator",
                         set_hexpand: true,
                         set_vexpand: false,
-                        set_halign: gtk::Align:: Center,
+                        set_halign: gtk::Align::Center,
                         set_valign: gtk::Align::End,
                     }
                 }
@@ -240,6 +241,13 @@ impl FactoryComponent for DockItem {
 impl DockItem {
     fn update_model(&self, widgets: &<Self as relm4::factory::FactoryComponent>::Widgets) {
         widgets
+            .icon_box
+            .set_orientation(match self.settings.dock_position {
+                DockPosition::Bottom => gtk::Orientation::Vertical,
+                DockPosition::Left | DockPosition::Right => gtk::Orientation::Horizontal,
+            });
+
+        widgets
             .icon_image
             .set_pixel_size(self.settings.size.get() as i32);
 
@@ -247,6 +255,8 @@ impl DockItem {
         widgets.icon_image.set_icon_name(Some(&icon_name));
 
         widgets.indicator_revealer.set_reveal_child(self.is_running);
+
+        self.update_indicator_alignment(widgets);
 
         if self.is_active {
             self._root.add_css_class("active");
@@ -258,6 +268,26 @@ impl DockItem {
             self._root.add_css_class("unpinned");
         } else {
             self._root.remove_css_class("unpinned");
+        }
+    }
+
+    fn update_indicator_alignment(&self, widgets: &<Self as relm4::factory::FactoryComponent>::Widgets) {
+        let is_vertical = matches!(
+            self.settings.dock_position,
+            DockPosition::Left | DockPosition::Right
+        );
+        if let Some(dot) = widgets.indicator_revealer.child().as_ref().and_then(|c| c.downcast_ref::<gtk::Box>()) {
+            if is_vertical {
+                dot.set_halign(gtk::Align::End);
+                dot.set_valign(gtk::Align::Center);
+                dot.remove_css_class("indicator-bottom");
+                dot.add_css_class("indicator-horizontal");
+            } else {
+                dot.set_halign(gtk::Align::Center);
+                dot.set_valign(gtk::Align::End);
+                dot.remove_css_class("indicator-horizontal");
+                dot.add_css_class("indicator-bottom");
+            }
         }
     }
 }

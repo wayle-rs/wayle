@@ -1,6 +1,6 @@
 use wayle_config::{
     ConfigProperty,
-    schemas::{bar::IconPosition, styling::RoundingLevel},
+    schemas::{bar::IconPosition, dock::DockPosition, styling::RoundingLevel},
 };
 
 /// Settings for dock items.
@@ -18,4 +18,6 @@ pub(crate) struct DockSettings {
     pub size: ConfigProperty<u32>,
     /// Monitor connector name.
     pub monitor_name: Option<String>,
+    /// Dock position for layout orientation.
+    pub dock_position: DockPosition,
 }

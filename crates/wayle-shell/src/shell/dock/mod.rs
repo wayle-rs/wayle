@@ -48,6 +48,7 @@ pub(crate) struct Dock {
     css_provider: gtk::CssProvider,
     last_css: String,
     items: FactoryVecDeque<DockItem>,
+    dock_box: gtk::Box,
     dock_visibility: DockVisibility,
     dock_position: DockPosition,
     running_apps: wayle_core::Property<Vec<DockAppData>>,
@@ -127,6 +128,7 @@ impl Component for Dock {
             item_padding: config.dock.item_padding.clone(),
             size: ConfigProperty::new(config.dock.size.get()),
             monitor_name: monitor_name.clone(),
+            dock_position: position,
         };
         let adapter = build_adapter(&init.services);
         let css_provider = gtk::CssProvider::new();
@@ -159,17 +161,20 @@ impl Component for Dock {
             css_provider,
             last_css: initial_css,
             items,
+            dock_box: widgets.dock_box.clone(),
             dock_visibility: visibility,
             dock_position: position,
             running_apps: wayle_core::Property::new(Vec::new()),
             adapter,
         };
 
-        let dock_items_widget = model.items.widget();
+         let dock_items_widget = model.items.widget();
         dock_items_widget.set_hexpand(false);
         dock_items_widget.set_vexpand(false);
-        dock_items_widget.set_halign(gtk::Align::Center);
-        widgets.dock_box.set_halign(gtk::Align::Center);
+        widgets.dock_box.set_halign(gtk::Align::Fill);
+        widgets.dock_box.set_valign(gtk::Align::Fill);
+        Self::apply_dock_box_alignment(&widgets.dock_box, position);
+        Self::apply_dock_box_orientation(&widgets.dock_box, position);
         widgets.dock_box.append(dock_items_widget);
         root.auto_exclusive_zone_enable();
 
@@ -243,6 +248,10 @@ impl Component for Dock {
                 if new_position != self.dock_position {
                     Self::apply_dock_anchors(root, new_position);
                     Self::apply_dock_css_classes(root, root.monitor().as_ref(), new_position);
+                    Self::apply_dock_box_alignment(&self.dock_box, new_position);
+                    Self::apply_dock_box_orientation(&self.dock_box, new_position);
+                    self.settings.dock_position = new_position;
+                    self.rebuild_all_items();
                     self.dock_position = new_position;
                 }
             }
@@ -563,9 +572,30 @@ impl Dock {
                 }
             }
         }
-        if changed {
+         if changed {
             self.running_apps.set(old_apps);
             self.rebuild_all_items();
         }
+    }
+
+    fn apply_dock_box_alignment(dock_box: &gtk::Box, position: DockPosition) {
+        match position {
+            DockPosition::Bottom => {
+                dock_box.set_halign(gtk::Align::Center);
+                dock_box.set_valign(gtk::Align::Fill);
+            }
+            DockPosition::Left | DockPosition::Right => {
+                dock_box.set_halign(gtk::Align::Fill);
+                dock_box.set_valign(gtk::Align::Center);
+            }
+        }
+    }
+
+    fn apply_dock_box_orientation(dock_box: &gtk::Box, position: DockPosition) {
+        let orientation = match position {
+            DockPosition::Bottom => gtk::Orientation::Horizontal,
+            DockPosition::Left | DockPosition::Right => gtk::Orientation::Vertical,
+        };
+        dock_box.set_orientation(orientation);
     }
 }
