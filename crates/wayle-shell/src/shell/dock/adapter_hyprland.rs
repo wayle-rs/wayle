@@ -59,7 +59,7 @@ impl DockAdapter for HyprlandDockAdapter {
 
             if class_windows.is_empty() {
                 let _ = hyprland
-                    .dispatch(&format!("exec,xdg-open {}-launcher.desktop", app_id))
+                    .dispatch(&format!("exec,gtk-launch {}", app_id))
                     .await;
                 return;
             }

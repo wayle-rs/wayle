@@ -141,7 +141,7 @@ impl DockAdapter for NiriDockAdapter {
 
             if app_windows.is_empty() {
                 let _ = niri
-                    .spawn(vec![format!("/usr/bin/xdg-open {}.desktop", app_id)])
+                    .spawn(vec!["gtk-launch".to_string(), app_id])
                     .await;
                 return;
             }
