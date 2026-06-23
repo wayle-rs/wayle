@@ -138,6 +138,9 @@ impl Component for Dock {
         root.style_context()
             .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
 
+        let initial_css = Self::build_initial_css(&settings, &init.services);
+        css_provider.load_from_string(&initial_css);
+
         let widgets = view_output!();
         let items = FactoryVecDeque::builder()
             .launch(widgets.dock_box.clone())
@@ -154,7 +157,7 @@ impl Component for Dock {
             open_popover: open_popover.clone(),
             services: init.services.clone(),
             css_provider,
-            last_css: String::new(),
+            last_css: initial_css,
             items,
             dock_visibility: visibility,
             dock_position: position,
@@ -387,9 +390,9 @@ impl Dock {
         }
 
         let class = match position {
-            DockPosition::Bottom => "dock-bottom",
-            DockPosition::Left => "dock-left",
-            DockPosition::Right => "dock-right",
+            DockPosition::Bottom => "horizontal",
+            DockPosition::Left => "vertical",
+            DockPosition::Right => "vertical",
         };
         window.add_css_class(class);
     }
@@ -415,82 +418,52 @@ impl Dock {
     }
 
     fn build_css(&self) -> String {
-        let config = self.services.config.config();
+        Self::build_css_from_settings(&self.settings, &self.services)
+    }
+
+    fn build_initial_css(settings: &settings::DockSettings, services: &ShellServices) -> String {
+        Self::build_css_from_settings(settings, services)
+    }
+
+    fn build_css_from_settings(settings: &settings::DockSettings, services: &ShellServices) -> String {
+        let config = services.config.config();
         let dock = &config.dock;
-
-        let bg = wayle_widgets::styling::resolve_color(
-            &dock.bg,
-            matches!(
-                config.styling.theme_provider.get(),
-                wayle_config::schemas::styling::ThemeProvider::Wayle
-            ),
+        let is_wayle = matches!(
+            config.styling.theme_provider.get(),
+            wayle_config::schemas::styling::ThemeProvider::Wayle
         );
-        let bg_opacity = dock.background_opacity.get().value() as f64 / 100.0;
 
-        let (r, g, b) = Self::hex_to_rgb(&bg);
-        let bg_rgba = format!("rgba({}, {}, {}, {})", r, g, b, bg_opacity);
+        let bg = wayle_widgets::styling::resolve_color(&dock.bg, is_wayle);
+        let bg_opacity = dock.background_opacity.get().value();
+        let size = settings.size.get();
+        let padding = settings.item_padding.get();
+        let rounding = settings.item_rounding.get();
+
+        let border_radius = match rounding {
+            wayle_config::schemas::styling::RoundingLevel::None => 0,
+            wayle_config::schemas::styling::RoundingLevel::Sm => 6,
+            wayle_config::schemas::styling::RoundingLevel::Md => 10,
+            wayle_config::schemas::styling::RoundingLevel::Lg => 14,
+            wayle_config::schemas::styling::RoundingLevel::Full => 18,
+        };
+
+        let section_padding = (padding.value() * 8.0).round() as i32;
+        let section_gap = ((padding.value() * 8.0 + 4.0) * 2.0).round() as i32;
+        let popover_item_padding = ((padding.value() * 8.0 + 4.0) * 2.0).round() as i32;
 
         format!(
             ".dock {{ \
-            background: none; \
-            border-radius: 18px; \
-            }} \
-            .dock .dock-section {{ \
-            background-color: {}; \
-            border-radius: 18px; \
-            padding: 4px 6px; \
-            margin: 0; \
-            }} \
-            .dock .dock-item {{ \
-            background-color: transparent; \
-            min-width: 24px; \
-            min-height: 24px; \
-            padding: 0; \
-            margin: 4px 2px; \
-            border: none; \
-            border-radius: 10px; \
-            transition: background-color 0.15s ease; \
-            }} \
-            .dock .dock-item:hover {{ \
-            background-color: rgba(255, 255, 255, 0.1); \
-            border-radius: 12px; \
-            }} \
-            .dock .dock-item.active {{ \
-            background-color: rgba(255, 255, 255, 0.15); \
-            }} \
-            .dock .dock-window-popover {{ \
-            border-radius: 12px; \
-            padding: 6px; \
-            }} \
-            .dock .dock-popover-content {{ \
-            padding: 4px; \
-            }} \
-            .dock .dock-window-item {{ \
-            background-color: transparent; \
-            border: none; \
-            border-radius: 6px; \
-            padding: 4px 10px; \
-            margin: 2px 0; \
-            font-size: 13px; \
-            color: #ffffff; \
-            text-align: start; \
-            }} \
-            .dock .dock-window-item:hover {{ \
-            background-color: rgba(255, 255, 255, 0.1); \
-            }}",
-            bg_rgba
+            --dock-bg: {bg}; \
+            --dock-opacity: {bg_opacity}%; \
+            --dock-section-padding-px: {section_padding}; \
+            --dock-section-gap-px: {section_gap}; \
+            --dock-item-size-px: {size}; \
+            --dock-item-border-radius: {border_radius}px; \
+            --dock-border-radius: {border_radius}px; \
+            --dock-popover-item-padding-px: {popover_item_padding}; \
+            --dock-item-unpinned-opacity: 0.7; \
+            }}"
         )
-    }
-
-    fn hex_to_rgb(hex: &str) -> (u8, u8, u8) {
-        let hex = hex.trim_start_matches('#');
-        if hex.len() != 6 {
-            return (0, 0, 0);
-        }
-        let r = u8::from_str_radix(&hex[0..2], 16).unwrap_or(0);
-        let g = u8::from_str_radix(&hex[2..4], 16).unwrap_or(0);
-        let b = u8::from_str_radix(&hex[4..6], 16).unwrap_or(0);
-        (r, g, b)
     }
 
     fn build_dock_items(&self) -> Vec<DockItemData> {

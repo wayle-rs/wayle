@@ -254,10 +254,10 @@ impl DockItem {
             self._root.remove_css_class("active");
         }
 
-        if self.is_running {
-            self._root.add_css_class("running");
+        if !self.is_pinned {
+            self._root.add_css_class("unpinned");
         } else {
-            self._root.remove_css_class("running");
+            self._root.remove_css_class("unpinned");
         }
     }
 }
