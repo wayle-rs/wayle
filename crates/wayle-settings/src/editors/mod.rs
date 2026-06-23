@@ -15,6 +15,7 @@ pub(crate) mod text;
 pub(crate) mod theme_selector;
 pub(crate) mod toggle;
 pub(crate) mod toml_editor;
+pub(crate) mod vec_string;
 
 use futures::StreamExt;
 use relm4::{

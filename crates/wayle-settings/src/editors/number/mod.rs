@@ -9,7 +9,7 @@ use relm4::{
     prelude::*,
 };
 pub(crate) use row::{
-    number_f64, number_newtype, number_u8, number_u32, number_u64, scale, spacing,
+    dock_size, number_f64, number_newtype, number_u8, number_u32, number_u64, scale, spacing,
 };
 use wayle_config::ConfigProperty;
 

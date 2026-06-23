@@ -254,3 +254,36 @@ where
         unit: None,
     }
 }
+
+/// Row with a numeric spin for the dock size property (16–512 range).
+pub(crate) fn dock_size(property: &ConfigProperty<u32>) -> SettingRowInit {
+    let controller = NumberControl::builder()
+        .launch(NumberInit {
+            property: property.clone(),
+            range_min: 16.0,
+            range_max: 512.0,
+            step: 1.0,
+            digits: 0,
+            to_f64: |value| *value as f64,
+            from_f64: |value| {
+                if !value.is_finite() {
+                    return 16u32;
+                }
+                (value as u32).clamp(16, 512)
+            },
+        })
+        .detach();
+
+    let widget = controller.widget().clone();
+
+    SettingRowInit {
+        i18n_key: property.i18n_key(),
+        handle: PropertyHandle::new(property, |value| value.to_string()),
+        control: widget.upcast(),
+        keepalive: Box::new(controller),
+        full_width: false,
+        dirty_badge: None,
+        behavior: RowBehavior::Setting,
+        unit: None,
+    }
+}
