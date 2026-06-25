@@ -4,12 +4,13 @@ use wayle_config::Config;
 
 use crate::{
     editors::{
-        color_value::color_value, enum_select::enum_select,
-        number::{dock_size, number_u64},
+        color_value::color_value,
+        enum_select::enum_select,
+        number::{dock_size, number_u64, spacing},
         slider::percentage,
-        toggle::toggle, vec_string::vec_string,
+        toggle::toggle,
+        vec_string::vec_string,
     },
-    editors::number::spacing,
     pages::{
         nav::LeafEntry,
         spec::{SectionSpec, page_spec},
@@ -46,10 +47,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 },
                 SectionSpec {
                     title_key: "settings-section-items",
-                    items: vec![
-                        toggle(&dock.show_running),
-                        toggle(&dock.show_preview),
-                    ],
+                    items: vec![toggle(&dock.show_running), toggle(&dock.show_preview)],
                 },
                 SectionSpec {
                     title_key: "settings-section-pinned-apps",

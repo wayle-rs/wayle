@@ -1,13 +1,13 @@
 use std::rc::Rc;
 
-use relm4::gtk::prelude::*;
-use relm4::gtk;
-use relm4::prelude::*;
+use relm4::{gtk, gtk::prelude::*, prelude::*};
 use tracing::debug;
 use wayle_config::schemas::dock::DockPosition;
 
-use super::adapter::{self, DockAdapter, DockAdapterRef};
-use super::settings::DockSettings;
+use super::{
+    adapter::{self, DockAdapter, DockAdapterRef},
+    settings::DockSettings,
+};
 use crate::shell::bar::icons::resolve_app_icon;
 
 pub(crate) struct DockItem {
@@ -47,7 +47,7 @@ impl FactoryComponent for DockItem {
     type CommandOutput = ();
     type ParentWidget = gtk::Box;
 
-   view! {
+    view! {
         #[root]
         gtk::Button {
             add_css_class: "dock-item",
@@ -152,7 +152,8 @@ impl FactoryComponent for DockItem {
 
             debug!(app_id = %app_id, "dock item hover enter");
 
-            let windows = adapter.as_ref()
+            let windows = adapter
+                .as_ref()
                 .map(|a| a.get_windows(&app_id))
                 .unwrap_or_default();
 
@@ -271,12 +272,20 @@ impl DockItem {
         }
     }
 
-    fn update_indicator_alignment(&self, widgets: &<Self as relm4::factory::FactoryComponent>::Widgets) {
+    fn update_indicator_alignment(
+        &self,
+        widgets: &<Self as relm4::factory::FactoryComponent>::Widgets,
+    ) {
         let is_vertical = matches!(
             self.settings.dock_position,
             DockPosition::Left | DockPosition::Right
         );
-        if let Some(dot) = widgets.indicator_revealer.child().as_ref().and_then(|c| c.downcast_ref::<gtk::Box>()) {
+        if let Some(dot) = widgets
+            .indicator_revealer
+            .child()
+            .as_ref()
+            .and_then(|c| c.downcast_ref::<gtk::Box>())
+        {
             if is_vertical {
                 dot.set_halign(gtk::Align::End);
                 dot.set_valign(gtk::Align::Center);

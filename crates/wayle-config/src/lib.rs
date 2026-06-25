@@ -74,8 +74,8 @@ pub use infrastructure::{
     watcher::FileWatcher,
 };
 use schemas::{
-    bar::BarConfig, dock::DockConfig, modules::ModulesConfig, osd::OsdConfig, styling::StylingConfig,
-    wallpaper::WallpaperConfig,
+    bar::BarConfig, dock::DockConfig, modules::ModulesConfig, osd::OsdConfig,
+    styling::StylingConfig, wallpaper::WallpaperConfig,
 };
 use wayle_derive::wayle_config;
 
@@ -140,10 +140,7 @@ mod tests {
             keys.contains(&"settings-bar-background-opacity"),
             "missing bar key"
         );
-        assert!(
-            keys.contains(&"settings-dock-position"),
-            "missing dock key"
-        );
+        assert!(keys.contains(&"settings-dock-position"), "missing dock key");
         assert!(
             keys.contains(&"settings-modules-clock-format"),
             "missing module key"

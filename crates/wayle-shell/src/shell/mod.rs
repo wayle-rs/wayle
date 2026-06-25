@@ -146,7 +146,7 @@ impl Component for Shell {
             }
 
             ShellCmd::LocationChanged => {
-                self.recreate_bars_and_docs();
+                self.recreate_bars_and_docks();
             }
 
             ShellCmd::OsdEnabledChanged(enabled) => {
@@ -173,7 +173,7 @@ impl Component for Shell {
 }
 
 impl Shell {
-    fn recreate_bars_and_docs(&mut self) {
+    fn recreate_bars_and_docks(&mut self) {
         for controller in self.bars.values() {
             controller.widget().destroy();
         }

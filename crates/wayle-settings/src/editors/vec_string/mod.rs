@@ -1,6 +1,5 @@
 //! Comma-separated text entry for `Vec<String>` properties. Commits on Enter.
 
-mod helpers;
 mod row;
 
 use relm4::{
@@ -96,7 +95,8 @@ impl SimpleComponent for VecStringControl {
             VecStringMsg::Refresh => {
                 self.entry.block_signal(&self.activate_id);
                 self.entry.block_signal(&self.changed_id);
-                self.entry.set_text(&Self::to_entry_text(&self.property.get()));
+                self.entry
+                    .set_text(&Self::to_entry_text(&self.property.get()));
                 self.entry.unblock_signal(&self.changed_id);
                 self.entry.unblock_signal(&self.activate_id);
             }

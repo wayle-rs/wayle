@@ -1,11 +1,9 @@
 //! Compositor-agnostic dock adapter trait and Niri implementation.
 
-use std::rc::Rc;
-use std::sync::Arc;
+use std::{rc::Rc, sync::Arc};
 
 use indexmap::IndexMap;
-use relm4::gtk::prelude::*;
-use relm4::gtk;
+use relm4::{gtk, gtk::prelude::*};
 use wayle_niri::NiriService;
 
 use super::DockAppData;
@@ -21,15 +19,6 @@ pub type OpenPopoverTracker = Rc<std::cell::RefCell<Option<Rc<gtk::Popover>>>>;
 /// Create a new popover tracker.
 pub fn create_open_popover_tracker() -> OpenPopoverTracker {
     Rc::new(std::cell::RefCell::new(None))
-}
-
-/// Close the currently tracked popover (if any is still visible), then clear.
-pub fn close_tracked_open(tracker: &OpenPopoverTracker) {
-    if let Some(ref current) = *tracker.borrow() {
-        if current.is_visible() {
-            current.popdown();
-        }
-    }
 }
 
 /// Set the currently open popover in the tracker.
@@ -140,9 +129,7 @@ impl DockAdapter for NiriDockAdapter {
                 .collect();
 
             if app_windows.is_empty() {
-                let _ = niri
-                    .spawn(vec!["gtk-launch".to_string(), app_id])
-                    .await;
+                let _ = niri.spawn(vec!["gtk-launch".to_string(), app_id]).await;
                 return;
             }
 
@@ -175,7 +162,18 @@ impl DockAdapter for NiriDockAdapter {
 
     fn focus_window(&self, identifier: &str) {
         let niri = self.niri.clone();
-        let window_id: u64 = identifier.parse().unwrap_or(0);
+        let window_id: u64 = match identifier.parse() {
+            Ok(id) => id,
+            Err(e) => {
+                tracing::debug!(
+                    dock = "focus_window",
+                    identifier = %identifier,
+                    parse_error = ?e,
+                    "Failed to parse window identifier"
+                );
+                return;
+            }
+        };
         tokio::spawn(async move {
             if window_id != 0 {
                 let _ = niri.focus_window(window_id).await;
@@ -227,13 +225,11 @@ impl Clone for DockAdapterRef {
             DockAdapterRef::Niri(niri) => {
                 DockAdapterRef::Niri(NiriDockAdapter::new(niri.niri.clone()))
             }
-            DockAdapterRef::Hyprland(hyprland) => {
-                DockAdapterRef::Hyprland(
-                    crate::shell::dock::adapter_hyprland::HyprlandDockAdapter::new(
-                        hyprland.hyprland.clone(),
-                    ),
-                )
-            }
+            DockAdapterRef::Hyprland(hyprland) => DockAdapterRef::Hyprland(
+                crate::shell::dock::adapter_hyprland::HyprlandDockAdapter::new(
+                    hyprland.hyprland.clone(),
+                ),
+            ),
         }
     }
 }

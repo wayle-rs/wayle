@@ -3,8 +3,7 @@
 //! Patterns use glob syntax and match case-insensitively.
 //! Order matters - first match wins.
 
-use std::collections::HashMap;
-use std::sync::OnceLock;
+use std::{collections::HashMap, sync::OnceLock};
 
 use glob::Pattern;
 
@@ -277,8 +276,7 @@ pub(crate) fn lookup_app_icon(name: &str) -> Option<&'static str> {
         .map(|entry| entry.icon)
 }
 
-static DESKTOP_APP_CACHE: OnceLock<std::sync::RwLock<HashMap<String, String>>> =
-    OnceLock::new();
+static DESKTOP_APP_CACHE: OnceLock<std::sync::RwLock<HashMap<String, String>>> = OnceLock::new();
 
 /// Resolves an application icon name, falling back to desktop entry lookup
 /// and icon theme search when the hardcoded map has no match.

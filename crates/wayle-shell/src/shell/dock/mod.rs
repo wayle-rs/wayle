@@ -6,15 +6,14 @@ mod settings;
 mod watchers;
 
 use std::collections::HashMap;
-use adapter::OpenPopoverTracker;
-use tracing::{debug, info};
-pub(crate) use adapter::DockAdapterRef;
-use adapter::DockAdapter;
 
+pub(crate) use adapter::DockAdapterRef;
+use adapter::{DockAdapter, OpenPopoverTracker};
 use factory::*;
 use gtk::prelude::*;
 use gtk4_layer_shell::{KeyboardMode, LayerShell};
 use relm4::{factory::FactoryVecDeque, gtk, gtk::gdk, prelude::*};
+use tracing::{debug, info};
 use wayle_config::{
     ConfigProperty,
     schemas::dock::{DockPosition, DockVisibility},
@@ -117,17 +116,13 @@ impl Component for Dock {
         let config = init.services.config.config();
         let position = config.dock.position.get();
         let visibility = config.dock.visibility.get();
-        let monitor_name = init.monitor.connector().map(|s| s.to_string());
 
         // Phase 1: Config reads
         let open_popover = adapter::create_open_popover_tracker();
         let settings = settings::DockSettings {
-            theme_provider: config.styling.theme_provider.clone(),
-            icon_position: config.bar.button_icon_position.clone(),
             item_rounding: config.dock.item_rounding.clone(),
             item_padding: config.dock.item_padding.clone(),
             size: ConfigProperty::new(config.dock.size.get()),
-            monitor_name: monitor_name.clone(),
             dock_position: position,
         };
         let adapter = build_adapter(&init.services);
@@ -168,7 +163,7 @@ impl Component for Dock {
             adapter,
         };
 
-         let dock_items_widget = model.items.widget();
+        let dock_items_widget = model.items.widget();
         dock_items_widget.set_hexpand(false);
         dock_items_widget.set_vexpand(false);
         widgets.dock_box.set_halign(gtk::Align::Fill);
@@ -188,7 +183,11 @@ impl Component for Dock {
             );
             model.running_apps.set(initial_apps.clone());
             event_watcher::spawn(&sender, &init.services, adapter.clone());
-            info!(dock = "init", event_watcher = "spawned", "Event watcher started");
+            info!(
+                dock = "init",
+                event_watcher = "spawned",
+                "Event watcher started"
+            );
         }
 
         let pinned_stream = config.dock.pinned_apps.watch();
@@ -222,7 +221,10 @@ impl Component for Dock {
                 self.handle_dock_item_action(&app_id, action);
             }
             DockInput::InitialReady => {
-                debug!(dock = "init", "InitialReady: running apps set, building dock items");
+                debug!(
+                    dock = "init",
+                    "InitialReady: running apps set, building dock items"
+                );
                 self.rebuild_all_items();
             }
         }
@@ -230,7 +232,7 @@ impl Component for Dock {
 
     fn update_cmd(&mut self, msg: DockCmd, _sender: ComponentSender<Self>, root: &Self::Root) {
         match msg {
-              DockCmd::StyleChanged => {
+            DockCmd::StyleChanged => {
                 let config = self.services.config.config();
                 let visibility = config.dock.visibility.get();
                 self.dock_visibility = visibility;
@@ -256,54 +258,54 @@ impl Component for Dock {
                 }
             }
             DockCmd::DockItemsChanged => {
-                debug!(dock = "cmd", cmd = "DockItemsChanged", "Handling DockItemsChanged command");
+                debug!(
+                    dock = "cmd",
+                    cmd = "DockItemsChanged",
+                    "Handling DockItemsChanged command"
+                );
                 self.rebuild_all_items_from_compositor();
             }
-            DockCmd::DockItemsChangedWithEvent(event) => {
-                match event {
-                    DockEvent::ActiveWindowChanged(focused_id) => {
-                        self.incremental_update_focus(focused_id);
-                    }
-                    DockEvent::WindowOpened | DockEvent::WindowClosed => {
-                        self.rebuild_all_items_from_compositor();
-                    }
-                    DockEvent::WindowsChanged => {
-                        self.rebuild_all_items_from_compositor();
-                    }
+            DockCmd::DockItemsChangedWithEvent(event) => match event {
+                DockEvent::ActiveWindowChanged(focused_id) => {
+                    self.incremental_update_focus(focused_id);
                 }
-            }
+                DockEvent::WindowOpened | DockEvent::WindowClosed => {
+                    self.rebuild_all_items_from_compositor();
+                }
+                DockEvent::WindowsChanged => {
+                    self.rebuild_all_items_from_compositor();
+                }
+            },
         }
     }
 }
 
-fn build_dock_items(
-    services: &ShellServices,
-    running: &[DockAppData],
-) -> Vec<DockItemData> {
+fn build_dock_items(services: &ShellServices, running: &[DockAppData]) -> Vec<DockItemData> {
     let config = services.config.config();
     let pinned: Vec<String> = config.dock.pinned_apps.get();
 
     let running_map: HashMap<&str, &DockAppData> =
         running.iter().map(|a| (a.app_id.as_str(), a)).collect();
+    let pinned_set: std::collections::HashSet<&str> = pinned.iter().map(|s| s.as_str()).collect();
 
     let mut items: Vec<DockItemData> = pinned
         .iter()
         .filter_map(|app_id| {
-            running_map.get(app_id.as_str()).copied().map(|ra| DockItemData {
-                app_id: app_id.clone(),
-                is_pinned: true,
-                is_running: true,
-                is_active: ra.is_active,
-                window_count: ra.window_count,
-            })
+            running_map
+                .get(app_id.as_str())
+                .copied()
+                .map(|ra| DockItemData {
+                    app_id: app_id.clone(),
+                    is_pinned: true,
+                    is_running: true,
+                    is_active: ra.is_active,
+                    window_count: ra.window_count,
+                })
         })
         .collect();
 
-    let running_ids: HashMap<&str, ()> =
-        running.iter().map(|a| (a.app_id.as_str(), ())).collect();
-
     for app_id in &pinned {
-        if !running_ids.contains_key(app_id.as_str()) {
+        if !running_map.contains_key(app_id.as_str()) {
             items.push(DockItemData {
                 app_id: app_id.clone(),
                 is_pinned: true,
@@ -314,11 +316,8 @@ fn build_dock_items(
         }
     }
 
-    let pinned_set: HashMap<&str, ()> =
-        pinned.iter().map(|s| (s.as_str(), ())).collect();
-
     for app in running.iter() {
-        if !pinned_set.contains_key(app.app_id.as_str()) {
+        if !pinned_set.contains(app.app_id.as_str()) {
             items.push(DockItemData {
                 app_id: app.app_id.clone(),
                 is_pinned: false,
@@ -339,12 +338,14 @@ fn build_adapter(services: &ShellServices) -> Option<DockAdapterRef> {
         ))
     } else if let Some(ref hyprland) = services.hyprland {
         Some(DockAdapterRef::Hyprland(
-            crate::shell::dock::adapter_hyprland::HyprlandDockAdapter::new(
-                hyprland.clone(),
-            ),
+            crate::shell::dock::adapter_hyprland::HyprlandDockAdapter::new(hyprland.clone()),
         ))
     } else {
-        None
+        services.hyprland.as_ref().map(|hyprland| {
+            DockAdapterRef::Hyprland(
+                crate::shell::dock::adapter_hyprland::HyprlandDockAdapter::new(hyprland.clone()),
+            )
+        })
     }
 }
 
@@ -391,11 +392,11 @@ impl Dock {
         monitor: Option<&gdk::Monitor>,
         position: DockPosition,
     ) {
-        if let Some(monitor) = monitor {
-            if let Some(connector) = monitor.connector() {
-                window.add_css_class(&connector.to_string());
-                window.set_namespace(Some(&format!("wayle-dock-{}", connector)));
-            }
+        if let Some(monitor) = monitor
+            && let Some(connector) = monitor.connector()
+        {
+            window.add_css_class(&connector);
+            window.set_namespace(Some(&format!("wayle-dock-{}", connector)));
         }
 
         let class = match position {
@@ -406,11 +407,7 @@ impl Dock {
         window.add_css_class(class);
     }
 
-    fn setup_dock_window(
-        window: &gtk::Window,
-        monitor: &gdk::Monitor,
-        position: DockPosition,
-    ) {
+    fn setup_dock_window(window: &gtk::Window, monitor: &gdk::Monitor, position: DockPosition) {
         window.init_layer_shell();
         window.set_layer(gtk4_layer_shell::Layer::Top);
         window.set_keyboard_mode(KeyboardMode::None);
@@ -434,7 +431,10 @@ impl Dock {
         Self::build_css_from_settings(settings, services)
     }
 
-    fn build_css_from_settings(settings: &settings::DockSettings, services: &ShellServices) -> String {
+    fn build_css_from_settings(
+        settings: &settings::DockSettings,
+        services: &ShellServices,
+    ) -> String {
         let config = services.config.config();
         let dock = &config.dock;
         let is_wayle = matches!(
@@ -518,8 +518,10 @@ impl Dock {
                 app_ids = ?new_apps.iter().map(|a| &a.app_id).collect::<Vec<_>>(),
                 "Rebuilding dock items from compositor state"
             );
-            let mut app_map: std::collections::HashMap<String, DockAppData> =
-                new_apps.into_iter().map(|a| (a.app_id.clone(), a)).collect();
+            let mut app_map: std::collections::HashMap<String, DockAppData> = new_apps
+                .into_iter()
+                .map(|a| (a.app_id.clone(), a))
+                .collect();
             let old_apps = self.running_apps.get();
             let mut ordered: Vec<DockAppData> = Vec::new();
             let mut changed = false;
@@ -545,7 +547,10 @@ impl Dock {
                 self.running_apps.set(ordered);
                 self.rebuild_all_items();
             } else {
-                debug!(dock = "rebuild", "No change in running apps, skipping rebuild");
+                debug!(
+                    dock = "rebuild",
+                    "No change in running apps, skipping rebuild"
+                );
             }
         }
     }
@@ -572,7 +577,7 @@ impl Dock {
                 }
             }
         }
-         if changed {
+        if changed {
             self.running_apps.set(old_apps);
             self.rebuild_all_items();
         }

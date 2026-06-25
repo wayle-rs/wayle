@@ -156,35 +156,86 @@ fn reconcile_bars(
         .collect();
     debug!(?active, "Reconciling bars");
 
-    let stale: Vec<String> = bars
+    remove_stale(bars, &active);
+
+    for (connector, monitor) in monitors {
+        create_if_new(bars, &connector, monitor, services);
+    }
+
+    sync_ipc_state(services, bars);
+    debug!(bar_count = bars.len(), "Bar reconciliation complete");
+}
+
+fn reconcile_docks(
+    docks: &mut DockMap,
+    services: &ShellServices,
+    monitors: Vec<(Connector, gdk::Monitor)>,
+) {
+    let active: HashSet<&str> = monitors
+        .iter()
+        .map(|(connector, _)| connector.as_str())
+        .collect();
+    debug!(?active, "Reconciling docks");
+
+    remove_stale(docks, &active);
+
+    for (connector, monitor) in monitors {
+        create_dock_if_new(docks, &connector, monitor, services);
+    }
+
+    debug!(dock_count = docks.len(), "Dock reconciliation complete");
+}
+
+fn remove_stale<M>(map: &mut HashMap<Connector, M>, active: &HashSet<&str>) {
+    let stale: Vec<String> = map
         .keys()
         .filter(|connector| !active.contains(connector.as_str()))
         .cloned()
         .collect();
 
     for connector in stale {
-        bars.remove(&connector);
-        info!(connector = %connector, "Removed bar for disconnected monitor");
+        map.remove(&connector);
     }
+}
 
-    for (connector, monitor) in monitors {
-        let Entry::Vacant(entry) = bars.entry(connector) else {
-            continue;
-        };
+fn create_if_new(
+    bars: &mut BarMap,
+    connector: &str,
+    monitor: gdk::Monitor,
+    services: &ShellServices,
+) {
+    let Entry::Vacant(entry) = bars.entry(connector.to_string()) else {
+        return;
+    };
 
-        info!(connector = %entry.key(), "Creating bar for new monitor");
-        let bar = Bar::builder()
-            .launch(BarInit {
-                monitor,
-                services: services.clone(),
-            })
-            .detach();
-        entry.insert(bar);
-    }
+    info!(connector = %entry.key(), "Creating bar for new monitor");
+    let bar = Bar::builder()
+        .launch(BarInit {
+            monitor,
+            services: services.clone(),
+        })
+        .detach();
+    entry.insert(bar);
+}
 
-    sync_ipc_state(services, bars);
+fn create_dock_if_new(
+    docks: &mut DockMap,
+    connector: &str,
+    monitor: gdk::Monitor,
+    services: &ShellServices,
+) {
+    let Entry::Vacant(entry) = docks.entry(connector.to_string()) else {
+        return;
+    };
 
-    debug!(bar_count = bars.len(), "Bar reconciliation complete");
+    info!(connector = %entry.key(), "Creating dock for new monitor");
+    let dock = Dock::builder()
+        .launch(DockInit {
+            monitor,
+            services: services.clone(),
+        })
+        .detach();
+    entry.insert(dock);
 }
 
 fn sync_ipc_state(services: &ShellServices, bars: &BarMap) {
@@ -220,42 +271,4 @@ pub(crate) fn create_docks(services: &ShellServices) -> DockMap {
     docks
 }
 
-fn reconcile_docks(
-    docks: &mut DockMap,
-    services: &ShellServices,
-    monitors: Vec<(Connector, gdk::Monitor)>,
-) {
-    let active: HashSet<&str> = monitors
-        .iter()
-        .map(|(connector, _)| connector.as_str())
-        .collect();
-    debug!(?active, "Reconciling docks");
 
-    let stale: Vec<String> = docks
-        .keys()
-        .filter(|connector| !active.contains(connector.as_str()))
-        .cloned()
-        .collect();
-
-    for connector in stale {
-        docks.remove(&connector);
-        info!(connector = %connector, "Removed dock for disconnected monitor");
-    }
-
-    for (connector, monitor) in monitors {
-        let Entry::Vacant(entry) = docks.entry(connector) else {
-            continue;
-        };
-
-        info!(connector = %entry.key(), "Creating dock for new monitor");
-        let dock = Dock::builder()
-            .launch(DockInit {
-                monitor,
-                services: services.clone(),
-            })
-            .detach();
-        entry.insert(dock);
-    }
-
-    debug!(dock_count = docks.len(), "Dock reconciliation complete");
-}

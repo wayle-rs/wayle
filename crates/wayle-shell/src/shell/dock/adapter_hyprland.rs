@@ -5,8 +5,10 @@ use std::sync::Arc;
 use indexmap::IndexMap;
 use wayle_hyprland::HyprlandService;
 
-use super::adapter::{DockAdapter, DockWindow};
-use super::DockAppData;
+use super::{
+    DockAppData,
+    adapter::{DockAdapter, DockWindow},
+};
 
 pub struct HyprlandDockAdapter {
     pub(crate) hyprland: Arc<HyprlandService>,
