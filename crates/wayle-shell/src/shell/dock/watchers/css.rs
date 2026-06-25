@@ -17,7 +17,6 @@ pub(crate) fn spawn(
 
     let (tx, mut rx) = mpsc::unbounded_channel();
 
-    dock.visibility.subscribe_changes(tx.clone());
     dock.autohide_delay.subscribe_changes(tx.clone());
     dock.size.subscribe_changes(tx.clone());
     dock.item_padding.subscribe_changes(tx.clone());

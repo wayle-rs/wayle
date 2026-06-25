@@ -6,6 +6,7 @@ mod settings;
 mod watchers;
 
 use std::collections::HashMap;
+use std::rc::Rc;
 
 pub(crate) use adapter::DockAdapterRef;
 use adapter::{DockAdapter, OpenPopoverTracker};
@@ -50,6 +51,7 @@ pub(crate) struct Dock {
     dock_box: gtk::Box,
     dock_visibility: DockVisibility,
     dock_position: DockPosition,
+    hover_active: bool,
     running_apps: wayle_core::Property<Vec<DockAppData>>,
     adapter: Option<DockAdapterRef>,
 }
@@ -76,6 +78,7 @@ pub(crate) enum DockEvent {
 pub(crate) enum DockCmd {
     StyleChanged,
     PositionChanged,
+    VisibilityChanged,
     DockItemsChanged,
     DockItemsChangedWithEvent(DockEvent),
 }
@@ -84,6 +87,8 @@ pub(crate) enum DockCmd {
 pub(crate) enum DockInput {
     DockItemAction(String, DockItemInput),
     InitialReady,
+    HoverEnter,
+    HoverLeave,
 }
 
 #[relm4::component(pub(crate))]
@@ -97,8 +102,8 @@ impl Component for Dock {
         #[root]
         gtk::Window {
             set_decorated: false,
-            add_css_class: "dock",
             set_size_request: (1, 1),
+            add_css_class: "dock",
 
             #[name = "dock_box"]
             gtk::Box {
@@ -129,7 +134,7 @@ impl Component for Dock {
         let css_provider = gtk::CssProvider::new();
 
         // Phase 2: UI setup
-        Self::setup_dock_window(&root, &init.monitor, position);
+        Self::setup_dock_window(&root, &init.monitor, position, visibility);
 
         #[allow(deprecated)]
         root.style_context()
@@ -148,6 +153,8 @@ impl Component for Dock {
                 },
             );
 
+        let hover_state = Rc::new(std::cell::Cell::new(false));
+
         // Phase 3: Model + watchers
         let model = Self {
             settings,
@@ -159,6 +166,7 @@ impl Component for Dock {
             dock_box: widgets.dock_box.clone(),
             dock_visibility: visibility,
             dock_position: position,
+            hover_active: false,
             running_apps: wayle_core::Property::new(Vec::new()),
             adapter,
         };
@@ -170,8 +178,34 @@ impl Component for Dock {
         widgets.dock_box.set_valign(gtk::Align::Fill);
         Self::apply_dock_box_alignment(&widgets.dock_box, position);
         Self::apply_dock_box_orientation(&widgets.dock_box, position);
-        widgets.dock_box.append(dock_items_widget);
-        root.auto_exclusive_zone_enable();
+
+   
+
+      // Add hover controller for autohide
+        let hover_state = hover_state.clone();
+        let hover_sender = sender.clone();
+        {
+            let motion_controller = gtk::EventControllerMotion::new();
+            let hover_state_enter = hover_state.clone();
+            let hover_sender_enter = hover_sender.clone();
+            motion_controller.connect_enter(move |_controller, _x, _y| {
+                if hover_state_enter.get() {
+                    return;
+                }
+                hover_state_enter.set(true);
+                hover_sender_enter.input(DockInput::HoverEnter);
+            });
+            let hover_state_leave = hover_state.clone();
+            let hover_sender_leave = hover_sender.clone();
+            motion_controller.connect_leave(move |_controller| {
+                if !hover_state_leave.get() {
+                    return;
+                }
+                hover_state_leave.set(false);
+                hover_sender_leave.input(DockInput::HoverLeave);
+            });
+            root.add_controller(motion_controller);
+        }
 
         if let Some(ref adapter) = model.adapter {
             let initial_apps = adapter.compute_running_apps();
@@ -198,16 +232,6 @@ impl Component for Dock {
         css::spawn(&sender, &init.services);
         config::spawn(&sender, &init.services);
 
-        debug!(
-            dock = "init",
-            visibility = ?visibility,
-            monitor_connector = ?init.monitor.connector(),
-            dock_visible = matches!(visibility, DockVisibility::AlwaysVisible),
-            "Dock window visibility set"
-        );
-
-        root.set_visible(matches!(visibility, DockVisibility::AlwaysVisible));
-
         if model.adapter.is_some() {
             sender.input(DockInput::InitialReady);
         }
@@ -215,7 +239,7 @@ impl Component for Dock {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, root: &Self::Root) {
         match msg {
             DockInput::DockItemAction(app_id, action) => {
                 self.handle_dock_item_action(&app_id, action);
@@ -226,6 +250,12 @@ impl Component for Dock {
                     "InitialReady: running apps set, building dock items"
                 );
                 self.rebuild_all_items();
+            }
+            DockInput::HoverEnter => {
+                self.enter_hover(root);
+            }
+            DockInput::HoverLeave => {
+                self.leave_hover(root);
             }
         }
     }
@@ -241,21 +271,58 @@ impl Component for Dock {
                     self.css_provider.load_from_string(&new_css);
                     self.last_css = new_css;
                 }
-                root.set_visible(matches!(visibility, DockVisibility::AlwaysVisible));
                 self.rebuild_all_items();
+                root.set_visible(true);
             }
             DockCmd::PositionChanged => {
                 let config = self.services.config.config();
                 let new_position = config.dock.position.get();
                 if new_position != self.dock_position {
                     Self::apply_dock_anchors(root, new_position);
-                    Self::apply_dock_css_classes(root, root.monitor().as_ref(), new_position);
+                    Self::apply_dock_css_classes(root, root.monitor().as_ref(), new_position, self.dock_visibility);
                     Self::apply_dock_box_alignment(&self.dock_box, new_position);
                     Self::apply_dock_box_orientation(&self.dock_box, new_position);
                     self.settings.dock_position = new_position;
+
+                    // Re-apply autohide sliver if in autohide mode
+                    if self.dock_visibility == DockVisibility::Autohide {
+                        Self::apply_autohide_sliver(root, &root.monitor().expect("monitor"), new_position);
+                    }
+
                     self.rebuild_all_items();
                     self.dock_position = new_position;
                 }
+            }
+            DockCmd::VisibilityChanged => {
+                let config = self.services.config.config();
+                let visibility = config.dock.visibility.get();
+                let was_autohide = self.dock_visibility == DockVisibility::Autohide;
+                self.dock_visibility = visibility;
+
+                match visibility {
+                    DockVisibility::AlwaysVisible => {
+                        root.auto_exclusive_zone_enable();
+                        if was_autohide {
+                            let dock_size = config.dock.size.get();
+                            let monitor = root.monitor().expect("dock must be on a monitor");
+                            Self::restore_full_size(root, &monitor, self.dock_position, dock_size);
+                        }
+                    }
+                    DockVisibility::Autohide => {
+                        root.set_exclusive_zone(0);
+                        Self::apply_autohide_sliver(root, &root.monitor().expect("monitor must exist"), self.dock_position);
+                    }
+                }
+
+                Self::apply_dock_css_classes(root, root.monitor().as_ref(), self.dock_position, visibility);
+
+                let new_css = self.build_css();
+                if new_css != self.last_css {
+                    self.css_provider.load_from_string(&new_css);
+                    self.last_css = new_css;
+                }
+
+                root.set_visible(true);
             }
             DockCmd::DockItemsChanged => {
                 debug!(
@@ -391,6 +458,7 @@ impl Dock {
         window: &gtk::Window,
         monitor: Option<&gdk::Monitor>,
         position: DockPosition,
+        visibility: DockVisibility,
     ) {
         if let Some(monitor) = monitor
             && let Some(connector) = monitor.connector()
@@ -405,9 +473,20 @@ impl Dock {
             DockPosition::Right => "vertical",
         };
         window.add_css_class(class);
+
+        if visibility == DockVisibility::Autohide {
+            window.add_css_class("autohide");
+        } else {
+            window.remove_css_class("autohide");
+        }
     }
 
-    fn setup_dock_window(window: &gtk::Window, monitor: &gdk::Monitor, position: DockPosition) {
+    fn setup_dock_window(
+        window: &gtk::Window,
+        monitor: &gdk::Monitor,
+        position: DockPosition,
+        visibility: DockVisibility,
+    ) {
         window.init_layer_shell();
         window.set_layer(gtk4_layer_shell::Layer::Top);
         window.set_keyboard_mode(KeyboardMode::None);
@@ -415,7 +494,19 @@ impl Dock {
         window.set_hexpand(false);
         window.set_vexpand(false);
         Self::apply_dock_anchors(window, position);
-        Self::apply_dock_css_classes(window, Some(monitor), position);
+        Self::apply_dock_css_classes(window, Some(monitor), position, visibility);
+
+        match visibility {
+            DockVisibility::AlwaysVisible => {
+                window.auto_exclusive_zone_enable();
+            }
+            DockVisibility::Autohide => {
+                window.set_exclusive_zone(0);
+                Self::apply_autohide_sliver(window, monitor, position);
+            }
+        }
+
+        window.set_visible(true);
 
         let win = window.clone();
         monitor.connect_invalidate(move |_| {
@@ -602,5 +693,62 @@ impl Dock {
             DockPosition::Left | DockPosition::Right => gtk::Orientation::Vertical,
         };
         dock_box.set_orientation(orientation);
+    }
+
+    fn apply_autohide_sliver(window: &gtk::Window, monitor: &gdk::Monitor, position: DockPosition) {
+        let sliver_size = 3;
+        let geom = monitor.geometry();
+        match position {
+            DockPosition::Bottom => {
+                window.set_size_request(geom.width(), sliver_size);
+            }
+            DockPosition::Left | DockPosition::Right => {
+                window.set_size_request(sliver_size, geom.height());
+            }
+        }
+    }
+
+    fn restore_full_size(window: &gtk::Window, monitor: &gdk::Monitor, position: DockPosition, size_px: u32) {
+        let margin = 6;
+        let geom = monitor.geometry();
+        match position {
+            DockPosition::Bottom => {
+                window.set_size_request(geom.width(), size_px as i32 + margin * 2);
+            }
+            DockPosition::Left | DockPosition::Right => {
+                window.set_size_request(size_px as i32 + margin * 2, geom.height());
+            }
+        }
+    }
+
+   fn enter_hover(&mut self, root: &gtk::Window) {
+        if self.dock_visibility != DockVisibility::Autohide {
+            return;
+        }
+        if self.hover_active {
+            return;
+        }
+        self.hover_active = true;
+
+        let config = self.services.config.config();
+        let dock_size = config.dock.size.get();
+        let monitor = root.monitor().expect("dock must be on a monitor");
+        Self::restore_full_size(root, &monitor, self.dock_position, dock_size);
+        root.remove_css_class("autohide");
+    }
+
+    fn leave_hover(&mut self, root: &gtk::Window) {
+        if self.dock_visibility != DockVisibility::Autohide {
+            return;
+        }
+        if !self.hover_active {
+            return;
+        }
+        self.hover_active = false;
+
+        let monitor = root.monitor().expect("dock must be on a monitor");
+        let position = self.dock_position;
+        Self::apply_autohide_sliver(root, &monitor, position);
+        root.add_css_class("autohide");
     }
 }

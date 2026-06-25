@@ -2,6 +2,20 @@
 
 .dock {
     all: unset;
+    transition: opacity 0.15s ease-out;
+
+    &.autohide {
+        .dock-section {
+            opacity: 0;
+            transition: opacity 0.2s ease-out;
+        }
+    }
+
+    &.autohide:hover {
+        .dock-section {
+            opacity: 1;
+        }
+    }
 }
 
 .dock-section {
