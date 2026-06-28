@@ -129,6 +129,8 @@ impl Component for Dock {
             item_padding: config.dock.item_padding.clone(),
             size: ConfigProperty::new(config.dock.size.get()),
             dock_position: position,
+            active_border_width: config.dock.active_border_width.clone(),
+            active_border_color: config.dock.active_border_color.clone(),
         };
         let adapter = build_adapter(&init.services);
         let css_provider = gtk::CssProvider::new();
@@ -538,6 +540,8 @@ impl Dock {
         let size = settings.size.get();
         let padding = settings.item_padding.get();
         let rounding = settings.item_rounding.get();
+        let active_border_width = settings.active_border_width.get();
+        let active_border_color = wayle_widgets::styling::resolve_color(&dock.active_border_color, is_wayle);
 
         let border_radius = match rounding {
             wayle_config::schemas::styling::RoundingLevel::None => 0,
@@ -562,6 +566,8 @@ impl Dock {
             --dock-border-radius: {border_radius}px; \
             --dock-popover-item-padding-px: {popover_item_padding}; \
             --dock-item-unpinned-opacity: 0.7; \
+            --dock-active-border-width: {active_border_width}px; \
+            --dock-active-border-color: {active_border_color}; \
             }}"
         )
     }

@@ -33,7 +33,9 @@
     all: unset;
     background-color: transparent;
     border-radius: var(--dock-item-border-radius, 10px);
-    transition: background-color var(--dock-transition-duration, 150ms);
+    transition: background-color var(--dock-transition-duration, 150ms),
+        border var(--dock-transition-duration, 150ms);
+    border: 1px solid transparent;
     min-width: calc(var(--dock-item-size-px, 44) * 1px);
     min-height: calc(var(--dock-item-size-px, 44) * 1px);
 
@@ -43,10 +45,12 @@
             var(--dock-item-hover-bg) 60%,
             transparent
         );
+        border: 1px solid var(--dock-active-border-color, var(--accent));
     }
 
     &.active {
         background-color: var(--dock-item-active-bg);
+        border: var(--dock-active-border-width, 2px) solid var(--dock-active-border-color, var(--accent));
 
         .dock-indicator {
             opacity: 1;

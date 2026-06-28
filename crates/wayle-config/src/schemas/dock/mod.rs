@@ -81,6 +81,16 @@ pub struct DockConfig {
     #[serde(rename = "pinned-apps")]
     #[default(Vec::new())]
     pub pinned_apps: ConfigProperty<Vec<String>>,
+
+    /// Active window border width in pixels.
+    #[serde(rename = "active-border-width")]
+    #[default(2u8)]
+    pub active_border_width: ConfigProperty<u8>,
+
+    /// Active window border color.
+    #[serde(rename = "active-border-color")]
+    #[default(ColorValue::Token(CssToken::Accent))]
+    pub active_border_color: ConfigProperty<ColorValue>,
 }
 
 impl ModuleInfoProvider for DockConfig {

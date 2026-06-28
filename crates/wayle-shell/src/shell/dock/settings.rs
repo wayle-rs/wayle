@@ -1,6 +1,6 @@
 use wayle_config::{
     ConfigProperty,
-    schemas::{dock::DockPosition, styling::RoundingLevel},
+    schemas::{dock::DockPosition, styling::{ColorValue, RoundingLevel}},
 };
 
 /// Settings for dock items.
@@ -14,4 +14,8 @@ pub(crate) struct DockSettings {
     pub size: ConfigProperty<u32>,
     /// Dock position for layout orientation.
     pub dock_position: DockPosition,
+    /// Active window border width in pixels.
+    pub active_border_width: ConfigProperty<u8>,
+    /// Active window border color.
+    pub active_border_color: ConfigProperty<ColorValue>,
 }
