@@ -9,7 +9,7 @@ use super::{
     adapter::{self, DockAdapter, DockAdapterRef},
     settings::DockSettings,
 };
-use crate::shell::bar::icons::resolve_app_icon;
+use super::icon_resolver::resolve_app_icon;
 
 pub(crate) struct DockItem {
     app_id: String,

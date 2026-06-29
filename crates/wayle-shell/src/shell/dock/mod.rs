@@ -2,6 +2,7 @@ mod adapter;
 mod adapter_hyprland;
 mod event_watcher;
 mod factory;
+mod icon_resolver;
 mod settings;
 mod watchers;
 
