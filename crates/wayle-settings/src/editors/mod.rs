@@ -2,6 +2,7 @@
 //! text entry, color picker, file picker, and TOML editor.
 //! Each owns its `ConfigProperty` and writes back on user interaction.
 
+pub(crate) mod app_picker;
 pub(crate) mod bar_layout;
 pub(crate) mod color;
 pub(crate) mod color_value;

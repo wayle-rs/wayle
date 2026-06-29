@@ -4908,6 +4908,7 @@ name = "wayle-settings"
 version = "0.6.0"
 dependencies = [
  "futures",
+ "gio-unix",
  "gtk4",
  "notify",
  "relm4",
