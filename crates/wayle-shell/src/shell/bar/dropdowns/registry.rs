@@ -99,7 +99,6 @@ impl DropdownInstance {
         let widget_ref = widget.upcast_ref::<gtk::Widget>();
         let visible = self.popover.is_visible();
         let same_parent = self.popover.parent().as_ref() == Some(widget_ref);
-
         debug!(
             visible,
             same_parent,
@@ -456,10 +455,7 @@ fn set_bar_keyboard_mode(popover: &gtk::Popover, mode: KeyboardMode) {
         return;
     };
 
-    let Some(window) = parent
-        .root()
-        .and_then(|root| root.downcast::<gtk::Window>().ok())
-    else {
+    let Some(window) = parent.root().and_then(|r| r.downcast::<gtk::Window>().ok()) else {
         return;
     };
 

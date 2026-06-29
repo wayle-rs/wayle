@@ -26,6 +26,8 @@ pub use property::{
 pub mod schemas {
     /// Bar layout configuration.
     pub mod bar;
+    /// Dock configuration.
+    pub mod dock;
     /// General Wayle configuration.
     pub mod general;
     /// Module-specific configurations.
@@ -72,8 +74,8 @@ pub use infrastructure::{
     watcher::FileWatcher,
 };
 use schemas::{
-    bar::BarConfig, modules::ModulesConfig, osd::OsdConfig, styling::StylingConfig,
-    wallpaper::WallpaperConfig,
+    bar::BarConfig, dock::DockConfig, modules::ModulesConfig, osd::OsdConfig,
+    styling::StylingConfig, wallpaper::WallpaperConfig,
 };
 use wayle_derive::wayle_config;
 
@@ -102,6 +104,9 @@ pub struct Config {
 
     /// Bar layout and module placement.
     pub bar: BarConfig,
+
+    /// Dock configuration.
+    pub dock: DockConfig,
 
     /// Styling configuration (theme, fonts, scale).
     pub styling: StylingConfig,
@@ -135,6 +140,7 @@ mod tests {
             keys.contains(&"settings-bar-background-opacity"),
             "missing bar key"
         );
+        assert!(keys.contains(&"settings-dock-position"), "missing dock key");
         assert!(
             keys.contains(&"settings-modules-clock-format"),
             "missing module key"
