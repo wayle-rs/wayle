@@ -4,6 +4,7 @@ use std::{rc::Rc, sync::Arc};
 
 use indexmap::IndexMap;
 use relm4::{gtk, gtk::prelude::*};
+use tracing::debug;
 use wayle_niri::NiriService;
 
 use super::DockAppData;
@@ -12,26 +13,40 @@ use super::DockAppData;
 /// dock items. Since all GTK operations run on the main thread, Rc<RefCell<...>>
 /// is sufficient (no Arc/Mutex needed).
 ///
+/// Stores (app_id, popover) so we can detect hover on a different icon.
 /// This replaces the previous static registry approach which failed because
 /// gtk::Popover is not Send+Sync and cannot be stored in a static Mutex.
-pub type OpenPopoverTracker = Rc<std::cell::RefCell<Option<Rc<gtk::Popover>>>>;
+pub type OpenPopoverTracker = Rc<std::cell::RefCell<Option<(String, Rc<gtk::Popover>)>>>;
 
 /// Create a new popover tracker.
 pub fn create_open_popover_tracker() -> OpenPopoverTracker {
     Rc::new(std::cell::RefCell::new(None))
 }
 
+/// Check if the tracker currently holds a popover for the given app_id.
+pub fn tracker_has_popover_for(tracker: &OpenPopoverTracker, app_id: &str) -> bool {
+    tracker
+        .borrow()
+        .as_ref()
+        .is_some_and(|(tid, _)| tid == app_id)
+}
+
 /// Set the currently open popover in the tracker.
-pub fn set_open_popover(tracker: &OpenPopoverTracker, popover: &gtk::Popover) {
+pub fn set_open_popover(tracker: &OpenPopoverTracker, app_id: &str, popover: &gtk::Popover) {
+    let has_old = tracker.borrow().as_ref().is_some();
+    debug!(app_id, has_old, "set_open_popover START");
     // Unparent the old popover if it's still parented (prevents GTK warnings
     // about popup() on already-parented popovers)
     if let Some(ref old) = *tracker.borrow() {
-        if old.parent().is_some() {
-            old.unparent();
+        let old_parent = old.1.parent().is_some();
+        debug!(app_id, old_has_parent = old_parent, "set_open_popover unparenting old");
+        if old_parent {
+            old.1.unparent();
         }
     }
     let new_ref = Rc::new(popover.clone());
-    *tracker.borrow_mut() = Some(new_ref);
+    *tracker.borrow_mut() = Some((app_id.to_string(), new_ref));
+    debug!(app_id, "set_open_popover DONE");
 }
 
 /// Window info for the dock window popover.

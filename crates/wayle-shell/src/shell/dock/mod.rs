@@ -598,9 +598,19 @@ impl Dock {
             })
             .collect();
 
-        let mut guard = self.items.guard();
-        guard.clear();
+        let old_count = self.items.len();
+        debug!(old_count, "rebuild_all_items START");
+        *self.open_popover.borrow_mut() = None;
+        debug!("rebuild_all_items tracker cleared");
 
+        let mut guard = self.items.guard();
+        debug!("rebuild_all_items clearing items");
+        guard.clear();
+        drop(guard);
+        let new_count = self.items.len();
+        debug!("rebuild_all_items items cleared, new_count={new_count}");
+
+        let mut guard = self.items.guard();
         for item in new_items {
             guard.push_back(item);
         }

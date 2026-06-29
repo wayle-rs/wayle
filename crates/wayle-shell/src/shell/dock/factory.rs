@@ -2,6 +2,7 @@ use std::rc::Rc;
 
 use relm4::{gtk, gtk::prelude::*, prelude::*};
 use tracing::debug;
+
 use wayle_config::schemas::dock::DockPosition;
 
 use super::{
@@ -125,11 +126,11 @@ impl FactoryComponent for DockItem {
         let sender_clone = sender.clone();
         let tracker = self.open_popover.clone();
         root.connect_clicked(move |_| {
-            // Unparent the tracked popover to close it without triggering
-            // synchronous leave events that would RecCell-panic.
+            debug!("CLICK clearing tracker");
             if let Some(ref old) = *tracker.borrow() {
-                if old.parent().is_some() {
-                    old.unparent();
+                debug!("CLICK unparenting old popover");
+                if old.1.parent().is_some() {
+                    old.1.unparent();
                 }
             }
             *tracker.borrow_mut() = None;
@@ -146,11 +147,11 @@ impl FactoryComponent for DockItem {
         let root_hover = root.clone();
 
         motion.connect_enter(move |_controller, _x, _y| {
-            if *tracker.borrow() != None {
+            let has = adapter::tracker_has_popover_for(&tracker, &app_id);
+            debug!(app_id, "ENTER has_tracker={has}");
+            if has {
                 return;
             }
-
-            debug!(app_id = %app_id, "dock item hover enter");
 
             let windows = adapter
                 .as_ref()
@@ -158,11 +159,9 @@ impl FactoryComponent for DockItem {
                 .unwrap_or_default();
 
             if windows.is_empty() {
-                debug!(app_id = %app_id, "no windows found, skipping popover");
+                debug!(app_id, "ENTER no_windows");
                 return;
             }
-
-            debug!(app_id = %app_id, window_count = windows.len(), "showing popover");
 
             // Clear existing content
             while let Some(child) = content_hover.first_child() {
@@ -185,13 +184,22 @@ impl FactoryComponent for DockItem {
                 content_hover.append(&btn);
             }
 
-            if popover_hover.parent().is_some() {
+            let has_parent = popover_hover.parent().is_some();
+            debug!(app_id, has_parent, "ENTER has_parent");
+            if has_parent {
                 popover_hover.unparent();
             }
             popover_hover.set_parent(&root_hover);
+            let parented = popover_hover.parent().is_some();
+            debug!(app_id, parented, "ENTER after_set_parent");
 
-            adapter::set_open_popover(&tracker, &popover_hover);
+            adapter::set_open_popover(&tracker, &app_id, &popover_hover);
 
+            if !parented {
+                debug!(app_id, "ENTER skipping popup (widget not parented)");
+                return;
+            }
+            debug!(app_id, "ENTER calling popup");
             popover_hover.popup();
         });
 
@@ -201,26 +209,29 @@ impl FactoryComponent for DockItem {
         let popover_leave = self.popover.clone();
 
         motion.connect_leave(move |_| {
+            debug!(app_id = %app_id_leave, "LEAVE start");
             // popup() triggers a motion leave event as GTK moves focus
-            // from the button to the popover surface. If the tracker is set,
-            // we're in the middle of popup() and shouldn't close.
+            // from the button to the popover surface. If the tracker holds
+            // THIS popover, we're in the middle of popup() and shouldn't close.
             if let Ok(current) = tracker_leave.try_borrow() {
-                if current.is_some() {
+                if current.as_ref().is_some_and(|(tid, _)| tid == &app_id_leave) {
+                    debug!(app_id = %app_id_leave, "LEAVE same_app, skipping");
                     return;
+                } else if let Some((tid, _)) = current.as_ref() {
+                    debug!(app_id = %app_id_leave, other_tid = tid, "LEAVE diff_app_tracker");
                 }
-            } else {
-                return;
             }
-            debug!(app_id = %app_id_leave, "motion leave (no active popover)");
+            debug!(app_id = %app_id_leave, "LEAVE popdown");
             popover_leave.popdown();
             // Unparent so the popover can be reparented on next hover
             if popover_leave.parent().as_ref().is_some() {
+                debug!(app_id = %app_id_leave, "LEAVE unparent");
                 popover_leave.unparent();
             }
             while let Some(child) = content_leave.first_child() {
                 content_leave.remove(&child);
             }
-            // Clear the tracker since we're closing this popover.
+            debug!(app_id = %app_id_leave, "LEAVE clearing tracker");
             *tracker_leave.borrow_mut() = None;
         });
 
