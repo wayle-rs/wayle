@@ -17,5 +17,6 @@ pub(crate) struct DockSettings {
     /// Active window border width in pixels.
     pub active_border_width: ConfigProperty<u8>,
     /// Active window border color.
+    #[allow(dead_code)]
     pub active_border_color: ConfigProperty<ColorValue>,
 }

@@ -3,17 +3,14 @@ use wayle_config::ConfigProperty;
 
 use super::{AppPickerControl, AppPickerInit};
 use crate::{
-    editors::make_dirty_badge, pages::spec::SettingRowInit, property_handle::PropertyHandle,
+    pages::spec::SettingRowInit, property_handle::PropertyHandle,
     row::RowBehavior,
 };
 
 pub(crate) fn app_picker(property: &ConfigProperty<Vec<String>>) -> SettingRowInit {
-    let badge = make_dirty_badge();
-
     let controller = AppPickerControl::builder()
         .launch(AppPickerInit {
             property: property.clone(),
-            pinned_badge: badge.clone(),
         })
         .detach();
 

@@ -23,14 +23,6 @@ pub fn create_open_popover_tracker() -> OpenPopoverTracker {
     Rc::new(std::cell::RefCell::new(None))
 }
 
-/// Check if the tracker currently holds a popover for the given app_id.
-pub fn tracker_has_popover_for(tracker: &OpenPopoverTracker, app_id: &str) -> bool {
-    tracker
-        .borrow()
-        .as_ref()
-        .is_some_and(|(tid, _)| tid == app_id)
-}
-
 /// Set the currently open popover in the tracker.
 pub fn set_open_popover(tracker: &OpenPopoverTracker, app_id: &str, popover: &gtk::Popover) {
     let has_old = tracker.borrow().as_ref().is_some();
@@ -200,6 +192,7 @@ impl DockAdapter for NiriDockAdapter {
 
 /// Enum holding whichever compositor adapter is active.
 #[allow(clippy::large_enum_variant)]
+#[allow(dead_code)]
 pub enum DockAdapterRef {
     Niri(NiriDockAdapter),
     Hyprland(crate::shell::dock::adapter_hyprland::HyprlandDockAdapter),

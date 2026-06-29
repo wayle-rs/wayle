@@ -225,15 +225,8 @@ pub(crate) struct AppPickerControl {
     /// The config property being edited.
     property: ConfigProperty<Vec<String>>,
     /// Underlying string list of all app display names.
-    string_list: gtk::StringList,
     /// Filter for search queries.
     filter: gtk::StringFilter,
-    /// Filtered model backing the ListView.
-    filter_model: gtk::FilterListModel,
-    /// Search entry widget.
-    search_entry: gtk::SearchEntry,
-    /// List view widget.
-    list_view: gtk::ListView,
     /// Currently pinned app_ids for factory + activation.
     pinned_apps: Rc<RefCell<HashSet<String>>>,
     /// Container holding pinned app chips.
@@ -251,6 +244,7 @@ pub(crate) enum AppPickerMsg {
     /// User typed in search box.
     SearchChanged(String),
     /// User clicked a list row (position from connect_activate).
+    #[allow(dead_code)]
     Activated(u32),
     /// External property change — sync UI.
     Refresh,
@@ -260,8 +254,7 @@ pub(crate) enum AppPickerMsg {
 pub(crate) struct AppPickerInit {
     /// The config property being edited.
     pub(super) property: ConfigProperty<Vec<String>>,
-    /// Dirty badge label from the parent row.
-    pub(super) pinned_badge: gtk::Label,
+ 
 }
 
 impl SimpleComponent for AppPickerControl {
@@ -376,11 +369,7 @@ impl SimpleComponent for AppPickerControl {
 
         let model = Self {
             property: init.property,
-            string_list,
             filter,
-            filter_model,
-            search_entry,
-            list_view,
             pinned_apps,
             pinned_container,
             lookup,
