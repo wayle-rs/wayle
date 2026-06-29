@@ -211,12 +211,9 @@ impl FactoryComponent for DockItem {
 
         motion.connect_leave(move |_| {
             debug!(app_id = %app_id_leave, "LEAVE start");
-            // popup() triggers a motion leave event as GTK moves focus
-            // from the button to the popover surface. If the tracker holds
-            // THIS popover, we're in the middle of popup() and shouldn't close.
             if let Ok(current) = tracker_leave.try_borrow() {
                 if current.as_ref().is_some_and(|(tid, _)| tid == &app_id_leave) {
-                    debug!(app_id = %app_id_leave, "LEAVE same_app, skipping");
+                    debug!(app_id = %app_id_leave, "LEAVE same_app, returning early");
                     return;
                 } else if let Some((tid, _)) = current.as_ref() {
                     debug!(app_id = %app_id_leave, other_tid = tid, "LEAVE diff_app_tracker");

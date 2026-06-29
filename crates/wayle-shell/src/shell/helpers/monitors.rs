@@ -121,8 +121,8 @@ pub(crate) fn sync(
         );
     }
 
-    reconcile_bars(bars, services, monitors.clone());
-    reconcile_docks(docks, services, monitors);
+    reconcile_bars(bars, services, &monitors);
+    reconcile_docks(docks, services, &monitors);
 }
 
 pub(crate) fn schedule_retry<C: Component<CommandOutput = ShellCmd>>(
@@ -148,7 +148,7 @@ pub(crate) fn schedule_retry<C: Component<CommandOutput = ShellCmd>>(
 fn reconcile_bars(
     bars: &mut BarMap,
     services: &ShellServices,
-    monitors: Vec<(Connector, gdk::Monitor)>,
+    monitors: &[(Connector, gdk::Monitor)],
 ) {
     let active: HashSet<&str> = monitors
         .iter()
@@ -158,8 +158,8 @@ fn reconcile_bars(
 
     remove_stale(bars, &active);
 
-    for (connector, monitor) in monitors {
-        create_if_new(bars, &connector, monitor, services);
+    for (connector, monitor) in monitors.iter() {
+        create_if_new(bars, &connector, monitor.clone(), services);
     }
 
     sync_ipc_state(services, bars);
@@ -169,7 +169,7 @@ fn reconcile_bars(
 fn reconcile_docks(
     docks: &mut DockMap,
     services: &ShellServices,
-    monitors: Vec<(Connector, gdk::Monitor)>,
+    monitors: &[(Connector, gdk::Monitor)],
 ) {
     let active: HashSet<&str> = monitors
         .iter()
@@ -179,23 +179,15 @@ fn reconcile_docks(
 
     remove_stale(docks, &active);
 
-    for (connector, monitor) in monitors {
-        create_dock_if_new(docks, &connector, monitor, services);
+    for (connector, monitor) in monitors.iter() {
+        create_dock_if_new(docks, &connector, monitor.clone(), services);
     }
 
     debug!(dock_count = docks.len(), "Dock reconciliation complete");
 }
 
 fn remove_stale<M>(map: &mut HashMap<Connector, M>, active: &HashSet<&str>) {
-    let stale: Vec<String> = map
-        .keys()
-        .filter(|connector| !active.contains(connector.as_str()))
-        .cloned()
-        .collect();
-
-    for connector in stale {
-        map.remove(&connector);
-    }
+    map.retain(|connector, _| active.contains(connector.as_str()));
 }
 
 fn create_if_new(

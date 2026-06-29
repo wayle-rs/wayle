@@ -22,8 +22,7 @@ pub(crate) fn spawn(
     dock.item_padding.subscribe_changes(tx.clone());
     dock.item_rounding.subscribe_changes(tx.clone());
     dock.background_opacity.subscribe_changes(tx.clone());
-    dock.bg.subscribe_changes(tx.clone());
-    dock.show_running.subscribe_changes(tx);
+    dock.bg.subscribe_changes(tx);
 
     sender.command(move |out, shutdown| async move {
         const DEBOUNCE: Duration = Duration::from_millis(50);

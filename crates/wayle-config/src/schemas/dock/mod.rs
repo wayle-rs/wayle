@@ -79,7 +79,7 @@ pub struct DockConfig {
 
     /// Pinned application IDs displayed in the dock.
     #[serde(rename = "pinned-apps")]
-    #[default(Vec::new())]
+    #[default(Vec::<String>::new())]
     pub pinned_apps: ConfigProperty<Vec<String>>,
 
     /// Active window border width in pixels.

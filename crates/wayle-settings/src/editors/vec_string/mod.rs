@@ -97,8 +97,8 @@ impl SimpleComponent for VecStringControl {
                 self.entry.block_signal(&self.changed_id);
                 self.entry
                     .set_text(&Self::to_entry_text(&self.property.get()));
-                self.entry.unblock_signal(&self.changed_id);
                 self.entry.unblock_signal(&self.activate_id);
+                self.entry.unblock_signal(&self.changed_id);
             }
         }
     }
