@@ -147,7 +147,7 @@ impl FactoryComponent for DockItem {
         let root_hover = root.clone();
 
         motion.connect_enter(move |_controller, _x, _y| {
-            let has = adapter::tracker_has_popover_for(&tracker, &app_id);
+            let has = tracker.borrow().as_ref().is_some_and(|(tid, p)| tid == &app_id && p.parent().is_some());
             debug!(app_id, "ENTER has_tracker={has}");
             if has {
                 return;
@@ -174,6 +174,7 @@ impl FactoryComponent for DockItem {
                 let btn = gtk::Button::new();
                 btn.add_css_class("dock-window-item");
                 btn.set_label(&win.title);
+                btn.set_hexpand(true);
                 btn.set_halign(gtk::Align::Start);
                 btn.set_valign(gtk::Align::Center);
                 btn.connect_clicked(move |_| {

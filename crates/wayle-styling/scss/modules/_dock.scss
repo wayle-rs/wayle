@@ -72,32 +72,60 @@
 .dock-window-popover {
     @include popover-base;
     font-family: var(--font-sans);
+    background-color: var(--dock-popover-bg, var(--bg-elevated));
 
     > contents {
         @include popover-contents;
-        padding: var(--dock-popover-padding, 0.5rem);
+        padding: 0;
+        border-radius: var(--dock-popover-border-radius, 12px);
     }
 }
 
 .dock-window-item {
     all: unset;
     border-radius: var(--dock-item-border-radius, 10px);
-    transition: background-color var(--dock-transition-duration, 150ms);
+    transition: background-color var(--dock-transition-duration, 150ms),
+        border var(--dock-transition-duration, 150ms);
     padding: calc(var(--dock-popover-item-padding-px, 8) * 1px);
+    margin: 2px 0;
+    border: 1px solid transparent;
+    min-height: 24px;
+
+    &:first-child {
+        border-top-left-radius: var(--dock-popover-border-radius, 12px);
+        border-top-right-radius: var(--dock-popover-border-radius, 12px);
+    }
+
+    &:last-child {
+        border-bottom-left-radius: var(--dock-popover-border-radius, 12px);
+        border-bottom-right-radius: var(--dock-popover-border-radius, 12px);
+    }
 
     &:hover {
-        background-color: color-mix(
-            in srgb,
-            var(--dock-item-hover-bg) 40%,
-            transparent
-        );
+        background-color: var(--dock-item-hover-bg);
+        border: 1px solid var(--dock-item-hover-border, var(--border-subtle));
     }
 }
 
 .dock-popover-content {
-    padding: var(--dock-popover-padding, 0.5rem);
+    padding: 0;
 }
 
 .dock-vertical .dock-window-popover > contents {
     @include popover-contents;
+    padding: 0;
+}
+
+.dock-vertical .dock-window-item:first-child {
+    border-top-left-radius: 0;
+    border-bottom-left-radius: var(--dock-popover-border-radius, 12px);
+    border-top-right-radius: var(--dock-popover-border-radius, 12px);
+    border-bottom-right-radius: 0;
+}
+
+.dock-vertical .dock-window-item:last-child {
+    border-top-left-radius: var(--dock-popover-border-radius, 12px);
+    border-bottom-left-radius: 0;
+    border-top-right-radius: 0;
+    border-bottom-right-radius: var(--dock-popover-border-radius, 12px);
 }

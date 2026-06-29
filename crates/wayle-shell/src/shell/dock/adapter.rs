@@ -41,6 +41,7 @@ pub fn set_open_popover(tracker: &OpenPopoverTracker, app_id: &str, popover: &gt
         let old_parent = old.1.parent().is_some();
         debug!(app_id, old_has_parent = old_parent, "set_open_popover unparenting old");
         if old_parent {
+            old.1.popdown();
             old.1.unparent();
         }
     }

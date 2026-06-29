@@ -568,6 +568,9 @@ impl Dock {
             --dock-item-unpinned-opacity: 0.7; \
             --dock-active-border-width: {active_border_width}px; \
             --dock-active-border-color: {active_border_color}; \
+            --dock-item-hover-bg: color-mix(in srgb, var(--bg-overlay) 50%, transparent); \
+            --dock-item-hover-border: var(--border-subtle); \
+            --dock-popover-bg: var(--bg-elevated); \
             }}"
         )
     }
