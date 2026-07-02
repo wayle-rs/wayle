@@ -6,3 +6,4 @@ wayle-shell.ftl
 # Temporary sandboxes
 Wayle
 sandbox/
+package-lock.json
