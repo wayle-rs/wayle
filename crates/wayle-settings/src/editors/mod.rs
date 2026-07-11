@@ -2,6 +2,7 @@
 //! text entry, color picker, file picker, and TOML editor.
 //! Each owns its `ConfigProperty` and writes back on user interaction.
 
+pub(crate) mod app_picker;
 pub(crate) mod bar_layout;
 pub(crate) mod color;
 pub(crate) mod color_value;
@@ -15,6 +16,7 @@ pub(crate) mod text;
 pub(crate) mod theme_selector;
 pub(crate) mod toggle;
 pub(crate) mod toml_editor;
+
 
 use futures::StreamExt;
 use relm4::{

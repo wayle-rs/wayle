@@ -24,8 +24,21 @@ pub(crate) fn derive_layers(background: &str, is_light: bool) -> Layers {
     }
 }
 
+pub(crate) fn hex_to_rgba(hex: &str, alpha: f32) -> String {
+    let alpha = alpha.clamp(0.0, 1.0);
+    let srgb = parse(hex);
+    let srgb = srgb.into_format::<u8>();
+    format!(
+        "rgba({}, {}, {}, {:.2})",
+        srgb.red, srgb.green, srgb.blue, alpha
+    )
+}
+
 fn parse(hex: &str) -> Srgb<f32> {
     let hex = hex.trim_start_matches('#');
+    if hex.len() < 6 {
+        return Srgb::new(0u8, 0u8, 0u8).into_format();
+    }
     let r = u8::from_str_radix(&hex[0..2], 16).unwrap_or(0);
     let g = u8::from_str_radix(&hex[2..4], 16).unwrap_or(0);
     let b = u8::from_str_radix(&hex[4..6], 16).unwrap_or(0);

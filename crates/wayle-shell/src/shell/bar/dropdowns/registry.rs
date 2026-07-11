@@ -99,7 +99,6 @@ impl DropdownInstance {
         let widget_ref = widget.upcast_ref::<gtk::Widget>();
         let visible = self.popover.is_visible();
         let same_parent = self.popover.parent().as_ref() == Some(widget_ref);
-
         debug!(
             visible,
             same_parent,
@@ -202,7 +201,6 @@ impl DropdownInstance {
     }
 
     fn apply_style(&self, style: &DropdownStyle) {
-        self.popover.set_opacity(style.opacity);
         self.popover.set_autohide(style.autohide);
         if style.shadow_enabled {
             self.popover.add_css_class("shadow");
@@ -457,10 +455,7 @@ fn set_bar_keyboard_mode(popover: &gtk::Popover, mode: KeyboardMode) {
         return;
     };
 
-    let Some(window) = parent
-        .root()
-        .and_then(|root| root.downcast::<gtk::Window>().ok())
-    else {
+    let Some(window) = parent.root().and_then(|r| r.downcast::<gtk::Window>().ok()) else {
         return;
     };
 

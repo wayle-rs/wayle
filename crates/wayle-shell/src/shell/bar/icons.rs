@@ -81,6 +81,7 @@ pub(crate) const DEFAULT_APP_ICON_MAP: &[(&str, &str)] = &[
     ("*atom*", "ld-code-symbolic"),
     ("*clion*", "si-clion-symbolic"),
     ("*code*", "tb-brand-vscode-symbolic"),
+    ("*vscodium*", "tb-brand-vscode-symbolic"),
     ("*cursor*", "si-cursor-symbolic"),
     ("*datagrip*", "si-datagrip-symbolic"),
     ("*emacs*", "si-gnuemacs-symbolic"),
@@ -274,3 +275,5 @@ pub(crate) fn lookup_app_icon(name: &str) -> Option<&'static str> {
         .find(|entry| entry.pattern.matches(&name_lower))
         .map(|entry| entry.icon)
 }
+
+

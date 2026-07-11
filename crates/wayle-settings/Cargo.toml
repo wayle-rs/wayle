@@ -11,6 +11,7 @@ name = "wayle-settings"
 path = "src/main.rs"
 
 [dependencies]
+gio-unix = { version = "0.22.6", default-features = false }
 gtk4.workspace = true
 notify.workspace = true
 relm4.workspace = true

@@ -4908,6 +4908,7 @@ name = "wayle-settings"
 version = "0.6.0"
 dependencies = [
  "futures",
+ "gio-unix",
  "gtk4",
  "notify",
  "relm4",
@@ -4943,6 +4944,7 @@ dependencies = [
  "gtk4-layer-shell",
  "i18n-embed",
  "i18n-embed-fl",
+ "indexmap",
  "indicatif",
  "minijinja",
  "notify",

@@ -13,6 +13,7 @@ use std::{
 };
 
 pub use errors::Error;
+use palette_provider::color::hex_to_rgba;
 use tracing::error;
 use wayle_config::{
     infrastructure::themes::Palette,
@@ -55,6 +56,8 @@ pub fn theme_css(
     let bar_values = bar_rounding.to_bar_css_values();
     let bar_button_values = button_rounding.to_bar_element_css_values();
     let bar_group_values = group_rounding.to_bar_element_css_values();
+    let dropdown_opacity = (bar.dropdown_opacity.get().value() as f32) / 100.0;
+    let dropdown_surface = hex_to_rgba(&resolved.surface, dropdown_opacity);
 
     format!(
         r#":root {{
@@ -68,6 +71,7 @@ pub fn theme_css(
     --palette-yellow: {yellow};
     --palette-green: {green};
     --palette-blue: {blue};
+    --dropdown-surface: {dropdown_surface};
 
     --cfg-font-sans: "{font_sans}";
     --cfg-font-mono: "{font_mono}";
