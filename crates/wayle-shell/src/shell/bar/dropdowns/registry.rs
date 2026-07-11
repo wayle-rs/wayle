@@ -202,7 +202,6 @@ impl DropdownInstance {
     }
 
     fn apply_style(&self, style: &DropdownStyle) {
-        self.popover.set_opacity(style.opacity);
         self.popover.set_autohide(style.autohide);
         if style.shadow_enabled {
             self.popover.add_css_class("shadow");

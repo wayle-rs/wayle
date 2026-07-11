@@ -1,6 +1,6 @@
 .dropdown {
     all: unset;
-    background: var(--bg-surface);
+    background: transparent;
     border-radius: var(--rounding-container);
     border: 1px solid var(--border-default);
     min-width: calc(28rem * var(--global-scale));
@@ -35,7 +35,6 @@ popover.shadow.position-right > contents .dropdown {
 }
 
 popover.dropdown {
-    background: transparent;
     border: none;
     box-shadow: none;
     min-width: 0;
@@ -49,10 +48,12 @@ popover.dropdown {
 
     > contents {
         all: unset;
-        background: transparent;
+        opacity: 1.0;
 
         > .dropdown {
             min-width: 0;
+            background-color: var(--dropdown-surface);
+            opacity: 1.0;
         }
     }
 }
