@@ -11,7 +11,8 @@ menubutton.bar-button.icon-square {
         border-radius: var(--bar-button-rounding-element);
         transition: background-color var(--duration-fast);
 
-        image {
+        image,
+        .text-icon {
             color: var(--bar-btn-icon-color);
             margin: calc(var(--bar-btn-icon-padding) * 0.3);
         }

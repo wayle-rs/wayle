@@ -135,8 +135,25 @@ impl Component for BarButton {
                         set_hexpand: model.icon_should_center(),
 
                         #[watch]
-                        set_icon_name: Some(&model.icon),
+                        set_visible: !model.is_text_icon(),
+
+                        #[watch]
+                        set_icon_name: (!model.is_text_icon()).then(|| model.icon.as_str()),
                     },
+
+                    gtk::Label {
+                        add_css_class: "text-icon",
+                        set_halign: gtk::Align::Center,
+
+                        #[watch]
+                        set_hexpand: model.icon_should_center(),
+
+                        #[watch]
+                        set_visible: model.is_text_icon(),
+
+                        #[watch]
+                        set_label: &model.icon,
+                    }
                 },
 
                 #[name = "label_container"]
@@ -320,6 +337,10 @@ impl BarButton {
     fn max_width_chars(&self) -> i32 {
         let max = self.behavior.label_max_chars.get();
         if max > 0 { max as i32 } else { -1 }
+    }
+
+    fn is_text_icon(&self) -> bool {
+        !self.icon.is_ascii() || self.icon.chars().count() <= 2
     }
 
     fn is_icon_only(&self) -> bool {

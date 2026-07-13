@@ -14,7 +14,8 @@ menubutton.bar-button.block-prefix {
     }
 
 
-    .icon-container image {
+    .icon-container image,
+    .icon-container .text-icon {
         color: var(--bar-btn-icon-color);
         margin: var(--bar-btn-icon-padding);
     }

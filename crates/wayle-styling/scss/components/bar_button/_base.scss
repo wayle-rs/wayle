@@ -36,10 +36,18 @@ menubutton.bar-button {
         font-weight: var(--bar-btn-label-weight);
     }
 
-    > button.toggle image {
+    > button.toggle image,
+    > button.toggle .text-icon {
         all: unset;
         color: var(--bar-btn-icon-color);
+    }
+
+    > button.toggle image {
         -gtk-icon-size: var(--bar-btn-icon-size);
+    }
+
+    > button.toggle .text-icon {
+        font-size: var(--bar-btn-icon-size);
     }
 
     // Basic variant: padding on content box, gap as margin on label
