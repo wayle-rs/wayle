@@ -25,3 +25,9 @@ pub fn force_window_resize(widget: &impl IsA<gtk::Widget>) {
         });
     }
 }
+
+/// Determines if an icon string should be treated as text (e.g. Nerd Font characters)
+/// rather than a GTK symbolic icon name.
+pub fn is_text_icon(icon: &str) -> bool {
+    !icon.is_ascii() || icon.chars().count() <= 2
+}

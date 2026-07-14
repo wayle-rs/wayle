@@ -79,29 +79,49 @@ impl NiriWorkspaceButton {
         urgent_window_ids: &HashSet<u64>,
     ) {
         if self.app_icon_inits.is_empty() {
-            let image = gtk::Image::builder()
-                .icon_name(&self.empty_icon)
-                .css_classes([WORKSPACE_ICON_CSS, WORKSPACE_ICON_EMPTY_CSS])
-                .valign(gtk::Align::Center)
-                .build();
-            container.append(&image);
+            if wayle_widgets::utils::is_text_icon(&self.empty_icon) {
+                let label = gtk::Label::builder()
+                    .label(&self.empty_icon)
+                    .css_classes([WORKSPACE_ICON_CSS, WORKSPACE_ICON_EMPTY_CSS])
+                    .valign(gtk::Align::Center)
+                    .build();
+                container.append(&label);
+            } else {
+                let image = gtk::Image::builder()
+                    .icon_name(&self.empty_icon)
+                    .css_classes([WORKSPACE_ICON_CSS, WORKSPACE_ICON_EMPTY_CSS])
+                    .valign(gtk::Align::Center)
+                    .build();
+                container.append(&image);
+            }
             return;
         }
 
         for init in mem::take(&mut self.app_icon_inits) {
-            let image = gtk::Image::builder()
-                .icon_name(&init.icon_name)
-                .css_classes([WORKSPACE_ICON_CSS])
-                .valign(gtk::Align::Center)
-                .build();
+            let widget: gtk::Widget = if wayle_widgets::utils::is_text_icon(&init.icon_name) {
+                gtk::Label::builder()
+                    .label(&init.icon_name)
+                    .css_classes([WORKSPACE_ICON_CSS])
+                    .valign(gtk::Align::Center)
+                    .build()
+                    .upcast()
+            } else {
+                gtk::Image::builder()
+                    .icon_name(&init.icon_name)
+                    .css_classes([WORKSPACE_ICON_CSS])
+                    .valign(gtk::Align::Center)
+                    .build()
+                    .upcast()
+            };
+
             let is_urgent = init
                 .window_ids
                 .iter()
                 .any(|window_id| urgent_window_ids.contains(window_id));
             if is_urgent {
-                image.add_css_class(URGENT_CLASS);
+                widget.add_css_class(URGENT_CLASS);
             }
-            container.append(&image);
+            container.append(&widget);
         }
     }
 }

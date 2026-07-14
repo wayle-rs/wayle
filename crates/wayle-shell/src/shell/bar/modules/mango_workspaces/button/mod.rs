@@ -117,9 +117,18 @@ impl FactoryComponent for MangoTagButton {
                     gtk::Image {
                         add_css_class: "workspace-icon",
                         #[watch]
-                        set_visible: self.show_icon(),
+                        set_visible: self.show_icon() && !self.icon.as_deref().is_some_and(wayle_widgets::utils::is_text_icon),
                         #[watch]
-                        set_icon_name: self.icon.as_deref(),
+                        set_icon_name: self.icon.as_deref().filter(|i| !wayle_widgets::utils::is_text_icon(i)),
+                        set_valign: gtk::Align::Center,
+                    },
+
+                    gtk::Label {
+                        add_css_class: "workspace-icon",
+                        #[watch]
+                        set_visible: self.show_icon() && self.icon.as_deref().is_some_and(wayle_widgets::utils::is_text_icon),
+                        #[watch]
+                        set_label: self.icon.as_deref().unwrap_or_default(),
                         set_valign: gtk::Align::Center,
                     },
 

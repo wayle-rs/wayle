@@ -63,7 +63,7 @@ pub(crate) struct WorkspaceButtonInit {
 
 pub(super) struct AppIcon {
     pub addresses: Vec<Address>,
-    pub widget: gtk::Image,
+    pub widget: gtk::Widget,
 }
 
 pub(crate) struct WorkspaceButton {

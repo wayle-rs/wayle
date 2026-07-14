@@ -123,12 +123,21 @@ impl WorkspaceButton {
                     container.append(&label);
                     return;
                 };
-                let image = gtk::Image::builder()
-                    .icon_name(icon_name)
-                    .css_classes([WORKSPACE_CUSTOM_ICON_CSS])
-                    .valign(gtk::Align::Center)
-                    .build();
-                container.append(&image);
+                if wayle_widgets::utils::is_text_icon(icon_name) {
+                    let label = gtk::Label::builder()
+                        .label(icon_name)
+                        .css_classes([WORKSPACE_CUSTOM_ICON_CSS])
+                        .valign(gtk::Align::Center)
+                        .build();
+                    container.append(&label);
+                } else {
+                    let image = gtk::Image::builder()
+                        .icon_name(icon_name)
+                        .css_classes([WORKSPACE_CUSTOM_ICON_CSS])
+                        .valign(gtk::Align::Center)
+                        .build();
+                    container.append(&image);
+                }
             }
             DisplayMode::None => {}
         }
@@ -140,32 +149,52 @@ impl WorkspaceButton {
         urgent_addresses: &HashSet<Address>,
     ) {
         if self.app_icon_inits.is_empty() {
-            let image = gtk::Image::builder()
-                .icon_name(&self.empty_icon)
-                .css_classes([WORKSPACE_ICON_CSS, WORKSPACE_ICON_EMPTY_CSS])
-                .valign(gtk::Align::Center)
-                .build();
-            container.append(&image);
+            if wayle_widgets::utils::is_text_icon(&self.empty_icon) {
+                let label = gtk::Label::builder()
+                    .label(&self.empty_icon)
+                    .css_classes([WORKSPACE_ICON_CSS, WORKSPACE_ICON_EMPTY_CSS])
+                    .valign(gtk::Align::Center)
+                    .build();
+                container.append(&label);
+            } else {
+                let image = gtk::Image::builder()
+                    .icon_name(&self.empty_icon)
+                    .css_classes([WORKSPACE_ICON_CSS, WORKSPACE_ICON_EMPTY_CSS])
+                    .valign(gtk::Align::Center)
+                    .build();
+                container.append(&image);
+            }
             return;
         }
 
         for init in self.app_icon_inits.drain(..) {
-            let image = gtk::Image::builder()
-                .icon_name(&init.icon_name)
-                .css_classes([WORKSPACE_ICON_CSS])
-                .valign(gtk::Align::Center)
-                .build();
+            let widget: gtk::Widget = if wayle_widgets::utils::is_text_icon(&init.icon_name) {
+                gtk::Label::builder()
+                    .label(&init.icon_name)
+                    .css_classes([WORKSPACE_ICON_CSS])
+                    .valign(gtk::Align::Center)
+                    .build()
+                    .upcast()
+            } else {
+                gtk::Image::builder()
+                    .icon_name(&init.icon_name)
+                    .css_classes([WORKSPACE_ICON_CSS])
+                    .valign(gtk::Align::Center)
+                    .build()
+                    .upcast()
+            };
+
             let is_urgent = init
                 .addresses
                 .iter()
                 .any(|addr| urgent_addresses.contains(addr));
             if is_urgent {
-                image.add_css_class("urgent");
+                widget.add_css_class("urgent");
             }
-            container.append(&image);
+            container.append(&widget);
             self.app_icons.push(AppIcon {
                 addresses: init.addresses,
-                widget: image,
+                widget,
             });
         }
     }

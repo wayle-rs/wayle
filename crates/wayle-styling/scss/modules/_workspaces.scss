@@ -125,12 +125,20 @@
     -gtk-icon-size: calc(var(--ws-icon-size-px) * 1px);
 }
 
+label.workspace-custom-icon {
+    font-size: calc(var(--ws-icon-size-px) * 1px);
+}
+
 .workspace-icon {
     -gtk-icon-size: calc(var(--ws-icon-size-px) * 1px);
 
     &.urgent {
         opacity: 0.5;
     }
+}
+
+label.workspace-icon {
+    font-size: calc(var(--ws-icon-size-px) * 1px);
 }
 
 .workspace-divider {
