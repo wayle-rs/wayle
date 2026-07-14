@@ -309,14 +309,6 @@ pub struct HyprlandWorkspacesConfig {
     #[default(ScaleFactor::default())]
     pub icon_size: ConfigProperty<ScaleFactor>,
 
-    /// Scale multiplier for text-based icons (Nerd Fonts).
-    ///
-    /// Applies to workspace identity icons and app icons that are text-based.
-    /// Multiplies on top of `icon-size`.
-    #[serde(rename = "text-icon-size")]
-    #[default(ScaleFactor::new(1.3))]
-    pub text_icon_size: ConfigProperty<ScaleFactor>,
-
     /// Scale multiplier for workspace labels and dividers.
     ///
     /// Applies to workspace number/name labels and the divider text.

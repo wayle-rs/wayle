@@ -40,7 +40,6 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                     title_key: "settings-section-icons",
                     items: vec![
                         scale(&bar.button_icon_size),
-                        scale(&bar.button_text_icon_size),
                         scale(&bar.button_icon_padding),
                     ],
                 },

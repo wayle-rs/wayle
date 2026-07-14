@@ -47,9 +47,6 @@ settings-modules-niri-workspaces-workspace-padding = Workspace Padding
 settings-modules-niri-workspaces-icon-size = Icon Size
     .description = Scale multiplier for workspace icons (0.25-3.0)
 
-settings-modules-niri-workspaces-text-icon-size = Text Icon Size
-    .description = Scale multiplier for text-based icons (Nerd Fonts). Multiplies on top of icon size
-
 settings-modules-niri-workspaces-label-size = Label Size
     .description = Scale multiplier for workspace labels (0.25-3.0)
 

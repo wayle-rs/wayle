@@ -75,7 +75,6 @@ pub fn theme_css(
     --global-scale: {global_scale};
     --bar-scale: {bar_scale};
     --bar-btn-icon-scale: {btn_icon_scale};
-    --bar-btn-text-icon-scale: {btn_text_icon_scale};
     --bar-btn-icon-padding-scale: {btn_icon_padding_scale};
     --bar-btn-label-scale: {btn_label_scale};
     --bar-btn-label-padding-scale: {btn_label_padding_scale};
@@ -103,7 +102,6 @@ pub fn theme_css(
         global_scale = styling.scale.get(),
         bar_scale = bar.scale.get(),
         btn_icon_scale = bar.button_icon_size.get(),
-        btn_text_icon_scale = bar.button_text_icon_size.get(),
         btn_icon_padding_scale = bar.button_icon_padding.get(),
         btn_label_scale = bar.button_label_size.get(),
         btn_label_padding_scale = bar.button_label_padding.get(),
