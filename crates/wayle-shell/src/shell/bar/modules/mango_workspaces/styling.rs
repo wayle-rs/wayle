@@ -40,10 +40,12 @@ pub(super) fn apply_styling(
 
     let bar_scale = config.bar.scale.get().value();
     let icon_scale = tags_config.icon_size.get().value();
+    let text_icon_scale = tags_config.text_icon_size.get().value();
     let label_scale = tags_config.label_size.get().value();
     let is_vertical = settings.is_vertical.get();
 
     let icon_size_px = rem_to_px_rounded(ICON_BASE_REM * icon_scale, bar_scale);
+    let text_icon_size_px = rem_to_px_rounded(ICON_BASE_REM * icon_scale * text_icon_scale, bar_scale);
     let label_size_px = rem_to_px_rounded(LABEL_BASE_REM * label_scale, bar_scale);
     let tag_padding_px = rem_to_px_rounded(tags_config.tag_padding.get().value(), bar_scale);
 
@@ -62,6 +64,7 @@ pub(super) fn apply_styling(
             --ws-border-color: {border_color}; \
             --ws-border-width: {border_width}px; \
             --ws-icon-size-px: {icon_size_px}; \
+            --ws-text-icon-size-px: {text_icon_size_px}; \
             --ws-label-size-px: {label_size_px}; \
             --ws-margin-vertical-px: {margin_vertical_px}; \
             --ws-margin-horizontal-px: {margin_horizontal_px}; \

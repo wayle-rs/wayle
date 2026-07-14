@@ -160,6 +160,7 @@ fn spawn_config_watchers(
     let app_icons_empty = config.app_icons_empty.clone();
     let icon_gap = config.icon_gap.clone();
     let icon_size = config.icon_size.clone();
+    let text_icon_size = config.text_icon_size.clone();
     let label_size = config.label_size.clone();
     let workspace_padding = config.workspace_padding.clone();
     let workspace_ignore = config.workspace_ignore.clone();
@@ -193,6 +194,7 @@ fn spawn_config_watchers(
             app_icons_empty.watch(),
             icon_gap.watch(),
             icon_size.watch(),
+            text_icon_size.watch(),
             label_size.watch(),
             workspace_padding.watch(),
             workspace_ignore.watch(),

@@ -94,6 +94,13 @@ pub struct MangoWorkspacesConfig {
     #[default(ScaleFactor::default())]
     pub icon_size: ConfigProperty<ScaleFactor>,
 
+    /// Scale multiplier for text-based icons (Nerd Fonts).
+    ///
+    /// Multiplies on top of `icon-size`.
+    #[serde(rename = "text-icon-size")]
+    #[default(ScaleFactor::new(1.3))]
+    pub text_icon_size: ConfigProperty<ScaleFactor>,
+
     /// Scale factor applied to the tag label text.
     #[serde(rename = "label-size")]
     #[default(ScaleFactor::default())]

@@ -48,9 +48,10 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 SectionSpec {
                     title_key: "settings-section-sizing",
                     items: vec![
-                        spacing(&module.tag_padding),
                         spacing(&module.icon_gap),
+                        spacing(&module.tag_padding),
                         scale(&module.icon_size),
+                        scale(&module.text_icon_size),
                         scale(&module.label_size),
                     ],
                 },

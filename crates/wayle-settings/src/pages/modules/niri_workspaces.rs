@@ -59,6 +59,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                         spacing(&module.icon_gap),
                         spacing(&module.workspace_padding),
                         scale(&module.icon_size),
+                        scale(&module.text_icon_size),
                         scale(&module.label_size),
                     ],
                 },

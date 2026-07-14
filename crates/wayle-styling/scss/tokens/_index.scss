@@ -181,6 +181,9 @@ $base-btn-gap: 0.5rem;
     --bar-btn-icon-size: calc(
         #{$base-btn-icon-size} * var(--bar-scale) * var(--bar-btn-icon-scale)
     );
+    --bar-btn-text-icon-size: calc(
+        #{$base-btn-icon-size} * var(--bar-scale) * var(--bar-btn-icon-scale) * var(--bar-btn-text-icon-scale)
+    );
     --bar-btn-icon-padding: calc(
         #{$base-btn-padding} * var(--bar-scale) * var(--bar-btn-icon-padding-scale)
     );

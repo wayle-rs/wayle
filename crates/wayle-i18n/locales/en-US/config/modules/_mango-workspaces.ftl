@@ -32,6 +32,9 @@ settings-modules-mango-workspaces-icon-gap = Icon Gap
 settings-modules-mango-workspaces-icon-size = Icon Size
     .description = Scale multiplier for application icons (0.25-3.0)
 
+settings-modules-mango-workspaces-text-icon-size = Text Icon Size
+    .description = Scale multiplier for text-based icons (Nerd Fonts). Multiplies on top of icon size
+
 settings-modules-mango-workspaces-app-icon-map = App Icon Map
     .description = Client app id or title to icon mappings
 

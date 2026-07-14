@@ -47,6 +47,9 @@ settings-modules-hyprland-workspaces-workspace-padding = Marge intérieure de l'
 settings-modules-hyprland-workspaces-icon-size = Taille des icônes
     .description = Multiplicateur d'échelle pour les icônes d'espaces de travail (0.25-3.0)
 
+settings-modules-hyprland-workspaces-text-icon-size = Taille des icônes texte
+    .description = Multiplicateur d'échelle pour les icônes basées sur le texte (Nerd Fonts). Multiplié en plus de la taille des icônes
+
 settings-modules-hyprland-workspaces-label-size = Taille des libellés
     .description = Multiplicateur d'échelle pour les libellés d'espaces de travail (0.25-3.0)
 
