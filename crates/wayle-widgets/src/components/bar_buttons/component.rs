@@ -144,6 +144,7 @@ impl Component for BarButton {
                     gtk::Label {
                         add_css_class: "text-icon",
                         set_halign: gtk::Align::Center,
+                        set_valign: gtk::Align::Center,
 
                         #[watch]
                         set_hexpand: model.icon_should_center(),
