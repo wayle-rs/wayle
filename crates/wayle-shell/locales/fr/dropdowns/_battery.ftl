@@ -27,6 +27,8 @@ dropdown-battery-charge-limit = Limite de charge
 dropdown-battery-limit-to = Limiter à { $threshold } %
 dropdown-battery-resumes-at = Reprend la charge à { $threshold } %
 dropdown-battery-charge-limit-not-supported = Limite de charge non prise en charge sur cet appareil
+dropdown-battery-charge-limit-optimized = Santé de batterie optimisée
+dropdown-battery-charge-limit-optimized-subtitle = Prolonge la durée de vie en limitant les charges complètes
 
 ## Profil d'alimentation
 dropdown-battery-power-profile = Profil d'alimentation
