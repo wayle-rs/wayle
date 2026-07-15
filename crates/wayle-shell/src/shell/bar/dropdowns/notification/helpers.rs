@@ -2,6 +2,8 @@ use std::{cmp::Reverse, collections::HashMap, sync::Arc};
 
 use wayle_notification::core::notification::Notification;
 
+use crate::shell::notification_popup::helpers::desktop_entry_app_label;
+
 pub(super) struct NotificationGroupData {
     pub app_name: Option<String>,
     pub notifications: Vec<Arc<Notification>>,
@@ -15,7 +17,10 @@ pub(super) fn group_by_app(notifications: &[Arc<Notification>]) -> Vec<Notificat
     let mut groups: HashMap<Option<String>, Vec<Arc<Notification>>> = HashMap::new();
 
     for notification in notifications {
-        let key = notification.app_name.get();
+        let key = notification
+            .app_name
+            .get()
+            .or_else(|| desktop_entry_app_label(notification.desktop_entry.get()));
         groups.entry(key).or_default().push(notification.clone());
     }
 

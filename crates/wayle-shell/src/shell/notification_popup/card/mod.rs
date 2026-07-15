@@ -13,8 +13,8 @@ use wayle_notification::{NotificationService, core::notification::Notification};
 
 use super::{
     helpers::{
-        ResolvedIcon, relative_time, resolve_icon, sanitize_markup, urgency_bar_visible,
-        urgency_css_class,
+        ResolvedIcon, desktop_entry_app_label, relative_time, resolve_icon, sanitize_markup,
+        urgency_bar_visible, urgency_css_class,
     },
     templates::NotificationContentTemplate,
 };
@@ -155,6 +155,7 @@ impl Component for NotificationPopupCard {
         let app_label = notif
             .app_name
             .get()
+            .or_else(|| desktop_entry_app_label(notif.desktop_entry.get()))
             .unwrap_or_else(|| t!("notification-popup-unknown-app"));
 
         let time_label = Self::format_time_label(relative_time(&notif.timestamp.get()));

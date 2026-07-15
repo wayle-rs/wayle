@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use relm4::gtk::{glib, pango};
+use relm4::gtk::{gio::prelude::AppInfoExt, glib, pango};
 use wayle_config::schemas::modules::notification::{IconSource, UrgencyBarThreshold};
 use wayle_notification::types::Urgency;
 
@@ -27,6 +27,25 @@ pub(crate) enum ResolvedIcon {
     Named(String),
     /// Filesystem path to an image file.
     File(String),
+}
+
+/// Human-readable app label for a notification without an `app_name`.
+///
+/// Portal-routed notifications (e.g. from flatpak apps) arrive with an empty
+/// app name and a `desktop-entry` hint instead; resolve the entry's display
+/// name, falling back to the raw entry id when no desktop file is found.
+pub(crate) fn desktop_entry_app_label(desktop_entry: Option<String>) -> Option<String> {
+    let entry = desktop_entry?;
+    let desktop_id = if entry.ends_with(".desktop") {
+        entry.clone()
+    } else {
+        format!("{entry}.desktop")
+    };
+
+    Some(
+        gio_unix::DesktopAppInfo::new(&desktop_id)
+            .map_or(entry, |info| info.display_name().to_string()),
+    )
 }
 
 /// Returns the CSS class name for a notification's urgency level.
@@ -230,6 +249,17 @@ mod tests {
             panic!("expected Hours, got {result:?}");
         };
         assert_eq!(hours, 2);
+    }
+
+    #[test]
+    fn desktop_entry_app_label_none_returns_none() {
+        assert!(desktop_entry_app_label(None).is_none());
+    }
+
+    #[test]
+    fn desktop_entry_app_label_unknown_entry_falls_back_to_raw_id() {
+        let result = desktop_entry_app_label(Some("com.wayle.does-not-exist".into()));
+        assert_eq!(result.as_deref(), Some("com.wayle.does-not-exist"));
     }
 
     #[test]
