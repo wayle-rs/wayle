@@ -4712,9 +4712,9 @@ dependencies = [
 
 [[package]]
 name = "wayle-hyprland"
-version = "0.2.2"
+version = "0.2.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69c465e133c429815ea36019f30a143855c91af6d8778a0ca88b6860c03ce20c"
+checksum = "94211e5d87a633e1d8336a7840d3638f4f823bb903d7a0315841e216a745593d"
 dependencies = [
  "async-trait",
  "derive_more",
@@ -5166,7 +5166,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
