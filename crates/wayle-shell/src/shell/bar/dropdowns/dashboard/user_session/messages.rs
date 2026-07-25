@@ -7,7 +7,7 @@ pub(crate) struct UserSessionInit {
     pub config: Arc<ConfigService>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub(crate) enum UserSessionInput {
     Lock,
     Logout,
