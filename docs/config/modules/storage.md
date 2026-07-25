@@ -22,7 +22,7 @@ right = ["storage"]
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `poll-interval-ms` | u64 | `30000` | Polling interval in milliseconds. |
-| `mount-point` | string | `"/"` | Mount point to monitor (e.g., `"/"`, `"/home"`). |
+| `mount-point` | [`StorageMountPoint`](/config/types#storage-mount-point) | `"/"` | Mount point(s) to monitor (e.g., `"/"` or `["/", "/mnt/drive1"]`). |
 | `format` | string | `"{{ percent }}%"` | Format string for the label. |
 | `icon-name` | string | `"ld-hard-drive-symbolic"` | Icon name. |
 | `border-show` | bool | `false` | Display border around button. |
