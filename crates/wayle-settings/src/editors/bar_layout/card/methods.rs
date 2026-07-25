@@ -131,13 +131,21 @@ impl LayoutCard {
     }
 
     pub(super) fn on_monitor_changed(&mut self) -> bool {
-        self.monitor = self.monitor_entry.text().to_string();
+        let new_monitor = self.monitor_entry.text().to_string();
+        if self.monitor == new_monitor {
+            return false;
+        }
+        self.monitor = new_monitor;
         true
     }
 
     pub(super) fn on_extends_changed(&mut self) -> bool {
         let text = self.extends_entry.text().to_string();
-        self.extends = if text.is_empty() { None } else { Some(text) };
+        let new_extends = if text.is_empty() { None } else { Some(text) };
+        if self.extends == new_extends {
+            return false;
+        }
+        self.extends = new_extends;
         true
     }
 
@@ -152,11 +160,17 @@ impl LayoutCard {
         let Some(BarItem::Group(group)) = items.get_mut(group_index) else {
             return false;
         };
+        if group.name == name {
+            return false;
+        }
         group.name = name;
         true
     }
 
     pub(super) fn on_show_toggled(&mut self, active: bool, sender: &FactorySender<Self>) -> bool {
+        if self.show == active {
+            return false;
+        }
         self.show = active;
         self.rebuild_body(sender);
         true

@@ -17,7 +17,18 @@ use crate::cli::CliAction;
 pub async fn execute() -> CliAction {
     info!("Launching Wayle settings");
 
-    Command::new("wayle-settings")
+    let mut command = if let Ok(current_exe) = std::env::current_exe() {
+        let sibling = current_exe.parent().map(|p| p.join("wayle-settings"));
+        if let Some(ref sibling_path) = sibling && sibling_path.exists() {
+            Command::new(sibling_path)
+        } else {
+            Command::new("wayle-settings")
+        }
+    } else {
+        Command::new("wayle-settings")
+    };
+
+    command
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
