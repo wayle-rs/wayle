@@ -29,8 +29,12 @@ pub async fn execute() -> CliAction {
     let current_exe =
         env::current_exe().map_err(|err| format!("Failed to resolve executable: {err}"))?;
 
+    // Strip `$NOTIFY_SOCKET` from the detached child: systemd readiness is
+    // reported only by a directly-launched `wayle shell`, never by a shell
+    // spawned via `wayle panel start` (whose parent has already exited).
     Command::new(current_exe)
         .arg("shell")
+        .env_remove("NOTIFY_SOCKET")
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())

@@ -2,10 +2,15 @@
 Description=Wayle Desktop Shell
 PartOf=graphical-session.target
 After=graphical-session.target
+# Ordering only: hold autostart apps and tray clients until the shell is ready.
+Before=xdg-desktop-autostart.target tray.target
 StartLimitIntervalSec=30
 StartLimitBurst=5
 
 [Service]
+# READY=1 is sent once all modules have started; NotifyAccess=main ignores child processes.
+Type=notify
+NotifyAccess=main
 ExecStart=/usr/bin/wayle shell
 Restart=on-failure
 RestartSec=3
