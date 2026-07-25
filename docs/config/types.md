@@ -636,6 +636,14 @@ Order in which popups are stacked on screen.
 | `"newest-first"` | Newest notifications appear closest to the configured position. |
 | `"oldest-first"` | Oldest notifications appear closest to the configured position. |
 
+## StorageMountPoint {#storage-mount-point}
+
+Storage mount targets accepted by `mount-point`.
+
+Supports a single string for backwards compatibility or an array of paths.
+
+String.
+
 ## TemperatureUnit {#temperature-unit}
 
 Temperature unit for display.
