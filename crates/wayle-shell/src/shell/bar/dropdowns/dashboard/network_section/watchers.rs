@@ -19,6 +19,11 @@ pub(super) fn spawn(
     sysinfo: &Arc<SysinfoService>,
     token: CancellationToken,
 ) {
+    // When NetworkManager is unavailable (e.g. systemd-networkd systems),
+    // connection state is inferred from sysinfo interface activity instead so
+    // the speed readout is not permanently gated off.
+    let has_network_manager = network.is_some();
+
     if let Some(network) = network {
         let primary = network.primary.clone();
         let wifi = network.wifi.clone();
@@ -55,6 +60,12 @@ pub(super) fn spawn(
             download: download.value,
             download_is_megabytes: download.is_megabytes,
         });
+
+        if !has_network_manager {
+            let _ = out.send(NetworkSectionCmd::ConnectionChanged {
+                connected: helpers::infer_connected(&data),
+            });
+        }
     });
 }
 
