@@ -5,7 +5,7 @@ use crate::cli::CliAction;
 ///
 /// # Errors
 /// Returns error if D-Bus communication fails.
-pub async fn execute(id: u32) -> CliAction {
+pub async fn execute(id: i64) -> CliAction {
     let (_connection, proxy) = connect().await?;
 
     proxy

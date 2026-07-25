@@ -12,6 +12,7 @@ use wayle_media::MediaService;
 use wayle_network::NetworkService;
 use wayle_niri::NiriService;
 use wayle_notification::NotificationService;
+use wayle_portal::PortalHost;
 use wayle_power_profiles::PowerProfilesService;
 use wayle_sysinfo::SysinfoService;
 use wayle_systray::SystemTrayService;
@@ -38,6 +39,11 @@ pub(crate) struct ShellServices {
     pub niri: Option<Arc<NiriService>>,
     pub network: Option<Arc<NetworkService>>,
     pub notification: Option<Arc<NotificationService>>,
+    /// Owns the `org.freedesktop.impl.portal.desktop.wayle` connection that the portal
+    /// notification backend is served on; held for the session so the connection (and thus
+    /// the registered interface) stays alive. `None` if the portal backend didn't start.
+    #[allow(dead_code)]
+    pub portal_host: Option<PortalHost>,
     pub power_profiles: DeferredService<PowerProfilesService>,
     pub sysinfo: Arc<SysinfoService>,
     pub systray: Option<Arc<SystemTrayService>>,

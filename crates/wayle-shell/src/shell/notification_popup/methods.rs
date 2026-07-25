@@ -32,9 +32,11 @@ impl NotificationPopupHost {
 
         self.remove_stale_cards(&visible_popups);
 
-        let existing_ids: Vec<u32> = self.cards.iter().map(|(notif, _)| notif.id).collect();
+        // Identity snapshot of already-carded notifications (by `PartialEq` = notification id).
+        let existing: Vec<Arc<Notification>> =
+            self.cards.iter().map(|(notif, _)| notif.clone()).collect();
 
-        self.insert_new_cards(&visible_popups, &existing_ids);
+        self.insert_new_cards(&visible_popups, &existing);
 
         debug!(cards = self.cards.len(), "popup reconcile complete");
 
@@ -44,9 +46,7 @@ impl NotificationPopupHost {
     fn remove_stale_cards(&mut self, active_popups: &[Arc<Notification>]) {
         let container = &self.card_container;
         self.cards.retain(|(stored_notif, controller)| {
-            let still_active = active_popups
-                .iter()
-                .any(|popup| popup.id == stored_notif.id);
+            let still_active = active_popups.iter().any(|popup| popup == stored_notif);
 
             if !still_active {
                 container.remove(controller.widget());
@@ -55,7 +55,7 @@ impl NotificationPopupHost {
         });
     }
 
-    fn insert_new_cards(&mut self, popups: &[Arc<Notification>], existing_ids: &[u32]) {
+    fn insert_new_cards(&mut self, popups: &[Arc<Notification>], existing: &[Arc<Notification>]) {
         let config = self.config.config();
         let notif_config = &config.modules.notifications;
 
@@ -68,14 +68,13 @@ impl NotificationPopupHost {
         let use_prepend = matches!(stacking_order, StackingOrder::NewestFirst);
 
         for notif in popups {
-            if existing_ids.contains(&notif.id) {
+            if existing.contains(notif) {
                 continue;
             }
 
             let controller = NotificationPopupCard::builder()
                 .launch(CardInit {
                     notification: notif.clone(),
-                    service: self.notification.clone(),
                     config: self.config.clone(),
                     hover_pause,
                     close_behavior,

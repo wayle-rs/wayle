@@ -1,0 +1,3 @@
+[portal]
+DBusName=org.freedesktop.impl.portal.desktop.wayle
+Interfaces=org.freedesktop.impl.portal.Notification;

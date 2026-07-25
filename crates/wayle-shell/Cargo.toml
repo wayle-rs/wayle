@@ -55,6 +55,7 @@ wayle-media.workspace = true
 wayle-niri.workspace = true
 wayle-network.workspace = true
 wayle-notification.workspace = true
+wayle-portal.workspace = true
 wayle-power-profiles.workspace = true
 wayle-styling = { workspace = true }
 wayle-sysinfo.workspace = true

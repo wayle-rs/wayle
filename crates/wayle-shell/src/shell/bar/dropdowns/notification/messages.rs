@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use wayle_config::ConfigService;
-use wayle_notification::NotificationService;
+use wayle_notification::{NotificationService, core::notification::Notification};
 
 pub(crate) struct NotificationDropdownInit {
     pub notification: Arc<NotificationService>,
@@ -12,7 +12,7 @@ pub(crate) struct NotificationDropdownInit {
 pub(crate) enum NotificationDropdownMsg {
     DndToggled(bool),
     ClearAll,
-    NotificationDismissed,
+    ClearGroup(Vec<Arc<Notification>>),
 }
 
 #[derive(Debug)]

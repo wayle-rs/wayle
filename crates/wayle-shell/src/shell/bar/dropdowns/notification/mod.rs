@@ -178,8 +178,8 @@ impl Component for NotificationDropdown {
         let groups = FactoryVecDeque::builder()
             .launch(gtk::Box::default())
             .forward(sender.input_sender(), |group_output| match group_output {
-                NotificationGroupOutput::Dismissed => {
-                    NotificationDropdownMsg::NotificationDismissed
+                NotificationGroupOutput::ClearRequested(notifications) => {
+                    NotificationDropdownMsg::ClearGroup(notifications)
                 }
             });
 
@@ -210,13 +210,13 @@ impl Component for NotificationDropdown {
             }
 
             NotificationDropdownMsg::ClearAll => {
-                let notifications = self.notification.notifications.get();
-                for notification in &notifications {
-                    notification.dismiss();
-                }
+                self.notification
+                    .dismiss_many(&self.notification.notifications.get());
             }
 
-            NotificationDropdownMsg::NotificationDismissed => {}
+            NotificationDropdownMsg::ClearGroup(notifications) => {
+                self.notification.dismiss_many(&notifications);
+            }
         }
     }
 

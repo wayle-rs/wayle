@@ -16,10 +16,11 @@ pub(crate) enum NotificationGroupInput {
     ClearGroup,
     UpdateNotifications(Vec<Arc<Notification>>),
     RefreshTime,
-    ItemDismissed(u32),
 }
 
 #[derive(Debug)]
 pub(crate) enum NotificationGroupOutput {
-    Dismissed,
+    /// Requests the parent (which owns the service) to clear these notifications as a
+    /// single batch.
+    ClearRequested(Vec<Arc<Notification>>),
 }
