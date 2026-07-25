@@ -97,24 +97,32 @@ impl Component for WeatherDropdown {
                         set_vhomogeneous: true,
                         set_hhomogeneous: true,
                         #[name = "loaded_page"]
-                        add_named[Some("loaded")] = &gtk::Box {
-                            set_orientation: gtk::Orientation::Vertical,
+                        add_named[Some("loaded")] = &gtk::ScrolledWindow {
+                            set_hscrollbar_policy: gtk::PolicyType::Never,
                             set_vexpand: true,
+                            set_propagate_natural_height: true,
+                            add_css_class: "weather-scroll",
 
-                            #[local_ref]
-                            weather_header_widget -> gtk::Box {},
+                            #[wrap(Some)]
+                            set_child = &gtk::Box {
+                                set_orientation: gtk::Orientation::Vertical,
+                                set_vexpand: true,
 
-                            #[local_ref]
-                            stats_grid_widget -> gtk::Box {},
+                                #[local_ref]
+                                weather_header_widget -> gtk::Box {},
 
-                            #[local_ref]
-                            hourly_forecast_widget -> gtk::Box {},
+                                #[local_ref]
+                                stats_grid_widget -> gtk::Box {},
 
-                            #[local_ref]
-                            daily_forecast_widget -> gtk::Box {},
+                                #[local_ref]
+                                hourly_forecast_widget -> gtk::Box {},
 
-                            #[local_ref]
-                            sun_times_widget -> gtk::Box {},
+                                #[local_ref]
+                                daily_forecast_widget -> gtk::Box {},
+
+                                #[local_ref]
+                                sun_times_widget -> gtk::Box {},
+                            },
                         },
 
                         #[name = "loading_page"]
