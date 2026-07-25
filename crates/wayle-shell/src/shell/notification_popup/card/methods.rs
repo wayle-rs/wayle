@@ -1,13 +1,17 @@
 use gtk::prelude::*;
-use relm4::{gtk, spawn_local};
+use relm4::{gtk, gtk::gio, spawn_local};
 use wayle_config::schemas::modules::notification::{PopupCloseBehavior, UrgencyBarThreshold};
 use wayle_notification::core::types::Action;
 
 use super::NotificationPopupCard;
 use crate::{
     i18n::t,
-    shell::notification_popup::helpers::{RelativeTime, ResolvedIcon, urgency_bar_visible},
+    shell::notification_popup::helpers::{
+        RelativeTime, ResolvedIcon, load_scaled_file_icon, urgency_bar_visible,
+    },
 };
+
+const POPUP_ICON_TEXTURE_SIZE_PX: i32 = 64;
 
 impl NotificationPopupCard {
     pub(super) fn apply_css_classes(
@@ -35,8 +39,26 @@ impl NotificationPopupCard {
             }
 
             ResolvedIcon::File(path) => {
-                icon.set_from_file(Some(path));
-                icon_container.add_css_class("file-icon");
+                let path = path.clone();
+                let icon = icon.clone();
+                let icon_container = icon_container.clone();
+
+                spawn_local(async move {
+                    let texture = gio::spawn_blocking(move || {
+                        load_scaled_file_icon(&path, POPUP_ICON_TEXTURE_SIZE_PX)
+                    })
+                    .await
+                    .ok()
+                    .flatten();
+
+                    let Some(texture) = texture else {
+                        icon.set_icon_name(Some("ld-bell-symbolic"));
+                        return;
+                    };
+
+                    icon.set_paintable(Some(&texture));
+                    icon_container.add_css_class("file-icon");
+                });
             }
         }
     }

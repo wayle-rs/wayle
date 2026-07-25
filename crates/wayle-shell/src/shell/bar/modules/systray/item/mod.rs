@@ -24,11 +24,21 @@ pub(super) struct SystrayItem {
     config: Arc<ConfigService>,
     button: Option<gtk::Button>,
     icon: Option<gtk::Image>,
+    icon_signature: Option<IconSignature>,
     icon_color_provider: Option<gtk::CssProvider>,
+    icon_color_provider_attached: bool,
     popover: Option<gtk::PopoverMenu>,
     action_group: Option<SimpleActionGroup>,
     registered_accels: Vec<String>,
     cancel_token: CancellationToken,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(super) enum IconSignature {
+    File(String),
+    Named(String),
+    Pixmap(u64),
+    Fallback,
 }
 
 #[derive(Debug)]
@@ -74,7 +84,9 @@ impl FactoryComponent for SystrayItem {
             config: init.config,
             button: None,
             icon: None,
+            icon_signature: None,
             icon_color_provider: None,
+            icon_color_provider_attached: false,
             popover: None,
             action_group: None,
             registered_accels: Vec::new(),
