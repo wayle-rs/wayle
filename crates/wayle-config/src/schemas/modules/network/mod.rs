@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+
 use schemars::schema_for;
 use wayle_derive::wayle_config;
 
@@ -127,6 +129,19 @@ pub struct NetworkConfig {
     #[serde(rename = "scroll-down")]
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
+
+    /// Custom display names for VPN tunnels, keyed by connection UUID.
+    ///
+    /// ## Examples
+    ///
+    /// ```toml
+    /// [modules.network.vpn-aliases]
+    /// "a1b2c3d4-e5f6-7890-abcd-ef1234567890" = "Work VPN"
+    /// "f0e1d2c3-b4a5-6789-0abc-def123456789" = "Home Server"
+    /// ```
+    #[serde(rename = "vpn-aliases")]
+    #[default(HashMap::new())]
+    pub vpn_aliases: ConfigProperty<HashMap<String, String>>,
 }
 
 impl ModuleInfoProvider for NetworkConfig {

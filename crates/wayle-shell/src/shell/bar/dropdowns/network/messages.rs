@@ -3,7 +3,10 @@ use std::sync::Arc;
 use wayle_config::ConfigService;
 use wayle_network::NetworkService;
 
-use super::available_networks::AvailableNetworksOutput;
+use super::{
+    available_networks::AvailableNetworksOutput,
+    vpn_tunnels::VpnTunnelsOutput,
+};
 
 pub(crate) struct NetworkDropdownInit {
     pub network: Arc<NetworkService>,
@@ -15,6 +18,7 @@ pub(crate) enum NetworkDropdownMsg {
     WifiToggled(bool),
     ScanRequested,
     AvailableNetworks(AvailableNetworksOutput),
+    VpnTunnels(VpnTunnelsOutput),
 }
 
 #[derive(Debug)]
