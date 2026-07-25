@@ -31,7 +31,10 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 },
                 SectionSpec {
                     title_key: "settings-section-display",
-                    items: vec![toggle(&general.tearing_mode)],
+                    items: vec![
+                        toggle(&general.tearing_mode),
+                        toggle(&general.prefer_color_icons),
+                    ],
                 },
             ],
         ),

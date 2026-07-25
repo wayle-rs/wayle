@@ -29,6 +29,17 @@ pub struct GeneralConfig {
     #[serde(rename = "tearing-mode")]
     #[default(false)]
     pub tearing_mode: ConfigProperty<bool>,
+
+    /// Prefer full-colour app icons over symbolic ones for notifications and workspaces.
+    ///
+    /// When enabled, the notification and workspace modules use an app's colour
+    /// icon when one exists, falling back to a symbolic icon (including the built-in
+    /// symbolic mappings) only when no colour icon is available. When disabled
+    /// (the default), those modules prefer symbolic icons. Either way, modules
+    /// fall back to an app's symbolic desktop-entry icon before the generic icon.
+    #[serde(rename = "prefer-color-icons")]
+    #[default(false)]
+    pub prefer_color_icons: ConfigProperty<bool>,
 }
 
 impl ModuleInfoProvider for GeneralConfig {

@@ -40,6 +40,7 @@ struct TagLayout {
     app_icon_map: HashMap<String, String>,
     tag_map: HashMap<String, WorkspaceStyle>,
     blink_on: bool,
+    prefer_color: bool,
 }
 
 impl MangoWorkspaces {
@@ -67,6 +68,7 @@ impl MangoWorkspaces {
         let min_tag_count = tags_config.min_tag_count.get();
         let urgent_show = tags_config.urgent_show.get();
         let border_show = tags_config.border_show.get();
+        let prefer_color = config.general.prefer_color_icons.get();
 
         let layout = TagLayout {
             display_mode: tags_config.display_mode.get(),
@@ -83,6 +85,7 @@ impl MangoWorkspaces {
             app_icon_map: tags_config.app_icon_map.get(),
             tag_map: tags_config.tag_map.get(),
             blink_on: self.blink_on,
+            prefer_color,
         };
 
         let monitor = self.chosen_monitor();
@@ -315,6 +318,7 @@ fn collect_app_icons(
     app_icon_map: &HashMap<String, String>,
     fallback: &str,
     dedupe: bool,
+    prefer_color: bool,
 ) -> Vec<AppIconInit> {
     let mut result: Vec<AppIconInit> = Vec::with_capacity(clients.len());
 
@@ -324,6 +328,7 @@ fn collect_app_icons(
             client.title.as_deref(),
             app_icon_map,
             fallback,
+            prefer_color,
         );
 
         if dedupe && let Some(existing) = result.iter_mut().find(|init| init.icon_name == icon_name)
@@ -356,6 +361,7 @@ fn build_button_init(tag: &Tag, clients: &[Client], layout: &TagLayout) -> Mango
             &layout.app_icon_map,
             &layout.app_icons_fallback,
             layout.app_icons_dedupe,
+            layout.prefer_color,
         )
     } else {
         Vec::new()

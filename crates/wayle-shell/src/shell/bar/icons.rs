@@ -3,9 +3,16 @@
 //! Patterns use glob syntax and match case-insensitively.
 //! Order matters - first match wins.
 
-use std::sync::OnceLock;
+use std::{
+    cell::RefCell,
+    collections::HashMap,
+    path::{Path, PathBuf},
+    sync::OnceLock,
+};
 
 use glob::Pattern;
+use gtk4::{gdk, glib};
+use wayle_widgets::icons::icon_exists;
 
 struct CompiledEntry {
     pattern: Pattern,
@@ -273,4 +280,168 @@ pub(crate) fn lookup_app_icon(name: &str) -> Option<&'static str> {
         .iter()
         .find(|entry| entry.pattern.matches(&name_lower))
         .map(|entry| entry.icon)
+}
+
+thread_local! {
+    /// Caches `identifier -> symbolic icon name` resolutions. App→icon mappings
+    /// are stable, so this avoids repeated desktop-file and theme lookups on
+    /// every redraw. `None` (no symbolic variant) is cached too.
+    static SYMBOLIC_DESKTOP_CACHE: RefCell<HashMap<String, Option<String>>> =
+        RefCell::new(HashMap::new());
+}
+
+/// Resolves the `-symbolic` variant of an app's desktop-entry icon.
+///
+/// `identifier` is a desktop-entry id or window class (e.g. `org.gnome.Calendar`
+/// or `firefox`). Returns the symbolic icon name only if such a variant exists
+/// in the current icon theme — never a full-colour icon — so callers fall
+/// through to their own generic fallback otherwise. No-op (returns `None`) when
+/// there is no GDK display, so it is safe to call off-screen (e.g. in tests).
+pub(crate) fn symbolic_desktop_icon(identifier: &str) -> Option<String> {
+    if identifier.is_empty() {
+        return None;
+    }
+
+    SYMBOLIC_DESKTOP_CACHE.with(|cache| {
+        if let Some(cached) = cache.borrow().get(identifier) {
+            return cached.clone();
+        }
+        let resolved = resolve_symbolic_desktop_icon(identifier);
+        cache
+            .borrow_mut()
+            .insert(identifier.to_owned(), resolved.clone());
+        resolved
+    })
+}
+
+fn resolve_symbolic_desktop_icon(identifier: &str) -> Option<String> {
+    // Icon-theme lookups require a GDK display; bail out (rather than panic in
+    // `icon_exists`) when there isn't one.
+    gdk::Display::default()?;
+
+    let icon = desktop_entry_icon(identifier)?;
+    let base = icon.strip_suffix("-symbolic").unwrap_or(&icon);
+    let symbolic = format!("{base}-symbolic");
+
+    icon_exists(&symbolic).then_some(symbolic)
+}
+
+thread_local! {
+    /// Caches `identifier -> colour icon name` resolutions, mirroring
+    /// [`SYMBOLIC_DESKTOP_CACHE`]. `None` (no colour variant) is cached too.
+    static COLOR_DESKTOP_CACHE: RefCell<HashMap<String, Option<String>>> =
+        RefCell::new(HashMap::new());
+}
+
+/// Resolves the full-colour variant of an app's desktop-entry icon.
+///
+/// The counterpart to [`symbolic_desktop_icon`]: returns the desktop entry's `Icon=`
+/// name only when it is non-symbolic and exists in the current icon theme (never a
+/// `-symbolic` name and never a bare filesystem path), so callers fall through to a
+/// symbolic icon otherwise. No-op (returns `None`) when there is no GDK display.
+pub(crate) fn color_desktop_icon(identifier: &str) -> Option<String> {
+    if identifier.is_empty() {
+        return None;
+    }
+
+    COLOR_DESKTOP_CACHE.with(|cache| {
+        if let Some(cached) = cache.borrow().get(identifier) {
+            return cached.clone();
+        }
+        let resolved = resolve_color_desktop_icon(identifier);
+        cache
+            .borrow_mut()
+            .insert(identifier.to_owned(), resolved.clone());
+        resolved
+    })
+}
+
+fn resolve_color_desktop_icon(identifier: &str) -> Option<String> {
+    gdk::Display::default()?;
+
+    let icon = desktop_entry_icon(identifier)?;
+    (!icon.ends_with("-symbolic") && icon_exists(&icon)).then_some(icon)
+}
+
+/// Reads the `Icon=` value from an app's desktop entry — by desktop id first,
+/// then by matching `StartupWMClass`.
+///
+/// Reads the `.desktop` files directly (via `glib::KeyFile`) instead of going
+/// through `gio::DesktopAppInfo` / `AppInfo::all()`, which silently drop any app
+/// whose `Exec` program is not found in `$PATH`. That filtering would otherwise
+/// hide an app's icon whenever Wayle runs with a restricted `$PATH` (e.g. as a
+/// systemd user service whose unit sets a minimal `PATH`) even though the icon is
+/// installed — an app's icon does not depend on its binary being runnable.
+fn desktop_entry_icon(identifier: &str) -> Option<String> {
+    let ids = [
+        format!("{identifier}.desktop"),
+        format!("{}.desktop", identifier.to_lowercase()),
+    ];
+    let dirs = application_dirs();
+
+    for id in &ids {
+        for dir in &dirs {
+            if let Some(icon) = read_desktop_icon(&dir.join(id)) {
+                return Some(icon);
+            }
+        }
+    }
+
+    icon_by_startup_wm_class(&dirs, identifier)
+}
+
+/// The `applications` subdirectory of every XDG data directory
+/// (`$XDG_DATA_HOME` then each entry of `$XDG_DATA_DIRS`).
+fn application_dirs() -> Vec<PathBuf> {
+    let mut dirs = vec![glib::user_data_dir()];
+    dirs.extend(glib::system_data_dirs());
+    dirs.into_iter()
+        .map(|dir| dir.join("applications"))
+        .collect()
+}
+
+/// Reads `[Desktop Entry] Icon=` from a `.desktop` file, if present and non-empty.
+fn read_desktop_icon(path: &Path) -> Option<String> {
+    let keyfile = glib::KeyFile::new();
+    keyfile.load_from_file(path, glib::KeyFileFlags::NONE).ok()?;
+    desktop_icon_key(&keyfile)
+}
+
+fn desktop_icon_key(keyfile: &glib::KeyFile) -> Option<String> {
+    keyfile
+        .string("Desktop Entry", "Icon")
+        .ok()
+        .map(|icon| icon.to_string())
+        .filter(|icon| !icon.is_empty())
+}
+
+/// Scans `.desktop` files for one whose `StartupWMClass` matches `wm_class`
+/// (case-insensitively) and returns its `Icon=`.
+fn icon_by_startup_wm_class(dirs: &[PathBuf], wm_class: &str) -> Option<String> {
+    let wm_class_lower = wm_class.to_lowercase();
+    for dir in dirs {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            continue;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.extension().and_then(|ext| ext.to_str()) != Some("desktop") {
+                continue;
+            }
+            let keyfile = glib::KeyFile::new();
+            if keyfile.load_from_file(&path, glib::KeyFileFlags::NONE).is_err() {
+                continue;
+            }
+            let matches = keyfile
+                .string("Desktop Entry", "StartupWMClass")
+                .ok()
+                .is_some_and(|class| class.to_lowercase() == wm_class_lower);
+            if matches
+                && let Some(icon) = desktop_icon_key(&keyfile)
+            {
+                return Some(icon);
+            }
+        }
+    }
+    None
 }

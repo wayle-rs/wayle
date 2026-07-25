@@ -144,12 +144,14 @@ impl Component for NotificationPopupCard {
     ) -> ComponentParts<Self> {
         let notif = &init.notification;
 
+        let prefer_color = init.config.config().general.prefer_color_icons.get();
         let resolved_icon = resolve_icon(
             init.icon_source,
             &notif.app_name.get(),
             &notif.app_icon.get(),
             &notif.image_path.get(),
             &notif.desktop_entry.get(),
+            prefer_color,
         );
 
         let app_label = notif

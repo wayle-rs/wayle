@@ -217,6 +217,7 @@ impl HyprlandWorkspaces {
 
         let config = self.config.config();
         let ws_config = &config.modules.hyprland_workspaces;
+        let prefer_color = config.general.prefer_color_icons.get();
         let is_vertical = self.is_vertical();
 
         self.update_border_classes(ws_config.border_show.get());
@@ -248,7 +249,7 @@ impl HyprlandWorkspaces {
                     is_urgent,
                     is_vertical,
                 };
-                build_button_init(&ctx, ws_config, &clients, urgent_addrs)
+                build_button_init(&ctx, ws_config, &clients, urgent_addrs, prefer_color)
             })
             .collect();
 

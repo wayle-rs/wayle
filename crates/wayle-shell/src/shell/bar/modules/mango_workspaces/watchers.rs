@@ -24,10 +24,18 @@ pub(super) fn spawn_watchers(
     mango: Arc<MangoService>,
     theme_provider: ConfigProperty<ThemeProvider>,
     bar_scale: ConfigProperty<ScaleFactor>,
+    prefer_color: ConfigProperty<bool>,
     settings: &BarSettings,
 ) {
     spawn_service_watcher(sender, mango);
-    spawn_config_watcher(sender, config, theme_provider, bar_scale, settings);
+    spawn_config_watcher(
+        sender,
+        config,
+        theme_provider,
+        bar_scale,
+        prefer_color,
+        settings,
+    );
 }
 
 fn spawn_service_watcher(sender: &ComponentSender<MangoWorkspaces>, mango: Arc<MangoService>) {
@@ -68,6 +76,7 @@ fn spawn_config_watcher(
     config: &MangoWorkspacesConfig,
     theme_provider: ConfigProperty<ThemeProvider>,
     bar_scale: ConfigProperty<ScaleFactor>,
+    prefer_color: ConfigProperty<bool>,
     settings: &BarSettings,
 ) {
     let (tx, rx) = mpsc::unbounded_channel();
@@ -75,6 +84,7 @@ fn spawn_config_watcher(
     config.subscribe_changes(tx.clone());
     theme_provider.subscribe_changes(tx.clone());
     bar_scale.subscribe_changes(tx.clone());
+    prefer_color.subscribe_changes(tx.clone());
     settings.border_width.subscribe_changes(tx.clone());
     settings.border_location.subscribe_changes(tx.clone());
     settings.is_vertical.subscribe_changes(tx);

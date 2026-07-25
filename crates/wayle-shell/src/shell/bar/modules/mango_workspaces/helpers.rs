@@ -4,7 +4,10 @@ use std::collections::HashMap;
 
 use wayle_config::schemas::modules::WorkspaceStyle;
 
-use crate::{glob, shell::bar::icons::DEFAULT_APP_ICON_MAP};
+use crate::{
+    glob,
+    shell::bar::icons::{DEFAULT_APP_ICON_MAP, color_desktop_icon, symbolic_desktop_icon},
+};
 
 const TITLE_PREFIX: &str = "title:";
 const APP_PREFIX: &str = "app:";
@@ -32,6 +35,7 @@ pub(super) fn resolve_app_icon(
     title: Option<&str>,
     user_map: &HashMap<String, String>,
     fallback: &str,
+    prefer_color: bool,
 ) -> String {
     let (title_entries, app_entries): (Vec<_>, Vec<_>) = user_map
         .iter()
@@ -51,8 +55,20 @@ pub(super) fn resolve_app_icon(
         return icon.to_string();
     }
 
+    // Prefer the app's full-colour desktop icon over the built-in symbolic mapping when asked.
+    if prefer_color
+        && let Some(color) = color_desktop_icon(app_id)
+    {
+        return color;
+    }
+
     if let Some(icon) = glob::find_match(DEFAULT_APP_ICON_MAP.iter().copied(), app_id) {
         return icon.to_string();
+    }
+
+    // Fall back to the app's symbolic desktop icon if one exists (always attempted).
+    if let Some(symbolic) = symbolic_desktop_icon(app_id) {
+        return symbolic;
     }
 
     fallback.to_string()
@@ -112,7 +128,7 @@ mod tests {
         let mut map = HashMap::new();
         map.insert(String::from("*firefox*"), String::from("ld-globe"));
         assert_eq!(
-            resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback"),
+            resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback", false),
             "ld-globe",
         );
     }
@@ -128,6 +144,7 @@ mod tests {
                 Some("YouTube - Firefox"),
                 &map,
                 "fallback",
+                false,
             ),
             "si-youtube",
         );
@@ -137,7 +154,7 @@ mod tests {
     fn resolve_app_icon_falls_back_when_no_match() {
         let map = HashMap::new();
         assert_eq!(
-            resolve_app_icon(Some("unknown.app"), Some("Unknown"), &map, "ld-default"),
+            resolve_app_icon(Some("unknown.app"), Some("Unknown"), &map, "ld-default", false),
             "ld-default",
         );
     }

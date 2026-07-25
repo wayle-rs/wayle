@@ -10,6 +10,7 @@ impl NotificationDropdown {
         self.has_notifications = !notifications.is_empty();
 
         let icon_source = self.config.config().modules.notifications.icon_source.get();
+        let prefer_color = self.config.config().general.prefer_color_icons.get();
 
         let new_groups = group_by_app(&notifications);
         let new_keys: Vec<Option<String>> = new_groups
@@ -18,7 +19,7 @@ impl NotificationDropdown {
             .collect();
 
         self.remove_stale_groups(&new_keys);
-        self.update_or_insert_groups(&new_groups, icon_source);
+        self.update_or_insert_groups(&new_groups, icon_source, prefer_color);
         self.reorder_groups(&new_keys);
     }
 
@@ -27,6 +28,7 @@ impl NotificationDropdown {
         self.has_notifications = !notifications.is_empty();
 
         let icon_source = self.config.config().modules.notifications.icon_source.get();
+        let prefer_color = self.config.config().general.prefer_color_icons.get();
 
         let grouped = group_by_app(&notifications);
 
@@ -38,6 +40,7 @@ impl NotificationDropdown {
                 app_name: group_data.app_name,
                 notifications: group_data.notifications,
                 icon_source,
+                prefer_color,
             });
         }
     }
@@ -65,6 +68,7 @@ impl NotificationDropdown {
         &mut self,
         new_groups: &[NotificationGroupData],
         icon_source: wayle_config::schemas::modules::notification::IconSource,
+        prefer_color: bool,
     ) {
         let mut to_add = Vec::new();
 
@@ -81,6 +85,7 @@ impl NotificationDropdown {
                     app_name: group_data.app_name.clone(),
                     notifications: group_data.notifications.clone(),
                     icon_source,
+                    prefer_color,
                 });
             }
         }

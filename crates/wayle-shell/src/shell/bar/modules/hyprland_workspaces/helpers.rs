@@ -9,11 +9,14 @@ use wayle_config::schemas::modules::{DisplayMode, Numbering};
 use wayle_hyprland::{Address, Client, WorkspaceId};
 
 use super::filtering::relative_workspace_number;
-use crate::shell::bar::icons::{DEFAULT_APP_ICON_MAP, matches_glob};
+use crate::shell::bar::icons::{
+    DEFAULT_APP_ICON_MAP, color_desktop_icon, matches_glob, symbolic_desktop_icon,
+};
 
 pub(crate) struct IconContext<'a> {
     pub user_map: &'a BTreeMap<String, String>,
     pub fallback: &'a str,
+    pub prefer_color: bool,
 }
 
 pub(crate) struct WindowInfo<'a> {
@@ -51,10 +54,22 @@ pub(crate) fn resolve_app_icon(window: &WindowInfo<'_>, ctx: &IconContext<'_>) -
         }
     }
 
+    // Prefer the app's full-colour desktop icon over the built-in symbolic mapping when asked.
+    if ctx.prefer_color
+        && let Some(color) = color_desktop_icon(window.class)
+    {
+        return color;
+    }
+
     for (pattern, icon) in DEFAULT_APP_ICON_MAP {
         if matches_glob(window.class, &pattern.to_lowercase()) {
             return (*icon).to_string();
         }
+    }
+
+    // Fall back to the app's symbolic desktop icon if one exists (always attempted).
+    if let Some(symbolic) = symbolic_desktop_icon(window.class) {
+        return symbolic;
     }
 
     ctx.fallback.to_string()
@@ -295,6 +310,7 @@ mod tests {
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
+                prefer_color: false,
             };
             let window = WindowInfo {
                 class: "kitty",
@@ -309,6 +325,7 @@ mod tests {
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
+                prefer_color: false,
             };
             let window = WindowInfo {
                 class: "org.mozilla.firefox",
@@ -324,6 +341,7 @@ mod tests {
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
+                prefer_color: false,
             };
             let window = WindowInfo {
                 class: "kitty",
@@ -339,6 +357,7 @@ mod tests {
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
+                prefer_color: false,
             };
             let window = WindowInfo {
                 class: "firefox",
@@ -353,6 +372,7 @@ mod tests {
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
+                prefer_color: false,
             };
             let window = WindowInfo {
                 class: "unknown-app",

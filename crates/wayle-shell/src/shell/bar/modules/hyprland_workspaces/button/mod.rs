@@ -257,6 +257,7 @@ pub(crate) fn build_button_init(
     config: &HyprlandWorkspacesConfig,
     clients: &[Arc<Client>],
     urgent_addresses: HashSet<Address>,
+    prefer_color: bool,
 ) -> WorkspaceButtonInit {
     let workspace_map = config.workspace_map.get();
     let mapped_style = i32::try_from(ctx.id)
@@ -271,6 +272,7 @@ pub(crate) fn build_button_init(
         let icon_ctx = IconContext {
             user_map: &user_map,
             fallback: &fallback,
+            prefer_color,
         };
         let resolved =
             resolve_workspace_icons(ctx.id, clients, &icon_ctx, config.app_icons_dedupe.get());
