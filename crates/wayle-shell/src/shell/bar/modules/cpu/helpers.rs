@@ -5,12 +5,12 @@ use wayle_sysinfo::types::CpuData;
 ///
 /// ## Variables
 ///
-/// - `{{ percent }}` - CPU usage (00-100, zero-padded)
+/// - `{{ percent }}` - CPU usage (0-100)
 /// - `{{ freq_ghz }}` - Frequency of the busiest core (highest usage)
 /// - `{{ avg_freq_ghz }}` - Average frequency across cores
 /// - `{{ max_freq_ghz }}` - Maximum frequency among cores
-/// - `{{ temp_c }}` - Temperature in Celsius (zero-padded)
-/// - `{{ temp_f }}` - Temperature in Fahrenheit (zero-padded)
+/// - `{{ temp_c }}` - Temperature in Celsius
+/// - `{{ temp_f }}` - Temperature in Fahrenheit
 pub(super) fn format_label(format: &str, cpu: &CpuData) -> String {
     let busiest_ghz = cpu.busiest_core_freq_mhz as f64 / 1000.0;
     let avg_ghz = cpu.avg_frequency_mhz as f64 / 1000.0;
@@ -19,12 +19,12 @@ pub(super) fn format_label(format: &str, cpu: &CpuData) -> String {
     let temp_f = temp_c * 9.0 / 5.0 + 32.0;
 
     let ctx = json!({
-        "percent": format!("{:02.0}", cpu.usage_percent),
+        "percent": format!("{:.0}", cpu.usage_percent),
         "freq_ghz": format!("{busiest_ghz:.1}"),
         "avg_freq_ghz": format!("{avg_ghz:.1}"),
         "max_freq_ghz": format!("{max_ghz:.1}"),
-        "temp_c": format!("{temp_c:02.0}"),
-        "temp_f": format!("{temp_f:02.0}"),
+        "temp_c": format!("{temp_c:.0}"),
+        "temp_f": format!("{temp_f:.0}"),
     });
     crate::template::render(format, ctx).unwrap_or_default()
 }
@@ -58,10 +58,10 @@ mod tests {
     }
 
     #[test]
-    fn format_label_percent_pads_single_digits() {
+    fn format_label_percent_minimal_digits() {
         let cpu = cpu_data(5.2, 3500, 4500, 4200, Some(55.0));
         let result = format_label("{{ percent }}", &cpu);
-        assert_eq!(result, "05");
+        assert_eq!(result, "5");
     }
 
     #[test]
@@ -107,10 +107,10 @@ mod tests {
     }
 
     #[test]
-    fn format_label_temp_c_pads_single_digits() {
+    fn format_label_temp_c_minimal_digits() {
         let cpu = cpu_data(50.0, 3500, 4500, 4200, Some(8.0));
         let result = format_label("{{ temp_c }}", &cpu);
-        assert_eq!(result, "08");
+        assert_eq!(result, "8");
     }
 
     #[test]
@@ -131,7 +131,7 @@ mod tests {
     fn format_label_with_no_temperature_uses_zero() {
         let cpu = cpu_data(50.0, 3500, 4500, 4200, None);
         let result = format_label("{{ temp_c }}°C / {{ temp_f }}°F", &cpu);
-        assert_eq!(result, "00°C / 32°F");
+        assert_eq!(result, "0°C / 32°F");
     }
 
     #[test]

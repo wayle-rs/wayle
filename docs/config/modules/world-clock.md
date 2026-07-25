@@ -21,7 +21,7 @@ right = ["world-clock"]
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `format` | string | `"{{ tz('UTC', '%H:%M %Z') }}"` | Format string with embedded timezone blocks. |
+| `format` | string | `"{{ tz('UTC', '%-H:%M %Z') }}"` | Format string with embedded timezone blocks. |
 | `icon-name` | string | `"ld-globe-symbolic"` | Symbolic icon name. |
 | `border-show` | bool | `false` | Display border around button. |
 | `icon-show` | bool | `true` | Display module icon. |
@@ -37,7 +37,7 @@ Anything outside a placeholder stays as literal text.
 
 | Format string | Renders as |
 |---|---|
-| `"{{ tz('UTC', '%H:%M %Z') }}"` | `14:30 UTC` |
+| `"{{ tz('UTC', '%-H:%M %Z') }}"` | `14:30 UTC` |
 | `"NYC {{ tz('America/New_York', '%H:%M') }}  TYO {{ tz('Asia/Tokyo', '%H:%M') }}"` | `NYC 09:30  TYO 23:30` |
 | `"{{ tz('America/New_York', '%H:%M %Z') }} \| {{ tz('Europe/London', '%H:%M %Z') }}"` | `09:30 EST \| 14:30 GMT` |
 
@@ -67,7 +67,7 @@ Anything outside a placeholder stays as literal text.
 
 ```toml
 [modules.world-clock]
-format = "{{ tz('UTC', '%H:%M %Z') }}"
+format = "{{ tz('UTC', '%-H:%M %Z') }}"
 icon-name = "ld-globe-symbolic"
 border-show = false
 border-color = "yellow"

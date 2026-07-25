@@ -84,6 +84,10 @@ impl Component for ClockModule {
                 BarButtonOutput::ScrollDown => ClockMsg::ScrollDown,
             });
 
+        // Only the time (HH:MM) is reserved. The date changes at most once a day, so
+        // it gets no reserved space and simply renders at its natural width.
+        bar_button.emit(BarButtonInput::SetLabelReserveTimeOnly(true));
+
         watchers::spawn_watchers(&sender, clock);
 
         let model = Self {

@@ -85,6 +85,9 @@ impl Component for WorldClockModule {
                 BarButtonOutput::ScrollDown => WorldClockMsg::ScrollDown,
             });
 
+        // Reserve only the time components; any date part shows its natural width.
+        bar_button.emit(BarButtonInput::SetLabelReserveTimeOnly(true));
+
         watchers::spawn_watchers(&sender, world_clock);
 
         let model = Self {

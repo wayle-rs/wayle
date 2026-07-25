@@ -16,6 +16,7 @@ pub mod radio_group;
 pub mod separator;
 pub mod slider;
 pub mod spinner;
+pub mod stable_label;
 pub mod status_dot;
 pub mod switch;
 pub mod text_input;
