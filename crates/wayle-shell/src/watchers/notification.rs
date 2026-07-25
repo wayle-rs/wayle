@@ -9,9 +9,14 @@ use crate::shell::ShellServices;
 
 /// Syncs the notification blocklist from config to the service on change.
 pub fn spawn(services: &ShellServices) {
+    let notification_enabled = services.config.config().modules.notifications.enabled.get();
     let Some(notification) = &services.notification else {
         return;
     };
+
+    if !notification_enabled {
+        return;
+    }
 
     let config = services.config.config();
     spawn_blocklist_watcher(&config.modules.notifications, notification);
