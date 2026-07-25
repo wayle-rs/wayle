@@ -3,6 +3,7 @@
 dropdown-network-title = Network
 dropdown-network-active-connections = Active Connections
 dropdown-network-active-connection = Active Connection
+dropdown-network-vpn = VPN
 dropdown-network-available = Available Networks
 dropdown-network-connected = Connected
 dropdown-network-connecting = Connecting
