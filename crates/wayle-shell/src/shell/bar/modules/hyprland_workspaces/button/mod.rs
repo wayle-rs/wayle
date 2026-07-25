@@ -118,6 +118,8 @@ impl FactoryComponent for WorkspaceButton {
     view! {
         #[root]
         gtk::Button {
+            set_cursor_from_name: Some("pointer"),
+
             #[watch]
             set_css_classes: &self.current_css_classes(),
 
