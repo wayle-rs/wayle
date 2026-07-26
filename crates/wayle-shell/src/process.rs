@@ -9,7 +9,7 @@ use tracing::warn;
 fn spawn_quiet(cmd: &str) -> io::Result<()> {
     use std::process::Stdio;
 
-    let child = Command::new("sh")
+    let child = Command::new("/bin/sh")
         .arg("-c")
         .arg(cmd)
         .stdout(Stdio::null())
