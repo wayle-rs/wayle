@@ -14,6 +14,7 @@ mod sidebar;
 
 use std::{env, process};
 
+use relm4::gtk::prelude::*;
 use tokio::runtime::Runtime;
 use tracing_subscriber::EnvFilter;
 use wayle_config::{ConfigService, PersistenceWatcher};
@@ -72,7 +73,18 @@ fn main() {
         }
     };
 
-    let relm_app = relm4::RelmApp::new("com.wayle.settings");
+    let app = relm4::main_application();
+    app.set_application_id(Some("com.wayle.settings"));
+
+    // Raise the existing window when launched again; relm4 only calls
+    // set_visible, which is a no-op once the window is already shown.
+    app.connect_activate(|app| {
+        if let Some(window) = app.active_window() {
+            window.present();
+        }
+    });
+
+    let relm_app = relm4::RelmApp::from_app(app);
 
     relm_app.run::<app::SettingsApp>(config_service);
 }
