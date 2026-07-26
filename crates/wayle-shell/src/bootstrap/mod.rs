@@ -6,6 +6,7 @@ mod weather;
 use std::{
     error::Error,
     fmt::Display,
+    path::PathBuf,
     sync::Arc,
     time::{Duration, Instant},
 };
@@ -112,7 +113,9 @@ pub async fn is_already_running() -> bool {
     result
 }
 
-pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Error>> {
+pub async fn init_services(
+    config_override: Option<PathBuf>,
+) -> Result<(StartupTimer, ShellServices), Box<dyn Error>> {
     let mut timer = StartupTimer::new();
 
     if let Err(e) = timer
@@ -122,7 +125,9 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         warn!(error = %e, "Could not write schema file");
     }
 
-    let config_service = timer.time("Config", ConfigService::load()).await?;
+    let config_service = timer
+        .time("Config", ConfigService::load(config_override))
+        .await?;
 
     let bluetooth: DeferredService<BluetoothService> = DeferredService::new(None);
     let power_profiles: DeferredService<PowerProfilesService> = DeferredService::new(None);

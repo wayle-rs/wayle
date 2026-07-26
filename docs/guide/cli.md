@@ -10,6 +10,16 @@ wayle panel restart
 wayle panel settings
 ```
 
+Run the shell with a config file outside the default location:
+
+```sh
+wayle shell --config /path/to/config.toml
+```
+
+`--config` (`-c`) is valid only on `wayle shell` — other subcommands reject it. It moves
+only the main config file; other files stay under `~/.config/wayle`. See
+[Editing config](/guide/editing-config#custom-config-location).
+
 Read and edit config values from the command line:
 
 ```sh

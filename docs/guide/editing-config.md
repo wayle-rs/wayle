@@ -24,6 +24,19 @@ format = "%H:%M"
 
 Every supported key is documented in the [config reference](/config/).
 
+## Custom config location
+
+By default the main config file is `~/.config/wayle/config.toml`. Launch the shell with
+`--config` (short `-c`) to read it from elsewhere:
+
+```sh
+wayle shell --config /path/to/config.toml
+```
+
+Only the main config file moves; `runtime.toml`, themes, `.env` files, and `schema.json`
+still resolve under `~/.config/wayle`, and the overridden file is watched and hot-reloaded
+like the default. `--config` is valid only on `wayle shell`; other subcommands reject it.
+
 ## Imports
 
 `config.toml` may declare a top-level `imports` array to load additional TOML files. Files referenced through `imports` may themselves declare `imports`, forming a chain:

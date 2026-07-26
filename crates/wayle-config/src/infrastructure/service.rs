@@ -1,5 +1,6 @@
 use std::{
     io,
+    path::{Path, PathBuf},
     sync::{Arc, RwLock},
 };
 
@@ -28,19 +29,21 @@ use crate::{
 pub struct ConfigService {
     config: Arc<Config>,
     watcher: Arc<RwLock<Option<FileWatcher>>>,
+    main_config_path: Arc<PathBuf>,
 }
 
 impl ConfigService {
     /// Loads configuration from TOML files and starts file watcher.
     ///
-    /// Applies `config.toml` to the config layer and `runtime.toml` to
-    /// the runtime layer, then starts hot-reload file watching.
+    /// Applies `config.toml` (or `config_override`, if given) to the config
+    /// layer and `runtime.toml` to the runtime layer, then starts hot-reload
+    /// file watching. `config_override` changes only the main config file path.
     ///
     /// # Errors
     ///
     /// Returns error if config files cannot be loaded or parsed.
     #[instrument]
-    pub async fn load() -> Result<Arc<Self>, Error> {
+    pub async fn load(config_override: Option<PathBuf>) -> Result<Arc<Self>, Error> {
         info!("Loading configuration");
 
         if let Ok(config_dir) = ConfigPaths::config_dir() {
@@ -48,8 +51,9 @@ impl ConfigService {
         }
 
         let config = Config::default();
-        let config_path = ConfigPaths::main_config();
+        let main_config_path = config_override.unwrap_or_else(ConfigPaths::main_config);
 
+        let config_path = main_config_path.clone();
         let config_result =
             tokio::task::spawn_blocking(move || Config::load_toml_with_imports(&config_path))
                 .await
@@ -80,6 +84,7 @@ impl ConfigService {
         let service = Arc::new(Self {
             config: Arc::new(config),
             watcher: Arc::new(RwLock::new(None)),
+            main_config_path: Arc::new(main_config_path),
         });
 
         let themes_dir = ConfigPaths::themes_dir();
@@ -99,6 +104,12 @@ impl ConfigService {
     /// Reference to the config root.
     pub fn config(&self) -> &Config {
         &self.config
+    }
+
+    /// Path to the effective main config file (the `--config` override if one
+    /// was given, otherwise the XDG default).
+    pub fn main_config_path(&self) -> &Path {
+        &self.main_config_path
     }
 
     /// Drops every runtime override and deletes `runtime.toml` from disk.

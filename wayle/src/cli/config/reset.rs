@@ -9,7 +9,7 @@ use crate::{
 ///
 /// Returns error if config loading fails or the path is invalid.
 pub async fn execute(path: String) -> CliAction {
-    let config_service = ConfigService::load()
+    let config_service = ConfigService::load(None)
         .await
         .map_err(|e| format!("cannot load config: {e}"))?;
 

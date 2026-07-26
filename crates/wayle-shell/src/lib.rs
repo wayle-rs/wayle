@@ -1,6 +1,6 @@
 //! Wayle desktop shell - a GTK4/Relm4 status bar for Wayland compositors.
 
-use std::{env, error::Error};
+use std::{env, error::Error, path::PathBuf};
 
 use relm4::RelmApp;
 use tokio::runtime::Runtime;
@@ -25,11 +25,14 @@ use shell::{Shell, ShellInit};
 /// Creates its own tokio runtime internally, so this must not be called
 /// from within an existing tokio context (it will panic).
 ///
+/// `config_override` points the main config file at a path other than the
+/// default `~/.config/wayle/config.toml`; other config files are unaffected.
+///
 /// # Errors
 ///
 /// Returns error on tracing init failure, runtime creation failure,
 /// or service bootstrap failure.
-pub fn run() -> Result<(), Box<dyn Error>> {
+pub fn run(config_override: Option<PathBuf>) -> Result<(), Box<dyn Error>> {
     if env::var_os("GSK_RENDERER").is_none() {
         #[allow(unsafe_code)]
         // SAFETY: single-threaded, called before any runtime or GTK init
@@ -49,7 +52,7 @@ pub fn run() -> Result<(), Box<dyn Error>> {
         return Ok(());
     }
 
-    let (timer, services) = runtime.block_on(bootstrap::init_services())?;
+    let (timer, services) = runtime.block_on(bootstrap::init_services(config_override))?;
     info!("Services initialized");
 
     let app = RelmApp::new("com.wayle.shell")

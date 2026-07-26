@@ -56,7 +56,7 @@ fn main() {
 
     let _guard = runtime.enter();
 
-    let config_service = match runtime.block_on(ConfigService::load()) {
+    let config_service = match runtime.block_on(ConfigService::load(None)) {
         Ok(service) => service,
         Err(err) => {
             eprintln!("cannot load config: {err}");

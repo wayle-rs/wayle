@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, path::PathBuf};
 
 use clap::{
     CommandFactory, Parser, Subcommand,
@@ -99,7 +99,12 @@ pub enum Commands {
         command: IdleCommands,
     },
     /// Run the desktop shell in the foreground
-    Shell,
+    Shell {
+        /// Read the main config from this file instead of the default
+        /// ~/.config/wayle/config.toml (does not affect runtime.toml or other files).
+        #[arg(short = 'c', long = "config", value_name = "PATH")]
+        config: Option<PathBuf>,
+    },
     /// Generate shell completions
     Completions {
         /// Shell to generate completions for.
