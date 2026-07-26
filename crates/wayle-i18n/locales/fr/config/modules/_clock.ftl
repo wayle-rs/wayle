@@ -52,3 +52,6 @@ settings-modules-clock-scroll-down = Défilement vers le bas
 
 settings-modules-clock-dropdown-show-seconds = Afficher les secondes
     .description = Afficher les secondes dans l'horloge du calendrier déroulant
+
+settings-modules-clock-dropdown-week-start = Début de semaine
+    .description = Premier jour de la semaine dans le calendrier déroulant

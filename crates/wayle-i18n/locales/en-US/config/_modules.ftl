@@ -35,3 +35,12 @@ enum-temperature-unit-imperial = Imperial
 ## TimeFormat variants
 enum-time-format-twelve-hour = 12 Hour
 enum-time-format-twenty-four-hour = 24 Hour
+
+## WeekStart variants
+enum-week-start-monday = Monday
+enum-week-start-tuesday = Tuesday
+enum-week-start-wednesday = Wednesday
+enum-week-start-thursday = Thursday
+enum-week-start-friday = Friday
+enum-week-start-saturday = Saturday
+enum-week-start-sunday = Sunday
