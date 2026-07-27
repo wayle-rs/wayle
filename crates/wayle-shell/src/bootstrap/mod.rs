@@ -208,7 +208,17 @@ async fn init_core_services(
 
     let startup_duration = modules.idle_inhibit.startup_duration.get();
 
-    let battery_task = tokio::spawn(BatteryService::new());
+    let battery_task = tokio::spawn(async {
+        let devices = BatteryService::enumerate_devices().await?;
+        let battery_path = devices
+            .into_iter()
+            .find(|p| p.as_str().contains("/battery_"));
+        if let Some(path) = battery_path {
+            BatteryService::builder().device_path(path).build().await
+        } else {
+            BatteryService::new().await
+        }
+    });
     let brightness_task = tokio::spawn(BrightnessService::new());
     let network_task = tokio::spawn(NetworkService::new());
     let wallpaper_cfg = config.wallpaper.clone();
