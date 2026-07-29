@@ -16,6 +16,7 @@ mod keyboard_input;
 mod mango_workspaces;
 mod media;
 mod microphone;
+mod mullvad;
 mod netstat;
 mod network;
 mod niri_workspaces;
@@ -52,6 +53,7 @@ pub use keyboard_input::KeyboardInputConfig;
 pub use mango_workspaces::MangoWorkspacesConfig;
 pub use media::{BUILTIN_MAPPINGS, MediaConfig, MediaIconType};
 pub use microphone::MicrophoneConfig;
+pub use mullvad::MullvadConfig;
 pub use netstat::NetstatConfig;
 pub use network::NetworkConfig;
 pub use niri_workspaces::{
@@ -113,6 +115,8 @@ pub struct ModulesConfig {
     pub media: MediaConfig,
     /// Microphone input module.
     pub microphone: MicrophoneConfig,
+    /// Mullvad VPN connection module.
+    pub mullvad: MullvadConfig,
     /// Network connection module.
     pub network: NetworkConfig,
     /// Network traffic statistics module.

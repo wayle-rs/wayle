@@ -9,6 +9,15 @@ bar-network-no-wifi = Pas de Wi-Fi
 bar-network-no-ethernet = Pas d'Ethernet
 bar-network-offline = Hors ligne
 
+## Mullvad
+bar-mullvad-connecting = Connexion…
+bar-mullvad-disconnecting = Déconnexion…
+bar-mullvad-disconnected = Déconnecté
+bar-mullvad-connected = Connecté
+bar-mullvad-blocked = Bloqué
+bar-mullvad-logged-out = Déconnecté du compte
+bar-mullvad-revoked = Appareil révoqué
+
 ## Batterie
 bar-battery-unavailable = N/D
 

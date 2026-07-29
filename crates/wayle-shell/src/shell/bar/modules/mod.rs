@@ -15,6 +15,7 @@ mod keyboard_input;
 mod mango_workspaces;
 mod media;
 mod microphone;
+mod mullvad;
 mod netstat;
 mod network;
 mod niri_workspaces;
@@ -75,6 +76,7 @@ register_modules! {
     MangoWorkspaces => mango_workspaces::Factory,
     Media => media::Factory,
     Microphone => microphone::Factory,
+    Mullvad => mullvad::Factory,
     Netstat => netstat::Factory,
     Network => network::Factory,
     NiriWorkspaces => niri_workspaces::Factory,
