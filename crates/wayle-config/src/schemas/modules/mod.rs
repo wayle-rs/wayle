@@ -8,6 +8,7 @@ mod clock;
 mod cpu;
 mod custom;
 mod dashboard;
+mod gpu;
 mod hyprland_workspaces;
 mod hyprsunset;
 mod idle_inhibit;
@@ -26,6 +27,7 @@ mod ram;
 mod separator;
 mod storage;
 mod systray;
+mod updates;
 mod volume;
 mod weather;
 mod window_title;
@@ -42,6 +44,7 @@ pub use clock::ClockConfig;
 pub use cpu::CpuConfig;
 pub use custom::{CustomModuleDefinition, ExecutionMode, RestartDelay, RestartPolicy};
 pub use dashboard::DashboardConfig;
+pub use gpu::GpuConfig;
 pub use hyprland_workspaces::{
     ActiveIndicator, DisplayMode, HyprlandWorkspacesConfig, Numbering, UrgentMode, WorkspaceStyle,
 };
@@ -67,6 +70,7 @@ pub use separator::SeparatorConfig;
 pub use storage::{StorageConfig, StorageMountPoint};
 pub use systray::{SystrayConfig, TrayItemOverride};
 pub use types::TimeFormat;
+pub use updates::UpdatesConfig;
 pub use volume::{AppIconSource, VolumeConfig};
 use wayle_derive::wayle_config;
 pub use weather::{TemperatureUnit, WeatherConfig, WeatherProvider};
@@ -90,6 +94,8 @@ pub struct ModulesConfig {
     pub clock: ClockConfig,
     /// CPU usage module.
     pub cpu: CpuConfig,
+    /// GPU usage module.
+    pub gpu: GpuConfig,
     /// Dashboard module.
     pub dashboard: DashboardConfig,
     /// Hyprland workspace switcher module.
@@ -134,6 +140,8 @@ pub struct ModulesConfig {
     pub separator: SeparatorConfig,
     /// System tray module.
     pub systray: SystrayConfig,
+    /// System updates module.
+    pub updates: UpdatesConfig,
     /// Volume control module.
     pub volume: VolumeConfig,
     /// Weather display module.
