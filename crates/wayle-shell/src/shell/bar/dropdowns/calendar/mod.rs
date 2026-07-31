@@ -16,6 +16,8 @@ use self::{
     helpers::{day_names_array, format_date_rest, months_array, weekdays_array},
     messages::{CalendarDropdownCmd, CalendarDropdownInit},
 };
+use chrono::Weekday;
+
 use crate::{i18n::t, shell::bar::dropdowns::scaled_dimension};
 
 const BASE_WIDTH: f32 = 340.0;
@@ -25,6 +27,7 @@ pub(crate) struct CalendarDropdown {
     scaled_width: i32,
     use_12h: bool,
     show_seconds: bool,
+    week_start: Weekday,
     last_today: NaiveDate,
 
     day_names: [String; 7],
@@ -162,15 +165,18 @@ impl Component for CalendarDropdown {
         let format_str = clock_config.format.get();
         let use_12h = helpers::is_12h_format(&format_str);
         let show_seconds = clock_config.dropdown_show_seconds.get();
+        let week_start =
+            watchers::week_start_to_weekday(clock_config.calendar_weekday_start.get());
 
         let months = months_array();
 
         let calendar = Calendar::builder()
             .launch(CalendarInit {
                 today,
+                week_start,
                 labels: CalendarLabels {
                     today: t!("cal-today"),
-                    weekdays: weekdays_array(),
+                    weekdays: weekdays_array(week_start),
                     months: months.clone(),
                     month_year: t!("cal-month-year", month = "{month}", year = "{year}"),
                 },
@@ -182,6 +188,7 @@ impl Component for CalendarDropdown {
         watchers::spawn(&sender, &init.config);
 
         let day_names = day_names_array();
+        // day_names is always Sunday-indexed, so index with num_days_from_sunday.
         let weekday_idx = now.weekday().num_days_from_sunday() as usize;
 
         let model = Self {
@@ -189,6 +196,7 @@ impl Component for CalendarDropdown {
             scaled_width: scaled_dimension(BASE_WIDTH, scale),
             use_12h,
             show_seconds,
+            week_start,
             last_today: today,
             hours: helpers::hours_text(&now, use_12h),
             minutes: helpers::minutes_text(&now),
@@ -243,6 +251,11 @@ impl Component for CalendarDropdown {
 
             CalendarDropdownCmd::ShowSecondsChanged(show) => {
                 self.show_seconds = show;
+            }
+
+            CalendarDropdownCmd::WeekStartChanged(week_start) => {
+                self.week_start = week_start;
+                self.calendar.emit(CalendarInput::UpdateWeekStart(week_start));
             }
         }
     }

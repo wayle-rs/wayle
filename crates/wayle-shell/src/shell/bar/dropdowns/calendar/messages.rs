@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+use chrono::Weekday;
 use wayle_config::ConfigService;
 
 pub(crate) struct CalendarDropdownInit {
@@ -12,4 +13,5 @@ pub(crate) enum CalendarDropdownCmd {
     TimeTick,
     FormatChanged(bool),
     ShowSecondsChanged(bool),
+    WeekStartChanged(Weekday),
 }

@@ -1,4 +1,5 @@
-use schemars::schema_for;
+use schemars::{JsonSchema, schema_for};
+use serde::{Deserialize, Serialize};
 use wayle_derive::wayle_config;
 
 use crate::{
@@ -7,7 +8,28 @@ use crate::{
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Time display with a calendar dropdown.
+/// Which day appears in the first column of the calendar dropdown.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[serde(rename_all = "lowercase")]
+pub enum WeekStart {
+    /// Week starts on Monday.
+    Monday,
+    /// Week starts on Tuesday.
+    Tuesday,
+    /// Week starts on Wednesday.
+    Wednesday,
+    /// Week starts on Thursday.
+    Thursday,
+    /// Week starts on Friday.
+    Friday,
+    /// Week starts on Saturday.
+    Saturday,
+    /// Week starts on Sunday (default).
+    #[default]
+    Sunday,
+}
+
+/// Clock module configuration.
 #[wayle_config(bar_button, i18n_prefix = "settings-modules-clock")]
 pub struct ClockConfig {
     /// Format string using strftime syntax.
@@ -113,6 +135,11 @@ pub struct ClockConfig {
     #[serde(rename = "dropdown-show-seconds")]
     #[default(false)]
     pub dropdown_show_seconds: ConfigProperty<bool>,
+
+    /// First day of the week in the calendar dropdown.
+    #[serde(rename = "calendar-weekday-start")]
+    #[default(WeekStart::Sunday)]
+    pub calendar_weekday_start: ConfigProperty<WeekStart>,
 }
 
 impl ModuleInfoProvider for ClockConfig {
