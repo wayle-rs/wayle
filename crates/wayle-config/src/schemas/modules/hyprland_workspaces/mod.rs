@@ -3,14 +3,14 @@ use std::{
     ops::Deref,
 };
 
-use schemars::{schema_for, JsonSchema};
+use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use wayle_derive::{wayle_config, wayle_enum};
 
 use crate::{
+    ConfigProperty,
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ScaleFactor, Spacing},
-    ConfigProperty,
 };
 
 /// What identifies a workspace in the UI.

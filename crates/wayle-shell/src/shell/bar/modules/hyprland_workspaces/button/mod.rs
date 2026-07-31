@@ -8,8 +8,8 @@ use wayle_config::schemas::modules::{ActiveIndicator, DisplayMode, HyprlandWorks
 use wayle_hyprland::{Address, Client, WorkspaceId};
 
 use crate::shell::bar::modules::hyprland_workspaces::helpers::{
-    compute_static_css_classes, determine_workspace_state, resolve_workspace_icons,
-    workspace_id_css_class, workspace_name_css_class, IconContext, WorkspaceState,
+    IconContext, WorkspaceState, compute_static_css_classes, determine_workspace_state,
+    resolve_workspace_icons, workspace_id_css_class, workspace_name_css_class,
 };
 
 const WORKSPACE_LABEL_CSS: &str = "workspace-label";
