@@ -9,6 +9,21 @@ use tracing::info;
 
 use crate::cli::CliAction;
 
+/// Resolves the `wayle-settings` binary next to the running `wayle`
+/// executable, falling back to `$PATH` when that lookup fails.
+///
+/// Prevents a custom/dev build of `wayle` from silently launching an
+/// unrelated, possibly schema-incompatible `wayle-settings` found earlier on
+/// `$PATH` (e.g. a system package), which can corrupt `runtime.toml` when the
+/// two builds disagree on the config schema.
+fn settings_binary_path() -> std::path::PathBuf {
+    std::env::current_exe()
+        .ok()
+        .and_then(|exe| exe.parent().map(|dir| dir.join("wayle-settings")))
+        .filter(|path| path.is_file())
+        .unwrap_or_else(|| std::path::PathBuf::from("wayle-settings"))
+}
+
 /// Launches the settings application.
 ///
 /// # Errors
@@ -17,7 +32,7 @@ use crate::cli::CliAction;
 pub async fn execute() -> CliAction {
     info!("Launching Wayle settings");
 
-    Command::new("wayle-settings")
+    Command::new(settings_binary_path())
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
