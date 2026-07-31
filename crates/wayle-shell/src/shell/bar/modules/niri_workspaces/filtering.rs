@@ -29,7 +29,6 @@ pub(super) struct FilterContext<'a> {
     pub monitor_specific: bool,
     pub bar_monitor: Option<&'a str>,
     pub hide_trailing_empty: bool,
-    pub min_workspace_count: usize,
     pub ignore_patterns: &'a [String],
 }
 
@@ -43,7 +42,7 @@ pub(super) fn collect_displayed(
         Vec::new()
     };
 
-    let candidates: Vec<WorkspaceSnapshot> = snapshots
+    let mut workspaces: Vec<WorkspaceSnapshot> = snapshots
         .into_iter()
         .filter(|snapshot| visible_on_monitor(snapshot, ctx))
         .filter(|snapshot| {
@@ -57,22 +56,8 @@ pub(super) fn collect_displayed(
         .filter(|snapshot| !trailing_empty_ids.contains(&snapshot.id))
         .collect();
 
-    let (mut shown, hidden): (Vec<_>, Vec<_>) = candidates
-        .into_iter()
-        .partition(|snapshot| snapshot.has_windows || snapshot.is_active);
-
-    for snapshot in hidden {
-        if name_as_id(&snapshot.name).is_some_and(|id| id <= ctx.min_workspace_count) {
-            shown.push(snapshot);
-        }
-    }
-
-    shown.sort_by_key(sort_key);
-    shown
-}
-
-fn name_as_id(name: &Option<String>) -> Option<usize> {
-    name.as_deref()?.parse().ok()
+    workspaces.sort_by_key(sort_key);
+    workspaces
 }
 
 fn visible_on_monitor(snapshot: &WorkspaceSnapshot, ctx: &FilterContext<'_>) -> bool {
