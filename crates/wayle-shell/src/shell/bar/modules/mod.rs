@@ -27,6 +27,7 @@ mod storage;
 mod systray;
 mod volume;
 pub(crate) mod weather;
+mod aurora;
 mod window_title;
 mod world_clock;
 
@@ -86,6 +87,7 @@ register_modules! {
     Systray => systray::Factory,
     Volume => volume::Factory,
     Weather => weather::Factory,
+    Aurora => aurora::Factory,
     WindowTitle => window_title::Factory,
     WorldClock => world_clock::Factory,
 }
