@@ -4,7 +4,7 @@ use relm4::gtk;
 use wayle_config::{ConfigService, schemas::styling::ThemeProvider};
 use wayle_widgets::{prelude::BarSettings, styling::resolve_color};
 
-use super::helpers::workspace_id_css_class;
+use super::helpers::{workspace_id_css_class, workspace_name_css_class};
 
 const REM_BASE: f32 = 16.0;
 const ICON_BASE_REM: f32 = 1.3;
@@ -61,15 +61,19 @@ pub(super) fn apply_styling(
         }}"
     );
 
-    for (workspace_id, style) in &ws_config.workspace_map.get() {
+    for (key, style) in &ws_config.workspace_map.get() {
         let Some(color) = style.color.as_ref() else {
             continue;
         };
 
-        let id_class = workspace_id_css_class(i64::from(*workspace_id));
+        let css_class = if let Ok(id) = key.parse::<i32>() {
+            workspace_id_css_class(i64::from(id))
+        } else {
+            workspace_name_css_class(key)
+        };
         let color_css = color.to_css();
         css.push_str(&format!(
-            ".workspaces .workspace.{id_class} {{ --ws-override-color: {color_css}; }}"
+            ".workspaces .workspace.{css_class} {{ --ws-override-color: {color_css}; }}"
         ));
     }
 
