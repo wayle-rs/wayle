@@ -16,6 +16,13 @@ impl ThemeSelectorControl {
             return;
         };
 
+        if let Some(ref badge) = self.dirty_badge {
+            badge.set_label(&name);
+            badge.set_visible(true);
+            badge.set_css_classes(&["badge", "badge-subtle"]);
+        }
+
+        self.palette_base_theme.set(name);
         apply_palette(&self.palette, &theme.palette);
         self.popover.popdown();
     }
