@@ -6,9 +6,11 @@ use tokio_util::sync::CancellationToken;
 use wayle_audio::{
     AudioService,
     core::device::{input::InputDevice, output::OutputDevice},
+    volume::types::Volume,
 };
 use wayle_brightness::{BacklightDevice, BrightnessService};
 use wayle_config::ConfigService;
+use wayle_core::Property;
 use wayle_widgets::{watch, watch_cancellable, watch_cancellable_throttled};
 
 use super::{
@@ -16,6 +18,7 @@ use super::{
     messages::{OsdCmd, ToggleEvent},
     toggles,
 };
+use crate::services::shell_ipc::{OsdDevice, ShellIpcState};
 
 const VOLUME_THROTTLE: Duration = Duration::from_millis(30);
 
@@ -24,6 +27,7 @@ pub(super) fn spawn(
     config: &Arc<ConfigService>,
     audio: &Option<Arc<AudioService>>,
     brightness: &Option<Arc<BrightnessService>>,
+    ipc: &ShellIpcState,
 ) {
     spawn_config_watcher(sender, config);
 
@@ -36,6 +40,17 @@ pub(super) fn spawn(
     }
 
     spawn_toggle_watchers(sender);
+    spawn_ipc_watcher(sender, ipc);
+}
+
+/// Watches for CLI-initiated show requests. The component drops replays by
+/// sequence, so this forwards every emission.
+fn spawn_ipc_watcher(sender: &ComponentSender<Osd>, ipc: &ShellIpcState) {
+    let osd_request = ipc.osd_request.clone();
+
+    watch!(sender, [osd_request.watch()], |out| {
+        let _ = out.send(OsdCmd::ShowRequested(osd_request.get()));
+    });
 }
 
 fn spawn_config_watcher(sender: &ComponentSender<Osd>, config: &Arc<ConfigService>) {
@@ -182,4 +197,53 @@ pub(super) fn spawn_brightness_watcher(
     watch_cancellable!(sender, token, [brightness.watch()], |out| {
         let _ = out.send(OsdCmd::BrightnessChanged);
     });
+}
+
+/// Watches the device currently on screen so its reading stays live.
+///
+/// The watchers above follow the *default* device to decide when to open the
+/// OSD; this one follows whatever is displayed, including a device named on
+/// the command line, and only refreshes the content.
+pub(super) fn spawn_displayed_watcher(
+    sender: &ComponentSender<Osd>,
+    device: &OsdDevice,
+    token: CancellationToken,
+) {
+    match device {
+        OsdDevice::Speaker(device) => {
+            spawn_volume_refresh(sender, &device.volume, &device.muted, token);
+        }
+
+        OsdDevice::Microphone(device) => {
+            spawn_volume_refresh(sender, &device.volume, &device.muted, token);
+        }
+
+        OsdDevice::Brightness(device) => {
+            let brightness = device.brightness.clone();
+
+            watch_cancellable!(sender, token, [brightness.watch()], |out| {
+                let _ = out.send(OsdCmd::DisplayedValueChanged);
+            });
+        }
+    }
+}
+
+fn spawn_volume_refresh(
+    sender: &ComponentSender<Osd>,
+    volume: &Property<Volume>,
+    muted: &Property<bool>,
+    token: CancellationToken,
+) {
+    let volume = volume.clone();
+    let muted = muted.clone();
+
+    watch_cancellable_throttled!(
+        sender,
+        token,
+        VOLUME_THROTTLE,
+        [volume.watch(), muted.watch()],
+        |out| {
+            let _ = out.send(OsdCmd::DisplayedValueChanged);
+        }
+    );
 }

@@ -7,10 +7,18 @@ use wayle_audio::{
 use wayle_brightness::{BacklightDevice, BrightnessService};
 use wayle_config::ConfigService;
 
+use crate::services::shell_ipc::{OsdRequest, ShellIpcState};
+
 pub(crate) struct OsdInit {
     pub(crate) config: Arc<ConfigService>,
     pub(crate) audio: Option<Arc<AudioService>>,
     pub(crate) brightness: Option<Arc<BrightnessService>>,
+    pub(crate) shell_ipc: ShellIpcState,
+
+    /// Requests at or below this sequence are ignored. Non-zero only when the
+    /// component is being recreated, to skip the request `Property::watch()`
+    /// replays to every new subscriber.
+    pub(crate) seen_seq: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -41,6 +49,8 @@ pub(crate) enum OsdCmd {
     BrightnessDeviceChanged(Option<Arc<BacklightDevice>>),
     BrightnessChanged,
     ToggleChanged(ToggleEvent),
+    ShowRequested(Option<OsdRequest>),
+    DisplayedValueChanged,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -13,6 +13,7 @@ use super::{
 };
 use crate::{
     i18n::t,
+    services::shell_ipc::{OsdDevice, OsdRequest},
     shell::helpers::layer_shell::{
         apply_layer as apply_window_layer, apply_monitor_by_connector, apply_primary_monitor,
         reset_anchors,
@@ -20,16 +21,17 @@ use crate::{
 };
 
 impl Osd {
-    pub(super) fn show_event(
+    /// Shows an event and restarts the dismiss timer.
+    ///
+    /// `displayed` is the device the reading came from, `None` for keyboard
+    /// toggles. It is watched until the overlay is dismissed.
+    fn present(
         &mut self,
         event: OsdEvent,
+        displayed: Option<OsdDevice>,
         sender: &ComponentSender<Self>,
         root: &gtk::Window,
     ) {
-        if !self.ready {
-            return;
-        }
-
         self.current_event = Some(event);
         self.dismiss_id = self.dismiss_id.wrapping_add(1);
 
@@ -37,6 +39,60 @@ impl Osd {
 
         let duration = self.config.config().osd.duration.get();
         Self::schedule_dismiss(sender, duration, self.dismiss_id);
+
+        self.watch_displayed(displayed, sender);
+    }
+
+    /// [`Self::present`] for change-driven events, held back until the
+    /// startup replay has passed.
+    pub(super) fn show_event(
+        &mut self,
+        event: OsdEvent,
+        displayed: Option<OsdDevice>,
+        sender: &ComponentSender<Self>,
+        root: &gtk::Window,
+    ) {
+        if !self.ready {
+            return;
+        }
+
+        self.present(event, displayed, sender, root);
+    }
+
+    /// Re-points the live watcher, skipping the re-arm when the device is
+    /// unchanged so a rapid stream of changes doesn't churn watcher tasks.
+    fn watch_displayed(
+        &mut self,
+        displayed: Option<OsdDevice>,
+        sender: &ComponentSender<Self>,
+    ) {
+        if self.displayed == displayed {
+            return;
+        }
+
+        let token = self.displayed_watcher.reset();
+        self.displayed = displayed;
+
+        if let Some(device) = &self.displayed {
+            watchers::spawn_displayed_watcher(sender, device, token);
+        }
+    }
+
+    /// Stops tracking on dismiss, so nothing recomputes an overlay nobody can
+    /// see.
+    pub(super) fn clear_displayed(&mut self) {
+        self.displayed_watcher.reset();
+        self.displayed = None;
+    }
+
+    /// Refreshes the reading without touching the dismiss timer, so a stream
+    /// of changes can't hold the overlay open indefinitely.
+    pub(super) fn handle_displayed_value_changed(&mut self) {
+        let Some(displayed) = &self.displayed else {
+            return;
+        };
+
+        self.current_event = Some(displayed_event(displayed));
     }
 
     pub(super) fn handle_device_changed(
@@ -64,11 +120,7 @@ impl Osd {
             return;
         };
 
-        let percentage = device.volume.get().average_percentage();
-        let muted = device.muted.get();
-        let rounded = percentage.round() as u32;
-
-        let snapshot = (rounded, muted);
+        let (event, snapshot) = output_event(&device);
 
         if self.last_volume == Some(snapshot) {
             return;
@@ -76,17 +128,11 @@ impl Osd {
 
         self.last_volume = Some(snapshot);
 
-        let description = device.description.get();
-        let icon = volume_icon(percentage, muted);
+        if !self.config.config().osd.auto_speaker.get() {
+            return;
+        }
 
-        let event = OsdEvent::Slider {
-            label: description,
-            icon: icon.to_string(),
-            percentage,
-            muted,
-        };
-
-        self.show_event(event, sender, root);
+        self.show_event(event, Some(OsdDevice::Speaker(device)), sender, root);
     }
 
     pub(super) fn handle_brightness_device_changed(
@@ -114,23 +160,19 @@ impl Osd {
             return;
         };
 
-        let percentage = device.percentage().value();
-        let rounded = percentage.round() as u32;
+        let (event, snapshot) = brightness_event(&device);
 
-        if self.last_brightness == Some(rounded) {
+        if self.last_brightness == Some(snapshot) {
             return;
         }
 
-        self.last_brightness = Some(rounded);
+        self.last_brightness = Some(snapshot);
 
-        let event = OsdEvent::Slider {
-            label: device.name.to_string(),
-            icon: BRIGHTNESS_ICON.to_string(),
-            percentage,
-            muted: false,
-        };
+        if !self.config.config().osd.auto_brightness.get() {
+            return;
+        }
 
-        self.show_event(event, sender, root);
+        self.show_event(event, Some(OsdDevice::Brightness(device)), sender, root);
     }
 
     pub(super) fn handle_input_device_changed(
@@ -158,11 +200,7 @@ impl Osd {
             return;
         };
 
-        let percentage = device.volume.get().average_percentage();
-        let muted = device.muted.get();
-        let rounded = percentage.round() as u32;
-
-        let snapshot = (rounded, muted);
+        let (event, snapshot) = input_event(&device);
 
         if self.last_input_volume == Some(snapshot) {
             return;
@@ -170,22 +208,11 @@ impl Osd {
 
         self.last_input_volume = Some(snapshot);
 
-        let description = device.description.get();
+        if !self.config.config().osd.auto_microphone.get() {
+            return;
+        }
 
-        let icon = if muted {
-            "ld-mic-off-symbolic"
-        } else {
-            "ld-mic-symbolic"
-        };
-
-        let event = OsdEvent::Slider {
-            label: description,
-            icon: icon.to_string(),
-            percentage,
-            muted,
-        };
-
-        self.show_event(event, sender, root);
+        self.show_event(event, Some(OsdDevice::Microphone(device)), sender, root);
     }
 
     pub(super) fn handle_toggle_changed(
@@ -194,6 +221,10 @@ impl Osd {
         sender: &ComponentSender<Self>,
         root: &gtk::Window,
     ) {
+        if !self.config.config().osd.auto_toggles.get() {
+            return;
+        }
+
         let (label, icon) = match toggle.key {
             messages::ToggleKey::CapsLock => (t!("osd-caps-lock"), "ld-a-large-small-symbolic"),
             messages::ToggleKey::NumLock => (t!("osd-num-lock"), "ld-hash-symbolic"),
@@ -206,7 +237,32 @@ impl Osd {
             active: toggle.active,
         };
 
-        self.show_event(event, sender, root);
+        self.show_event(event, None, sender, root);
+    }
+
+    /// Shows the device an IPC client asked for, whatever its value.
+    ///
+    /// The `last_*` snapshots are left alone: they track the *default* device,
+    /// and a request may name any device.
+    pub(super) fn handle_show_requested(
+        &mut self,
+        request: Option<OsdRequest>,
+        sender: &ComponentSender<Self>,
+        root: &gtk::Window,
+    ) {
+        let Some(OsdRequest { seq, device }) = request else {
+            return;
+        };
+
+        if seq <= self.seen_seq {
+            return;
+        }
+
+        self.seen_seq = seq;
+
+        let event = displayed_event(&device);
+
+        self.present(event, Some(device), sender, root);
     }
 
     pub(super) fn apply_position(&self, root: &gtk::Window) {
@@ -293,6 +349,68 @@ impl Osd {
             OsdCmd::Dismiss(dismiss_id)
         });
     }
+}
+
+/// Reads a device's current values into a renderable event.
+fn displayed_event(device: &OsdDevice) -> OsdEvent {
+    match device {
+        OsdDevice::Speaker(device) => output_event(device).0,
+        OsdDevice::Microphone(device) => input_event(device).0,
+        OsdDevice::Brightness(device) => brightness_event(device).0,
+    }
+}
+
+/// Builds the speaker OSD payload and the snapshot used to detect a change.
+///
+/// The snapshot is the rounded percentage, not the raw float, so per-channel
+/// jitter below a whole percent doesn't count as a change.
+fn output_event(device: &OutputDevice) -> (OsdEvent, (u32, bool)) {
+    let percentage = device.volume.get().average_percentage();
+    let muted = device.muted.get();
+
+    let event = OsdEvent::Slider {
+        label: device.description.get(),
+        icon: volume_icon(percentage, muted).to_string(),
+        percentage,
+        muted,
+    };
+
+    (event, (percentage.round() as u32, muted))
+}
+
+/// Builds the microphone OSD payload and its change-detection snapshot.
+fn input_event(device: &InputDevice) -> (OsdEvent, (u32, bool)) {
+    let percentage = device.volume.get().average_percentage();
+    let muted = device.muted.get();
+
+    let icon = if muted {
+        "ld-mic-off-symbolic"
+    } else {
+        "ld-mic-symbolic"
+    };
+
+    let event = OsdEvent::Slider {
+        label: device.description.get(),
+        icon: icon.to_string(),
+        percentage,
+        muted,
+    };
+
+    (event, (percentage.round() as u32, muted))
+}
+
+/// Builds the brightness OSD payload and its change-detection snapshot.
+fn brightness_event(device: &BacklightDevice) -> (OsdEvent, u32) {
+    let percentage = device.percentage().value();
+
+    let event = OsdEvent::Slider {
+        label: device.name.to_string(),
+        icon: BRIGHTNESS_ICON.to_string(),
+        percentage,
+        muted: false,
+    };
+
+    (event, percentage.round() as u32)
 }
 
 pub(super) fn osd_classes(model: &Osd) -> Vec<&'static str> {

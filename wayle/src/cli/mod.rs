@@ -13,6 +13,8 @@ pub mod idle;
 pub mod media;
 /// Notification control commands
 pub mod notify;
+/// On-screen display commands
+pub mod osd;
 /// Panel management commands
 pub mod panel;
 /// Power profile commands

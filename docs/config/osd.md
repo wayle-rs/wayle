@@ -9,6 +9,11 @@ outline: [2, 3]
 
 On-screen display overlay for transient events like volume and brightness.
 
+The `auto-*` keys control whether a change *opens* the overlay. An overlay
+that is already open always tracks its device's value, and that tracking
+never restarts the dismiss timer — though a change that also re-triggers
+the automatic display does.
+
 ## General
 
 | Field | Type | Default | Description |
@@ -28,11 +33,43 @@ to allow fullscreen tearing.
 
 :::
 
+## Automatic display
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `auto-speaker` | bool | `true` | Show the speaker OSD automatically when output volume or mute changes. |
+| `auto-microphone` | bool | `true` | Show the microphone OSD automatically when input volume or mute changes. |
+| `auto-brightness` | bool | `true` | Show the brightness OSD automatically when display brightness changes. |
+| `auto-toggles` | bool | `true` | Show the OSD automatically when caps, num, or scroll lock is pressed. |
+
+::: details More about `auto-speaker`
+
+Turn off to only show it on demand via `wayle osd speaker`.
+
+:::
+
+::: details More about `auto-microphone`
+
+Turn off to only show it on demand via `wayle osd mic`.
+
+:::
+
+::: details More about `auto-brightness`
+
+Turn off when an external daemon adjusts brightness continuously, so the
+overlay isn't permanently on screen. `wayle osd brightness` still works.
+
+:::
+
 ## Default configuration
 
 ```toml
 [osd]
 enabled = true
+auto-speaker = true
+auto-microphone = true
+auto-brightness = true
+auto-toggles = true
 position = "bottom"
 duration = 2500
 monitor = "primary"

@@ -4772,6 +4772,7 @@ dependencies = [
 name = "wayle-ipc"
 version = "0.7.0"
 dependencies = [
+ "serde",
  "zbus",
 ]
 
