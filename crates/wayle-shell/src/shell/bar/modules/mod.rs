@@ -37,7 +37,10 @@ use wayle_config::schemas::bar::{BarModule, ModuleRef};
 use wayle_widgets::prelude::BarSettings;
 
 pub(crate) use self::registry::{ModuleFactory, ModuleInstance};
-use crate::shell::{bar::dropdowns::DropdownRegistry, services::ShellServices};
+use crate::shell::{
+    bar::dropdowns::{DropdownOpener, DropdownRegistry},
+    services::ShellServices,
+};
 
 macro_rules! register_modules {
     ($($variant:ident => $factory:ty),+ $(,)?) => {
@@ -90,18 +93,25 @@ register_modules! {
     WorldClock => world_clock::Factory,
 }
 
+/// Build a module instance, returning it together with the [`DropdownOpener`] the
+/// module published during its `init()` (if any). The opener is drained here — the
+/// single choke point through which every module is built — so the courier slot
+/// never carries a stale opener into the next module.
 pub(crate) fn create_module(
     module_ref: &ModuleRef,
     settings: &BarSettings,
     services: &ShellServices,
     dropdowns: &Rc<DropdownRegistry>,
-) -> Option<ModuleInstance> {
+) -> Option<(ModuleInstance, Option<DropdownOpener>)> {
     let module = module_ref.module();
     let class = module_ref.class().map(String::from);
 
-    if let Some(id) = module.custom_id() {
-        return custom::Factory::create_for_id(id, settings, services, dropdowns, class);
-    }
+    let instance = if let Some(id) = module.custom_id() {
+        custom::Factory::create_for_id(id, settings, services, dropdowns, class)
+    } else {
+        create_from_variant(module.clone(), settings, services, dropdowns, class)
+    };
 
-    create_from_variant(module.clone(), settings, services, dropdowns, class)
+    let opener = dropdowns.take_opener();
+    instance.map(|instance| (instance, opener))
 }

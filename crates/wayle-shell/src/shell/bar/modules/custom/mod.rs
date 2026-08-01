@@ -4,12 +4,12 @@ mod messages;
 mod methods;
 mod watchers;
 
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use gtk::prelude::*;
 use relm4::prelude::*;
 use wayle_config::{
-    ClickAction, ConfigProperty,
+    ClickAction, ConfigProperty, DropdownSources,
     schemas::{
         modules::{CustomModuleDefinition, ExecutionMode},
         styling::{ColorValue, CssToken},
@@ -26,13 +26,29 @@ pub(crate) use self::{
     factory::Factory,
     messages::{CustomCmd, CustomInit, CustomMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
+
+/// A [`DropdownSources`] backed by a shared, mutable name list. A custom module's
+/// click bindings live on a per-instance definition (not a live `ConfigProperty`), so
+/// its opener can't clone a config that updates itself. Instead the module updates this
+/// shared list in place when the definition changes, keeping the opener — and thus
+/// `wayle dropdown list` — in sync with runtime re-bindings.
+#[derive(Clone)]
+struct CustomDropdownNames(Rc<RefCell<Vec<String>>>);
+
+impl DropdownSources for CustomDropdownNames {
+    fn dropdown_names(&self) -> Vec<String> {
+        self.0.borrow().clone()
+    }
+}
 
 pub(crate) struct CustomModule {
     bar_button: Controller<BarButton>,
     definition: CustomModuleDefinition,
     definition_present: bool,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
+    /// Live dropdown names shared with `opener`, refreshed on definition change.
+    dropdown_names: Rc<RefCell<Vec<String>>>,
     poller_token: WatcherToken,
     watcher_token: WatcherToken,
     command_token: WatcherToken,
@@ -130,11 +146,19 @@ impl Component for CustomModule {
         }
         watchers::spawn_config_watcher(&sender, custom_modules, definition.id.clone());
 
+        let dropdown_names = Rc::new(RefCell::new(definition.dropdown_names()));
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            CustomDropdownNames(dropdown_names.clone()),
+        );
+
         let model = Self {
             bar_button,
             definition,
             definition_present: true,
-            dropdowns: init.dropdowns,
+            opener,
+            dropdown_names,
             poller_token,
             watcher_token,
             command_token,
@@ -173,7 +197,7 @@ impl Component for CustomModule {
             CustomMsg::ScrollDown => &self.definition.scroll_down,
         };
 
-        dropdowns::dispatch_click(action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(action);
 
         // on_action only applies to shell commands (dropdowns handle their own state)
         if !matches!(action, ClickAction::Shell(_)) {

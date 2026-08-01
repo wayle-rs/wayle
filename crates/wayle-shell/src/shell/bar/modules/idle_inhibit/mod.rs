@@ -4,7 +4,7 @@ mod messages;
 mod methods;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use relm4::{gtk::prelude::*, prelude::*};
 use wayle_config::{ConfigProperty, ConfigService, schemas::styling::CssToken};
@@ -19,7 +19,7 @@ pub(crate) use self::{
 };
 use crate::{
     services::idle_inhibit::IdleInhibitState,
-    shell::bar::dropdowns::{self, DropdownRegistry},
+    shell::bar::dropdowns::DropdownOpener,
 };
 
 pub(crate) struct IdleInhibitModule {
@@ -27,7 +27,7 @@ pub(crate) struct IdleInhibitModule {
     config: Arc<ConfigService>,
     state: IdleInhibitState,
     inhibitor: Option<IdleInhibitor>,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -88,12 +88,18 @@ impl Component for IdleInhibitModule {
         watchers::spawn_config_watchers(&sender, config);
         watchers::spawn_state_watchers(&sender, &state);
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            config.clone(),
+        );
+
         let model = Self {
             bar_button,
             config: init.config,
             state,
             inhibitor: None,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -112,7 +118,7 @@ impl Component for IdleInhibitModule {
             IdleInhibitMsg::ScrollDown => config.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(

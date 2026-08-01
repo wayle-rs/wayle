@@ -1,6 +1,6 @@
 #![allow(missing_docs)]
 
-use wayle_config::{ApplyConfigLayer, CommitConfigReload, ConfigProperty};
+use wayle_config::{ApplyConfigLayer, CommitConfigReload, ConfigProperty, ExtractRuntimeValues, Removed};
 use wayle_derive::{ApplyConfigLayer, CommitConfigReload};
 
 #[derive(ApplyConfigLayer, CommitConfigReload)]
@@ -95,6 +95,35 @@ fn handles_empty_table() {
 
     assert!(config.enabled.get());
     assert_eq!(config.count.get(), 5);
+}
+
+#[derive(ApplyConfigLayer, CommitConfigReload)]
+struct ConfigWithRemoved {
+    enabled: ConfigProperty<bool>,
+    /// A removed key: still recognized (so a stale value warns), applies nothing.
+    #[wayle(deprecated("use `enabled` instead"))]
+    old_toggle: Removed<bool>,
+}
+
+#[test]
+fn removed_field_is_inert_and_others_still_apply() {
+    let config = ConfigWithRemoved {
+        enabled: ConfigProperty::new(false),
+        old_toggle: Removed::default(),
+    };
+
+    // Both the live key and the removed key are present in the loaded config.
+    let toml_value = toml::toml! {
+        enabled = true
+        old_toggle = true
+    };
+
+    config.apply_config_layer(&toml::Value::Table(toml_value), "");
+    config.commit_config_reload();
+
+    // The live field applied; the removed field applied and persisted nothing.
+    assert!(config.enabled.get());
+    assert!(config.old_toggle.extract_runtime_values().is_none());
 }
 
 #[derive(ApplyConfigLayer, CommitConfigReload)]

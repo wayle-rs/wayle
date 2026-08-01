@@ -1,6 +1,8 @@
+mod resolve;
 mod types;
 
 use schemars::schema_for;
+pub use resolve::find_layout;
 pub use types::{
     BarButtonVariant, BarGroup, BarItem, BarLayout, BarModule, BorderLocation, ClassedModule,
     IconPosition, Location, ModuleRef, ShadowPreset,
@@ -8,7 +10,7 @@ pub use types::{
 use wayle_derive::wayle_config;
 
 use crate::{
-    ConfigProperty,
+    ConfigProperty, Removed,
     docs::{ConfigGroup, ModuleInfo, ModuleInfoProvider},
     schemas::{
         general::Layer,
@@ -239,11 +241,6 @@ pub struct BarConfig {
     #[default(Percentage::new(100))]
     pub dropdown_opacity: ConfigProperty<Percentage>,
 
-    /// Close dropdown when clicking outside it.
-    #[serde(rename = "dropdown-autohide")]
-    #[default(true)]
-    pub dropdown_autohide: ConfigProperty<bool>,
-
     /// Freeze the bar button label while its dropdown is open.
     ///
     /// Prevents the button from resizing mid-interaction, which keeps the
@@ -251,6 +248,13 @@ pub struct BarConfig {
     #[serde(rename = "dropdown-freeze-label")]
     #[default(true)]
     pub dropdown_freeze_label: ConfigProperty<bool>,
+
+    /// REMOVED: dropdowns now always dismiss on an outside click. A stale
+    /// `dropdown-autohide` still in a config warns at load; it has no effect.
+    #[wayle(deprecated("dropdowns now always dismiss on outside click"))]
+    #[serde(rename = "dropdown-autohide", skip_serializing)]
+    #[schemars(skip)]
+    pub dropdown_autohide: Removed<bool>,
 }
 
 impl ModuleInfoProvider for BarConfig {

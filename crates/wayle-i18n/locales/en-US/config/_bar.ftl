@@ -122,9 +122,6 @@ settings-bar-dropdown-shadow = Dropdown Shadow
 settings-bar-dropdown-opacity = Dropdown Opacity
     .description = Transparency for dropdown panels (0-100%)
 
-settings-bar-dropdown-autohide = Dropdown Autohide
-    .description = Close dropdown when clicking outside it
-
 settings-bar-dropdown-freeze-label = Freeze Label
     .description = Prevent bar button label from updating while its dropdown is open
 

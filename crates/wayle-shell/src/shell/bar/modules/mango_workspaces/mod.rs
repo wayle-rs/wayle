@@ -8,7 +8,7 @@ mod methods;
 mod styling;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc, time::Duration};
+use std::{sync::Arc, time::Duration};
 
 use gtk::prelude::*;
 use relm4::{factory::FactoryVecDeque, prelude::*};
@@ -22,7 +22,10 @@ pub(crate) use self::{
     factory::Factory,
     messages::{MangoWorkspacesCmd, MangoWorkspacesInit, MangoWorkspacesMsg},
 };
-use crate::shell::{bar::dropdowns::DropdownRegistry, helpers::COMPONENT_CSS_PRIORITY};
+use crate::shell::{
+    bar::dropdowns::DropdownOpener,
+    helpers::COMPONENT_CSS_PRIORITY,
+};
 
 pub(super) const BLINK_INTERVAL: Duration = Duration::from_millis(500);
 
@@ -30,7 +33,7 @@ pub(crate) struct MangoWorkspaces {
     pub(super) mango: Arc<MangoService>,
     pub(super) config: Arc<ConfigService>,
     pub(super) settings: BarSettings,
-    pub(super) dropdowns: Rc<DropdownRegistry>,
+    pub(super) opener: DropdownOpener,
     pub(super) css_provider: gtk::CssProvider,
     pub(super) buttons: FactoryVecDeque<MangoTagButton>,
     pub(super) blink_on: bool,
@@ -95,11 +98,13 @@ impl Component for MangoWorkspaces {
             },
         );
 
+        let opener = DropdownOpener::for_widget_unlisted(&init.dropdowns, &root);
+
         let mut model = Self {
             mango: init.mango,
             config: init.config,
             settings: init.settings,
-            dropdowns: init.dropdowns,
+            opener,
             css_provider,
             buttons,
             blink_on: false,

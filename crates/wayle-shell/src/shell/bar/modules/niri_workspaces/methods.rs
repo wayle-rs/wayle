@@ -27,7 +27,7 @@ use super::{
     filtering::{self, FilterContext, WorkspaceSnapshot},
     helpers,
 };
-use crate::{process, shell::bar::dropdowns};
+use crate::process;
 
 const REM_BASE_PX: f32 = 16.0;
 
@@ -174,6 +174,12 @@ impl NiriWorkspaces {
     }
 
     pub(super) fn dispatch_click_action(&self, action: WorkspaceClickAction, click_id: u64) {
+        // Any workspace click that isn't opening a dropdown dismisses the open
+        // surface — the bar-click gesture skips this module's whole container, so
+        // (like a button's Shell/None action) non-dropdown actions dismiss here.
+        if !matches!(&action, WorkspaceClickAction::Dropdown(_)) {
+            self.opener.dismiss();
+        }
         match action {
             WorkspaceClickAction::None => {}
             WorkspaceClickAction::FocusWorkspace => self.spawn_focus_id(click_id),
@@ -187,14 +193,16 @@ impl NiriWorkspaces {
                 self.spawn_action(Action::FocusWorkspacePrevious {});
             }
             WorkspaceClickAction::Dropdown(name) => {
-                let action = ClickAction::Dropdown(name);
-                dropdowns::dispatch_click_widget(&action, &self.dropdowns, self.buttons.widget());
+                self.opener.dispatch(&ClickAction::Dropdown(name));
             }
             WorkspaceClickAction::Shell(cmd) => process::run_if_set(&cmd),
         }
     }
 
     pub(super) fn dispatch_scroll_action(&self, action: WorkspaceClickAction) {
+        if !matches!(&action, WorkspaceClickAction::Dropdown(_)) {
+            self.opener.dismiss();
+        }
         match action {
             WorkspaceClickAction::None => {}
             WorkspaceClickAction::FocusWorkspace => warn!(
@@ -210,8 +218,7 @@ impl NiriWorkspaces {
                 self.spawn_action(Action::FocusWorkspacePrevious {});
             }
             WorkspaceClickAction::Dropdown(name) => {
-                let action = ClickAction::Dropdown(name);
-                dropdowns::dispatch_click_widget(&action, &self.dropdowns, self.buttons.widget());
+                self.opener.dispatch(&ClickAction::Dropdown(name));
             }
             WorkspaceClickAction::Shell(cmd) => process::run_if_set(&cmd),
         }

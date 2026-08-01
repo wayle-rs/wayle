@@ -4,7 +4,7 @@ mod messages;
 mod methods;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -20,7 +20,7 @@ pub(crate) use self::{
     factory::Factory,
     messages::{BluetoothCmd, BluetoothInit, BluetoothMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct BluetoothModule {
     bar_button: Controller<BarButton>,
@@ -28,7 +28,7 @@ pub(crate) struct BluetoothModule {
     adapter_watcher: WatcherToken,
     bluetooth: DeferredService<BluetoothService>,
     config: Arc<ConfigService>,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -91,13 +91,19 @@ impl Component for BluetoothModule {
         let adapter_watcher = WatcherToken::new();
         let state_watcher = WatcherToken::new();
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            bt_config.clone(),
+        );
+
         let model = Self {
             bar_button,
             state_watcher,
             adapter_watcher,
             bluetooth: init.bluetooth,
             config: init.config,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -116,7 +122,7 @@ impl Component for BluetoothModule {
             BluetoothMsg::ScrollDown => config.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(&mut self, msg: BluetoothCmd, sender: ComponentSender<Self>, _root: &Self::Root) {

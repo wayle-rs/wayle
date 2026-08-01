@@ -1,6 +1,6 @@
 //! The agnostic [`WindowTitle`] component: model, view, and message routing.
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -14,14 +14,14 @@ use super::{
     messages::{WindowTitleCmd, WindowTitleInit, WindowTitleMsg},
     watchers,
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct WindowTitle {
     pub(super) bar_button: Controller<BarButton>,
     pub(super) config: Arc<ConfigService>,
     pub(super) current_title: String,
     pub(super) current_app_id: String,
-    pub(super) dropdowns: Rc<DropdownRegistry>,
+    pub(super) opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -93,6 +93,12 @@ impl Component for WindowTitle {
                 BarButtonOutput::ScrollDown => WindowTitleMsg::ScrollDown,
             });
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            window_title.clone(),
+        );
+
         watchers::spawn_watchers(&sender, window_title, init.source);
 
         let model = Self {
@@ -100,7 +106,7 @@ impl Component for WindowTitle {
             config: init.config,
             current_title: initial_title,
             current_app_id: initial_app_id,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -119,7 +125,7 @@ impl Component for WindowTitle {
             WindowTitleMsg::ScrollDown => window_title.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(

@@ -1,22 +1,79 @@
 //! Bar component methods: layer-shell positioning, layout diffing,
 //! orientation, and section rebuilding.
 
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc};
 
 use gtk::prelude::*;
 use gtk4_layer_shell::{Edge, LayerShell};
 use relm4::{factory::FactoryVecDeque, gtk, gtk::gdk};
-use wayle_config::schemas::bar::{BarItem, BarLayout, Location};
+use tracing::debug;
+use wayle_config::{
+    ClickAction, Config,
+    schemas::bar::{BarItem, BarLayout, Location},
+};
+
+use crate::services::shell_ipc::{DropdownAction, ShellIpcState};
 use wayle_widgets::prelude::BarSettings;
 
 use super::{
     Bar,
-    dropdowns::DropdownRegistry,
+    dropdowns::{DropdownOpener, DropdownRegistry},
     factory::{BarItemFactory, BarItemFactoryInit},
 };
 use crate::shell::services::ShellServices;
 
 impl Bar {
+    /// Whether this bar should be visible at startup: its layout says `show` and its
+    /// connector isn't in the CLI-hidden set.
+    pub(super) fn visible_on_startup(
+        config: &Config,
+        ipc_state: &ShellIpcState,
+        connector: &str,
+    ) -> bool {
+        wayle_config::schemas::bar::find_layout(&config.bar.layout.get(), connector)
+            .is_some_and(|layout| layout.show)
+            && !ipc_state.hidden_bars.get().contains(connector)
+    }
+
+    /// Install the bar's keyboard + click dismissal controllers (both capture-phase).
+    ///
+    /// Keyboard: when the bar (or one of its popovers) holds focus, Escape closes the
+    /// open surface and nav keys drive the systray menu's cascade — the scrim covers
+    /// the same while the pointer is over the empty desktop; together they span every
+    /// pointer position. Click: any click on the bar — left, middle, OR right —
+    /// dismisses the open dropdown/menu, EXCEPT a click on an opener widget (left to
+    /// that opener's own toggle/swap). A right-click additionally defers to a
+    /// secondary-opener (the tray button, whose right-click opens its menu). This is
+    /// THE automatic dismiss — modules never call `dismiss_current` themselves.
+    pub(super) fn install_dismiss_controllers(
+        window: &gtk::Window,
+        dropdowns: &Rc<DropdownRegistry>,
+    ) {
+        let keys = gtk::EventControllerKey::new();
+        keys.set_propagation_phase(gtk::PropagationPhase::Capture);
+        keys.connect_key_pressed({
+            let coordinator = dropdowns.coordinator();
+            move |_, keyval, _, state| coordinator.handle_key_event(keyval, state)
+        });
+        window.add_controller(keys);
+
+        let click_dismiss = gtk::GestureClick::builder().button(0).build();
+        click_dismiss.set_propagation_phase(gtk::PropagationPhase::Capture);
+        click_dismiss.connect_pressed({
+            let coordinator = dropdowns.coordinator();
+            let window = window.downgrade();
+            move |gesture, _, x, y| {
+                let secondary = gesture.current_button() == gdk::BUTTON_SECONDARY;
+                let Some(window) = window.upgrade() else {
+                    return;
+                };
+                let target = window.pick(x, y, gtk::PickFlags::DEFAULT);
+                coordinator.handle_bar_click(target.as_ref(), secondary);
+            }
+        });
+        window.add_controller(click_dismiss);
+    }
+
     pub(super) fn apply_anchors(window: &gtk::Window, location: Location) {
         let (anchor_edge, stretch_edges) = match location {
             Location::Top => (Edge::Top, [Edge::Left, Edge::Right]),
@@ -158,6 +215,123 @@ impl Bar {
         }
 
         self.layout = new_layout;
+    }
+
+    /// Rebuild the `identifier -> (opener, dropdown)` map from the live modules'
+    /// dropdown openers (the source of truth — no config walk), and publish the
+    /// identifiers for `wayle dropdown list`. Walks the sections in layout order;
+    /// a module type that appears more than once gets a positional `#n` suffix.
+    pub(super) fn rebuild_dropdown_targets(&self) {
+        // Ordered (module token, opener, live names) for every live module that opens a
+        // dropdown. Names are read once here (they may change with the config).
+        let mut entries: Vec<(String, DropdownOpener, Vec<String>)> = Vec::new();
+        for factory in [&self.left, &self.center, &self.right] {
+            for index in 0..factory.len() {
+                let Some(item) = factory.get(index) else {
+                    continue;
+                };
+                for (module, opener) in item.dropdown_targets() {
+                    if let Some(opener) = opener {
+                        let names = opener.names();
+                        if !names.is_empty() {
+                            entries.push((module.to_string(), opener, names));
+                        }
+                    }
+                }
+            }
+        }
+
+        // `#n` suffix only for a module type that appears more than once.
+        let mut totals: HashMap<String, usize> = HashMap::new();
+        for (token, _, _) in &entries {
+            *totals.entry(token.clone()).or_default() += 1;
+        }
+
+        let mut ordinals: HashMap<String, usize> = HashMap::new();
+        let mut targets = HashMap::new();
+        let mut ids = Vec::new();
+        for (token, opener, names) in entries {
+            let ordinal = {
+                let counter = ordinals.entry(token.clone()).or_default();
+                *counter += 1;
+                *counter
+            };
+            let suffix = if totals[&token] > 1 {
+                format!("#{ordinal}")
+            } else {
+                String::new()
+            };
+            for name in names {
+                let identifier = format!("{name}@{token}{suffix}");
+                ids.push(identifier.clone());
+                targets.insert(identifier, (opener.clone(), name.clone()));
+            }
+        }
+        *self.dropdown_targets.borrow_mut() = targets;
+        self.publish_dropdown_ids(ids);
+    }
+
+    /// Publish this bar's live dropdown identifiers to the shell IPC state, keyed by
+    /// its connector, so `wayle dropdown list` reflects the actual openers.
+    fn publish_dropdown_ids(&self, ids: Vec<String>) {
+        let Some(connector) = self.settings.monitor_name.clone() else {
+            return;
+        };
+        let ipc = self.services.shell_ipc.state();
+        let mut map = ipc.dropdown_ids.get();
+        map.insert(connector, ids);
+        ipc.dropdown_ids.set(map);
+    }
+
+    /// Handle a CLI dropdown request on this bar.
+    ///
+    /// [`DropdownAction::Close`] dismisses whatever surface is open (no-op if none).
+    /// [`Toggle`](DropdownAction::Toggle)/[`Open`](DropdownAction::Open) resolve the
+    /// identifier to the owning module's [`DropdownOpener`] and dispatch through it —
+    /// the exact same anchor/freeze/coordinator ceremony as a mouse click — toggling
+    /// or opening-only respectively. Unknown identifiers (not on this bar) are ignored.
+    pub(super) fn handle_dropdown_request(
+        &self,
+        action: DropdownAction,
+        identifier: &str,
+        root: &gtk::Window,
+    ) {
+        if action == DropdownAction::Close {
+            self.dropdowns.coordinator().dismiss_current();
+            return;
+        }
+
+        let target = self.dropdown_targets.borrow().get(identifier).cloned();
+        let Some((opener, dropdown)) = target else {
+            debug!(identifier, "dropdown request: identifier not present on this bar");
+            return;
+        };
+        // If this bar is hidden (`wayle panel hide`), a CLI-opened dropdown would
+        // show the scrim with no bar above it — reveal the bar first.
+        self.ensure_unhidden(root);
+        let click = ClickAction::Dropdown(dropdown);
+        match action {
+            DropdownAction::Open => opener.dispatch_open(&click),
+            DropdownAction::Toggle => opener.dispatch(&click),
+            // Handled by the early return above (it needs no identifier/target); listed
+            // explicitly so a new `DropdownAction` variant is a compile error, not a
+            // silent Toggle.
+            DropdownAction::Close => unreachable!("Close is handled before target resolution"),
+        }
+    }
+
+    /// Remove this bar's connector from the hidden set and show it now, so a
+    /// CLI-opened dropdown has its bar above the scrim. No-op when already visible.
+    fn ensure_unhidden(&self, root: &gtk::Window) {
+        let Some(connector) = self.settings.monitor_name.as_deref() else {
+            return;
+        };
+        let ipc = self.services.shell_ipc.state();
+        let mut hidden = ipc.hidden_bars.get();
+        if hidden.remove(connector) {
+            ipc.hidden_bars.set(hidden);
+            root.set_visible(true);
+        }
     }
 }
 

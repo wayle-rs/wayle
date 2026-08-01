@@ -18,6 +18,7 @@ impl SystrayModule {
             guard.push_back(SystrayItemInit {
                 item,
                 config: self.config.clone(),
+                coordinator: self.coordinator.clone(),
             });
         }
 

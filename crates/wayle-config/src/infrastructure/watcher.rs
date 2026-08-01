@@ -20,6 +20,7 @@ use crate::{
 pub struct FileWatcher {
     config_service: Arc<ConfigService>,
     secrets_tx: watch::Sender<()>,
+    config_tx: watch::Sender<()>,
     _watcher: Arc<RecommendedWatcher>,
 }
 
@@ -29,6 +30,15 @@ impl FileWatcher {
     /// The receiver fires whenever `.env` files are reloaded.
     pub fn subscribe_secrets_reload(&self) -> watch::Receiver<()> {
         self.secrets_tx.subscribe()
+    }
+
+    /// Subscribes to config reload events.
+    ///
+    /// The receiver fires once (per debounced batch) whenever the main or runtime
+    /// config is reloaded from disk — after the new values have been committed to the
+    /// `ConfigProperty` fields, so subscribers can read the fresh config.
+    pub fn subscribe_config_reload(&self) -> watch::Receiver<()> {
+        self.config_tx.subscribe()
     }
 }
 
@@ -42,6 +52,7 @@ impl FileWatcher {
     pub fn start(config_service: Arc<ConfigService>) -> Result<Self, Error> {
         let (tx, rx) = mpsc::unbounded_channel();
         let (secrets_tx, _) = watch::channel(());
+        let (config_tx, _) = watch::channel(());
 
         let mut watcher = notify::recommended_watcher(move |result: Result<Event, _>| {
             if let Ok(event) = result {
@@ -64,6 +75,7 @@ impl FileWatcher {
         let file_watcher = Self {
             config_service,
             secrets_tx,
+            config_tx,
             _watcher: Arc::new(watcher),
         };
 
@@ -109,6 +121,13 @@ impl FileWatcher {
             self.reload_main_config().await?;
         } else if has_runtime_changes {
             self.reload_runtime_only().await?;
+        }
+
+        // Notify config-reload subscribers once the fresh values are committed, so
+        // e.g. bars can re-derive config-driven state (dropdown identifiers) without
+        // each subscribing to every individual `ConfigProperty`.
+        if has_main_config_changes || has_runtime_changes {
+            let _ = self.config_tx.send(());
         }
 
         Ok(())

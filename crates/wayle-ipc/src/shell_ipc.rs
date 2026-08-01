@@ -22,6 +22,18 @@ pub trait ShellIpc {
 
     async fn bar_toggle(&self, monitor: &str) -> Result<()>;
 
+    async fn dropdown_list(&self, monitor: &str) -> Result<Vec<String>>;
+
+    async fn dropdown_toggle(&self, monitor: &str, identifier: &str) -> Result<()>;
+
+    async fn dropdown_open(&self, monitor: &str, identifier: &str) -> Result<()>;
+
+    async fn dropdown_close(&self, monitor: &str) -> Result<()>;
+
+    async fn systray_toggle(&self, id: &str, monitor: &str) -> Result<()>;
+
+    async fn systray_open(&self, id: &str, monitor: &str) -> Result<()>;
+
     #[zbus(property)]
     fn bar_hidden(&self) -> Result<Vec<String>>;
 

@@ -5,6 +5,8 @@ pub mod audio;
 /// Configuration management commands
 pub mod config;
 mod dbus;
+/// Bar dropdown control commands
+pub mod dropdown;
 /// Icon management commands
 pub mod icons;
 /// Idle inhibit control commands

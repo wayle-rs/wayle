@@ -1,6 +1,9 @@
 use relm4::{ComponentController, gtk, gtk::prelude::*, prelude::*};
 use tracing::debug;
-use wayle_config::schemas::modules::{CustomModuleDefinition, ExecutionMode};
+use wayle_config::{
+    DropdownSources,
+    schemas::modules::{CustomModuleDefinition, ExecutionMode},
+};
 use wayle_widgets::{prelude::BarButtonInput, utils::force_window_resize};
 
 use super::{CustomModule, helpers, watchers};
@@ -42,6 +45,12 @@ impl CustomModule {
         self.apply_visual_properties(&new_definition);
         self.definition = new_definition;
         self.definition_present = true;
+        // Keep the opener's (shared) dropdown names in sync with the re-bound clicks, so
+        // `wayle dropdown list` and CLI addressing follow a runtime re-configuration.
+        // Update the names FIRST, then ask the bar to republish — running the rebuild
+        // after the names are in place, rather than racing the config-reload republish.
+        *self.dropdown_names.borrow_mut() = self.definition.dropdown_names();
+        self.opener.request_republish();
 
         if needs_restart {
             self.last_output.clear();

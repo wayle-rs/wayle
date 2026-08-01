@@ -4,7 +4,7 @@ mod messages;
 mod methods;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -22,14 +22,14 @@ pub(crate) use self::{
     factory::Factory,
     messages::{BrightnessCmd, BrightnessInit, BrightnessMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct BrightnessModule {
     bar_button: Controller<BarButton>,
     config: Arc<ConfigService>,
     active_device_watcher_token: WatcherToken,
     brightness: Arc<BrightnessService>,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -95,12 +95,18 @@ impl Component for BrightnessModule {
 
         watchers::spawn_watchers(&sender, brightness_config, &init.brightness);
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            brightness_config.clone(),
+        );
+
         let model = Self {
             bar_button,
             config: init.config,
             active_device_watcher_token: WatcherToken::new(),
             brightness: init.brightness,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -119,7 +125,7 @@ impl Component for BrightnessModule {
             BrightnessMsg::ScrollDown => brightness_config.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(

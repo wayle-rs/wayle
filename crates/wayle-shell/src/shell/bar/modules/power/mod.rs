@@ -2,7 +2,7 @@ mod factory;
 mod messages;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -16,12 +16,12 @@ pub(crate) use self::{
     factory::Factory,
     messages::{PowerCmd, PowerInit, PowerMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct PowerModule {
     bar_button: Controller<BarButton>,
     config: Arc<ConfigService>,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -82,10 +82,16 @@ impl Component for PowerModule {
 
         watchers::spawn_watchers(&sender, power);
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            power.clone(),
+        );
+
         let model = Self {
             bar_button,
             config: init.config,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -104,7 +110,7 @@ impl Component for PowerModule {
             PowerMsg::ScrollDown => power.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(&mut self, msg: PowerCmd, _sender: ComponentSender<Self>, _root: &Self::Root) {

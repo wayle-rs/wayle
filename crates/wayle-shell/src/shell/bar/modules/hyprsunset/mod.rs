@@ -4,7 +4,7 @@ mod messages;
 mod methods;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -18,7 +18,7 @@ pub(crate) use self::{
     factory::Factory,
     messages::{HyprsunsetCmd, HyprsunsetInit, HyprsunsetMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct HyprsunsetModule {
     bar_button: Controller<BarButton>,
@@ -26,7 +26,7 @@ pub(crate) struct HyprsunsetModule {
     enabled: bool,
     current_temp: u32,
     current_gamma: u32,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -86,13 +86,19 @@ impl Component for HyprsunsetModule {
         watchers::spawn_config_watchers(&sender, &config);
         watchers::spawn_state_watcher(&sender);
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            config.clone(),
+        );
+
         let model = Self {
             bar_button,
             config: config_service,
             enabled: false,
             current_temp: config.temperature.get(),
             current_gamma: config.gamma.get(),
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -118,7 +124,7 @@ impl Component for HyprsunsetModule {
             HyprsunsetMsg::ScrollDown => config.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(

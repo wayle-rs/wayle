@@ -319,6 +319,26 @@ pub struct CustomModuleDefinition {
     pub on_action: Option<String>,
 }
 
+impl crate::DropdownSources for CustomModuleDefinition {
+    fn dropdown_names(&self) -> Vec<String> {
+        let mut names: Vec<String> = Vec::new();
+        for action in [
+            &self.left_click,
+            &self.right_click,
+            &self.middle_click,
+            &self.scroll_up,
+            &self.scroll_down,
+        ] {
+            if let ClickAction::Dropdown(name) = action
+                && !names.contains(name)
+            {
+                names.push(name.clone());
+            }
+        }
+        names
+    }
+}
+
 fn default_interval() -> u64 {
     5000
 }

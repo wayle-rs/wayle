@@ -1,7 +1,7 @@
 mod methods;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use relm4::{gtk::prelude::*, prelude::*};
 use wayle_config::{ConfigProperty, ConfigService, schemas::styling::CssToken};
@@ -17,13 +17,13 @@ use super::{
     helpers,
     messages::{KeybindModeCmd, KeybindModeInit, KeybindModeMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct HyprlandKeybindMode {
     bar_button: Controller<BarButton>,
     config: Arc<ConfigService>,
     current_mode: String,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -82,13 +82,19 @@ impl Component for HyprlandKeybindMode {
                 BarButtonOutput::ScrollDown => KeybindModeMsg::ScrollDown,
             });
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            mode_config.clone(),
+        );
+
         watchers::spawn_watchers(&sender, mode_config, &init.hyprland);
 
         let model = Self {
             bar_button,
             config: init.config,
             current_mode: initial_mode,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -107,7 +113,7 @@ impl Component for HyprlandKeybindMode {
             KeybindModeMsg::ScrollDown => mode_config.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(

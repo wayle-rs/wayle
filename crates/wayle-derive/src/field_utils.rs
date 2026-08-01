@@ -111,6 +111,31 @@ fn collect_deprecated_aliases(attr: &Attribute, deprecated_aliases: &mut Vec<Str
     });
 }
 
+/// The note from a field's `#[wayle(deprecated("..."))]` attribute, if present — marking
+/// a REMOVED config key (a `Removed<T>` field). When present, the apply-config-layer
+/// derive warns (with this note) if the key still appears in a loaded config, and applies
+/// nothing. Distinct from `#[wayle(deprecated_alias = "...")]`, which RENAMES a key that
+/// still applies (see [`serde_keys`]).
+pub fn deprecated_note(field: &Field) -> Option<String> {
+    let mut note = None;
+
+    for attr in &field.attrs {
+        if !attr.path().is_ident("wayle") {
+            continue;
+        }
+        let _ = attr.parse_nested_meta(|meta| {
+            if meta.path.is_ident("deprecated") {
+                let content;
+                syn::parenthesized!(content in meta.input);
+                note = Some(content.parse::<syn::LitStr>()?.value());
+            }
+            Ok(())
+        });
+    }
+
+    note
+}
+
 fn field_ident_string(field: &Field) -> String {
     field
         .ident

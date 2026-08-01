@@ -4,7 +4,7 @@ mod messages;
 mod methods;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -22,14 +22,14 @@ pub(crate) use self::{
     factory::Factory,
     messages::{MicrophoneCmd, MicrophoneInit, MicrophoneMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct MicrophoneModule {
     bar_button: Controller<BarButton>,
     config: Arc<ConfigService>,
     active_device_watcher_token: WatcherToken,
     audio: Arc<AudioService>,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -90,12 +90,18 @@ impl Component for MicrophoneModule {
 
         watchers::spawn_watchers(&sender, mic_config, &init.audio);
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            mic_config.clone(),
+        );
+
         let model = Self {
             bar_button,
             config: init.config,
             active_device_watcher_token: WatcherToken::new(),
             audio: init.audio,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -114,7 +120,7 @@ impl Component for MicrophoneModule {
             MicrophoneMsg::ScrollDown => config.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(

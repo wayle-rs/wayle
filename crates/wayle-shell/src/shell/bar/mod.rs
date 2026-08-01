@@ -6,7 +6,7 @@ mod modules;
 mod styling;
 mod watchers;
 
-use std::rc::Rc;
+use std::{cell::RefCell, collections::HashMap, rc::Rc};
 
 use factory::*;
 use gtk::prelude::*;
@@ -15,8 +15,11 @@ use relm4::{factory::FactoryVecDeque, gtk, gtk::gdk, prelude::*};
 use wayle_config::{ConfigProperty, schemas::bar::BarLayout};
 use wayle_widgets::{prelude::BarSettings, styling::InlineStyling};
 
-use self::dropdowns::DropdownRegistry;
-use crate::shell::{helpers::layer_shell::apply_layer, services::ShellServices};
+use self::dropdowns::{DropdownOpener, DropdownRegistry};
+use crate::{
+    services::shell_ipc::DropdownAction,
+    shell::{helpers::layer_shell::apply_layer, services::ShellServices},
+};
 
 pub(crate) struct Bar {
     settings: BarSettings,
@@ -29,6 +32,12 @@ pub(crate) struct Bar {
     left: FactoryVecDeque<BarItemFactory>,
     center: FactoryVecDeque<BarItemFactory>,
     right: FactoryVecDeque<BarItemFactory>,
+
+    /// Maps a dropdown identifier (e.g. `audio@microphone`) to the module's opener
+    /// and the dropdown name it toggles, rebuilt from the live modules whenever the
+    /// layout changes. Backs `wayle dropdown toggle` — dispatching through the
+    /// same opener the module's own click uses.
+    dropdown_targets: RefCell<HashMap<String, (DropdownOpener, String)>>,
 }
 
 pub(crate) struct BarInit {
@@ -40,9 +49,14 @@ pub(crate) struct BarInit {
 pub(crate) enum BarCmd {
     LayoutLoaded(BarLayout),
     StyleChanged,
-    DropdownAutohideChanged(bool),
     ExclusiveChanged(bool),
     LayerChanged,
+    /// A CLI dropdown request (`toggle`/`open`/`close`) targeting this bar. The
+    /// `String` is the dropdown identifier (empty for [`DropdownAction::Close`]).
+    Dropdown(DropdownAction, String),
+    /// The config was reloaded; re-derive the dropdown identifier map and republish
+    /// it (openers read their names live, so a re-bound click updates `dropdown list`).
+    RepublishDropdowns,
 }
 
 #[relm4::component(pub(crate))]
@@ -100,14 +114,8 @@ impl Component for Bar {
 
         let ipc_state = init.services.shell_ipc.state();
 
-        let visible_on_startup = {
-            let connector = monitor_name.as_deref().unwrap_or("unknown");
-            let layouts = config.bar.layout.get();
-            let config_visible = watchers::layout::find_layout(&layouts, connector)
-                .is_some_and(|layout| layout.show);
-
-            config_visible && !ipc_state.hidden_bars.get().contains(connector)
-        };
+        let visible_on_startup =
+            Self::visible_on_startup(config, &ipc_state, monitor_name.as_deref().unwrap_or("unknown"));
 
         let settings = BarSettings {
             variant: config.bar.button_variant.clone(),
@@ -153,12 +161,20 @@ impl Component for Bar {
             .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
 
         watchers::layout::spawn(&sender, &init.monitor, &init.services.config, &ipc_state);
-        watchers::dropdowns::spawn(&sender, &init.services.config);
         watchers::exclusive::spawn(&sender, &init.services.config);
         watchers::layer::spawn(&sender, &init.services.config);
+        watchers::dropdown::spawn(&sender, &init.monitor, &init.services.config, &ipc_state);
 
-        let dropdowns = Rc::new(DropdownRegistry::new(&init.services));
+        let dropdowns = Rc::new(DropdownRegistry::new(&init.services, &init.monitor, &root));
         dropdowns.warm_all();
+        dropdowns.set_republish({
+            let command = sender.command_sender().clone();
+            Rc::new(move || {
+                let _ = command.send(BarCmd::RepublishDropdowns);
+            })
+        });
+
+        Self::install_dismiss_controllers(&root, &dropdowns);
 
         let mut model = Self {
             settings,
@@ -177,6 +193,7 @@ impl Component for Bar {
             left,
             center,
             right,
+            dropdown_targets: RefCell::new(HashMap::new()),
         };
 
         model.spawn_style_watcher(&sender);
@@ -212,6 +229,7 @@ impl Component for Bar {
         match msg {
             BarCmd::LayoutLoaded(layout) => {
                 self.apply_layout(layout, root);
+                self.rebuild_dropdown_targets();
             }
             BarCmd::StyleChanged => {
                 let new_css = self.build_css();
@@ -220,15 +238,25 @@ impl Component for Bar {
                     self.last_css = new_css;
                 }
             }
-            BarCmd::DropdownAutohideChanged(autohide) => {
-                self.dropdowns.set_all_autohide(autohide);
-            }
             BarCmd::ExclusiveChanged(exclusive) => {
                 Self::apply_exclusive_zone(root, exclusive);
             }
             BarCmd::LayerChanged => {
-                let configured = self.services.config.config().bar.layer.get();
-                apply_layer(root, configured, &self.services.config);
+                // While a dropdown/menu is open the scrim has raised the bar to Overlay
+                // and owns its layer; re-layering now would drop it below the active
+                // full-monitor scrim (which would then swallow the popover's clicks).
+                // Defer — `Scrim::hide` re-reads and applies the configured layer when
+                // the surface closes.
+                if !self.dropdowns.coordinator().has_open_surface() {
+                    let configured = self.services.config.config().bar.layer.get();
+                    apply_layer(root, configured, &self.services.config);
+                }
+            }
+            BarCmd::Dropdown(action, identifier) => {
+                self.handle_dropdown_request(action, &identifier, root);
+            }
+            BarCmd::RepublishDropdowns => {
+                self.rebuild_dropdown_targets();
             }
         }
     }

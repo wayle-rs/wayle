@@ -23,7 +23,7 @@ pub(crate) use self::{
     factory::Factory,
     messages::{CavaCmd, CavaInit},
 };
-use crate::shell::bar::dropdowns::{DropdownRegistry, dispatch_click_widget};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 /// Audio frequency visualizer rendered via cairo on a `DrawingArea`.
 pub(crate) struct CavaModule {
@@ -34,8 +34,7 @@ pub(crate) struct CavaModule {
     is_vertical: bool,
     cava: Option<Arc<CavaService>>,
     config: Arc<ConfigService>,
-    dropdowns: Rc<DropdownRegistry>,
-    container_widget: gtk::Box,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -134,6 +133,12 @@ impl Component for CavaModule {
         Self::attach_click_gesture(&root, &sender);
         Self::attach_scroll_controller(&root, &sender, scroll_sensitivity);
 
+        let opener = DropdownOpener::for_widget(
+            &init.dropdowns,
+            &root,
+            cava_config.clone(),
+        );
+
         let model = Self {
             container,
             drawing_area: drawing_area.clone(),
@@ -142,8 +147,7 @@ impl Component for CavaModule {
             is_vertical,
             cava: None,
             config: init.config.clone(),
-            dropdowns: init.dropdowns,
-            container_widget: root.clone(),
+            opener,
         };
         let container = model.container.widget();
         let drawing_area = &model.drawing_area;
@@ -161,7 +165,7 @@ impl Component for CavaModule {
             CavaMsg::ScrollUp => cava_config.scroll_up.get(),
             CavaMsg::ScrollDown => cava_config.scroll_down.get(),
         };
-        dispatch_click_widget(&action, &self.dropdowns, &self.container_widget);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(&mut self, msg: CavaCmd, sender: ComponentSender<Self>, _root: &Self::Root) {

@@ -7,6 +7,7 @@ extern crate self as wayle_config;
 
 pub mod click_action;
 mod diagnostic;
+mod dropdown_sources;
 mod enum_variants;
 mod property;
 
@@ -15,11 +16,12 @@ pub mod docs;
 
 pub use click_action::ClickAction;
 pub use diagnostic::Diagnostic;
+pub use dropdown_sources::DropdownSources;
 pub use enum_variants::{EnumVariant, EnumVariants};
 pub use property::{
     ApplyConfigLayer, ApplyRuntimeLayer, ClearAllRuntime, ClearRuntimeByPath, CommitConfigReload,
-    ConfigProperty, ExtractRuntimeValues, ResetConfigLayer, ResetRuntimeLayer, SubscribeChanges,
-    ValueSource,
+    ConfigProperty, ExtractRuntimeValues, Removed, ResetConfigLayer, ResetRuntimeLayer,
+    SubscribeChanges, ValueSource,
 };
 
 /// Configuration schema definitions.

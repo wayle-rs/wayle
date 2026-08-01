@@ -56,7 +56,12 @@ impl ConfigService {
                 .map_err(|source| Error::TaskJoin { source })?;
 
         match config_result {
-            Ok(config_toml) => config.apply_config_layer(&config_toml, ""),
+            Ok(config_toml) => {
+                // Removed/renamed keys still present are warned about by the derived
+                // `apply_config_layer` (from `#[wayle(deprecated(...))]` /
+                // `#[wayle(deprecated_alias)]` on the schema fields themselves).
+                config.apply_config_layer(&config_toml, "");
+            }
             Err(e) => warn!("using defaults, config.toml failed:\n{e}"),
         }
 
@@ -139,6 +144,19 @@ impl ConfigService {
             guard
                 .as_ref()
                 .map(|watcher| watcher.subscribe_secrets_reload())
+        })
+    }
+
+    /// Subscribes to config reload events.
+    ///
+    /// Returns a receiver that fires whenever the main or runtime config is reloaded
+    /// from disk (after the new values are committed). Returns `None` if the watcher
+    /// is not initialized.
+    pub fn subscribe_config_reload(&self) -> Option<tokio::sync::watch::Receiver<()>> {
+        self.watcher.read().ok().and_then(|guard| {
+            guard
+                .as_ref()
+                .map(|watcher| watcher.subscribe_config_reload())
         })
     }
 

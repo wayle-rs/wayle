@@ -12,7 +12,10 @@ pub(super) fn spawn_menu_watcher(
     item: &Arc<TrayItem>,
     cancel_token: CancellationToken,
 ) {
-    let stream = item.menu.watch().skip(1);
+    // No `skip(1)`: the initial layout must fire `MenuUpdated` too, so the cascade is
+    // pre-built off the click path as soon as the menu arrives (a click then only
+    // shows it). `rebuild_cached_menu` no-ops when the layout is unchanged.
+    let stream = item.menu.watch();
     let sender = sender.clone();
 
     relm4::spawn_local(async move {
@@ -25,7 +28,12 @@ pub(super) fn spawn_menu_watcher(
                     if result.is_none() {
                         break;
                     }
-                    sender.input(SystrayItemMsg::MenuUpdated);
+                    // Non-panicking send: this task can outlive the component during
+                    // factory teardown (the runtime's input receiver is dropped before
+                    // our `cancel_token` fires), so `sender.input` — which `expect`s —
+                    // would panic on a queued emission. Dropping into a shut-down
+                    // runtime is a no-op.
+                    let _ = sender.input_sender().send(SystrayItemMsg::MenuUpdated);
                 }
             }
         }
@@ -52,7 +60,8 @@ pub(super) fn spawn_icon_watcher(
                     if result.is_none() {
                         break;
                     }
-                    sender.input(SystrayItemMsg::IconUpdated);
+                    // Non-panicking send; see `spawn_menu_watcher`.
+                    let _ = sender.input_sender().send(SystrayItemMsg::IconUpdated);
                 }
             }
         }

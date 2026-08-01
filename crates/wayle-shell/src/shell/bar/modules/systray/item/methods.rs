@@ -1,159 +1,248 @@
-use std::path::Path;
+use std::{cell::Cell, path::Path, rc::Rc};
 
 #[allow(deprecated)]
 use gtk4::prelude::StyleContextExt;
-use gtk4::{gio, glib::idle_add_local_once};
-use relm4::{
-    gtk::{self, prelude::*},
-    prelude::*,
-};
+use relm4::gtk::{self, prelude::*};
 use tracing::debug;
-use wayle_systray::{
-    adapters::gtk4::{Adapter, TrayMenuModel},
-    types::Coordinates,
-};
+use wayle_systray::types::{Coordinates, menu::MenuItem};
 
 use super::{
-    IconSignature, SystrayItem, SystrayItemMsg,
+    IconSignature, SystrayItem, menu,
     helpers::{
         create_texture_from_pixmap, find_icon_in_theme_path, hash_pixmaps,
         load_icon_from_theme_path, load_scaled_texture_from_file, select_best_pixmap,
     },
 };
 use crate::shell::{
-    bar::modules::systray::helpers::find_override, helpers::COMPONENT_CSS_PRIORITY,
+    bar::{dropdowns::DismissFn, modules::systray::helpers::find_override},
+    helpers::COMPONENT_CSS_PRIORITY,
 };
 
+/// A freshly built cascade plus the bookkeeping to show it and later release it:
+/// the tree it was built from (for the no-op-skip), its stable dismiss closure, and
+/// the `registered` flag its one-time `closed` handler flips.
+struct BuiltMenu {
+    menu: menu::TrayMenu,
+    tree: MenuItem,
+    dismiss: DismissFn,
+    registered: Rc<Cell<bool>>,
+}
+
 impl SystrayItem {
-    pub(super) fn request_menu_show(&self, sender: &FactorySender<Self>) {
-        if let Some(popover) = self.popover.as_ref()
-            && popover.is_visible()
-        {
-            debug!(item_id = %self.item.id.get(), "hiding popover");
-            popover.popdown();
+    /// Toggle/open this item's menu on click. `toggle`: right-click / `systray
+    /// toggle` (open if closed, close if open); `false` is `systray open`
+    /// (open-if-closed, no-op if already open).
+    ///
+    /// The open/close decision goes through the [`OpenSurfaceCoordinator`], keyed on
+    /// the tray button as the anchor — the same authority the dropdowns use — rather
+    /// than a transient `menu.is_visible()` check. That check could go stale between
+    /// the press that closed the menu (via the scrim) and the release that acted on
+    /// it, so a second right-click sometimes re-opened instead of staying closed.
+    /// The cascade is normally pre-built off the click path (by the menu watcher),
+    /// so opening only *presents* it; a click before the first layout arrives
+    /// cold-builds it (see [`show_menu`]).
+    pub(super) fn request_menu_show(&mut self, toggle: bool) {
+        let Some(button) = self.button.clone() else {
             return;
+        };
+        let anchor: gtk::Widget = button.upcast();
+        // Clone the Rc so the open closure borrows only `self`, not `self.coordinator`.
+        let coordinator = self.coordinator.clone();
+
+        if toggle {
+            coordinator.toggle(&anchor, || self.present_or_show());
+        } else {
+            coordinator.open_only(&anchor, || self.present_or_show());
+        }
+    }
+
+    /// The coordinator's "open" action for this item: present the pre-built cascade
+    /// (or cold-build it), then kick off a background `AboutToShow` refresh — which
+    /// reconciles the menu in place if the app returns a changed layout. Runs only
+    /// when the coordinator decides to open (never on a toggle-off).
+    fn present_or_show(&mut self) {
+        if self.menu.is_some() {
+            self.present_cached();
+        } else {
+            // No cache yet (menu layout not received) — build and show now.
+            self.show_menu();
         }
 
         let item = self.item.clone();
-        let sender = sender.clone();
-
         tokio::spawn(async move {
             if let Err(error) = item.refresh_menu().await {
                 debug!(error = %error, "AboutToShow not supported");
             }
-
-            sender.input(SystrayItemMsg::ShowMenu);
         });
     }
 
-    pub(super) fn toggle_menu(&mut self) {
-        if let Some(popover) = self.popover.as_ref()
-            && popover.is_visible()
+    /// Apply a layout change from the menu watcher, OFF the click path. Skips when
+    /// the layout is unchanged. If the cascade is already built, it is PATCHED IN
+    /// PLACE via [`menu::TrayMenu::reconcile`] — reusing every popover, button, and
+    /// submenu column — whether the menu is hidden or visible (a visible reconcile
+    /// is the point: an AboutToShow/LayoutUpdated change updates the open menu with
+    /// no flicker and no surface churn). If it isn't built yet, build it once and
+    /// cache it hidden. If the layout goes empty, drop the cache.
+    pub(super) fn rebuild_cached_menu(&mut self) {
+        let new_tree = self.item.menu.get();
+        if new_tree == self.displayed_menu {
+            return;
+        }
+
+        let has_content = new_tree
+            .as_ref()
+            .is_some_and(|root| !root.children.is_empty());
+
+        if self.menu.is_some() {
+            if has_content {
+                if let (Some(menu), Some(root)) = (self.menu.as_ref(), new_tree.as_ref()) {
+                    menu.reconcile(root);
+                }
+                self.displayed_menu = new_tree;
+            } else {
+                // Layout emptied/unavailable: drop the cache (dismiss it if open).
+                let visible = self.menu.as_ref().is_some_and(menu::TrayMenu::is_visible);
+                self.drop_cache(visible);
+            }
+        } else if has_content
+            && let Some(built) = self.build_cascade()
         {
-            debug!(item_id = %self.item.id.get(), "hiding popover");
-            popover.popdown();
-            return;
+            // First layout: build the persistent cascade once, hidden.
+            self.install(built);
         }
-
-        self.show_menu();
     }
 
-    #[allow(clippy::cognitive_complexity)]
-    fn show_menu(&mut self) {
-        let item_id = self.item.id.get();
-        debug!(item_id = %item_id, title = %self.item.title.get(), "show_menu called");
-
-        let menu_data = self.item.menu.get();
-        let Some(root_menu) = menu_data else {
-            debug!("no menu data, falling back");
-            self.spawn_context_menu_fallback();
-            return;
-        };
-
+    /// Build the cascade for the current layout and install its one-time `closed`
+    /// handler, without showing it. `None` when there is no usable layout.
+    fn build_cascade(&self) -> Option<BuiltMenu> {
+        let root_menu = self.item.menu.get()?;
         if root_menu.children.is_empty() {
-            debug!("empty menu, falling back");
-            self.spawn_context_menu_fallback();
-            return;
+            return None;
         }
+        let parent = self.button.clone()?;
 
-        let model = Adapter::build_model(&self.item);
-        debug!(
-            item_id = %item_id,
-            menu_n_items = model.menu.n_items(),
-            accelerators = model.accelerators.len(),
-            "built menu model"
-        );
-
-        let popover = self.ensure_popover(&model.menu);
-        self.apply_menu_model(&popover, model);
-        popover.popup();
-    }
-
-    pub(super) fn ensure_popover(&mut self, menu: &gio::Menu) -> gtk::PopoverMenu {
-        if let Some(popover) = self.popover.clone() {
-            return popover;
-        }
-
-        let popover = gtk::PopoverMenu::from_model_full(menu, gtk::PopoverMenuFlags::NESTED);
-        popover.add_css_class("systray-menu");
-        popover.set_has_arrow(false);
-
-        popover.connect_map(|popover| {
-            override_model_button_layout(popover.upcast_ref());
+        // Bar scale sizes the root menu's bar-gap offset (to match the dropdown
+        // panels); styling scale sizes the submenu flush offset (to match the panel's
+        // `space-xs` contents padding, which uses `--global-scale`).
+        let config = self.config.config();
+        let scale = config.bar.scale.get().value();
+        let styling_scale = config.styling.scale.get().value();
+        let menu = menu::build(&self.item, &root_menu, parent.upcast_ref(), scale, styling_scale);
+        let dismiss = menu.dismiss_handle();
+        // `registered` = "this menu is the coordinator's open surface, so closing it
+        // must notify the coordinator". Set true on each present; flipped false
+        // exactly once by whichever fires first — the popover's `closed` (a popdown)
+        // or an explicit teardown (`clear_menu_registration`, since `teardown`
+        // unparents without popping down). Installed once here, so reusing the cached
+        // popover across open/close cycles never stacks handlers.
+        let registered = Rc::new(Cell::new(false));
+        menu.root_popover().connect_closed({
+            let coordinator = self.coordinator.clone();
+            let dismiss = dismiss.clone();
+            let registered = registered.clone();
+            move |_| {
+                if registered.replace(false) {
+                    coordinator.notify_closed(&dismiss);
+                }
+            }
         });
 
-        if let Some(parent) = self.button.as_ref() {
-            popover.set_parent(parent);
+        Some(BuiltMenu {
+            menu,
+            tree: root_menu,
+            dismiss,
+            registered,
+        })
+    }
+
+    /// Present the already-built cached cascade: register it as the open surface
+    /// (closing any other, showing the scrim) and pop it up. No widget construction.
+    fn present_cached(&mut self) {
+        let Some(menu) = self.menu.as_ref() else {
+            return;
+        };
+        let Some((dismiss, registered)) = self.menu_reg.as_ref() else {
+            return;
+        };
+        let Some(parent) = self.button.clone() else {
+            return;
+        };
+
+        registered.set(true);
+        let anchor = parent.upcast_ref::<gtk::Widget>().downgrade();
+        // Register as the open surface FIRST — this closes any other open surface and
+        // establishes the scrim + bar->Overlay stacking (coordinator.open -> sync_scrim
+        // -> scrim.show raises the bar above the scrim) — THEN pop the menu up so it
+        // maps as a child of the already-raised bar and stacks ABOVE the scrim. This
+        // matches the dropdown open ceremony (registry.rs `open_on`); doing popup()
+        // first left the fresh popup stacked under the scrim on a switch (scrim over
+        // the bar), which then swallowed the next click. The needs-motion swap bug is
+        // still avoided because the scrim stays mapped across the swap (coordinator
+        // show-before-close), so a stationary pointer always has a live surface.
+        self.coordinator
+            .open(dismiss.clone(), Some(menu.key_handler()), Some(anchor));
+        menu.popup();
+    }
+
+    /// Cold path: a click arrived before the watcher cached the cascade (the app
+    /// hadn't sent a layout yet). Build it once, cache it, and present it — or fall
+    /// back to the app's own context menu when there's still no layout. Subsequent
+    /// opens hit the cache and go straight through `present_cached`.
+    fn show_menu(&mut self) {
+        match self.build_cascade() {
+            Some(built) => {
+                self.install(built);
+                self.present_cached();
+            }
+            None => {
+                debug!("no menu data, falling back");
+                self.spawn_context_menu_fallback();
+            }
         }
-
-        self.popover = Some(popover.clone());
-        popover
     }
 
-    pub(super) fn apply_menu_model(&mut self, popover: &gtk::PopoverMenu, model: TrayMenuModel) {
-        self.clear_accelerators();
-        popover.set_menu_model(Some(&model.menu));
-        popover.insert_action_group("app", Some(&model.actions));
-        self.register_accelerators(popover, &model.accelerators);
-        self.action_group = Some(model.actions);
+    /// Cache a freshly built cascade (hidden). Only called when there is no existing
+    /// cache — the persistent surface is built exactly once and thereafter updated
+    /// in place by [`rebuild_cached_menu`], never rebuilt.
+    fn install(&mut self, built: BuiltMenu) {
+        debug_assert!(
+            self.menu.is_none(),
+            "install replaces no surface; updates go through reconcile"
+        );
+        let BuiltMenu {
+            menu,
+            tree,
+            dismiss,
+            registered,
+        } = built;
+
+        self.menu = Some(menu);
+        self.menu_reg = Some((dismiss, registered));
+        self.displayed_menu = Some(tree);
     }
 
-    fn register_accelerators(
-        &mut self,
-        popover: &gtk::PopoverMenu,
-        accelerators: &[(String, String)],
-    ) {
-        let Some(app) = popover
-            .root()
-            .and_then(|root| root.downcast::<gtk::Window>().ok())
-            .and_then(|window| window.application())
-        else {
-            return;
-        };
-
-        for (action_name, accel) in accelerators {
-            app.set_accels_for_action(action_name, &[accel.as_str()]);
-            self.registered_accels.push(action_name.clone());
+    /// Drop the cached cascade (the layout went empty/unavailable), dismissing it
+    /// first if it was open so a stale menu never lingers on screen.
+    fn drop_cache(&mut self, visible: bool) {
+        if visible {
+            self.coordinator.dismiss_current();
         }
+        self.clear_menu_registration();
+        if let Some(old_menu) = self.menu.take() {
+            old_menu.teardown();
+        }
+        self.menu_reg = None;
+        self.displayed_menu = None;
     }
 
-    pub(super) fn clear_accelerators(&mut self) {
-        let accels: Vec<String> = self.registered_accels.drain(..).collect();
-
-        let Some(popover) = self.popover.as_ref() else {
-            return;
-        };
-
-        let Some(app) = popover
-            .root()
-            .and_then(|root| root.downcast::<gtk::Window>().ok())
-            .and_then(|window| window.application())
-        else {
-            return;
-        };
-
-        for action_name in &accels {
-            app.set_accels_for_action(action_name, &[]);
+    /// Release the cached menu's coordinator registration (which hides the scrim) if
+    /// it is currently the open surface and its popover's `closed` hasn't already
+    /// done so — `teardown` unparents without popping down, so `closed` may not fire.
+    pub(super) fn clear_menu_registration(&mut self) {
+        if let Some((dismiss, registered)) = self.menu_reg.as_ref()
+            && registered.replace(false)
+        {
+            self.coordinator.notify_closed(dismiss);
         }
     }
 
@@ -269,87 +358,4 @@ impl SystrayItem {
 
         image.set_icon_name(Some("application-x-executable-symbolic"));
     }
-
-    pub(super) fn rebuild_menu_if_visible(&mut self) {
-        let Some(popover) = self.popover.clone() else {
-            return;
-        };
-
-        if !popover.is_visible() {
-            return;
-        }
-
-        let model = Adapter::build_model(&self.item);
-        self.apply_menu_model(&popover, model);
-
-        idle_add_local_once(move || override_model_button_layout(popover.upcast_ref()));
-    }
-}
-
-/// GTK4's `GtkModelButton` hides icons when a label is present and reserves
-/// left margin for check/radio indicators via a shared size group, even on
-/// items that don't have one. This walks the popover tree and undoes both:
-/// icons with content get forced visible, and empty indicator boxes get hidden.
-fn override_model_button_layout(widget: &gtk::Widget) {
-    if widget.css_name() == "modelbutton" {
-        force_icon_visible(widget);
-        hide_empty_indicator_box(widget);
-        return;
-    }
-
-    let mut child = widget.first_child();
-    while let Some(current) = child {
-        override_model_button_layout(current.upcast_ref());
-        child = current.next_sibling();
-    }
-}
-
-/// GTK4 hides the icon on model buttons that have a label. If the icon
-/// actually has content (a theme icon, GIcon, or paintable), force it visible.
-fn force_icon_visible(button: &gtk::Widget) {
-    let mut child = button.first_child();
-
-    while let Some(current) = child {
-        if let Some(image) = current.downcast_ref::<gtk::Image>() {
-            let has_content = image.icon_name().is_some()
-                || image.gicon().is_some()
-                || image.paintable().is_some();
-
-            if has_content {
-                image.set_visible(true);
-            }
-        }
-
-        child = current.next_sibling();
-    }
-}
-
-/// Every model button has a `box` child that holds check/radio indicators.
-/// GTK puts all of these boxes in a shared size group so they align, which
-/// means items without indicators still reserve that space on the left.
-/// Hide the box when it's empty to reclaim the margin.
-fn hide_empty_indicator_box(button: &gtk::Widget) {
-    let mut child = button.first_child();
-
-    while let Some(current) = child {
-        if current.css_name() == "box" && !contains_toggle_indicator(&current) {
-            current.set_visible(false);
-        }
-
-        child = current.next_sibling();
-    }
-}
-
-fn contains_toggle_indicator(indicator_box: &gtk::Widget) -> bool {
-    let mut child = indicator_box.first_child();
-
-    while let Some(current) = child {
-        let name = current.css_name();
-        if name == "check" || name == "radio" {
-            return true;
-        }
-        child = current.next_sibling();
-    }
-
-    false
 }

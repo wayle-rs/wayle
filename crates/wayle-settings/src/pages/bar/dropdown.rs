@@ -24,7 +24,6 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                     title_key: "settings-section-behavior",
                     items: vec![
                         toggle(&bar.dropdown_shadow),
-                        toggle(&bar.dropdown_autohide),
                         toggle(&bar.dropdown_freeze_label),
                     ],
                 },

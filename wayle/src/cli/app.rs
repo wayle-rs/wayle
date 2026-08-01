@@ -8,10 +8,10 @@ use clap_complete::Shell;
 
 use crate::cli::{
     audio::commands::AudioCommands, config::commands::ConfigCommands,
-    icons::commands::IconsCommands, idle::commands::IdleCommands, media::commands::MediaCommands,
-    notify::commands::NotifyCommands, panel::commands::PanelCommands,
-    power::commands::PowerCommands, systray::commands::SystrayCommands,
-    wallpaper::commands::WallpaperCommands,
+    dropdown::commands::DropdownCommands, icons::commands::IconsCommands,
+    idle::commands::IdleCommands, media::commands::MediaCommands, notify::commands::NotifyCommands,
+    panel::commands::PanelCommands, power::commands::PowerCommands,
+    systray::commands::SystrayCommands, wallpaper::commands::WallpaperCommands,
 };
 
 fn get_styles() -> Styles {
@@ -74,6 +74,19 @@ pub enum Commands {
         #[command(subcommand)]
         command: PanelCommands,
     },
+    /// Bar dropdown inspection and control commands
+    #[command(long_about = "\
+Bar dropdown inspection and control commands.\n\
+\n\
+The --monitor option (on `list`, `toggle`, `open`, `close`) selects the target monitor:\n\
+- omitted:        the currently active (focused) monitor\n\
+- --monitor=NAME: the monitor with that connector (e.g. DP-1)\n\
+- --monitor=all:  every monitor")]
+    Dropdown {
+        /// Dropdown subcommand to execute.
+        #[command(subcommand)]
+        command: DropdownCommands,
+    },
     /// Power profile commands
     Power {
         /// Power subcommand to execute.
@@ -81,6 +94,13 @@ pub enum Commands {
         command: PowerCommands,
     },
     /// System tray commands
+    #[command(long_about = "\
+System tray commands.\n\
+\n\
+The --monitor option (on `toggle`, `open`) selects the target monitor:\n\
+- omitted:        the currently active (focused) monitor\n\
+- --monitor=NAME: the monitor with that connector (e.g. DP-1)\n\
+- --monitor=all:  every monitor")]
     Systray {
         /// Systray subcommand to execute.
         #[command(subcommand)]

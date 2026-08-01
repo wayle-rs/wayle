@@ -12,6 +12,20 @@ window {
     font-family: var(--font-sans);
 }
 
+// The dropdown/menu dismissal scrim is a permanently-mapped fullscreen input
+// catcher (mapping/unmapping it drops the bar's pointer focus on Hyprland). It must
+// be visually transparent, but NOT fully transparent: on Hyprland/wlroots pointer
+// input for a layer surface is hit-tested against committed painted content, and —
+// just as important — GTK only commits a frame for a surface that has painted
+// content, so a fully `transparent` scrim never commits its (emptied) input region
+// on close and stays stuck catching input. A ~1/255 alpha fill forces a
+// full-monitor painted buffer that both hit-tests and commits, while being visually
+// imperceptible (~0.4%). This is the standard trick wlroots shells ship. More
+// specific than the `window` rule above, so it wins in the same stylesheet.
+window.dropdown-scrim {
+    background-color: rgba(0, 0, 0, 0.004);
+}
+
 popover.background {
     background: transparent;
 

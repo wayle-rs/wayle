@@ -4,7 +4,7 @@ mod messages;
 mod methods;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -22,7 +22,7 @@ pub(crate) use self::{
     factory::Factory,
     messages::{NetworkCmd, NetworkInit, NetworkMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct NetworkModule {
     bar_button: Controller<BarButton>,
@@ -30,7 +30,7 @@ pub(crate) struct NetworkModule {
     wifi_watcher: WatcherToken,
     wired_watcher: WatcherToken,
     network: Arc<NetworkService>,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -97,13 +97,19 @@ impl Component for NetworkModule {
         watchers::spawn_wifi_watchers(&sender, &init.network, wifi_watcher.reset());
         watchers::spawn_wired_watchers(&sender, &init.network, wired_watcher.reset());
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            network_config.clone(),
+        );
+
         let model = Self {
             bar_button,
             config: init.config,
             wifi_watcher,
             wired_watcher,
             network: init.network,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -122,7 +128,7 @@ impl Component for NetworkModule {
             NetworkMsg::ScrollDown => config.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(&mut self, msg: NetworkCmd, sender: ComponentSender<Self>, _root: &Self::Root) {

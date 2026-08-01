@@ -21,7 +21,7 @@ use super::{
     button::{AppIconInit, MangoTagButtonInit},
     helpers,
 };
-use crate::{process, shell::bar::dropdowns};
+use crate::process;
 
 const REM_BASE_PX: f32 = 16.0;
 
@@ -198,6 +198,12 @@ impl MangoWorkspaces {
     }
 
     pub(super) fn dispatch_click_action(&self, action: WorkspaceClickAction, clicked_index: u32) {
+        // Any tag click that isn't opening a dropdown dismisses the open surface —
+        // the bar-click gesture skips this module's whole container, so (like a
+        // button's Shell/None action) non-dropdown actions dismiss here.
+        if !matches!(&action, WorkspaceClickAction::Dropdown(_)) {
+            self.opener.dismiss();
+        }
         match action {
             WorkspaceClickAction::None => {}
             WorkspaceClickAction::FocusWorkspace => self.spawn_view_tag(clicked_index),
@@ -212,6 +218,9 @@ impl MangoWorkspaces {
     }
 
     pub(super) fn dispatch_scroll_action(&self, action: WorkspaceClickAction) {
+        if !matches!(&action, WorkspaceClickAction::Dropdown(_)) {
+            self.opener.dismiss();
+        }
         match action {
             WorkspaceClickAction::None => {}
             WorkspaceClickAction::FocusWorkspace => {
@@ -228,8 +237,7 @@ impl MangoWorkspaces {
     }
 
     fn open_dropdown(&self, name: String) {
-        let action = ClickAction::Dropdown(name);
-        dropdowns::dispatch_click_widget(&action, &self.dropdowns, self.buttons.widget());
+        self.opener.dispatch(&ClickAction::Dropdown(name));
     }
 
     fn spawn_view_tag(&self, index: u32) {

@@ -195,5 +195,14 @@ fn sync_ipc_state(services: &ShellServices, bars: &BarMap) {
         ipc.hidden_bars.set(hidden);
     }
 
+    // Drop published dropdown ids for connectors whose bar is gone, so a disconnected
+    // monitor doesn't leave a stale entry accumulating in the map across churn.
+    let mut ids = ipc.dropdown_ids.get();
+    let ids_before = ids.len();
+    ids.retain(|connector, _| connectors.contains(connector));
+    if ids.len() < ids_before {
+        ipc.dropdown_ids.set(ids);
+    }
+
     ipc.connectors.set(connectors);
 }

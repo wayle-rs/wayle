@@ -116,9 +116,6 @@ settings-bar-dropdown-shadow = Ombre du menu déroulant
 settings-bar-dropdown-opacity = Opacité du menu déroulant
     .description = Transparence des panneaux déroulants (0-100 %)
 
-settings-bar-dropdown-autohide = Masquage automatique du menu déroulant
-    .description = Fermer le menu déroulant lors d'un clic à l'extérieur
-
 settings-bar-dropdown-freeze-label = Figer le libellé
     .description = Empêcher la mise à jour du libellé du bouton de la barre lorsque son menu déroulant est ouvert
 

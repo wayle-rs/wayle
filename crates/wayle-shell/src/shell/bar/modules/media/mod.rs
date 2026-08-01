@@ -4,7 +4,7 @@ mod messages;
 mod methods;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::WidgetExt;
 use relm4::prelude::*;
@@ -25,14 +25,14 @@ pub(crate) use self::{
     factory::Factory,
     messages::{MediaCmd, MediaInit, MediaMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct MediaModule {
     bar_button: Controller<BarButton>,
     config: Arc<ConfigService>,
     active_player_watcher_token: WatcherToken,
     media: Arc<MediaService>,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -91,12 +91,18 @@ impl Component for MediaModule {
 
         watchers::spawn_watchers(&sender, media_config, &init.media);
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            media_config.clone(),
+        );
+
         let model = Self {
             bar_button,
             config: init.config,
             active_player_watcher_token: WatcherToken::new(),
             media: init.media,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -115,7 +121,7 @@ impl Component for MediaModule {
             MediaMsg::ScrollDown => config.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(&mut self, msg: MediaCmd, sender: ComponentSender<Self>, root: &Self::Root) {

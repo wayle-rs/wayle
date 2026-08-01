@@ -3,7 +3,7 @@ mod helpers;
 mod messages;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -16,12 +16,12 @@ pub(crate) use self::{
     factory::Factory,
     messages::{CpuCmd, CpuInit, CpuMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct CpuModule {
     bar_button: Controller<BarButton>,
     config: Arc<ConfigService>,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -81,12 +81,18 @@ impl Component for CpuModule {
                 BarButtonOutput::ScrollDown => CpuMsg::ScrollDown,
             });
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            cpu_config.clone(),
+        );
+
         watchers::spawn_watchers(&sender, cpu_config, &init.sysinfo);
 
         let model = Self {
             bar_button,
             config: init.config,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -105,7 +111,7 @@ impl Component for CpuModule {
             CpuMsg::ScrollDown => cpu_config.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(&mut self, msg: CpuCmd, _sender: ComponentSender<Self>, _root: &Self::Root) {

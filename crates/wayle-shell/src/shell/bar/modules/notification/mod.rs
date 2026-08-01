@@ -4,7 +4,7 @@ mod messages;
 mod methods;
 mod watchers;
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -18,14 +18,14 @@ pub(crate) use self::{
     factory::Factory,
     messages::{NotificationCmd, NotificationInit, NotificationMsg},
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 pub(crate) struct NotificationModule {
     bar_button: Controller<BarButton>,
     config: Arc<ConfigService>,
     count: usize,
     dnd: bool,
-    dropdowns: Rc<DropdownRegistry>,
+    opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -97,12 +97,18 @@ impl Component for NotificationModule {
 
         watchers::spawn_watchers(&sender, notification_config, &init.notification);
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            notification_config.clone(),
+        );
+
         let model = Self {
             bar_button,
             config: init.config,
             count: initial_count,
             dnd: initial_dnd,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -121,7 +127,7 @@ impl Component for NotificationModule {
             NotificationMsg::ScrollDown => config.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(

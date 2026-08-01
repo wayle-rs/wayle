@@ -1,6 +1,6 @@
 //! The agnostic [`KeyboardInput`] component: model, view, and message routing.
 
-use std::{rc::Rc, sync::Arc};
+use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::prelude::*;
@@ -14,7 +14,7 @@ use super::{
     messages::{KeyboardInputCmd, KeyboardInputInit, KeyboardInputMsg},
     watchers,
 };
-use crate::shell::bar::dropdowns::{self, DropdownRegistry};
+use crate::shell::bar::dropdowns::DropdownOpener;
 
 const UNKNOWN_LAYOUT: &str = "?";
 
@@ -22,7 +22,7 @@ pub(crate) struct KeyboardInput {
     pub(super) bar_button: Controller<BarButton>,
     pub(super) config: Arc<ConfigService>,
     pub(super) current_layout: String,
-    pub(super) dropdowns: Rc<DropdownRegistry>,
+    pub(super) opener: DropdownOpener,
 }
 
 #[relm4::component(pub(crate))]
@@ -91,13 +91,19 @@ impl Component for KeyboardInput {
                 BarButtonOutput::ScrollDown => KeyboardInputMsg::ScrollDown,
             });
 
+        let opener = DropdownOpener::for_button(
+            &init.dropdowns,
+            &bar_button,
+            keyboard_input.clone(),
+        );
+
         watchers::spawn_watchers(&sender, keyboard_input, init.source);
 
         let model = Self {
             bar_button,
             config: init.config,
             current_layout: initial_layout,
-            dropdowns: init.dropdowns,
+            opener,
         };
         let bar_button = model.bar_button.widget();
         let widgets = view_output!();
@@ -116,7 +122,7 @@ impl Component for KeyboardInput {
             KeyboardInputMsg::ScrollDown => keyboard_input.scroll_down.get(),
         };
 
-        dropdowns::dispatch_click(&action, &self.dropdowns, &self.bar_button);
+        self.opener.dispatch(&action);
     }
 
     fn update_cmd(

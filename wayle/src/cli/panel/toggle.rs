@@ -1,4 +1,4 @@
-use super::proxy::{format_ipc_error, shell_ipc_proxy};
+use crate::cli::dbus::{format_ipc_error, shell_ipc_proxy};
 use crate::cli::CliAction;
 
 pub async fn execute(monitor: Option<String>) -> CliAction {
