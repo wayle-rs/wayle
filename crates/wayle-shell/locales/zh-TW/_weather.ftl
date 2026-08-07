@@ -1,0 +1,20 @@
+### Weather Conditions
+
+weather-clear = 晴朗
+weather-partly-cloudy = 局部多雲
+weather-cloudy = 多雲
+weather-overcast = 陰天
+weather-mist = 薄霧
+weather-fog = 霧
+weather-light-rain = 小雨
+weather-rain = 雨
+weather-heavy-rain = 大雨
+weather-drizzle = 毛毛雨
+weather-light-snow = 小雪
+weather-snow = 雪
+weather-heavy-snow = 大雪
+weather-sleet = 雨夾雪
+weather-thunderstorm = 雷雨
+weather-windy = 有風
+weather-hail = 冰雹
+weather-unknown = 未知
