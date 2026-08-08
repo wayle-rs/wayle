@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use wayle_battery::BatteryService;
+use crate::services::BatteryService;
 
 pub(crate) struct BatterySectionInit {
     pub battery: Arc<BatteryService>,

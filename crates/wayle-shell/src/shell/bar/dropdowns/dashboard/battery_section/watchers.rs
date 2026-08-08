@@ -1,12 +1,13 @@
 use std::sync::Arc;
 
 use relm4::ComponentSender;
-use wayle_battery::{BatteryService, types::DeviceState};
+use wayle_battery::types::DeviceState;
 use wayle_core::Property;
 use wayle_power_profiles::PowerProfilesService;
 use wayle_widgets::watch;
 
 use super::{BatterySection, messages::BatterySectionCmd};
+use crate::services::BatteryService;
 
 pub(super) fn spawn(sender: &ComponentSender<BatterySection>, battery: &Arc<BatteryService>) {
     let device = battery.device.clone();

@@ -14,7 +14,6 @@ use std::{
 use tokio::task::JoinHandle;
 use tracing::{debug, info, warn};
 use wayle_audio::AudioService;
-use wayle_battery::BatteryService;
 use wayle_bluetooth::BluetoothService;
 use wayle_brightness::BrightnessService;
 use wayle_config::{ConfigService, infrastructure::schema};
@@ -33,7 +32,7 @@ use wayle_wallpaper::WallpaperService;
 use zbus::{Connection, fdo::DBusProxy};
 
 use crate::{
-    services::{IdleInhibitService, ShellIpcService},
+    services::{BatteryService, IdleInhibitService, ShellIpcService},
     shell::ShellServices,
     startup::StartupTimer,
     watchers::build_extractor_config,

@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use wayle_audio::AudioService;
-use wayle_battery::BatteryService;
 use wayle_bluetooth::BluetoothService;
 use wayle_brightness::BrightnessService;
 use wayle_config::ConfigService;
@@ -18,7 +17,7 @@ use wayle_systray::SystemTrayService;
 use wayle_wallpaper::WallpaperService;
 use wayle_weather::WeatherService;
 
-use crate::services::{IdleInhibitService, ShellIpcService};
+use crate::services::{BatteryService, IdleInhibitService, ShellIpcService};
 
 /// Container for services used by shell components.
 ///
