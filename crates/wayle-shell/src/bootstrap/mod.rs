@@ -1,5 +1,6 @@
 //! Application bootstrap: service initialization and instance detection.
 
+mod battery;
 mod wallpaper;
 mod weather;
 
@@ -208,7 +209,7 @@ async fn init_core_services(
 
     let startup_duration = modules.idle_inhibit.startup_duration.get();
 
-    let battery_task = tokio::spawn(BatteryService::new());
+    let battery_task = tokio::spawn(battery::build());
     let brightness_task = tokio::spawn(BrightnessService::new());
     let network_task = tokio::spawn(NetworkService::new());
     let wallpaper_cfg = config.wallpaper.clone();
