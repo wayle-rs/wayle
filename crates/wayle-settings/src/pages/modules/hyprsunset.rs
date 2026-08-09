@@ -3,7 +3,7 @@
 use wayle_config::Config;
 
 use crate::{
-    editors::{number::number_u32, text::text},
+    editors::{number::number_u32, text::text, toggle::toggle},
     pages::{
         nav::LeafEntry,
         sections::bar_button::{
@@ -44,6 +44,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                     title_key: "settings-section-general",
                     items: vec![
                         text(&module.format),
+                        toggle(&module.use_hyprsunset_config),
                         number_u32(&module.temperature),
                         number_u32(&module.gamma),
                         text(&module.icon_off),
