@@ -1,10 +1,10 @@
 use std::sync::Arc;
 
 use relm4::ComponentSender;
-use wayle_battery::BatteryService;
 use wayle_widgets::watch;
 
 use super::{BatterySection, messages::BatterySectionCmd};
+use crate::services::BatteryService;
 
 pub(super) fn spawn(sender: &ComponentSender<BatterySection>, battery: &Arc<BatteryService>) {
     let device = &battery.device;

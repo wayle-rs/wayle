@@ -1,10 +1,9 @@
 use std::{rc::Rc, sync::Arc};
 
-use wayle_battery::BatteryService;
 use wayle_config::{ConfigService, schemas::styling::ThresholdColors};
 use wayle_widgets::prelude::BarSettings;
 
-use crate::shell::bar::dropdowns::DropdownRegistry;
+use crate::{services::BatteryService, shell::bar::dropdowns::DropdownRegistry};
 
 pub(crate) struct BatteryInit {
     pub settings: BarSettings,

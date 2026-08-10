@@ -1,5 +1,6 @@
 //! Application bootstrap: service initialization and instance detection.
 
+mod battery;
 mod wallpaper;
 mod weather;
 
@@ -13,7 +14,6 @@ use std::{
 use tokio::task::JoinHandle;
 use tracing::{debug, info, warn};
 use wayle_audio::AudioService;
-use wayle_battery::BatteryService;
 use wayle_bluetooth::BluetoothService;
 use wayle_brightness::BrightnessService;
 use wayle_config::{ConfigService, infrastructure::schema};
@@ -32,7 +32,7 @@ use wayle_wallpaper::WallpaperService;
 use zbus::{Connection, fdo::DBusProxy};
 
 use crate::{
-    services::{IdleInhibitService, ShellIpcService},
+    services::{BatteryService, IdleInhibitService, ShellIpcService},
     shell::ShellServices,
     startup::StartupTimer,
     watchers::build_extractor_config,
@@ -208,7 +208,7 @@ async fn init_core_services(
 
     let startup_duration = modules.idle_inhibit.startup_duration.get();
 
-    let battery_task = tokio::spawn(BatteryService::new());
+    let battery_task = tokio::spawn(battery::build());
     let brightness_task = tokio::spawn(BrightnessService::new());
     let network_task = tokio::spawn(NetworkService::new());
     let wallpaper_cfg = config.wallpaper.clone();
