@@ -102,14 +102,23 @@ fn parse_numeric_response(response: &str, command: &str) -> Option<u32> {
     }
 }
 
-pub(super) async fn start(temperature: u32, gamma: u32) -> io::Result<()> {
-    Command::new("hyprsunset")
-        .arg("-t")
-        .arg(temperature.to_string())
-        .arg("-g")
-        .arg(gamma.to_string())
-        .spawn()?;
+pub(super) async fn start(overrides: Option<(u32, u32)>) -> io::Result<()> {
+    start_command(overrides).spawn()?;
     Ok(())
+}
+
+fn start_command(overrides: Option<(u32, u32)>) -> Command {
+    let mut command = Command::new("hyprsunset");
+
+    if let Some((temperature, gamma)) = overrides {
+        command
+            .arg("-t")
+            .arg(temperature.to_string())
+            .arg("-g")
+            .arg(gamma.to_string());
+    }
+
+    command
 }
 
 pub(super) async fn stop() -> io::Result<()> {
@@ -177,6 +186,25 @@ mod tests {
     #[test]
     fn select_icon_disabled() {
         assert_eq!(select_icon(false, "sun", "moon"), "sun");
+    }
+
+    #[test]
+    fn start_command_with_overrides() {
+        let command = start_command(Some((4500, 80)));
+        let args: Vec<String> = command
+            .as_std()
+            .get_args()
+            .map(|arg| arg.to_string_lossy().into_owned())
+            .collect();
+
+        assert_eq!(args, ["-t", "4500", "-g", "80"]);
+    }
+
+    #[test]
+    fn start_command_without_overrides() {
+        let command = start_command(None);
+
+        assert!(command.as_std().get_args().next().is_none());
     }
 
     #[test]

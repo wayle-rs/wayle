@@ -22,6 +22,7 @@ right = ["hyprsunset"]
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `format` | string | `"{{ status }}"` | Format string for the label. |
+| `use-hyprsunset-config` | bool | `false` | Use hyprsunset's configuration file and time-based profiles instead of overriding temperature and gamma. |
 | `temperature` | u32 | `5000` | Color temperature in Kelvin when filter is enabled. Range: 1000-20000. |
 | `gamma` | u32 | `100` | Display gamma percentage when filter is enabled. Range: 0-200. |
 | `icon-off` | string | `"ld-sun-symbolic"` | Icon when filter is disabled (showing normal daylight colors). |
@@ -74,6 +75,7 @@ right = ["hyprsunset"]
 ```toml
 [modules.hyprsunset]
 format = "{{ status }}"
+use-hyprsunset-config = false
 temperature = 5000
 gamma = 100
 icon-off = "ld-sun-symbolic"
