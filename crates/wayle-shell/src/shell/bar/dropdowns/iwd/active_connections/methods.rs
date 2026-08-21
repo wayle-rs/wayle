@@ -1,9 +1,12 @@
 use relm4::ComponentSender;
 use tracing::warn;
-use wayle_iwd::ConnectionState;
+use wayle_iwd::{ConnectionState, SecurityType};
 
 use super::{ActiveConnections, messages::ConnectionError};
-use crate::{i18n::t, shell::bar::dropdowns::iwd::helpers};
+use crate::{
+    i18n::t,
+    shell::bar::dropdowns::iwd::helpers::{self, ForgetOutcome},
+};
 
 impl ActiveConnections {
     /// The failure to display, if any. Present only while the station is
@@ -52,6 +55,26 @@ impl ActiveConnections {
     /// Whether the active-connection card should be shown at all.
     pub(super) fn card_visible(&self) -> bool {
         self.is_connecting() || self.is_active() || self.has_wifi_error()
+    }
+
+    /// Security type of the network the card is showing, resolved from the scan
+    /// list by the SSID displayed. `None` when that network is not in the list
+    /// (e.g. scan results have not arrived yet).
+    fn active_security(&self) -> Option<SecurityType> {
+        let ssid = self.station.connection.ssid()?;
+        let station = self.iwd.station.get()?;
+
+        helpers::security_for_ssid(&station.networks.get(), ssid)
+    }
+
+    /// Whether the card offers Forget for the active network.
+    ///
+    /// Only for networks whose credentials the shell could put back (see
+    /// [`helpers::forgettable`]). A security type that cannot be resolved is
+    /// treated the same way: without knowing what we would be destroying, the
+    /// action is not offered.
+    pub(super) fn offers_forget(&self) -> bool {
+        self.active_security().is_some_and(helpers::forgettable)
     }
 
     pub(super) fn reset_station_watchers(&mut self, sender: &ComponentSender<Self>) {
@@ -178,10 +201,14 @@ impl ActiveConnections {
                 .into_iter()
                 .find(|network| network.ssid.get() == ssid);
 
+            // A refused forget leaves the connection alone too: the user asked to
+            // forget and disconnect, not to be dropped off a network whose
+            // credentials we kept. The card hides the action for those networks,
+            // so this is a backstop.
             if let Some(network) = target
-                && let Err(err) = network.forget().await
+                && helpers::forget_network(&network).await == ForgetOutcome::Refused
             {
-                warn!(error = %err, "wifi forget failed");
+                return;
             }
 
             if let Err(err) = station.disconnect().await {

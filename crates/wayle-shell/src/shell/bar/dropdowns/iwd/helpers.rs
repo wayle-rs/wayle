@@ -1,5 +1,6 @@
 use std::{collections::HashSet, sync::Arc};
 
+use tracing::warn;
 use wayle_iwd::{Network, SecurityType, SignalStrength};
 use zbus::zvariant::OwnedObjectPath;
 
@@ -19,6 +20,66 @@ pub(crate) struct NetworkSnapshot {
 
 pub(crate) fn requires_password(security: SecurityType) -> bool {
     !matches!(security, SecurityType::None | SecurityType::Enterprise)
+}
+
+/// Whether saved credentials for this security type are ones the shell could put
+/// back after forgetting them.
+///
+/// Enterprise (802.1X) networks are provisioned out of band — IWD reads their
+/// credentials from a provisioning file that only the user can write, and the
+/// shell has no way to recreate one. Forgetting such a network would destroy
+/// configuration it cannot restore, so the Forget action is never offered for
+/// them; every other type is re-establishable from the UI (open networks need
+/// nothing, WEP/PSK prompt for a passphrase).
+pub(crate) fn forgettable(security: SecurityType) -> bool {
+    !matches!(security, SecurityType::Enterprise)
+}
+
+/// Outcome of a [`forget_network`] request.
+#[derive(Debug, PartialEq, Eq)]
+pub(crate) enum ForgetOutcome {
+    /// The saved credentials are gone (or there were none to begin with).
+    Forgotten,
+    /// Refused before reaching IWD: these are credentials the shell could not put
+    /// back (see [`forgettable`]).
+    Refused,
+    /// The request reached IWD and failed.
+    Failed,
+}
+
+/// Forget `network`'s saved credentials, refusing networks whose credentials the
+/// shell could not put back (see [`forgettable`]).
+///
+/// The UI never offers Forget for those networks, so the refusal here is a
+/// backstop: it keeps the guarantee on the action itself, whichever path — a
+/// stale request whose target changed under it, a re-entered passphrase clearing
+/// stale credentials — asks for the forget.
+pub(crate) async fn forget_network(network: &Network) -> ForgetOutcome {
+    if !forgettable(network.security.get()) {
+        warn!(
+            ssid = %network.ssid.get(),
+            "refusing to forget an enterprise network: its credentials cannot be recreated"
+        );
+        return ForgetOutcome::Refused;
+    }
+
+    if let Err(err) = network.forget().await {
+        warn!(error = %err, "forget network failed");
+        return ForgetOutcome::Failed;
+    }
+
+    ForgetOutcome::Forgotten
+}
+
+/// Security type of the visible network named `ssid`, if it is in the scan list.
+///
+/// The active-connection card knows only the SSID it displays, so this is how it
+/// recovers the security type behind it.
+pub(crate) fn security_for_ssid(networks: &[Arc<Network>], ssid: &str) -> Option<SecurityType> {
+    networks
+        .iter()
+        .find(|network| network.ssid.get() == ssid)
+        .map(|network| network.security.get())
 }
 
 /// Deduplicates networks by SSID and filters out hidden networks and the active
@@ -75,5 +136,13 @@ mod tests {
         assert!(!requires_password(SecurityType::Enterprise));
         assert!(requires_password(SecurityType::Psk));
         assert!(requires_password(SecurityType::Wep));
+    }
+
+    #[test]
+    fn only_enterprise_is_unforgettable() {
+        assert!(!forgettable(SecurityType::Enterprise));
+        assert!(forgettable(SecurityType::None));
+        assert!(forgettable(SecurityType::Psk));
+        assert!(forgettable(SecurityType::Wep));
     }
 }

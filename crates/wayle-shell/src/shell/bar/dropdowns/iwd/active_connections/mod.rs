@@ -159,6 +159,8 @@ impl Component for ActiveConnections {
                             #[template]
                             GhostButton {
                                 add_css_class: "network-action-forget",
+                                #[watch]
+                                set_visible: model.offers_forget(),
                                 #[template_child]
                                 label {
                                     set_label: &t!("dropdown-iwd-forget"),
@@ -204,6 +206,8 @@ impl Component for ActiveConnections {
                             #[template]
                             GhostButton {
                                 add_css_class: "network-action-forget",
+                                #[watch]
+                                set_visible: model.offers_forget(),
                                 #[template_child]
                                 label {
                                     set_label: &t!("dropdown-iwd-forget"),

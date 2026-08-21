@@ -85,7 +85,7 @@ impl AvailableNetworks {
                     .into_iter()
                     .find(|network| network.object_path() == &network_path)
             {
-                let _ = network.forget().await;
+                let _ = helpers::forget_network(&network).await;
             }
 
             match station.connect(network_path, password).await {
@@ -377,10 +377,8 @@ impl AvailableNetworks {
                     .into_iter()
                     .find(|network| network.object_path() == &network_path);
 
-                if let Some(network) = target
-                    && let Err(err) = network.forget().await
-                {
-                    warn!(error = %err, "forget network failed");
+                if let Some(network) = target {
+                    let _ = helpers::forget_network(&network).await;
                 }
             }
 

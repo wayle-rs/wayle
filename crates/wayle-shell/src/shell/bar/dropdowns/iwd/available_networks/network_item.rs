@@ -61,23 +61,41 @@ impl NetworkItem {
         self.known
     }
 
-    /// Whether this row can be updated in place for `snapshot`, or must be
-    /// recreated. `known` is the only field wired up at construction time (it
-    /// gates the hover-to-forget controller in `init_widgets`), so a change there
-    /// requires a fresh row; everything else updates via [`Self::refresh`].
-    pub(super) fn reusable_for(&self, snapshot: &NetworkSnapshot) -> bool {
-        self.known == snapshot.known
+    /// Whether this row offers the Forget action: credentials are saved, and they
+    /// are credentials the shell could put back afterwards (see
+    /// [`helpers::forgettable`]).
+    fn offers_forget(&self) -> bool {
+        offers_forget(self.known, self.security)
     }
 
-    /// Update the mutable display fields in place (icon and security label),
-    /// avoiding a destroy/recreate of the row widget.
+    /// Whether this row can be updated in place for `snapshot`, or must be
+    /// recreated. Whether Forget is offered is the only thing wired up at
+    /// construction time (it gates the hover-to-forget controller in
+    /// `init_widgets`), so a change there requires a fresh row; everything else
+    /// updates via [`Self::refresh`].
+    pub(super) fn reusable_for(&self, snapshot: &NetworkSnapshot) -> bool {
+        self.offers_forget() == offers_forget(snapshot.known, snapshot.security)
+    }
+
+    /// Adopt `snapshot` in place, avoiding a destroy/recreate of the row widget.
+    /// Every field is copied — a reused row must not keep state from the network
+    /// it previously showed, since `known` and `security` also drive the connect
+    /// flow (see [`super::methods`]'s `select_network`), not just the display.
     pub(super) fn refresh(&mut self, snapshot: &NetworkSnapshot, icon: String) {
         self.icon = icon;
         self.security = snapshot.security;
         self.strength = snapshot.strength;
+        self.known = snapshot.known;
         self.security_label = security_label(snapshot);
         self.object_path = snapshot.object_path.clone();
     }
+}
+
+/// Whether a network with these properties offers the Forget action — see
+/// [`NetworkItem::offers_forget`]. Free-standing so a row and the snapshot it
+/// would be rebuilt from can be compared.
+fn offers_forget(known: bool, security: SecurityType) -> bool {
+    known && helpers::forgettable(security)
 }
 
 /// Security label for a network, marking saved secured networks distinctly.
@@ -155,7 +173,7 @@ impl FactoryComponent for NetworkItem {
                 set_valign: gtk::Align::Center,
                 set_hexpand: false,
                 #[watch]
-                set_visible: helpers::requires_password(self.security) || self.known,
+                set_visible: helpers::requires_password(self.security) || self.offers_forget(),
 
                 add_named[Some("lock")] = &gtk::Box {
                     set_halign: gtk::Align::End,
@@ -188,7 +206,7 @@ impl FactoryComponent for NetworkItem {
 
                 #[watch]
                 set_visible_child_name:
-                    if self.hovered && self.known {
+                    if self.hovered && self.offers_forget() {
                         "actions"
                     } else {
                         "lock"
@@ -241,7 +259,7 @@ impl FactoryComponent for NetworkItem {
 
         root.add_controller(click);
 
-        if self.known {
+        if self.offers_forget() {
             let hover = gtk::EventControllerMotion::new();
             let hover_sender = sender.input_sender().clone();
 
