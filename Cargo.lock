@@ -4776,6 +4776,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "wayle-iwd"
+version = "0.6.0"
+dependencies = [
+ "derive_more",
+ "futures",
+ "thiserror 2.0.18",
+ "tokio",
+ "tokio-stream",
+ "tokio-util",
+ "tracing",
+ "wayle-core",
+ "wayle-traits",
+ "zbus",
+]
+
+[[package]]
 name = "wayle-mango"
 version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -4969,6 +4985,7 @@ dependencies = [
  "wayle-icons",
  "wayle-idle-inhibit",
  "wayle-ipc",
+ "wayle-iwd",
  "wayle-mango",
  "wayle-media",
  "wayle-network",

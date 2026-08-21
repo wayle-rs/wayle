@@ -9,6 +9,12 @@ bar-network-no-wifi = No WiFi
 bar-network-no-ethernet = No Ethernet
 bar-network-offline = Offline
 
+## IWD (WiFi)
+bar-iwd-connecting = Connecting...
+bar-iwd-disconnected = Disconnected
+bar-iwd-wifi-fallback = WiFi
+bar-iwd-no-wifi = No WiFi
+
 ## Battery
 bar-battery-unavailable = N/A
 

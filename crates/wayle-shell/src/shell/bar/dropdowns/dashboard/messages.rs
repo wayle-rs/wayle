@@ -5,6 +5,7 @@ use wayle_battery::BatteryService;
 use wayle_bluetooth::BluetoothService;
 use wayle_config::ConfigService;
 use wayle_core::DeferredService;
+use wayle_iwd::IwdService;
 use wayle_media::MediaService;
 use wayle_network::NetworkService;
 use wayle_notification::NotificationService;
@@ -20,6 +21,7 @@ pub(crate) struct DashboardDropdownInit {
     pub config: Arc<ConfigService>,
     pub media: Option<Arc<MediaService>>,
     pub network: Option<Arc<NetworkService>>,
+    pub iwd: Option<Arc<IwdService>>,
     pub notification: Option<Arc<NotificationService>>,
     pub power_profiles: DeferredService<PowerProfilesService>,
     pub sysinfo: Arc<SysinfoService>,

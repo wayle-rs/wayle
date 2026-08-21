@@ -90,6 +90,7 @@ export default defineConfig({
             { text: 'hyprland-workspaces', link: '/config/modules/hyprland-workspaces' },
             { text: 'hyprsunset', link: '/config/modules/hyprsunset' },
             { text: 'idle-inhibit', link: '/config/modules/idle-inhibit' },
+            { text: 'iwd', link: '/config/modules/iwd' },
             { text: 'keybind-mode', link: '/config/modules/keybind-mode' },
             { text: 'keyboard-input', link: '/config/modules/keyboard-input' },
             { text: 'mango-workspaces', link: '/config/modules/mango-workspaces' },

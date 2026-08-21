@@ -8,6 +8,7 @@ use gtk::prelude::*;
 use relm4::{gtk, prelude::*};
 use wayle_bluetooth::BluetoothService;
 use wayle_core::DeferredService;
+use wayle_iwd::IwdService;
 use wayle_network::NetworkService;
 use wayle_notification::NotificationService;
 use wayle_power_profiles::{PowerProfilesService, types::profile::PowerProfile};
@@ -19,6 +20,7 @@ use crate::{i18n::t, services::IdleInhibitService};
 
 pub(crate) struct QuickActionsSection {
     network: Option<Arc<NetworkService>>,
+    iwd: Option<Arc<IwdService>>,
     bluetooth: DeferredService<BluetoothService>,
     notification: Option<Arc<NotificationService>>,
     power_profiles: DeferredService<PowerProfilesService>,
@@ -277,10 +279,7 @@ impl Component for QuickActionsSection {
         _root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
-        let has_wifi = init
-            .network
-            .as_ref()
-            .is_some_and(|network| network.wifi.get().is_some());
+        let has_wifi = methods::wifi_enabled_property(&init.network, &init.iwd).is_some();
 
         let current_bt = init.bluetooth.get();
 
@@ -303,6 +302,7 @@ impl Component for QuickActionsSection {
         watchers::spawn(
             &sender,
             &init.network,
+            &init.iwd,
             &init.bluetooth,
             &init.notification,
             &init.power_profiles,
@@ -316,18 +316,16 @@ impl Component for QuickActionsSection {
         }
 
         let mut wifi_enabled_token = WatcherToken::new();
-        let wifi_active = init
-            .network
-            .as_ref()
-            .and_then(|network| network.wifi.get())
-            .is_some_and(|wifi| {
+        let wifi_active = methods::wifi_enabled_property(&init.network, &init.iwd)
+            .is_some_and(|enabled| {
                 let token = wifi_enabled_token.reset();
-                watchers::spawn_wifi_enabled_watcher(&sender, &wifi, token);
-                wifi.enabled.get()
+                watchers::spawn_wifi_enabled_watcher(&sender, &enabled, token);
+                enabled.get()
             });
 
         let model = Self {
             network: init.network,
+            iwd: init.iwd,
             bluetooth: init.bluetooth,
             notification: init.notification,
             power_profiles: init.power_profiles,
@@ -378,11 +376,10 @@ impl Component for QuickActionsSection {
             QuickActionsCmd::WifiAvailabilityChanged(available) => {
                 self.has_wifi = available;
                 if available {
-                    if let Some(wifi) = self.network.as_ref().and_then(|network| network.wifi.get())
-                    {
-                        self.wifi_active = wifi.enabled.get();
+                    if let Some(enabled) = methods::wifi_enabled_property(&self.network, &self.iwd) {
+                        self.wifi_active = enabled.get();
                         let token = self.wifi_enabled_token.reset();
-                        watchers::spawn_wifi_enabled_watcher(&sender, &wifi, token);
+                        watchers::spawn_wifi_enabled_watcher(&sender, &enabled, token);
                     }
                 } else {
                     self.wifi_active = false;

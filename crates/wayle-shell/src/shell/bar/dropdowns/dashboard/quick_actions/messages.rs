@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use wayle_bluetooth::BluetoothService;
 use wayle_core::DeferredService;
+use wayle_iwd::IwdService;
 use wayle_network::NetworkService;
 use wayle_notification::NotificationService;
 use wayle_power_profiles::PowerProfilesService;
@@ -10,6 +11,7 @@ use crate::services::IdleInhibitService;
 
 pub(crate) struct QuickActionsInit {
     pub network: Option<Arc<NetworkService>>,
+    pub iwd: Option<Arc<IwdService>>,
     pub bluetooth: DeferredService<BluetoothService>,
     pub notification: Option<Arc<NotificationService>>,
     pub power_profiles: DeferredService<PowerProfilesService>,

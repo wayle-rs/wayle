@@ -7,6 +7,8 @@ use std::{
 use wayle_network::core::access_point::{AccessPoint, SecurityType};
 use zbus::zvariant::OwnedObjectPath;
 
+pub(crate) use crate::shell::bar::dropdowns::frequency_to_band;
+
 /// Snapshot of an access point for display in the network list.
 #[derive(Debug, Clone)]
 pub(crate) struct AccessPointSnapshot {
@@ -24,16 +26,6 @@ pub(crate) fn signal_strength_icon(strength: u8) -> &'static str {
         40..=59 => "cm-wireless-signal-ok-symbolic",
         60..=79 => "cm-wireless-signal-good-symbolic",
         _ => "cm-wireless-signal-excellent-symbolic",
-    }
-}
-
-pub(crate) fn frequency_to_band(freq_mhz: u32) -> Option<&'static str> {
-    match freq_mhz {
-        2400..=2500 => Some("2.4 GHz"),
-        5000..=5900 => Some("5 GHz"),
-        5901..=7125 => Some("6 GHz"),
-        57000..=71000 => Some("60 GHz"),
-        _ => None,
     }
 }
 
@@ -107,33 +99,6 @@ pub(crate) fn sorted_unique_access_points(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn frequency_2ghz_band() {
-        assert_eq!(frequency_to_band(2412), Some("2.4 GHz"));
-        assert_eq!(frequency_to_band(2437), Some("2.4 GHz"));
-        assert_eq!(frequency_to_band(2484), Some("2.4 GHz"));
-    }
-
-    #[test]
-    fn frequency_5ghz_band() {
-        assert_eq!(frequency_to_band(5180), Some("5 GHz"));
-        assert_eq!(frequency_to_band(5745), Some("5 GHz"));
-        assert_eq!(frequency_to_band(5825), Some("5 GHz"));
-    }
-
-    #[test]
-    fn frequency_6ghz_band() {
-        assert_eq!(frequency_to_band(5955), Some("6 GHz"));
-        assert_eq!(frequency_to_band(6115), Some("6 GHz"));
-        assert_eq!(frequency_to_band(7115), Some("6 GHz"));
-    }
-
-    #[test]
-    fn frequency_unknown_band() {
-        assert_eq!(frequency_to_band(0), None);
-        assert_eq!(frequency_to_band(900), None);
-    }
 
     #[test]
     fn wired_speed_mbps() {
