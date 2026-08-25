@@ -4,13 +4,13 @@ pub(super) fn merge_toml_configs(imports: Vec<Value>, main: Value) -> Value {
     let mut accumulated = Value::Table(Map::new());
 
     for import in imports {
-        accumulated = merge_two_toml_configs(accumulated, import);
+        accumulated = merge_two_toml_configs(accumulated, import, false);
     }
 
-    merge_two_toml_configs(accumulated, main)
+    merge_two_toml_configs(accumulated, main, false)
 }
 
-fn merge_two_toml_configs(base: Value, overlay: Value) -> Value {
+fn merge_two_toml_configs(base: Value, overlay: Value, merge_custom_modules: bool) -> Value {
     match (base, overlay) {
         (Value::Table(base_table), Value::Table(overlay_table)) => {
             let mut merged_table = overlay_table;
@@ -21,13 +21,22 @@ fn merge_two_toml_configs(base: Value, overlay: Value) -> Value {
                         merged_table.insert(key, base_value);
                     }
                     Some(overlay_value) => {
-                        let merged_value = merge_two_toml_configs(base_value, overlay_value);
+                        let merged_value = merge_two_toml_configs(
+                            base_value,
+                            overlay_value,
+                            (!merge_custom_modules && key == "modules")
+                                || (merge_custom_modules && key == "custom"),
+                        );
                         merged_table.insert(key, merged_value);
                     }
                 }
             }
 
             Value::Table(merged_table)
+        }
+        (Value::Array(mut base_array), Value::Array(overlay_array)) if merge_custom_modules => {
+            base_array.extend(overlay_array);
+            Value::Array(base_array)
         }
         (_, overlay) => overlay,
     }
@@ -45,7 +54,7 @@ mod tests {
             let base = toml::toml! { enabled = false };
             let overlay = toml::toml! { enabled = true };
 
-            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay));
+            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay), false);
             let table = result.as_table().unwrap();
 
             assert_eq!(table.get("enabled"), Some(&Value::Boolean(true)));
@@ -61,7 +70,7 @@ mod tests {
                 enabled = false
             };
 
-            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay));
+            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay), false);
             let table = result.as_table().unwrap();
 
             assert_eq!(table.get("enabled"), Some(&Value::Boolean(false)));
@@ -80,7 +89,7 @@ mod tests {
                 format = "%I:%M %p"
             };
 
-            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay));
+            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay), false);
             let clock = result.get("clock").unwrap().as_table().unwrap();
 
             assert_eq!(clock.get("enabled"), Some(&Value::Boolean(true)));
@@ -97,7 +106,7 @@ mod tests {
                 clock = "disabled"
             };
 
-            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay));
+            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay), false);
             let table = result.as_table().unwrap();
 
             assert_eq!(table.get("clock"), Some(&Value::String("disabled".into())));
@@ -111,7 +120,7 @@ mod tests {
             };
             let overlay = Map::new();
 
-            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay));
+            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay), false);
             let table = result.as_table().unwrap();
 
             assert_eq!(table.get("enabled"), Some(&Value::Boolean(true)));
@@ -125,7 +134,7 @@ mod tests {
                 enabled = true
             };
 
-            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay));
+            let result = merge_two_toml_configs(Value::Table(base), Value::Table(overlay), false);
             let table = result.as_table().unwrap();
 
             assert_eq!(table.get("enabled"), Some(&Value::Boolean(true)));
@@ -186,6 +195,47 @@ mod tests {
             let table = result.as_table().unwrap();
 
             assert_eq!(table.get("enabled"), Some(&Value::Boolean(true)));
+        }
+
+        #[test]
+        fn merges_custom_module_arrays_from_imports() {
+            let import1 = toml::toml! {
+                [modules]
+                custom = [{ id = "module-a" }]
+            };
+            let import2 = toml::toml! {
+                [modules]
+                custom = [{ id = "module-b" }]
+            };
+
+            let result = merge_toml_configs(
+                vec![Value::Table(import1), Value::Table(import2)],
+                Value::Table(Map::new()),
+            );
+            let custom = result["modules"]["custom"].as_array().unwrap();
+
+            assert_eq!(custom.len(), 2);
+            assert_eq!(custom[0]["id"], Value::String("module-a".into()));
+            assert_eq!(custom[1]["id"], Value::String("module-b".into()));
+        }
+
+        #[test]
+        fn replaces_non_custom_arrays() {
+            let import = toml::toml! {
+                [modules]
+                order = ["module-a"]
+            };
+            let main = toml::toml! {
+                [modules]
+                order = ["module-b"]
+            };
+
+            let result = merge_toml_configs(vec![Value::Table(import)], Value::Table(main));
+
+            assert_eq!(
+                result["modules"]["order"],
+                toml::Value::Array(vec![toml::Value::String("module-b".into())])
+            );
         }
     }
 }
