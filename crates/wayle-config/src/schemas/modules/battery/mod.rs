@@ -126,6 +126,11 @@ pub struct BatteryConfig {
     #[default(ClickAction::None)]
     pub scroll_down: ConfigProperty<ClickAction>,
 
+    /// Custom UPower device path. Defaults to the display device. Use `upower --dump` to list available devices.
+    #[serde(rename = "custom-upower-device")]
+    #[default(String::from("/org/freedesktop/UPower/devices/DisplayDevice"))]
+    pub custom_upower_device: ConfigProperty<String>,
+
     /// Dynamic color thresholds based on battery percentage.
     ///
     /// Entries are checked in order; the last matching entry wins for each
