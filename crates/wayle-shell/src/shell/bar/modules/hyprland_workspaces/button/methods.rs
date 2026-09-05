@@ -11,6 +11,7 @@ use super::{
 use crate::shell::bar::modules::hyprland_workspaces::helpers::{
     collect_button_css_classes, format_workspace_label, should_show_divider,
 };
+use crate::shell::notification_popup::helpers::sanitize_markup;
 
 impl WorkspaceButton {
     pub fn id(&self) -> WorkspaceId {
@@ -104,23 +105,11 @@ impl WorkspaceButton {
     pub(super) fn populate_identity(&self, container: &gtk::Box) {
         match self.display_mode {
             DisplayMode::Label => {
-                let label_text = self.label_text();
-                let label = gtk::Label::builder()
-                    .label(&label_text)
-                    .css_classes([WORKSPACE_LABEL_CSS])
-                    .valign(gtk::Align::Center)
-                    .build();
-                container.append(&label);
+                container.append(&self.build_identity_label());
             }
             DisplayMode::Icon => {
                 let Some(ref icon_name) = self.mapped_icon else {
-                    let label_text = self.label_text();
-                    let label = gtk::Label::builder()
-                        .label(&label_text)
-                        .css_classes([WORKSPACE_LABEL_CSS])
-                        .valign(gtk::Align::Center)
-                        .build();
-                    container.append(&label);
+                    container.append(&self.build_identity_label());
                     return;
                 };
                 let image = gtk::Image::builder()
@@ -132,6 +121,16 @@ impl WorkspaceButton {
             }
             DisplayMode::None => {}
         }
+    }
+
+    fn build_identity_label(&self) -> gtk::Label {
+        let label_text = sanitize_markup(&self.label_text());
+        gtk::Label::builder()
+            .label(&label_text)
+            .use_markup(true)
+            .css_classes([WORKSPACE_LABEL_CSS])
+            .valign(gtk::Align::Center)
+            .build()
     }
 
     pub(super) fn populate_app_icons(
