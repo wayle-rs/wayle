@@ -180,6 +180,7 @@ settings-section-layout = Disposition
 settings-section-appearance = Apparence
 settings-section-spacing = Espacement
 settings-section-border = Bordure
+settings-section-autohide = Masquage automatique
 settings-section-sizing = Dimensionnement
 settings-section-style = Style
 settings-section-group = Groupe

@@ -11,8 +11,8 @@ mod registry;
 mod weather;
 
 pub(crate) use self::registry::{
-    DropdownFactory, DropdownInstance, DropdownRegistry, dispatch_click, dispatch_click_widget,
-    require_service,
+    DropdownFactory, DropdownInstance, DropdownRegistry, any_popover_open_in_tree, dispatch_click,
+    dispatch_click_widget, require_service,
 };
 use crate::shell::services::ShellServices;
 

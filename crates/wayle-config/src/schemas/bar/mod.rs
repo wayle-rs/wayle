@@ -251,6 +251,20 @@ pub struct BarConfig {
     #[serde(rename = "dropdown-freeze-label")]
     #[default(true)]
     pub dropdown_freeze_label: ConfigProperty<bool>,
+
+    /// Automatically hide the bar after inactivity, revealing it on edge hover.
+    #[default(false)]
+    pub autohide: ConfigProperty<bool>,
+
+    /// Timeout in milliseconds before hiding the bar after cursor leaves.
+    #[serde(rename = "autohide-timeout")]
+    #[default(3000u32)]
+    pub autohide_timeout: ConfigProperty<u32>,
+
+    /// Edge trigger zone thickness in pixels for revealing the bar on hover.
+    #[serde(rename = "autohide-trigger-size")]
+    #[default(Spacing::new(2.0))]
+    pub autohide_trigger_size: ConfigProperty<Spacing>,
 }
 
 impl ModuleInfoProvider for BarConfig {
@@ -269,6 +283,7 @@ impl ModuleInfoProvider for BarConfig {
             ConfigGroup::colors(),
             ConfigGroup::prefix("Buttons", "button-"),
             ConfigGroup::prefix("Dropdowns", "dropdown-"),
+            ConfigGroup::prefix("Autohide", "autohide-"),
         ]
     }
 }

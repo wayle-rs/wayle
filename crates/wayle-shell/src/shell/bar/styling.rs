@@ -17,7 +17,7 @@ const REM_BASE: f32 = 16.0;
 /// GTK4 rendering is being weird. Ends up making icons blurry when icons are not
 /// perfectly within the pixel boundary. So we make sure that they are with this
 /// little workaround.
-fn rem_to_px_rounded(rem: f32, scale: f32) -> i32 {
+pub(super) fn rem_to_px_rounded(rem: f32, scale: f32) -> i32 {
     (rem * scale * REM_BASE).round() as i32
 }
 

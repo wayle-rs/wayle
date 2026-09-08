@@ -122,6 +122,15 @@ settings-bar-dropdown-autohide = Masquage automatique du menu déroulant
 settings-bar-dropdown-freeze-label = Figer le libellé
     .description = Empêcher la mise à jour du libellé du bouton de la barre lorsque son menu déroulant est ouvert
 
+settings-bar-autohide = Masquage automatique
+    .description = Masquer automatiquement la barre après inactivité, la révélant au survol du bord
+
+settings-bar-autohide-timeout = Délai de masquage
+    .description = Délai en millisecondes avant de masquer la barre après le départ du curseur
+
+settings-bar-autohide-trigger-size = Taille de la zone de déclenchement
+    .description = Épaisseur en pixels de la zone de bord d'écran pour la révélation au survol
+
 settings-bar-shadow = Ombre
     .description = Activer l'ombre portée
 
