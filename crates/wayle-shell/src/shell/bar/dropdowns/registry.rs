@@ -355,13 +355,27 @@ pub(crate) trait DropdownFactory {
 pub(crate) struct DropdownRegistry {
     services: ShellServices,
     cache: RefCell<HashMap<String, Rc<DropdownInstance>>>,
+    on_dropdown_toggled: Rc<dyn Fn(bool)>,
 }
 
 impl DropdownRegistry {
-    pub(crate) fn new(services: &ShellServices) -> Self {
+    /// Creates a new registry.
+    ///
+    /// `on_dropdown_toggled` is invoked with `true` whenever any dropdown
+    /// popover managed by this registry maps (opens), and `false` whenever
+    /// one closes -- in addition to that popover's own internal close
+    /// handling (e.g. thawing a frozen bar button label). It lets the
+    /// owning `Bar` react to dropdowns opening/closing without the pointer
+    /// hovering the bar itself (e.g. to keep the bar revealed while a
+    /// dropdown is open, and to resume the autohide timer once it closes).
+    pub(crate) fn new(
+        services: &ShellServices,
+        on_dropdown_toggled: impl Fn(bool) + 'static,
+    ) -> Self {
         Self {
             services: services.clone(),
             cache: RefCell::default(),
+            on_dropdown_toggled: Rc::new(on_dropdown_toggled),
         }
     }
 
@@ -370,6 +384,14 @@ impl DropdownRegistry {
         for instance in self.cache.borrow().values() {
             instance.popover.set_autohide(autohide);
         }
+    }
+
+    /// Returns true if any registered dropdown popover is currently visible.
+    pub(crate) fn any_open(&self) -> bool {
+        self.cache
+            .borrow()
+            .values()
+            .any(|instance| instance.popover.is_visible())
     }
 
     pub(crate) fn warm_all(&self) {
@@ -395,11 +417,53 @@ impl DropdownRegistry {
             );
             return None;
         };
+
+        let on_opened = self.on_dropdown_toggled.clone();
+        raw.popover.connect_map(move |_| {
+            on_opened(true);
+        });
+
+        let on_closed = self.on_dropdown_toggled.clone();
+        raw.popover.connect_closed(move |_| {
+            on_closed(false);
+        });
+
         let instance = Rc::new(raw);
         cache.insert(name.to_owned(), instance.clone());
         debug!(dropdown = name, "dropdown cached");
         Some(instance)
     }
+}
+
+/// Recursively walks `widget`'s descendant tree looking for any currently
+/// visible `gtk::Popover` (which also matches `gtk::PopoverMenu`, a
+/// `Popover` subclass).
+///
+/// In GTK4, a popover attached via `set_parent` becomes part of the normal
+/// widget tree (reachable through `first_child()`/`next_sibling()`), not a
+/// separate top-level window. This is a generic fallback alongside
+/// `DropdownRegistry::any_open()`, which only sees popovers registered
+/// through this registry: some bar modules (the systray module's own
+/// `gtk::PopoverMenu` context menu, in particular) own and parent a popover
+/// entirely outside `DropdownRegistry`, so `any_open()` alone can't see them.
+/// Walking the tree from the bar's root window catches those too, without
+/// requiring every such module to register itself here.
+pub(crate) fn any_popover_open_in_tree(widget: &gtk::Widget) -> bool {
+    if let Some(popover) = widget.downcast_ref::<gtk::Popover>()
+        && popover.is_visible()
+    {
+        return true;
+    }
+
+    let mut child = widget.first_child();
+    while let Some(current) = child {
+        if any_popover_open_in_tree(&current) {
+            return true;
+        }
+        child = current.next_sibling();
+    }
+
+    false
 }
 
 /// Dispatches a click action: toggles dropdown, runs shell command, or no-ops.

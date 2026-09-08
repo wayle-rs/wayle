@@ -128,6 +128,15 @@ settings-bar-dropdown-autohide = Dropdown Autohide
 settings-bar-dropdown-freeze-label = Freeze Label
     .description = Prevent bar button label from updating while its dropdown is open
 
+settings-bar-autohide = Autohide
+    .description = Automatically hide the bar after inactivity, revealing it on edge hover
+
+settings-bar-autohide-timeout = Autohide Timeout
+    .description = Delay in milliseconds before hiding the bar after cursor leaves
+
+settings-bar-autohide-trigger-size = Autohide Trigger Size
+    .description = Thickness in pixels of the screen edge trigger zone for hover reveal
+
 settings-bar-shadow = Shadow
     .description = Enable drop shadow
 

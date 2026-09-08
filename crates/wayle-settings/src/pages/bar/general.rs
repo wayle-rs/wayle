@@ -7,7 +7,7 @@ use crate::{
         bar_layout::bar_layout,
         color_value::color_value,
         enum_select::enum_select,
-        number::{number_u8, scale, spacing},
+        number::{number_u8, number_u32, scale, spacing},
         slider::percentage,
         toggle::toggle,
     },
@@ -62,6 +62,14 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                         enum_select(&bar.border_location),
                         number_u8(&bar.border_width),
                         color_value(&bar.border_color),
+                    ],
+                },
+                SectionSpec {
+                    title_key: "settings-section-autohide",
+                    items: vec![
+                        toggle(&bar.autohide),
+                        number_u32(&bar.autohide_timeout),
+                        spacing(&bar.autohide_trigger_size),
                     ],
                 },
             ],

@@ -127,6 +127,22 @@ dropdown anchored in place.
 
 :::
 
+## Autohide
+
+| Field | Type | Default | Description |
+|---|---|---|---|
+| `autohide` | bool | `false` | Automatically hide the bar after inactivity, revealing it on edge hover. |
+| `autohide-timeout` | u32 | `3000` | Timeout in milliseconds before hiding the bar after cursor leaves. |
+| `autohide-trigger-size` | [`Spacing`](/config/types#spacing) | `2` | Edge trigger zone thickness in pixels for revealing the bar on hover. |
+
+::: tip Pair with `exclusive = false`
+Autohide works by actually unmapping the bar's layer-shell surface (needed
+for compositor animations), not just hiding it visually. With the default
+`exclusive = true`, every hide/reveal cycle destroys and recreates that
+surface, which reflows every tiled window on the monitor. If autohide feels
+janky, set `exclusive = false` alongside `autohide = true`.
+:::
+
 ## Default configuration
 
 ```toml
@@ -172,6 +188,9 @@ dropdown-shadow = true
 dropdown-opacity = 100
 dropdown-autohide = true
 dropdown-freeze-label = true
+autohide = false
+autohide-timeout = 3000
+autohide-trigger-size = 2.0
 ```
 
 

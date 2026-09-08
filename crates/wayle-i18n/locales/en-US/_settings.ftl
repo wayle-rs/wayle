@@ -186,6 +186,7 @@ settings-section-layout = Layout
 settings-section-appearance = Appearance
 settings-section-spacing = Spacing
 settings-section-border = Border
+settings-section-autohide = Autohide
 settings-section-sizing = Sizing
 settings-section-style = Style
 settings-section-group = Group

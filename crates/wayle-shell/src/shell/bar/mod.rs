@@ -1,3 +1,4 @@
+mod autohide;
 mod dropdowns;
 mod factory;
 pub(crate) mod icons;
@@ -10,12 +11,17 @@ use std::rc::Rc;
 
 use factory::*;
 use gtk::prelude::*;
-use gtk4_layer_shell::{KeyboardMode, LayerShell};
 use relm4::{factory::FactoryVecDeque, gtk, gtk::gdk, prelude::*};
-use wayle_config::{ConfigProperty, schemas::bar::BarLayout};
+use wayle_config::{
+    ConfigProperty,
+    schemas::{bar::BarLayout, styling::Spacing},
+};
 use wayle_widgets::{prelude::BarSettings, styling::InlineStyling};
 
-use self::dropdowns::DropdownRegistry;
+use self::{
+    autohide::{AutohideState, HoverTrigger},
+    dropdowns::DropdownRegistry,
+};
 use crate::shell::{helpers::layer_shell::apply_layer, services::ShellServices};
 
 pub(crate) struct Bar {
@@ -25,6 +31,9 @@ pub(crate) struct Bar {
     layout: BarLayout,
     css_provider: gtk::CssProvider,
     last_css: String,
+    monitor: gdk::Monitor,
+    autohide_state: AutohideState,
+    hover_trigger: Option<HoverTrigger>,
 
     left: FactoryVecDeque<BarItemFactory>,
     center: FactoryVecDeque<BarItemFactory>,
@@ -36,6 +45,32 @@ pub(crate) struct BarInit {
     pub(crate) services: ShellServices,
 }
 
+/// User-driven inputs handled by the [`Bar`] component itself (as opposed to
+/// [`BarCmd`], which carries background-task/config-watcher outputs).
+#[derive(Debug)]
+pub(crate) enum BarInput {
+    /// Pointer entered the bar's own surface.
+    HoverEnter,
+    /// Pointer moved while inside the bar's surface.
+    HoverMotion,
+    /// Pointer left the bar's surface.
+    HoverLeave,
+    /// Pointer entered the separate `HoverTrigger` edge-strip surface (not
+    /// the bar's own surface). Handled distinctly from `HoverEnter` because
+    /// the trigger unmaps as soon as the bar reveals, so it can never
+    /// guarantee a matching leave event -- see
+    /// `AutohideState::on_trigger_enter`.
+    TriggerHover,
+    /// A dropdown popover opened. Autohide relies on this to stay revealed
+    /// while a dropdown is open, even if it was opened through a path that
+    /// didn't itself hover the bar.
+    DropdownOpened,
+    /// A dropdown popover closed. Autohide relies on this to resume its
+    /// hide timer when a dropdown closes without the pointer being back
+    /// over the bar (e.g. clicking a menu item, or an outside click).
+    DropdownClosed,
+}
+
 #[derive(Debug)]
 pub(crate) enum BarCmd {
     LayoutLoaded(BarLayout),
@@ -43,12 +78,16 @@ pub(crate) enum BarCmd {
     DropdownAutohideChanged(bool),
     ExclusiveChanged(bool),
     LayerChanged,
+    AutohideTimeout(u64),
+    AutohideChanged(bool),
+    AutohideTimeoutChanged(u32),
+    AutohideTriggerSizeChanged(Spacing),
 }
 
 #[relm4::component(pub(crate))]
 impl Component for Bar {
     type Init = BarInit;
-    type Input = ();
+    type Input = BarInput;
     type Output = ();
     type CommandOutput = BarCmd;
 
@@ -120,19 +159,15 @@ impl Component for Bar {
             monitor_name,
         };
 
-        root.init_layer_shell();
-        apply_layer(&root, config.bar.layer.get(), &init.services.config);
-        root.set_keyboard_mode(KeyboardMode::None);
-        Self::apply_exclusive_zone(&root, config.bar.exclusive.get());
-        root.set_monitor(Some(&init.monitor));
-        Self::apply_anchors(&root, location);
-        Self::apply_css_classes(&root, &init.monitor, location, is_floating);
-        Self::suppress_alt_focus(&root);
+        Self::configure_root_window(
+            &root,
+            &init.monitor,
+            &init.services.config,
+            location,
+            is_floating,
+        );
 
-        let window = root.clone();
-        init.monitor.connect_invalidate(move |_| {
-            window.destroy();
-        });
+        Self::attach_motion_controller(&root, &sender);
 
         let left = FactoryVecDeque::builder()
             .launch(gtk::Box::default())
@@ -152,13 +187,12 @@ impl Component for Bar {
         root.style_context()
             .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
 
-        watchers::layout::spawn(&sender, &init.monitor, &init.services.config, &ipc_state);
-        watchers::dropdowns::spawn(&sender, &init.services.config);
-        watchers::exclusive::spawn(&sender, &init.services.config);
-        watchers::layer::spawn(&sender, &init.services.config);
+        Self::spawn_watchers(&sender, &init.monitor, &init.services.config, &ipc_state);
 
-        let dropdowns = Rc::new(DropdownRegistry::new(&init.services));
-        dropdowns.warm_all();
+        let (autohide_state, hover_trigger) =
+            Self::init_autohide(config, &init.monitor, location, &sender);
+
+        let dropdowns = Self::init_dropdowns(&init.services, &sender);
 
         let mut model = Self {
             settings,
@@ -174,6 +208,9 @@ impl Component for Bar {
             },
             css_provider,
             last_css: String::new(),
+            monitor: init.monitor,
+            autohide_state,
+            hover_trigger,
             left,
             center,
             right,
@@ -208,7 +245,46 @@ impl Component for Bar {
         ComponentParts { model, widgets }
     }
 
-    fn update_cmd(&mut self, msg: BarCmd, _sender: ComponentSender<Self>, root: &Self::Root) {
+    fn update(&mut self, msg: BarInput, sender: ComponentSender<Self>, root: &Self::Root) {
+        // Autohide is off for most users (default `autohide = false`), and
+        // hover motion over the bar fires at very high frequency. Skip the
+        // state-machine dispatch entirely rather than paying for a mutation
+        // + debug log + visibility resync on every pointer move when there's
+        // nothing for autohide to do.
+        if matches!(
+            msg,
+            BarInput::HoverEnter | BarInput::HoverMotion | BarInput::HoverLeave
+        ) && !self.autohide_state.is_enabled()
+        {
+            return;
+        }
+
+        let action = match msg {
+            BarInput::HoverEnter => self.autohide_state.on_hover_enter(),
+            BarInput::HoverMotion => self.autohide_state.on_hover_motion(),
+            BarInput::HoverLeave => {
+                // Registry-tracked dropdowns stay fully event-driven:
+                // `DropdownClosed` re-arms via `on_popover_closed` once one
+                // closes, so it's safe to `CancelTimer`-and-wait here.
+                // Popovers only visible to the generic tree walk (e.g. a
+                // systray context menu) have no such close event, so they're
+                // deliberately excluded from this bool: instead of an
+                // indefinite `CancelTimer` with nothing left to wake it back
+                // up, this arms a normal hide timer anyway, and
+                // `BarCmd::AutohideTimeout` below re-checks fresh at expiry
+                // and re-arms again if such a popover is still open.
+                let registry_open = self.dropdowns.any_open();
+                self.autohide_state.on_hover_leave(registry_open)
+            }
+            BarInput::TriggerHover => self.autohide_state.on_trigger_enter(),
+            BarInput::DropdownOpened => self.autohide_state.on_popover_open(),
+            BarInput::DropdownClosed => self.autohide_state.on_popover_closed(),
+        };
+
+        self.handle_autohide_action(action, &sender, root);
+    }
+
+    fn update_cmd(&mut self, msg: BarCmd, sender: ComponentSender<Self>, root: &Self::Root) {
         match msg {
             BarCmd::LayoutLoaded(layout) => {
                 self.apply_layout(layout, root);
@@ -229,6 +305,31 @@ impl Component for Bar {
             BarCmd::LayerChanged => {
                 let configured = self.services.config.config().bar.layer.get();
                 apply_layer(root, configured, &self.services.config);
+            }
+            BarCmd::AutohideTimeout(token) => {
+                let registry_open = self.dropdowns.any_open();
+                // Only worth walking the tree if the (cheap) registry check
+                // didn't already answer it -- see
+                // `AutohideState::on_autohide_timeout`'s doc comment for why
+                // the two sources are kept distinct rather than merged here.
+                let walk_open =
+                    !registry_open && dropdowns::any_popover_open_in_tree(root.upcast_ref());
+
+                let action =
+                    self.autohide_state
+                        .on_autohide_timeout(token, registry_open, walk_open);
+                self.handle_autohide_action(action, &sender, root);
+            }
+            BarCmd::AutohideChanged(enabled) => {
+                let action = self.autohide_state.set_enabled(enabled);
+                self.sync_hover_trigger(enabled, &sender, root);
+                self.handle_autohide_action(action, &sender, root);
+            }
+            BarCmd::AutohideTimeoutChanged(timeout_ms) => {
+                self.autohide_state.set_timeout(timeout_ms);
+            }
+            BarCmd::AutohideTriggerSizeChanged(size) => {
+                self.refresh_trigger_geometry(size);
             }
         }
     }

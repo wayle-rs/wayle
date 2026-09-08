@@ -85,3 +85,15 @@
     border-radius: var(--bar-group-rounding-element);
     padding: calc(var(--bar-group-padding-px) * 1px);
 }
+
+// Edge-strip layer-shell surface that reveals an autohidden bar on pointer
+// entry. Must stay visually near-invisible but NOT fully transparent:
+// background-color: transparent (alpha exactly 0) risks GTK skipping
+// committing a real buffer for a fully transparent layer-shell surface --
+// the surface would silently never get real geometry and never receive
+// pointer events. rgba(0, 0, 0, 0.01) avoids that risk at zero visible cost
+// (verify with `hyprctl layers` that this surface has non-zero width/height
+// and actually receives hover after touching this).
+.bar-hover-trigger {
+    background-color: rgba(0, 0, 0, 0.01);
+}
