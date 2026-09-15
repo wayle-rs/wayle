@@ -145,3 +145,14 @@ unsafe_code = "deny"
 [profile.release]
 lto = true
 codegen-units = 1
+
+# 2026-09-07: fork local temporal de wayle-audio 0.1.3 (crates.io) para
+# diagnosticar un panic recurrente (assertion failed: !ptr.is_null() en
+# libpulse-binding::operation::Operation::from_raw, ya visto 4 veces desde
+# el 31-ago) que mata el worker de audio en silencio. Agrega logging +
+# catch_unwind alrededor de las llamadas a introspect en
+# backend/commands/device.rs. Revertir a la versión de crates.io si
+# upstream publica un fix, o si esto confirma la causa y se decide
+# reportarla en vez de mantener el fork.
+[patch.crates-io]
+wayle-audio = { path = "vendor/wayle-audio" }

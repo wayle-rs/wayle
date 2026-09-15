@@ -4562,8 +4562,6 @@ dependencies = [
 [[package]]
 name = "wayle-audio"
 version = "0.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4205c59693f9a6d7344102d961ec2a739b50ea4375b3b434b9b9b7dcb571e56"
 dependencies = [
  "async-trait",
  "derive_more",
