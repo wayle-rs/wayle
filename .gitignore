@@ -1,5 +1,6 @@
 target/
 dist/
+.claude/
 wayle-design
 
 wayle-shell.ftl
