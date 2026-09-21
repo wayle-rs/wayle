@@ -5,15 +5,21 @@ use std::{
 };
 
 use glob::Pattern;
-use wayle_config::schemas::modules::{DisplayMode, Numbering};
+use wayle_config::schemas::{
+    general::ColorIconMode,
+    modules::{DisplayMode, Numbering},
+};
 use wayle_hyprland::{Address, Client, WorkspaceId};
 
 use super::filtering::relative_workspace_number;
-use crate::shell::bar::icons::{DEFAULT_APP_ICON_MAP, matches_glob};
+use crate::shell::bar::icons::{
+    DEFAULT_APP_ICON_MAP, color_desktop_icon, matches_glob, symbolic_desktop_icon,
+};
 
 pub(crate) struct IconContext<'a> {
     pub user_map: &'a BTreeMap<String, String>,
     pub fallback: &'a str,
+    pub color_icons: ColorIconMode,
 }
 
 pub(crate) struct WindowInfo<'a> {
@@ -51,6 +57,27 @@ pub(crate) fn resolve_app_icon(window: &WindowInfo<'_>, ctx: &IconContext<'_>) -
         }
     }
 
+    // Theme resolution via the app's desktop entry: in `prefer` mode the
+    // full-colour icon wins over the symbolic variant.
+    if ctx.color_icons == ColorIconMode::Prefer
+        && let Some(color) = color_desktop_icon(window.class)
+    {
+        return color;
+    }
+
+    if let Some(symbolic) = symbolic_desktop_icon(window.class) {
+        return symbolic;
+    }
+
+    // In `fallback` mode the colour icon steps in when the theme has no
+    // symbolic variant.
+    if ctx.color_icons == ColorIconMode::Fallback
+        && let Some(color) = color_desktop_icon(window.class)
+    {
+        return color;
+    }
+
+    // Built-in mappings are a last resort after theme resolution.
     for (pattern, icon) in DEFAULT_APP_ICON_MAP {
         if matches_glob(window.class, &pattern.to_lowercase()) {
             return (*icon).to_string();
@@ -295,6 +322,7 @@ mod tests {
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
+                color_icons: ColorIconMode::Never,
             };
             let window = WindowInfo {
                 class: "kitty",
@@ -309,6 +337,7 @@ mod tests {
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
+                color_icons: ColorIconMode::Never,
             };
             let window = WindowInfo {
                 class: "org.mozilla.firefox",
@@ -324,6 +353,7 @@ mod tests {
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
+                color_icons: ColorIconMode::Never,
             };
             let window = WindowInfo {
                 class: "kitty",
@@ -339,6 +369,7 @@ mod tests {
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
+                color_icons: ColorIconMode::Never,
             };
             let window = WindowInfo {
                 class: "firefox",
@@ -353,6 +384,7 @@ mod tests {
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
+                color_icons: ColorIconMode::Never,
             };
             let window = WindowInfo {
                 class: "unknown-app",

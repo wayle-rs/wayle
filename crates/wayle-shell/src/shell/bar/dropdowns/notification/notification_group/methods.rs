@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use wayle_config::schemas::modules::notification::IconSource;
+use wayle_config::schemas::{general::ColorIconMode, modules::notification::IconSource};
 use wayle_notification::core::notification::Notification;
 
 use super::{super::notification_item::messages::NotificationItemInit, NotificationGroup};
@@ -44,7 +44,9 @@ impl NotificationGroup {
 
         let inits: Vec<_> = remaining
             .iter()
-            .map(|notification| build_item_init(self.icon_source, notification))
+            .map(|notification| {
+                build_item_init(self.icon_source, self.color_icons, notification)
+            })
             .collect();
 
         {
@@ -59,6 +61,7 @@ impl NotificationGroup {
 
     pub(super) fn resolve_group_icon(
         _icon_source: IconSource,
+        color_icons: ColorIconMode,
         notifications: &[Arc<Notification>],
     ) -> Option<String> {
         let first = notifications.first()?;
@@ -68,6 +71,7 @@ impl NotificationGroup {
             &first.app_icon.get(),
             &first.image_path.get(),
             &first.desktop_entry.get(),
+            color_icons,
         );
 
         match resolved {
@@ -108,7 +112,9 @@ impl NotificationGroup {
 
         let inits: Vec<_> = visible
             .iter()
-            .map(|notification| build_item_init(self.icon_source, notification))
+            .map(|notification| {
+                build_item_init(self.icon_source, self.color_icons, notification)
+            })
             .collect();
 
         {
@@ -124,6 +130,7 @@ impl NotificationGroup {
 
 fn build_item_init(
     icon_source: IconSource,
+    color_icons: ColorIconMode,
     notification: &Arc<Notification>,
 ) -> NotificationItemInit {
     let resolved_icon = resolve_icon(
@@ -132,6 +139,7 @@ fn build_item_init(
         &notification.app_icon.get(),
         &notification.image_path.get(),
         &notification.desktop_entry.get(),
+        color_icons,
     );
 
     NotificationItemInit {

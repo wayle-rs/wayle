@@ -6,16 +6,30 @@ use crate::shell::bar::icons;
 
 pub(super) fn resolve_source_icon(player: &Player) -> String {
     let identity = player.identity.get();
+    let desktop_entry = player.desktop_entry.get();
+
+    // Theme resolution first: the player's desktop entry, then its identity.
+    if let Some(icon) = desktop_entry
+        .as_deref()
+        .and_then(icons::symbolic_desktop_icon)
+    {
+        return icon;
+    }
+
+    if let Some(icon) = icons::symbolic_desktop_icon(&identity) {
+        return icon;
+    }
+
+    // Built-in mappings are a last resort after theme resolution.
     if let Some(icon) = icons::lookup_app_icon(&identity) {
         return icon.to_string();
     }
 
-    let bus_name = player.id.bus_name();
-    if let Some(icon) = icons::lookup_app_icon(bus_name) {
+    if let Some(icon) = icons::lookup_app_icon(player.id.bus_name()) {
         return icon.to_string();
     }
 
-    let Some(desktop_entry) = player.desktop_entry.get() else {
+    let Some(desktop_entry) = desktop_entry else {
         return String::from("ld-music-symbolic");
     };
 

@@ -3,9 +3,12 @@
 
 use std::collections::BTreeMap;
 
-use wayle_config::schemas::modules::{LabelStrategy, WorkspaceStyle};
+use wayle_config::schemas::{general::ColorIconMode, modules::{LabelStrategy, WorkspaceStyle}};
 
-use crate::{glob, shell::bar::icons::DEFAULT_APP_ICON_MAP};
+use crate::{
+    glob,
+    shell::bar::icons::{DEFAULT_APP_ICON_MAP, color_desktop_icon, symbolic_desktop_icon},
+};
 
 const TITLE_PREFIX: &str = "title:";
 const APP_PREFIX: &str = "app:";
@@ -87,13 +90,15 @@ pub(super) fn is_ignored(name: Option<&str>, idx: u8, id: u64, patterns: &[Strin
 /// Resolves the icon name for a window using the configured icon map.
 ///
 /// Lookup order: title-prefixed patterns against `title`, then app-prefixed
-/// or unprefixed patterns against `app_id`. Falls back to `fallback` when
-/// nothing matches.
+/// or unprefixed patterns against `app_id`, then the app's desktop-entry icon
+/// from the icon theme (colour or symbolic first depending on `color_icons`),
+/// then the built-in mappings, and finally `fallback`.
 pub(super) fn resolve_app_icon(
     app_id: Option<&str>,
     title: Option<&str>,
     user_map: &BTreeMap<String, String>,
     fallback: &str,
+    color_icons: ColorIconMode,
 ) -> String {
     let (title_entries, app_entries): (Vec<_>, Vec<_>) = user_map
         .iter()
@@ -113,6 +118,27 @@ pub(super) fn resolve_app_icon(
         return icon.to_string();
     }
 
+    // Theme resolution via the app's desktop entry: in `prefer` mode the
+    // full-colour icon wins over the symbolic variant.
+    if color_icons == ColorIconMode::Prefer
+        && let Some(color) = color_desktop_icon(app_id)
+    {
+        return color;
+    }
+
+    if let Some(symbolic) = symbolic_desktop_icon(app_id) {
+        return symbolic;
+    }
+
+    // In `fallback` mode the colour icon steps in when the theme has no
+    // symbolic variant.
+    if color_icons == ColorIconMode::Fallback
+        && let Some(color) = color_desktop_icon(app_id)
+    {
+        return color;
+    }
+
+    // Built-in mappings are a last resort after theme resolution.
     if let Some(icon) = glob::find_match(DEFAULT_APP_ICON_MAP.iter().copied(), app_id) {
         return icon.to_string();
     }
@@ -299,7 +325,7 @@ mod tests {
         let mut map = BTreeMap::new();
         map.insert(String::from("*firefox*"), String::from("ld-globe"));
         assert_eq!(
-            resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback"),
+            resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback", ColorIconMode::Never),
             "ld-globe",
         );
     }
@@ -309,7 +335,7 @@ mod tests {
         let mut map = BTreeMap::new();
         map.insert(String::from("app:*firefox*"), String::from("ld-globe"));
         assert_eq!(
-            resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback"),
+            resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback", ColorIconMode::Never),
             "ld-globe",
         );
     }
@@ -324,6 +350,7 @@ mod tests {
                 Some("YouTube - Firefox"),
                 &map,
                 "fallback",
+                ColorIconMode::Never,
             ),
             "ld-youtube",
         );
@@ -340,6 +367,7 @@ mod tests {
                 Some("YouTube - Firefox"),
                 &map,
                 "fallback",
+                ColorIconMode::Never,
             ),
             "ld-youtube",
         );
@@ -349,7 +377,13 @@ mod tests {
     fn resolve_app_icon_falls_back_when_no_match() {
         let map = BTreeMap::new();
         assert_eq!(
-            resolve_app_icon(Some("unknown.app"), Some("Unknown"), &map, "ld-default"),
+            resolve_app_icon(
+                Some("unknown.app"),
+                Some("Unknown"),
+                &map,
+                "ld-default",
+                ColorIconMode::Never,
+            ),
             "ld-default",
         );
     }
@@ -357,7 +391,7 @@ mod tests {
     #[test]
     fn resolve_app_icon_uses_builtin_default_when_user_map_misses() {
         let map = BTreeMap::new();
-        let icon = resolve_app_icon(Some("firefox"), None, &map, "ld-default");
+        let icon = resolve_app_icon(Some("firefox"), None, &map, "ld-default", ColorIconMode::Never);
         assert_ne!(
             icon, "ld-default",
             "expected a built-in mapping for firefox"
@@ -369,7 +403,7 @@ mod tests {
         let mut map = BTreeMap::new();
         map.insert(String::from("*firefox*"), String::from("my-override"));
         assert_eq!(
-            resolve_app_icon(Some("firefox"), None, &map, "ld-default"),
+            resolve_app_icon(Some("firefox"), None, &map, "ld-default", ColorIconMode::Never),
             "my-override",
         );
     }
@@ -379,7 +413,7 @@ mod tests {
         let mut map = BTreeMap::new();
         map.insert(String::from("title:*Doc*"), String::from("ld-document"));
         assert_eq!(
-            resolve_app_icon(None, Some("Document Reader"), &map, "fallback"),
+            resolve_app_icon(None, Some("Document Reader"), &map, "fallback", ColorIconMode::Never),
             "ld-document",
         );
     }
@@ -389,7 +423,7 @@ mod tests {
         let mut map = BTreeMap::new();
         map.insert(String::from("*firefox*"), String::from("ld-globe"));
         assert_eq!(
-            resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback"),
+            resolve_app_icon(Some("org.mozilla.firefox"), None, &map, "fallback", ColorIconMode::Never),
             "ld-globe",
         );
     }

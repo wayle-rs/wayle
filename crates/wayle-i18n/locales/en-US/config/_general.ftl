@@ -11,9 +11,17 @@ settings-general-font-mono = Monospace Font
 settings-general-tearing-mode = Tearing Mode
     .description = Demote overlay surfaces to allow compositor screen tearing for fullscreen games
 
+settings-general-color-icons = Color Icons
+    .description = When to use full-colour app icons instead of symbolic ones for notifications and workspaces
+
 
 ## Layer enum variants
 enum-layer-background = Background
 enum-layer-bottom = Bottom
 enum-layer-top = Top
 enum-layer-overlay = Overlay
+
+## ColorIconMode enum variants
+enum-color-icon-mode-never = Never
+enum-color-icon-mode-fallback = Fallback
+enum-color-icon-mode-prefer = Prefer

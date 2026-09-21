@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use wayle_config::schemas::modules::AppIconSource;
 
-use crate::shell::bar::icons::lookup_app_icon;
+use crate::shell::bar::icons::{lookup_app_icon, symbolic_desktop_icon};
 
 const PA_PROP_STREAM_RESTORE_ID: &str = "module-stream-restore.id";
 const PA_ROLE_EVENT: &str = "sink-input-by-media-role:event";
@@ -27,6 +27,16 @@ pub(crate) fn stream_icon(
             PA_PROP_APP_ICON_NAME,
         ];
 
+        // Theme resolution first: try each property as a desktop-entry id.
+        for key in candidates {
+            if let Some(value) = props.get(key)
+                && let Some(icon) = symbolic_desktop_icon(value)
+            {
+                return Some(icon);
+            }
+        }
+
+        // Built-in mappings are a last resort after theme resolution.
         for key in candidates {
             if let Some(value) = props.get(key)
                 && let Some(icon) = lookup_app_icon(value)

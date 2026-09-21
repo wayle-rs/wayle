@@ -4,7 +4,10 @@ use std::{collections::HashSet, mem, sync::Arc};
 
 use gtk::prelude::*;
 use relm4::{factory::FactoryComponent, prelude::*};
-use wayle_config::schemas::modules::{ActiveIndicator, DisplayMode, HyprlandWorkspacesConfig};
+use wayle_config::schemas::{
+    general::ColorIconMode,
+    modules::{ActiveIndicator, DisplayMode, HyprlandWorkspacesConfig},
+};
 use wayle_hyprland::{Address, Client, WorkspaceId};
 
 use crate::shell::bar::modules::hyprland_workspaces::helpers::{
@@ -257,6 +260,7 @@ pub(crate) fn build_button_init(
     config: &HyprlandWorkspacesConfig,
     clients: &[Arc<Client>],
     urgent_addresses: HashSet<Address>,
+    color_icons: ColorIconMode,
 ) -> WorkspaceButtonInit {
     let workspace_map = config.workspace_map.get();
     let mapped_style = i32::try_from(ctx.id)
@@ -271,6 +275,7 @@ pub(crate) fn build_button_init(
         let icon_ctx = IconContext {
             user_map: &user_map,
             fallback: &fallback,
+            color_icons,
         };
         let resolved =
             resolve_workspace_icons(ctx.id, clients, &icon_ctx, config.app_icons_dedupe.get());

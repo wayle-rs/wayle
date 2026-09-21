@@ -3,7 +3,7 @@ mod types;
 use schemars::schema_for;
 use wayle_derive::wayle_config;
 
-pub use self::types::Layer;
+pub use self::types::{ColorIconMode, Layer};
 use crate::{
     ConfigProperty,
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
@@ -29,6 +29,17 @@ pub struct GeneralConfig {
     #[serde(rename = "tearing-mode")]
     #[default(false)]
     pub tearing_mode: ConfigProperty<bool>,
+
+    /// When to use full-colour app icons for notifications and workspaces.
+    ///
+    /// Icons resolve from the icon theme first (via the app's desktop entry),
+    /// then from the built-in symbolic mappings, then the generic fallback
+    /// icon. `never` only takes the theme's symbolic icon. `fallback` (the
+    /// default) also takes the theme's colour icon when no symbolic variant
+    /// exists. `prefer` takes the theme's colour icon first, then symbolic.
+    #[serde(rename = "color-icons")]
+    #[default(ColorIconMode::default())]
+    pub color_icons: ConfigProperty<ColorIconMode>,
 }
 
 impl ModuleInfoProvider for GeneralConfig {

@@ -1,9 +1,12 @@
 use chrono::{DateTime, Utc};
 use relm4::gtk::{gdk, glib, pango};
-use wayle_config::schemas::modules::notification::{IconSource, UrgencyBarThreshold};
+use wayle_config::schemas::{
+    general::ColorIconMode,
+    modules::notification::{IconSource, UrgencyBarThreshold},
+};
 use wayle_notification::types::Urgency;
 
-use crate::shell::bar::icons::lookup_app_icon;
+use crate::shell::bar::icons::{color_desktop_icon, lookup_app_icon, symbolic_desktop_icon};
 
 const FALLBACK_ICON: &str = "ld-bell-symbolic";
 const MINUTES_PER_HOUR: i64 = 60;
@@ -77,16 +80,17 @@ pub(crate) fn resolve_icon(
     app_icon: &Option<String>,
     image_path: &Option<String>,
     desktop_entry: &Option<String>,
+    color_icons: ColorIconMode,
 ) -> ResolvedIcon {
     match icon_source {
-        IconSource::Mapped => mapped_icon(app_name),
+        IconSource::Mapped => mapped_icon(app_name, desktop_entry, color_icons),
 
         IconSource::Automatic => {
             if let Some(resolved) = try_icon_string(image_path) {
                 return resolved;
             }
 
-            mapped_icon(app_name)
+            mapped_icon(app_name, desktop_entry, color_icons)
         }
 
         IconSource::Application => {
@@ -104,7 +108,7 @@ pub(crate) fn resolve_icon(
                 return ResolvedIcon::Named(entry.clone());
             }
 
-            mapped_icon(app_name)
+            mapped_icon(app_name, desktop_entry, color_icons)
         }
     }
 }
@@ -122,13 +126,46 @@ fn try_icon_string(value: &Option<String>) -> Option<ResolvedIcon> {
     }
 }
 
-fn mapped_icon(app_name: &Option<String>) -> ResolvedIcon {
-    let name = app_name
+fn mapped_icon(
+    app_name: &Option<String>,
+    desktop_entry: &Option<String>,
+    color_icons: ColorIconMode,
+) -> ResolvedIcon {
+    let identifier = desktop_entry
         .as_deref()
-        .and_then(lookup_app_icon)
-        .unwrap_or(FALLBACK_ICON);
+        .filter(|entry| !entry.is_empty())
+        .or(app_name.as_deref());
 
-    ResolvedIcon::Named(String::from(name))
+    // Theme resolution via the app's desktop entry: in `prefer` mode the
+    // full-colour icon wins over the symbolic variant.
+    if color_icons == ColorIconMode::Prefer
+        && let Some(id) = identifier
+        && let Some(color) = color_desktop_icon(id)
+    {
+        return ResolvedIcon::Named(color);
+    }
+
+    if let Some(id) = identifier
+        && let Some(symbolic) = symbolic_desktop_icon(id)
+    {
+        return ResolvedIcon::Named(symbolic);
+    }
+
+    // In `fallback` mode the colour icon steps in when the theme has no
+    // symbolic variant.
+    if color_icons == ColorIconMode::Fallback
+        && let Some(id) = identifier
+        && let Some(color) = color_desktop_icon(id)
+    {
+        return ResolvedIcon::Named(color);
+    }
+
+    // Built-in mappings are a last resort after theme resolution.
+    if let Some(name) = app_name.as_deref().and_then(lookup_app_icon) {
+        return ResolvedIcon::Named(String::from(name));
+    }
+
+    ResolvedIcon::Named(String::from(FALLBACK_ICON))
 }
 
 /// Loads a file-based icon as a scaled texture to avoid keeping oversized
