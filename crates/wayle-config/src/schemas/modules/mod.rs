@@ -11,6 +11,7 @@ mod dashboard;
 mod hyprland_workspaces;
 mod hyprsunset;
 mod idle_inhibit;
+mod iwd;
 mod keybind_mode;
 mod keyboard_input;
 mod mango_workspaces;
@@ -47,6 +48,7 @@ pub use hyprland_workspaces::{
 };
 pub use hyprsunset::HyprsunsetConfig;
 pub use idle_inhibit::IdleInhibitConfig;
+pub use iwd::IwdConfig;
 pub use keybind_mode::KeybindModeConfig;
 pub use keyboard_input::KeyboardInputConfig;
 pub use mango_workspaces::MangoWorkspacesConfig;
@@ -100,6 +102,8 @@ pub struct ModulesConfig {
     /// Idle inhibitor module.
     #[serde(rename = "idle-inhibit")]
     pub idle_inhibit: IdleInhibitConfig,
+    /// WiFi connection module backed by IWD.
+    pub iwd: IwdConfig,
     /// Keybind mode indicator module.
     #[serde(rename = "keybind-mode")]
     pub keybind_mode: KeybindModeConfig,

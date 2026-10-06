@@ -20,6 +20,7 @@ use wayle_config::{ConfigService, infrastructure::schema};
 use wayle_core::{DeferredService, Property};
 use wayle_hyprland::HyprlandService;
 use wayle_ipc::shell::APP_ID;
+use wayle_iwd::IwdService;
 use wayle_mango::MangoService;
 use wayle_media::MediaService;
 use wayle_network::NetworkService;
@@ -71,6 +72,7 @@ struct CoreServices {
     battery: Option<Arc<BatteryService>>,
     brightness: Option<Arc<BrightnessService>>,
     idle_inhibit: Arc<IdleInhibitService>,
+    iwd: Option<Arc<IwdService>>,
     network: Option<Arc<NetworkService>>,
     sysinfo: Arc<SysinfoService>,
     wallpaper: Option<Arc<WallpaperService>>,
@@ -164,6 +166,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         hyprland: optional.hyprland,
         power_profiles,
         idle_inhibit: core.idle_inhibit,
+        iwd: core.iwd,
         mango: optional.mango,
         media: daemons.media,
         niri: optional.niri,
@@ -211,16 +214,18 @@ async fn init_core_services(
     let battery_task = tokio::spawn(BatteryService::new());
     let brightness_task = tokio::spawn(BrightnessService::new());
     let network_task = tokio::spawn(NetworkService::new());
+    let iwd_task = tokio::spawn(IwdService::new());
     let wallpaper_cfg = config.wallpaper.clone();
     let wallpaper_task = tokio::spawn(async move {
         wallpaper::build_wallpaper_service(&wallpaper_cfg, theming_monitor, color_extractor).await
     });
     let idle_inhibit_task = tokio::spawn(IdleInhibitService::new(startup_duration));
 
-    let (battery, brightness, network, wallpaper, idle_inhibit) = tokio::join!(
+    let (battery, brightness, network, iwd, wallpaper, idle_inhibit) = tokio::join!(
         async { try_service!(timer, "Battery", spawned(battery_task)) },
         async { try_service!(timer, "Brightness", spawned(brightness_task), no_wrap) },
         async { try_service!(timer, "Network", spawned(network_task)) },
+        async { try_service!(timer, "Iwd", spawned(iwd_task)) },
         async { try_service!(timer, "Wallpaper", spawned(wallpaper_task), no_wrap) },
         timer.time("IdleInhibit", spawned(idle_inhibit_task)),
     );
@@ -229,6 +234,7 @@ async fn init_core_services(
         battery,
         brightness: brightness.flatten(),
         idle_inhibit: Arc::new(idle_inhibit?),
+        iwd,
         network,
         sysinfo,
         wallpaper,

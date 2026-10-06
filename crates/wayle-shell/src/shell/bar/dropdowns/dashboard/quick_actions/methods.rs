@@ -1,25 +1,54 @@
+use std::sync::Arc;
+
 use relm4::ComponentSender;
 use tracing::warn;
+use wayle_core::Property;
+use wayle_iwd::IwdService;
+use wayle_network::NetworkService;
 use wayle_power_profiles::types::profile::PowerProfile;
 
 use super::{QuickActionsSection, messages::QuickActionsCmd};
 
+/// The WiFi enabled/powered `Property` from whichever backend is in use, or
+/// `None` when no WiFi device is present.
+///
+/// NetworkManager takes precedence; IWD is only consulted when the Network
+/// service is entirely absent.
+pub(super) fn wifi_enabled_property(
+    network: &Option<Arc<NetworkService>>,
+    iwd: &Option<Arc<IwdService>>,
+) -> Option<Property<bool>> {
+    if let Some(network) = network {
+        network.wifi.get().map(|wifi| wifi.enabled.clone())
+    } else {
+        iwd.as_ref()
+            .and_then(|iwd| iwd.station.get())
+            .map(|station| station.powered.clone())
+    }
+}
+
 impl QuickActionsSection {
     pub(super) fn toggle_wifi(&self, sender: &ComponentSender<Self>) {
-        let Some(network) = self.network.clone() else {
-            return;
-        };
-
         let target = !self.wifi_active;
 
-        sender.oneshot_command(async move {
-            if let Some(wifi) = network.wifi.get()
-                && let Err(err) = wifi.set_enabled(target).await
-            {
-                warn!(error = %err, "wifi toggle failed");
-            }
-            QuickActionsCmd::WifiChanged(target)
-        });
+        // NetworkManager takes precedence; IWD is the fallback — the same ordering
+        // as `wifi_enabled_property`. The two differ: NetworkManager's setter is
+        // awaited and reports its result, while IWD's only queues the request,
+        // whose outcome shows in the station's `powered`.
+        if let Some(network) = self.network.clone() {
+            sender.oneshot_command(async move {
+                if let Some(wifi) = network.wifi.get()
+                    && let Err(err) = wifi.set_enabled(target).await
+                {
+                    warn!(error = %err, "wifi toggle failed");
+                }
+                QuickActionsCmd::WifiChanged(target)
+            });
+        } else if let Some(station) = self.iwd.as_ref().and_then(|iwd| iwd.station.get()) {
+            // The tile follows the station's `powered` (see
+            // `wifi_enabled_property`), which IWD reports.
+            station.set_powered(target);
+        }
     }
 
     pub(super) fn toggle_bluetooth(&self, sender: &ComponentSender<Self>) {

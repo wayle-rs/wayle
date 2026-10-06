@@ -215,6 +215,8 @@ pub enum BarModule {
     HyprlandWorkspaces,
     /// Idle inhibitor to prevent screen timeout.
     IdleInhibit,
+    /// WiFi connection status via IWD.
+    Iwd,
     /// Hyprsunset (night light) toggle.
     Hyprsunset,
     /// Keyboard layout indicator.
@@ -297,6 +299,7 @@ impl BarModule {
             Self::KeybindMode => "keybind-mode",
             Self::HyprlandWorkspaces => "hyprland-workspaces",
             Self::IdleInhibit => "idle-inhibit",
+            Self::Iwd => "iwd",
             Self::Hyprsunset => "hyprsunset",
             Self::KeyboardInput => "keyboard-input",
             Self::Media => "media",
@@ -332,6 +335,7 @@ impl BarModule {
             "keybind-mode" => Self::KeybindMode,
             "hyprland-workspaces" => Self::HyprlandWorkspaces,
             "idle-inhibit" => Self::IdleInhibit,
+            "iwd" => Self::Iwd,
             "hyprsunset" => Self::Hyprsunset,
             "keyboard-input" => Self::KeyboardInput,
             "media" => Self::Media,
@@ -418,6 +422,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "hyprland-workspaces",
     "hyprsunset",
     "idle-inhibit",
+    "iwd",
     "keybind-mode",
     "keyboard-input",
     "media",

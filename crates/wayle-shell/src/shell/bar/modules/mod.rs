@@ -10,6 +10,7 @@ mod dashboard;
 mod hyprland_workspaces;
 mod hyprsunset;
 mod idle_inhibit;
+mod iwd;
 mod keybind_mode;
 mod keyboard_input;
 mod mango_workspaces;
@@ -70,6 +71,7 @@ register_modules! {
     HyprlandWorkspaces => hyprland_workspaces::Factory,
     Hyprsunset => hyprsunset::Factory,
     IdleInhibit => idle_inhibit::Factory,
+    Iwd => iwd::Factory,
     KeybindMode => keybind_mode::Factory,
     KeyboardInput => keyboard_input::Factory,
     MangoWorkspaces => mango_workspaces::Factory,

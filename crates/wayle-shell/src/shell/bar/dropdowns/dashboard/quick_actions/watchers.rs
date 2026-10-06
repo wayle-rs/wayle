@@ -3,8 +3,9 @@ use std::sync::Arc;
 use relm4::ComponentSender;
 use tokio_util::sync::CancellationToken;
 use wayle_bluetooth::BluetoothService;
-use wayle_core::DeferredService;
-use wayle_network::{NetworkService, wifi::Wifi};
+use wayle_core::{DeferredService, Property};
+use wayle_iwd::IwdService;
+use wayle_network::NetworkService;
 use wayle_notification::NotificationService;
 use wayle_power_profiles::{PowerProfilesService, types::profile::PowerProfile};
 use wayle_widgets::{watch, watch_cancellable, watch_deferred};
@@ -15,16 +16,25 @@ use crate::services::IdleInhibitService;
 pub(super) fn spawn(
     sender: &ComponentSender<QuickActionsSection>,
     network: &Option<Arc<NetworkService>>,
+    iwd: &Option<Arc<IwdService>>,
     bluetooth: &DeferredService<BluetoothService>,
     notification: &Option<Arc<NotificationService>>,
     power_profiles: &DeferredService<PowerProfilesService>,
     idle_inhibit: &Arc<IdleInhibitService>,
 ) {
+    // NetworkManager takes precedence; fall back to IWD only when absent.
     if let Some(network) = network {
         let wifi_prop = network.wifi.clone();
 
         watch!(sender, [wifi_prop.watch()], |out| {
             let has_wifi = wifi_prop.get().is_some();
+            let _ = out.send(QuickActionsCmd::WifiAvailabilityChanged(has_wifi));
+        });
+    } else if let Some(iwd) = iwd {
+        let station_prop = iwd.station.clone();
+
+        watch!(sender, [station_prop.watch()], |out| {
+            let has_wifi = station_prop.get().is_some();
             let _ = out.send(QuickActionsCmd::WifiAvailabilityChanged(has_wifi));
         });
     }
@@ -96,10 +106,10 @@ pub(super) fn spawn_power_profile_watcher(
 
 pub(super) fn spawn_wifi_enabled_watcher(
     sender: &ComponentSender<QuickActionsSection>,
-    wifi: &Arc<Wifi>,
+    enabled: &Property<bool>,
     token: CancellationToken,
 ) {
-    let enabled = wifi.enabled.clone();
+    let enabled = enabled.clone();
 
     watch_cancellable!(sender, token, [enabled.watch()], |out| {
         let _ = out.send(QuickActionsCmd::WifiChanged(enabled.get()));

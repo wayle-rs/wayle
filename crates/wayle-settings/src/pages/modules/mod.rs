@@ -11,6 +11,7 @@ mod dashboard;
 mod hyprland_workspaces;
 mod hyprsunset;
 mod idle_inhibit;
+mod iwd;
 mod keybind_mode;
 mod keyboard_input;
 mod mango_workspaces;
@@ -47,6 +48,7 @@ pub(crate) fn factories() -> Vec<fn(&Config) -> LeafEntry> {
         hyprland_workspaces::entry,
         hyprsunset::entry,
         idle_inhibit::entry,
+        iwd::entry,
         keybind_mode::entry,
         keyboard_input::entry,
         mango_workspaces::entry,

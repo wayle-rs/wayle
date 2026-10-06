@@ -41,11 +41,12 @@ button.bluetooth-scan-btn {
     padding: var(--space-sm) var(--space-xs);
 }
 
+// Counterclockwise, the way the refresh icon's arrows point.
 @keyframes bt-scan-spin {
     from {
         -gtk-icon-transform: rotate(0deg);
     }
     to {
-        -gtk-icon-transform: rotate(360deg);
+        -gtk-icon-transform: rotate(-360deg);
     }
 }

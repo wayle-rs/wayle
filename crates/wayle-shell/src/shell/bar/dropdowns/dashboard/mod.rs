@@ -143,6 +143,7 @@ impl Component for DashboardDropdown {
         let quick_actions = QuickActionsSection::builder()
             .launch(QuickActionsInit {
                 network: init.network.clone(),
+                iwd: init.iwd.clone(),
                 bluetooth: init.bluetooth.clone(),
                 notification: init.notification.clone(),
                 power_profiles: init.power_profiles.clone(),
