@@ -7,10 +7,10 @@ use std::sync::Arc;
 use gtk::prelude::*;
 use relm4::{gtk, prelude::*};
 use wayle_config::ConfigService;
-use wayle_iwd::{ConnectionState, IwdService};
+use wayle_iwd::IwdService;
 use wayle_widgets::{WatcherToken, prelude::*};
 
-use self::messages::{ActiveConnectionsCmd, ConnectionError, StationState};
+use self::messages::{ActiveConnectionsCmd, StationState};
 pub(crate) use self::messages::{ActiveConnectionsInit, ActiveConnectionsInput};
 use crate::i18n::t;
 
@@ -18,9 +18,6 @@ pub(crate) struct ActiveConnections {
     iwd: Arc<IwdService>,
     config: Arc<ConfigService>,
     station: StationState,
-    /// Transient, shell-owned failure display (mirrors the NM dropdown). Shown
-    /// only while `station.connection` is `Idle` — see [`Self::has_wifi_error`].
-    error: Option<ConnectionError>,
     station_watcher: WatcherToken,
 }
 
@@ -92,7 +89,7 @@ impl Component for ActiveConnections {
                             #[watch]
                             set_visible: model.wifi_detail_visible(),
                             #[watch]
-                            set_tooltip_text: model.error_tooltip(),
+                            set_tooltip_text: model.error_tooltip().as_deref(),
 
                             #[name = "wifi_detail"]
                             gtk::Label {
@@ -249,7 +246,6 @@ impl Component for ActiveConnections {
             iwd: init.iwd.clone(),
             config: init.config.clone(),
             station,
-            error: None,
             station_watcher: WatcherToken::new(),
         };
 
@@ -277,23 +273,13 @@ impl Component for ActiveConnections {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
         match msg {
-            ActiveConnectionsInput::Disconnect => self.disconnect(&sender),
-            ActiveConnectionsInput::Forget => self.forget(&sender),
-            ActiveConnectionsInput::DismissError => {
-                self.error = None;
-            }
+            ActiveConnectionsInput::Disconnect => self.disconnect(),
+            ActiveConnectionsInput::Forget => self.forget(),
+            ActiveConnectionsInput::DismissError => self.dismiss_error(),
             ActiveConnectionsInput::CardHovered(hovered) => {
                 self.station.hovered = hovered;
-            }
-            ActiveConnectionsInput::ShowError { ssid, message } => {
-                // The list only routes genuine (non-auth) failures that left us
-                // disconnected, so accept it unconditionally. `has_wifi_error`
-                // gates display on `connection == Idle`, and a later connection
-                // change clears it (see `StateChanged`), so a stale error can
-                // never resurface.
-                self.error = Some(ConnectionError { ssid, message });
             }
         }
     }
@@ -309,21 +295,16 @@ impl Component for ActiveConnections {
                 connection,
                 strength,
                 frequency,
+                last_error,
             } => {
-                // Any connection activity (connecting elsewhere, or connected)
-                // supersedes a prior failure display.
-                if !matches!(connection, ConnectionState::Idle) {
-                    self.error = None;
-                }
-
                 self.station.connection = connection;
                 self.station.strength = strength;
                 self.station.frequency = frequency;
+                self.station.last_error = last_error;
             }
             ActiveConnectionsCmd::StationDeviceChanged => {
                 if self.iwd.station.get().is_none() {
                     self.station = StationState::default();
-                    self.error = None;
                 }
 
                 self.reset_station_watchers(&sender);

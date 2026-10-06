@@ -18,6 +18,9 @@ pub(crate) struct PasswordForm {
     visible: bool,
     error_message: Option<String>,
     password_entry: gtk::Entry,
+    /// Guards the form after it appears under the pointer; set once the
+    /// form's widget exists.
+    click_guard: Option<ClickGuard>,
 }
 
 #[relm4::component(pub(crate))]
@@ -79,7 +82,7 @@ impl SimpleComponent for PasswordForm {
                 #[template]
                 GhostIconButton {
                     add_css_class: "network-password-close",
-                    set_icon_name: "ld-x-symbolic",
+                    set_icon_name: "window-close-symbolic",
                     set_valign: gtk::Align::Start,
                     connect_clicked => PasswordFormInput::CancelClicked,
                 },
@@ -98,7 +101,11 @@ impl SimpleComponent for PasswordForm {
             #[name = "error_label"]
             gtk::Label {
                 add_css_class: "network-password-error",
-                set_halign: gtk::Align::Start,
+                // Wraps within the dropdown: a label wider than the open
+                // dropdown would make GTK close it.
+                set_xalign: 0.0,
+                set_wrap: true,
+                set_max_width_chars: 1,
                 #[watch]
                 set_visible: model.error_message.is_some(),
                 #[watch]
@@ -135,21 +142,23 @@ impl SimpleComponent for PasswordForm {
 
     fn init(
         _init: Self::Init,
-        _root: Self::Root,
+        root: Self::Root,
         _sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let password_entry = Self::build_password_entry();
 
-        let model = Self {
+        let mut model = Self {
             ssid: String::new(),
             security_label: String::new(),
             signal_icon: String::new(),
             visible: false,
             error_message: None,
             password_entry,
+            click_guard: None,
         };
 
         let widgets = view_output!();
+        model.click_guard = Some(ClickGuard::new(&root));
         ComponentParts { model, widgets }
     }
 
@@ -160,7 +169,11 @@ impl SimpleComponent for PasswordForm {
                 security_label,
                 signal_icon,
                 error_message,
+                guard,
             } => {
+                if guard && let Some(click_guard) = &self.click_guard {
+                    click_guard.arm();
+                }
                 self.ssid = ssid;
                 self.security_label = security_label;
                 self.signal_icon = signal_icon;
@@ -169,6 +182,10 @@ impl SimpleComponent for PasswordForm {
                 self.visible = true;
                 self.password_entry.grab_focus();
             }
+            // A click already queued when the form appeared counts as aimed
+            // elsewhere, like one the guard stops the pointer from making.
+            PasswordFormInput::ConnectClicked | PasswordFormInput::CancelClicked
+                if self.click_guard.as_ref().is_some_and(ClickGuard::is_armed) => {}
             PasswordFormInput::ConnectClicked => {
                 let password = self.password_entry.text().to_string();
                 let _ = sender.output(PasswordFormOutput::Connect { password });

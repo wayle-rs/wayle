@@ -16,10 +16,8 @@ use wayle_widgets::{WatcherToken, prelude::*};
 
 pub(super) use self::factory::Factory;
 use self::{
-    active_connections::{ActiveConnections, ActiveConnectionsInit, ActiveConnectionsInput},
-    available_networks::{
-        AvailableNetworks, AvailableNetworksInit, AvailableNetworksInput, AvailableNetworksOutput,
-    },
+    active_connections::{ActiveConnections, ActiveConnectionsInit},
+    available_networks::{AvailableNetworks, AvailableNetworksInit, AvailableNetworksInput},
     messages::{IwdDropdownCmd, IwdDropdownInit, IwdDropdownMsg},
 };
 use crate::{i18n::t, shell::bar::dropdowns::scaled_dimension};
@@ -65,7 +63,7 @@ impl Component for IwdDropdown {
                     #[template_child]
                     icon {
                         set_visible: true,
-                        set_icon_name: Some("tb-wifi-symbolic"),
+                        set_icon_name: Some("network-wireless-symbolic"),
                     },
                     #[template_child]
                     label {
@@ -90,16 +88,24 @@ impl Component for IwdDropdown {
                             connect_clicked => IwdDropdownMsg::ScanRequested,
                         },
 
+                        // GtkSwitch's delayed state: the knob (`active`)
+                        // shows what was last asked for, and moves at once;
+                        // the colour (`state`) is the station's `powered`
+                        // (adapter unblocked and device up), as IWD reports
+                        // it. The knob is put back to IWD's state once IWD
+                        // answers (see `update_cmd_with_view`).
+                        #[name = "power_switch"]
                         #[template]
                         Switch {
                             #[watch]
-                            #[block_signal(power_toggle_handler)]
-                            set_active: model.powered,
+                            set_state: model.powered,
                             #[watch]
                             set_visible: model.station_available,
-                            connect_state_set[sender] => move |switch, active| {
-                                sender.input(IwdDropdownMsg::PowerToggled(active));
-                                switch.set_state(active);
+                            // Stops GTK from setting `state` itself.
+                            connect_state_set[iwd] => move |_switch, active| {
+                                if let Some(station) = iwd.station.get() {
+                                    station.set_powered(active);
+                                }
                                 gtk::glib::Propagation::Stop
                             } @power_toggle_handler,
                         },
@@ -125,7 +131,7 @@ impl Component for IwdDropdown {
 
     fn init(
         init: Self::Init,
-        _root: Self::Root,
+        root: Self::Root,
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let active_connections = ActiveConnections::builder()
@@ -140,12 +146,16 @@ impl Component for IwdDropdown {
                 iwd: init.iwd.clone(),
                 config: init.config.clone(),
             })
-            .forward(sender.input_sender(), IwdDropdownMsg::AvailableNetworks);
+            .detach();
 
         let station = init.iwd.station.get();
         let station_available = station.is_some();
-        let powered = station.as_ref().is_some_and(|station| station.powered.get());
-        let scanning = station.as_ref().is_some_and(|station| station.scanning.get());
+        let powered = station
+            .as_ref()
+            .is_some_and(|station| station.powered.get());
+        let scanning = station
+            .as_ref()
+            .is_some_and(|station| station.scanning.get());
 
         let scale = init.config.config().styling.scale.get().value();
 
@@ -165,31 +175,71 @@ impl Component for IwdDropdown {
 
         model.reset_station_watchers(&sender);
 
+        let list_sender = model.available_networks.sender().clone();
+        list_sender.emit(AvailableNetworksInput::VisibilityChanged(root.is_visible()));
+        let shown_sender = sender.input_sender().clone();
+        root.connect_visible_notify(move |popover| {
+            list_sender.emit(AvailableNetworksInput::VisibilityChanged(
+                popover.is_visible(),
+            ));
+            if popover.is_visible() {
+                shown_sender.emit(IwdDropdownMsg::Shown);
+            }
+        });
+
+        let iwd = model.iwd.clone();
         let active_connections_widget = model.active_connections.widget();
         let available_networks_widget = model.available_networks.widget();
         let widgets = view_output!();
+        model.sync_knob(&widgets);
 
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
+    fn update_with_view(
+        &mut self,
+        widgets: &mut Self::Widgets,
+        msg: Self::Input,
+        sender: ComponentSender<Self>,
+        _root: &Self::Root,
+    ) {
         match msg {
-            IwdDropdownMsg::PowerToggled(active) => {
-                self.toggle_powered(active, &sender);
-            }
-            IwdDropdownMsg::ScanRequested => {
-                self.request_scan(&sender);
-            }
-            IwdDropdownMsg::AvailableNetworks(output) => match output {
-                AvailableNetworksOutput::ConnectionFailed { ssid, message } => {
-                    self.active_connections
-                        .emit(ActiveConnectionsInput::ShowError { ssid, message });
-                }
-            },
+            IwdDropdownMsg::ScanRequested => self.request_scan(),
+            // In case a request ended without an answer to resync on (e.g.
+            // IWD failing to bring the device up after an unblock).
+            IwdDropdownMsg::Shown => self.sync_knob(widgets),
+        }
+        self.update_view(widgets, sender);
+    }
+
+    fn update_cmd_with_view(
+        &mut self,
+        widgets: &mut Self::Widgets,
+        msg: IwdDropdownCmd,
+        sender: ComponentSender<Self>,
+        root: &Self::Root,
+    ) {
+        // IWD answered a power request, with a change of state or a recorded
+        // failure (or another client changed it). Not on other updates, such
+        // as a scan ending, which can arrive before the answer.
+        let answered = matches!(
+            msg,
+            IwdDropdownCmd::StationDeviceChanged | IwdDropdownCmd::PowerAnswered(_)
+        );
+
+        self.update_cmd(msg, sender.clone(), root);
+        self.update_view(widgets, sender);
+        if answered {
+            self.sync_knob(widgets);
         }
     }
 
-    fn update_cmd(&mut self, msg: IwdDropdownCmd, sender: ComponentSender<Self>, _root: &Self::Root) {
+    fn update_cmd(
+        &mut self,
+        msg: IwdDropdownCmd,
+        sender: ComponentSender<Self>,
+        _root: &Self::Root,
+    ) {
         match msg {
             IwdDropdownCmd::ScaleChanged(scale) => {
                 self.scaled_width = scaled_dimension(BASE_WIDTH, scale);
@@ -199,25 +249,22 @@ impl Component for IwdDropdown {
             IwdDropdownCmd::StationDeviceChanged => {
                 let station = self.iwd.station.get();
                 self.station_available = station.is_some();
-                self.powered = station.as_ref().is_some_and(|station| station.powered.get());
-                self.scanning = station.as_ref().is_some_and(|station| station.scanning.get());
-
-                self.available_networks
-                    .emit(AvailableNetworksInput::StationAvailabilityChanged(
-                        self.station_available,
-                    ));
+                self.powered = station
+                    .as_ref()
+                    .is_some_and(|station| station.powered.get());
+                self.scanning = station
+                    .as_ref()
+                    .is_some_and(|station| station.scanning.get());
 
                 self.reset_station_watchers(&sender);
             }
 
-            IwdDropdownCmd::StationFlags { powered, scanning } => {
+            IwdDropdownCmd::ScanningChanged(scanning) => {
                 self.scanning = scanning;
+            }
 
-                if powered != self.powered {
-                    self.powered = powered;
-                    self.available_networks
-                        .emit(AvailableNetworksInput::PoweredChanged(powered));
-                }
+            IwdDropdownCmd::PowerAnswered(powered) => {
+                self.powered = powered;
             }
         }
     }

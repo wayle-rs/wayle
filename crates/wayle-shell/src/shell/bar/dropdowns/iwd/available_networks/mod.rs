@@ -8,16 +8,11 @@ use std::sync::Arc;
 use gtk::prelude::*;
 use relm4::{factory::FactoryVecDeque, gtk, prelude::*};
 use wayle_config::ConfigService;
-use wayle_iwd::IwdService;
+use wayle_iwd::{IwdService, SignalStrength};
 use wayle_widgets::{WatcherToken, prelude::*};
 
-pub(crate) use self::messages::{
-    AvailableNetworksInit, AvailableNetworksInput, AvailableNetworksOutput,
-};
-use self::{
-    messages::{AvailableNetworksCmd, SelectedNetwork},
-    network_item::NetworkItem,
-};
+pub(crate) use self::messages::{AvailableNetworksInit, AvailableNetworksInput};
+use self::{messages::AvailableNetworksCmd, network_item::NetworkItem};
 use crate::{
     i18n::t,
     shell::bar::dropdowns::iwd::password_form::{PasswordForm, PasswordFormInput},
@@ -26,26 +21,22 @@ use crate::{
 pub(crate) struct AvailableNetworks {
     iwd: Arc<IwdService>,
     config: Arc<ConfigService>,
-    wifi_available: bool,
-    powered: bool,
     network_list: FactoryVecDeque<NetworkItem>,
-    state: ListState,
-    selection: Option<SelectedNetwork>,
+    /// Whether the popover is open; rows are only click-guarded while it is.
+    visible: bool,
+    /// Whether the active-connection card above the list was shown at the
+    /// last rebuild: its appearing or going away moves every row.
+    card_shown: bool,
+    /// Shows IWD's passphrase request, while there is one.
     password_form: Controller<PasswordForm>,
     networks_watcher: WatcherToken,
-}
-
-#[derive(PartialEq)]
-pub(super) enum ListState {
-    Normal,
-    PasswordEntry,
 }
 
 #[relm4::component(pub(crate))]
 impl Component for AvailableNetworks {
     type Init = AvailableNetworksInit;
     type Input = AvailableNetworksInput;
-    type Output = AvailableNetworksOutput;
+    type Output = ();
     type CommandOutput = AvailableNetworksCmd;
 
     view! {
@@ -58,16 +49,19 @@ impl Component for AvailableNetworks {
                 add_css_class: "section-label",
                 set_halign: gtk::Align::Start,
                 set_label: &t!("dropdown-iwd-available"),
+                // Not over the "no networks" empty state.
                 #[watch]
-                set_visible: model.wifi_available && model.powered,
+                set_visible: model.wifi_available()
+                    && model.powered()
+                    && (!model.network_list.is_empty() || model.prompting()),
             },
 
             #[local_ref]
             password_form_widget -> gtk::Box {
                 #[watch]
-                set_visible: model.wifi_available
-                    && model.powered
-                    && model.state == ListState::PasswordEntry,
+                set_visible: model.wifi_available()
+                    && model.powered()
+                    && model.prompting(),
             },
 
             #[name = "network_list_card"]
@@ -77,7 +71,7 @@ impl Component for AvailableNetworks {
                 set_overflow: gtk::Overflow::Hidden,
                 set_vexpand: true,
                 #[watch]
-                set_visible: model.wifi_available && model.powered && !model.network_list.is_empty(),
+                set_visible: model.wifi_available() && model.powered() && !model.network_list.is_empty(),
 
                 #[name = "network_list_scroll"]
                 gtk::ScrolledWindow {
@@ -98,13 +92,17 @@ impl Component for AvailableNetworks {
                 // the prompted network is shown in the form above, not because
                 // no networks exist.
                 #[watch]
-                set_visible: model.wifi_available
-                    && model.powered
+                set_visible: model.wifi_available()
+                    && model.powered()
                     && model.network_list.is_empty()
-                    && model.state != ListState::PasswordEntry,
+                    && !model.prompting(),
 
                 #[template]
                 EmptyState {
+                    // As wide as the dropdown, so the description wraps
+                    // within it: a label wider than the open dropdown would
+                    // make GTK close it.
+                    set_halign: gtk::Align::Fill,
                     #[template_child]
                     icon {
                         add_css_class: "sm",
@@ -117,6 +115,9 @@ impl Component for AvailableNetworks {
                     },
                     #[template_child]
                     description {
+                        set_wrap: true,
+                        set_justify: gtk::Justification::Center,
+                        set_max_width_chars: 1,
                         set_label: &t!("dropdown-iwd-no-networks-description"),
                     },
                 },
@@ -125,23 +126,44 @@ impl Component for AvailableNetworks {
             #[name = "empty_powered_off"]
             gtk::Box {
                 #[watch]
-                set_visible: model.wifi_available && !model.powered,
+                set_visible: model.wifi_available() && !model.powered(),
 
                 #[template]
                 EmptyState {
+                    // As wide as the dropdown, so the description wraps
+                    // within it: a label wider than the open dropdown would
+                    // make GTK close it.
+                    set_halign: gtk::Align::Fill,
                     #[template_child]
                     icon {
                         add_css_class: "sm",
                         #[watch]
-                        set_icon_name: Some(model.disabled_icon().as_str()),
+                        set_icon_name: Some(if model.hardware_blocked() {
+                            "tb-wifi-off-symbolic".to_owned()
+                        } else {
+                            model.disabled_icon()
+                        }.as_str()),
                     },
                     #[template_child]
                     title {
-                        set_label: &t!("dropdown-iwd-disabled-title"),
+                        #[watch]
+                        set_label: &if model.hardware_blocked() {
+                            t!("dropdown-iwd-blocked-title")
+                        } else {
+                            t!("dropdown-iwd-disabled-title")
+                        },
                     },
                     #[template_child]
                     description {
-                        set_label: &t!("dropdown-iwd-disabled-description"),
+                        set_wrap: true,
+                        set_justify: gtk::Justification::Center,
+                        set_max_width_chars: 1,
+                        #[watch]
+                        set_label: &if model.hardware_blocked() {
+                            t!("dropdown-iwd-blocked-description")
+                        } else {
+                            t!("dropdown-iwd-disabled-description")
+                        },
                     },
                 },
             },
@@ -149,13 +171,18 @@ impl Component for AvailableNetworks {
             #[name = "empty_no_adapter"]
             gtk::Box {
                 #[watch]
-                set_visible: !model.wifi_available,
+                set_visible: !model.wifi_available(),
 
                 #[template]
                 EmptyState {
+                    // As wide as the dropdown, so the description wraps
+                    // within it: a label wider than the open dropdown would
+                    // make GTK close it.
+                    set_halign: gtk::Align::Fill,
                     #[template_child]
                     icon {
                         add_css_class: "sm",
+                        #[watch]
                         set_icon_name: Some("tb-wifi-off-symbolic"),
                     },
                     #[template_child]
@@ -164,6 +191,9 @@ impl Component for AvailableNetworks {
                     },
                     #[template_child]
                     description {
+                        set_wrap: true,
+                        set_justify: gtk::Justification::Center,
+                        set_max_width_chars: 1,
                         set_label: &t!("dropdown-iwd-no-adapter-description"),
                     },
                 },
@@ -187,28 +217,20 @@ impl Component for AvailableNetworks {
             .launch(gtk::Box::default())
             .forward(sender.input_sender(), methods::forward_network_item_output);
 
-        let station = init.iwd.station.get();
-        let wifi_available = station.is_some();
-        let powered = station.as_ref().is_some_and(|station| station.powered.get());
-
         let mut model = Self {
             iwd: init.iwd.clone(),
             config: init.config.clone(),
-            wifi_available,
-            powered,
             network_list,
-            state: ListState::Normal,
-            selection: None,
+            visible: false,
+            card_shown: false,
             password_form,
             networks_watcher: WatcherToken::new(),
         };
 
-        if let Some(station) = station {
-            let token = model.networks_watcher.reset();
-            watchers::spawn(&sender, &station, token);
-        }
-
+        // Its first value starts the station's watchers.
+        watchers::spawn_station_watcher(&sender, &init.iwd);
         watchers::spawn_config_watchers(&sender, &init.config);
+        watchers::spawn_passphrase_watcher(&sender, &init.iwd);
 
         model.rebuild_network_list();
 
@@ -220,22 +242,15 @@ impl Component for AvailableNetworks {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
         match msg {
-            AvailableNetworksInput::StationAvailabilityChanged(available) => {
-                self.handle_wifi_availability(available, &sender);
+            AvailableNetworksInput::VisibilityChanged(visible) => {
+                self.handle_visibility_changed(visible);
             }
-            AvailableNetworksInput::PoweredChanged(enabled) => {
-                self.handle_wifi_enabled(enabled);
-            }
-            AvailableNetworksInput::NetworkSelected(index) => {
-                self.select_network(index, &sender);
-            }
-            AvailableNetworksInput::ForgetNetwork(path) => {
-                self.forget_network(path, &sender);
-            }
+            AvailableNetworksInput::NetworkSelected(network) => Self::select_network(&network),
+            AvailableNetworksInput::ForgetNetwork(network) => Self::forget_network(&network),
             AvailableNetworksInput::PasswordForm(form_output) => {
-                self.handle_password_form(form_output, &sender);
+                self.handle_password_form(form_output);
             }
         }
     }
@@ -247,49 +262,16 @@ impl Component for AvailableNetworks {
         _root: &Self::Root,
     ) {
         match msg {
-            AvailableNetworksCmd::NetworksChanged => {
-                // Dismiss first so the rebuild reflects the post-dismiss state
-                // (e.g. another client connected to the prompted network).
-                self.dismiss_stale_password_entry();
-                self.rebuild_network_list();
-            }
-            AvailableNetworksCmd::ConnectionSettled => {
-                self.state = ListState::Normal;
-                self.clear_selection();
-                self.rebuild_network_list();
-            }
-            AvailableNetworksCmd::ConnectionAuthFailed => {
-                // Only re-prompt if the attempt is still current. If a backend
-                // event (WiFi toggled off, device removed) tore down the
-                // selection while the connect was in flight, don't orphan the
-                // list in PasswordEntry with no form — return to normal browsing.
-                self.state = if self.selection.is_some() {
-                    ListState::PasswordEntry
-                } else {
-                    ListState::Normal
-                };
-                self.rebuild_network_list();
-
-                if let Some(selection) = &self.selection {
-                    self.password_form.emit(PasswordFormInput::Show {
-                        ssid: selection.ssid.clone(),
-                        security_label: selection.security_label.clone(),
-                        signal_icon: self.signal_icon(selection.strength),
-                        error_message: Some(t!("dropdown-iwd-error-wrong-password")),
-                    });
-                }
-            }
-            AvailableNetworksCmd::ConnectionFailed(reason) => {
-                self.handle_connection_failure(reason, &sender);
-            }
+            AvailableNetworksCmd::StationChanged => self.handle_station_changed(&sender),
+            AvailableNetworksCmd::NetworksChanged => self.rebuild_network_list(),
+            AvailableNetworksCmd::PassphraseRequestChanged => self.show_passphrase_request(),
             AvailableNetworksCmd::ConfigChanged => {
                 // Rebuild the list so each item re-reads the configured icons, and
                 // refresh the open password form's icon (without resetting entry).
                 self.rebuild_network_list();
 
-                if self.state == ListState::PasswordEntry
-                    && let Some(strength) = self.selection.as_ref().map(|selection| selection.strength)
-                {
+                if let Some(request) = self.iwd.passphrase_request.get() {
+                    let strength = SignalStrength::from_dbm(request.network.signal.get());
                     self.password_form
                         .emit(PasswordFormInput::SetSignalIcon(self.signal_icon(strength)));
                 }

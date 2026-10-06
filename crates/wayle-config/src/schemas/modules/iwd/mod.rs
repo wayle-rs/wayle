@@ -20,7 +20,7 @@ pub struct IwdConfig {
 
     /// WiFi icon when connecting.
     #[serde(rename = "wifi-acquiring-icon")]
-    #[default(String::from("cm-wireless-acquiring-symbolic"))]
+    #[default(String::from("network-wireless-acquiring-symbolic"))]
     pub wifi_acquiring_icon: ConfigProperty<String>,
 
     /// WiFi icon when disconnected.
@@ -30,7 +30,7 @@ pub struct IwdConfig {
 
     /// WiFi icon when connected but signal strength unavailable.
     #[serde(rename = "wifi-connected-icon")]
-    #[default(String::from("cm-wireless-connected-symbolic"))]
+    #[default(String::from("network-wireless-symbolic"))]
     pub wifi_connected_icon: ConfigProperty<String>,
 
     /// WiFi signal strength icons from weakest to strongest.
@@ -39,11 +39,11 @@ pub struct IwdConfig {
     /// for the weakest signal and the last entry for the strongest.
     #[serde(rename = "wifi-signal-icons")]
     #[default(vec![
-        String::from("cm-wireless-signal-none-symbolic"),
-        String::from("cm-wireless-signal-weak-symbolic"),
-        String::from("cm-wireless-signal-ok-symbolic"),
-        String::from("cm-wireless-signal-good-symbolic"),
-        String::from("cm-wireless-signal-excellent-symbolic"),
+        String::from("network-wireless-signal-none-symbolic"),
+        String::from("network-wireless-signal-weak-symbolic"),
+        String::from("network-wireless-signal-ok-symbolic"),
+        String::from("network-wireless-signal-good-symbolic"),
+        String::from("network-wireless-signal-excellent-symbolic"),
     ])]
     pub wifi_signal_icons: ConfigProperty<Vec<String>>,
 

@@ -1,8 +1,9 @@
 use gtk::{pango, prelude::*};
 use relm4::{gtk, prelude::*};
-use wayle_iwd::{SecurityType, SignalStrength};
+use std::sync::Arc;
+
+use wayle_iwd::{Network, SecurityType};
 use wayle_widgets::prelude::*;
-use zbus::zvariant::OwnedObjectPath;
 
 use super::methods;
 use crate::{
@@ -19,53 +20,38 @@ pub(super) struct NetworkItemInit {
 }
 
 pub(super) struct NetworkItem {
-    ssid: String,
+    /// What the row shows, and the network it acts on.
+    snapshot: NetworkSnapshot,
+    /// Configured signal-strength icon, resolved by the parent.
     icon: String,
     security_label: String,
-    object_path: OwnedObjectPath,
-
-    /// Raw security/strength carried so the parent can build a [`SelectedNetwork`]
-    /// straight from the chosen row — the row is the single source of per-network
-    /// state (there is no parallel snapshot cache).
-    ///
-    /// [`SelectedNetwork`]: super::messages::SelectedNetwork
-    security: SecurityType,
-    strength: SignalStrength,
-    known: bool,
     hovered: bool,
+    /// This row's position in the list, kept current by the factory; lets the
+    /// parent locate a row in O(1) while reordering.
+    pub(super) index: DynamicIndex,
+    /// Guards the row after it moves under the pointer; set once the row's
+    /// widget exists.
+    click_guard: Option<ClickGuard>,
 }
 
 impl NetworkItem {
-    /// SSID, the stable identity used to reconcile the list in place.
-    pub(super) fn ssid(&self) -> &str {
-        &self.ssid
+    /// The key reconciling the list in place: the network's object path,
+    /// which names one network of the station (unlike its SSID, shared by
+    /// networks of different security).
+    pub(super) fn key(&self) -> &str {
+        snapshot_key(&self.snapshot)
     }
 
-    /// D-Bus object path of this network (the connect/forget target).
-    pub(super) fn object_path(&self) -> &OwnedObjectPath {
-        &self.object_path
-    }
-
-    /// Security classification, used to derive the connect flow.
-    pub(super) fn security(&self) -> SecurityType {
-        self.security
-    }
-
-    /// Signal bucket, carried through to the password form's icon.
-    pub(super) fn strength(&self) -> SignalStrength {
-        self.strength
-    }
-
-    /// Whether credentials for this network are already saved.
-    pub(super) fn known(&self) -> bool {
-        self.known
+    /// Whether clicking the row connects: see [`helpers::joinable`].
+    fn joinable(&self) -> bool {
+        helpers::joinable(self.snapshot.security, self.snapshot.known)
     }
 
     /// Whether this row offers the Forget action: credentials are saved, and they
     /// are credentials the shell could put back afterwards (see
     /// [`helpers::forgettable`]).
     fn offers_forget(&self) -> bool {
-        offers_forget(self.known, self.security)
+        offers_forget(self.snapshot.known, self.snapshot.security)
     }
 
     /// Whether this row can be updated in place for `snapshot`, or must be
@@ -77,18 +63,41 @@ impl NetworkItem {
         self.offers_forget() == offers_forget(snapshot.known, snapshot.security)
     }
 
-    /// Adopt `snapshot` in place, avoiding a destroy/recreate of the row widget.
-    /// Every field is copied — a reused row must not keep state from the network
-    /// it previously showed, since `known` and `security` also drive the connect
-    /// flow (see [`super::methods`]'s `select_network`), not just the display.
+    /// Whether the row would show something different for `snapshot`.
+    pub(super) fn differs_from(&self, snapshot: &NetworkSnapshot, icon: &str) -> bool {
+        self.snapshot != *snapshot || self.icon != icon
+    }
+
+    /// Adopts `snapshot` in place, avoiding a destroy/recreate of the row
+    /// widget.
     pub(super) fn refresh(&mut self, snapshot: &NetworkSnapshot, icon: String) {
         self.icon = icon;
-        self.security = snapshot.security;
-        self.strength = snapshot.strength;
-        self.known = snapshot.known;
         self.security_label = security_label(snapshot);
-        self.object_path = snapshot.object_path.clone();
+        self.snapshot = snapshot.clone();
     }
+
+    /// Makes the row unclickable for a moment because it moved under the
+    /// pointer.
+    pub(super) fn arm_click_guard(&self) {
+        if let Some(guard) = &self.click_guard {
+            guard.arm();
+        }
+    }
+
+    pub(super) fn disarm_click_guard(&self) {
+        if let Some(guard) = &self.click_guard {
+            guard.disarm();
+        }
+    }
+
+    fn guarded(&self) -> bool {
+        self.click_guard.as_ref().is_some_and(ClickGuard::is_armed)
+    }
+}
+
+/// The key reconciling the list in place (see [`NetworkItem::key`]).
+pub(super) fn snapshot_key(snapshot: &NetworkSnapshot) -> &str {
+    snapshot.network.object_path().as_str()
 }
 
 /// Whether a network with these properties offers the Forget action — see
@@ -98,11 +107,15 @@ fn offers_forget(known: bool, security: SecurityType) -> bool {
     known && helpers::forgettable(security)
 }
 
-/// Security label for a network, marking saved secured networks distinctly.
+/// Security label for a network, marking saved networks (IWD keeps a profile
+/// for open networks too, once joined) and ones that can't be joined from
+/// here distinctly.
 fn security_label(snapshot: &NetworkSnapshot) -> String {
     let base = methods::translate_security_type(snapshot.security);
-    if snapshot.known && helpers::requires_password(snapshot.security) {
+    if snapshot.known {
         t!("dropdown-iwd-security-saved", security = base)
+    } else if !helpers::joinable(snapshot.security, snapshot.known) {
+        t!("dropdown-iwd-security-unconfigured", security = base)
     } else {
         base
     }
@@ -110,14 +123,16 @@ fn security_label(snapshot: &NetworkSnapshot) -> String {
 
 #[derive(Debug)]
 pub(super) enum NetworkItemInput {
+    /// The row itself was clicked.
+    Clicked,
     Hovered(bool),
     ForgetClicked,
 }
 
 #[derive(Debug)]
 pub(super) enum NetworkItemOutput {
-    Selected(DynamicIndex),
-    ForgetRequested(OwnedObjectPath),
+    Selected(Arc<Network>),
+    ForgetRequested(Arc<Network>),
 }
 
 #[relm4::factory(pub(super))]
@@ -131,14 +146,38 @@ impl FactoryComponent for NetworkItem {
     view! {
         gtk::Box {
             add_css_class: "network-item",
-            set_cursor_from_name: Some("pointer"),
+            // An 802.1X network IWD has no provisioning for can't be joined
+            // from here (see `helpers::joinable`).
+            #[watch]
+            set_sensitive: self.joinable(),
+            #[watch]
+            set_cursor_from_name: self.joinable().then_some("pointer"),
 
-            #[name = "signal_icon"]
-            gtk::Image {
-                add_css_class: "network-item-signal",
-                #[watch]
-                set_icon_name: Some(self.icon.as_str()),
+            // Signal strength, badged with a lock unless the network is open.
+            #[name = "signal_overlay"]
+            gtk::Overlay {
+                add_css_class: "network-item-signal-overlay",
                 set_valign: gtk::Align::Center,
+
+                #[name = "signal_icon"]
+                gtk::Image {
+                    add_css_class: "network-item-signal",
+                    // The overlay is wider than the icon, so the badge can
+                    // hang off its right edge.
+                    set_halign: gtk::Align::Start,
+                    #[watch]
+                    set_icon_name: Some(self.icon.as_str()),
+                },
+
+                add_overlay = &gtk::Image {
+                    add_css_class: "network-item-lock-badge",
+                    set_icon_name: Some("tbf-lock-symbolic"),
+                    set_halign: gtk::Align::End,
+                    set_valign: gtk::Align::End,
+                    set_can_target: false,
+                    #[watch]
+                    set_visible: helpers::secured(self.snapshot.security),
+                },
             },
 
             #[name = "info_column"]
@@ -153,7 +192,7 @@ impl FactoryComponent for NetworkItem {
                     set_halign: gtk::Align::Start,
                     set_ellipsize: pango::EllipsizeMode::End,
                     #[watch]
-                    set_label: &self.ssid,
+                    set_label: &self.snapshot.ssid,
                 },
 
                 #[name = "security_label"]
@@ -173,21 +212,9 @@ impl FactoryComponent for NetworkItem {
                 set_valign: gtk::Align::Center,
                 set_hexpand: false,
                 #[watch]
-                set_visible: helpers::requires_password(self.security) || self.offers_forget(),
+                set_visible: self.offers_forget(),
 
-                add_named[Some("lock")] = &gtk::Box {
-                    set_halign: gtk::Align::End,
-                    set_valign: gtk::Align::Center,
-
-                    #[name = "lock_icon"]
-                    gtk::Image {
-                        add_css_class: "network-item-lock",
-                        set_icon_name: Some("ld-lock-symbolic"),
-                        set_valign: gtk::Align::Center,
-                        #[watch]
-                        set_visible: helpers::requires_password(self.security),
-                    },
-                },
+                add_named[Some("idle")] = &gtk::Box {},
 
                 add_named[Some("actions")] = &gtk::Box {
                     add_css_class: "network-item-actions",
@@ -209,52 +236,71 @@ impl FactoryComponent for NetworkItem {
                     if self.hovered && self.offers_forget() {
                         "actions"
                     } else {
-                        "lock"
+                        "idle"
                     },
             },
         }
     }
 
-    fn init_model(init: Self::Init, _index: &Self::Index, _sender: FactorySender<Self>) -> Self {
+    fn init_model(init: Self::Init, index: &Self::Index, _sender: FactorySender<Self>) -> Self {
         let NetworkItemInit { snapshot, icon } = init;
         Self {
             icon,
-            security: snapshot.security,
-            strength: snapshot.strength,
-            known: snapshot.known,
             hovered: false,
             security_label: security_label(&snapshot),
-            ssid: snapshot.ssid,
-            object_path: snapshot.object_path,
+            snapshot,
+            index: index.clone(),
+            click_guard: None,
         }
     }
 
     fn update(&mut self, msg: NetworkItemInput, sender: FactorySender<Self>) {
+        // A guarded row can't be targeted by the pointer; this also covers a
+        // click that was already queued when the row moved.
+        let clicked = matches!(
+            msg,
+            NetworkItemInput::Clicked | NetworkItemInput::ForgetClicked
+        );
+        if clicked && self.guarded() {
+            return;
+        }
+
         match msg {
+            NetworkItemInput::Clicked => {
+                if self.joinable() {
+                    let _ = sender.output(NetworkItemOutput::Selected(Arc::clone(
+                        &self.snapshot.network,
+                    )));
+                }
+            }
+
             NetworkItemInput::Hovered(hovered) => {
                 self.hovered = hovered;
             }
 
             NetworkItemInput::ForgetClicked => {
-                let _ = sender.output(NetworkItemOutput::ForgetRequested(self.object_path.clone()));
+                let _ = sender.output(NetworkItemOutput::ForgetRequested(Arc::clone(
+                    &self.snapshot.network,
+                )));
             }
         }
     }
 
     fn init_widgets(
         &mut self,
-        index: &Self::Index,
+        _index: &Self::Index,
         root: Self::Root,
         _returned_widget: &<Self::ParentWidget as relm4::factory::FactoryView>::ReturnedWidget,
         sender: FactorySender<Self>,
     ) -> Self::Widgets {
+        self.click_guard = Some(ClickGuard::new(&root));
+
         let click = gtk::GestureClick::new();
-        let idx = index.clone();
-        let click_sender = sender.output_sender().clone();
+        let click_sender = sender.input_sender().clone();
 
         click.connect_released(move |gesture, _, _, _| {
             gesture.set_state(gtk::EventSequenceState::Claimed);
-            click_sender.emit(NetworkItemOutput::Selected(idx.clone()));
+            click_sender.emit(NetworkItemInput::Clicked);
         });
 
         root.add_controller(click);

@@ -5,9 +5,8 @@ use crate::{i18n::t, shell::bar::dropdowns::connected_signal_icon};
 
 pub(crate) struct StationContext {
     pub(crate) powered: bool,
-    /// Attempt-aware connection state — the same source the dropdown card uses,
-    /// so the bar shows "connecting" throughout a switch instead of flickering to
-    /// "disconnected" while IWD's raw `State` passes through `disconnected`.
+    /// The station's connection, as IWD reports it (the same source the
+    /// dropdown card uses).
     pub(crate) connection: ConnectionState,
     pub(crate) strength: Option<SignalStrength>,
 }
@@ -22,26 +21,27 @@ pub(crate) fn wifi_icon(config: &IwdConfig, ctx: &StationContext) -> String {
         ConnectionState::Idle => config.wifi_offline_icon.get().clone(),
         // Roaming is still connected — show the signal-strength icon, treating
         // unknown strength as the weakest ("none") bucket.
-        ConnectionState::Connected { .. } | ConnectionState::Roaming { .. } => connected_signal_icon(
-            ctx.strength,
-            &config.wifi_signal_icons.get(),
-            &config.wifi_connected_icon.get(),
-        ),
+        ConnectionState::Connected { .. } | ConnectionState::Roaming { .. } => {
+            connected_signal_icon(
+                ctx.strength,
+                &config.wifi_signal_icons.get(),
+                &config.wifi_connected_icon.get(),
+            )
+        }
     }
 }
 
 pub(crate) fn wifi_label(ctx: &StationContext) -> String {
     match &ctx.connection {
-        ConnectionState::Connected { ssid } | ConnectionState::Roaming { ssid }
-            if !ssid.is_empty() =>
-        {
-            ssid.clone()
-        }
-        ConnectionState::Connected { .. } | ConnectionState::Roaming { .. } => {
-            t!("bar-iwd-wifi-fallback")
+        ConnectionState::Connected { network } | ConnectionState::Roaming { network } => {
+            let ssid = network.ssid.get();
+            if ssid.is_empty() {
+                t!("bar-iwd-wifi-fallback")
+            } else {
+                ssid
+            }
         }
         ConnectionState::Connecting { .. } => t!("bar-iwd-connecting"),
         ConnectionState::Idle => t!("bar-iwd-disconnected"),
     }
 }
-

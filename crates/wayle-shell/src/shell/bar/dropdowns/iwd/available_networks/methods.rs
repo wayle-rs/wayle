@@ -1,18 +1,15 @@
-use relm4::prelude::*;
-use tracing::warn;
-use wayle_iwd::{ConnectionState, Error, SecurityType, SignalStrength};
-use zbus::zvariant::OwnedObjectPath;
+use std::{collections::HashMap, sync::Arc};
+
+use relm4::{factory::FactoryVecDequeGuard, prelude::*};
+use wayle_iwd::{ConnectionState, Network, SecurityType, SignalStrength, Station, StationAction};
 
 use crate::{
     i18n::t,
     shell::bar::dropdowns::iwd::{
         available_networks::{
-            AvailableNetworks, ListState,
-            messages::{
-                AvailableNetworksCmd, AvailableNetworksInput, AvailableNetworksOutput,
-                SelectedNetwork,
-            },
-            network_item::{NetworkItemInit, NetworkItemOutput},
+            AvailableNetworks,
+            messages::AvailableNetworksInput,
+            network_item::{NetworkItem, NetworkItemInit, NetworkItemOutput, snapshot_key},
             watchers,
         },
         helpers,
@@ -21,144 +18,34 @@ use crate::{
 };
 
 impl AvailableNetworks {
-    pub(super) fn clear_selection(&mut self) {
-        self.selection = None;
+    fn station(&self) -> Option<Arc<Station>> {
+        self.iwd.station.get()
     }
 
-    pub(super) fn handle_connection_failure(
-        &mut self,
-        message: String,
-        sender: &ComponentSender<Self>,
-    ) {
-        // Capture the failed target before clearing the selection.
-        let ssid = self.selection.as_ref().map(|selection| selection.ssid.clone());
-
-        self.state = ListState::Normal;
-        self.clear_selection();
-        self.rebuild_network_list();
-
-        // Only surface a card error if the attempt left us disconnected. If IWD
-        // stayed on (or returned to) a connection, the service already
-        // reconciled `connection` to it, so the failure is moot. Read live —
-        // `connect()` sets this synchronously before returning the error.
-        let still_idle = match self.iwd.station.get() {
-            Some(station) => matches!(station.connection.get(), ConnectionState::Idle),
-            None => true,
-        };
-
-        if let Some(ssid) = ssid
-            && still_idle
-        {
-            let _ = sender.output(AvailableNetworksOutput::ConnectionFailed { ssid, message });
-        }
+    /// Whether IWD has a WiFi device.
+    pub(super) fn wifi_available(&self) -> bool {
+        self.station().is_some()
     }
 
-    pub(super) fn connect_to_selected(
-        &mut self,
-        password: Option<String>,
-        sender: &ComponentSender<Self>,
-    ) {
-        let Some(selection) = &self.selection else {
-            return;
-        };
-
-        let Some(station) = self.iwd.station.get() else {
-            return;
-        };
-
-        let network_path = selection.network_path.clone();
-        let secured = selection.secured;
-
-        // The service publishes `connection = Connecting{ssid}` as the first step
-        // of `connect()`, which drives the card and the list exclusion — no
-        // optimistic shell state needed here.
-        sender.command(move |out, _shutdown| async move {
-            // If the user supplied a passphrase (e.g. retrying after an auth
-            // failure), clear any saved credentials first. IWD reuses a known
-            // network's stored passphrase and never asks our agent, so a
-            // re-entered password would otherwise be silently ignored. This is a
-            // no-op when the network has no saved credentials.
-            if password.is_some()
-                && let Some(network) = station
-                    .networks
-                    .get()
-                    .into_iter()
-                    .find(|network| network.object_path() == &network_path)
-            {
-                let _ = helpers::forget_network(&network).await;
-            }
-
-            match station.connect(network_path, password).await {
-                // Connected, or aborted (cancelled/superseded) — both just reset
-                // the list with no error on the card.
-                Ok(()) | Err(Error::ConnectionAborted) => {
-                    let _ = out.send(AvailableNetworksCmd::ConnectionSettled);
-                }
-                Err(Error::ConnectionFailed) if secured => {
-                    // IWD reports a rejected passphrase only as the generic
-                    // `Failed` error, so re-prompt for the password. Every other
-                    // error (Timeout, NoAgent, NotConfigured, ...) falls through
-                    // to the generic message below and never re-prompts.
-                    let _ = out.send(AvailableNetworksCmd::ConnectionAuthFailed);
-                }
-                Err(err) => {
-                    warn!(error = %err, "iwd connection failed");
-                    let _ = out.send(AvailableNetworksCmd::ConnectionFailed(t!(
-                        "dropdown-iwd-error-generic"
-                    )));
-                }
-            }
-        });
+    /// Whether WiFi is on.
+    pub(super) fn powered(&self) -> bool {
+        self.station().is_some_and(|station| station.powered.get())
     }
 
-    pub(super) fn handle_wifi_availability(
-        &mut self,
-        available: bool,
-        sender: &ComponentSender<Self>,
-    ) {
-        self.wifi_available = available;
-
-        let station = self.iwd.station.get();
-        self.powered = station.as_ref().is_some_and(|station| station.powered.get());
-
-        let token = self.networks_watcher.reset();
-        if let Some(station) = station {
-            watchers::spawn(sender, &station, token);
-        }
-
-        if !available {
-            self.state = ListState::Normal;
-            self.clear_selection();
-            self.password_form.emit(PasswordFormInput::Hide);
-        }
-
-        self.rebuild_network_list();
-    }
-
-    pub(super) fn handle_wifi_enabled(&mut self, enabled: bool) {
-        self.powered = enabled;
-
-        if enabled {
-            self.rebuild_network_list();
-            return;
-        }
-
-        self.network_list.guard().clear();
-        self.state = ListState::Normal;
-        self.clear_selection();
-        self.password_form.emit(PasswordFormInput::Hide);
-    }
-
-    /// The SSID currently shown as the Active Connection, and therefore excluded
-    /// from the available list: the in-progress connecting target or the
-    /// connected network. Sourced from the service's reconciled `connection`,
-    /// which already favours the in-progress target over the network IWD still
-    /// reports as connected during a transition.
-    fn active_ssid(&self) -> Option<String> {
+    /// Whether IWD refused to turn WiFi on because a hardware switch blocks the
+    /// radio. IWD reports a hardware block only when asked to lift it.
+    pub(super) fn hardware_blocked(&self) -> bool {
         self.iwd
             .station
             .get()
-            .and_then(|station| station.connection.get().ssid().map(str::to_string))
+            .and_then(|station| station.last_error.get())
+            .is_some_and(|error| error.hardware_blocked())
+    }
+
+    /// Whether IWD is waiting for a passphrase, which the password form asks
+    /// for.
+    pub(super) fn prompting(&self) -> bool {
+        self.iwd.passphrase_request.get().is_some()
     }
 
     /// The configured "WiFi disabled" icon, shown in the powered-off and
@@ -178,21 +65,22 @@ impl AvailableNetworks {
     }
 
     pub(super) fn rebuild_network_list(&mut self) {
-        let active_ssid = self.active_ssid();
-        let mut snapshots = match self.iwd.station.get() {
+        let snapshots = match self.station().filter(|station| station.powered.get()) {
             Some(station) => {
-                helpers::unique_networks(&station.networks.get(), active_ssid.as_deref())
+                // Shown elsewhere: the network of the connection (in the
+                // active-connection card), and the one IWD asks a passphrase
+                // for (in the password form).
+                let connection = station.connection.get();
+                let request = self.iwd.passphrase_request.get();
+                let excluded: Vec<&Arc<Network>> = connection
+                    .network()
+                    .into_iter()
+                    .chain(request.as_ref().map(|request| &request.network))
+                    .collect();
+                helpers::list_snapshots(&station.networks.get(), &excluded)
             }
             None => vec![],
         };
-
-        // While entering a password, hide the targeted network too — it is shown
-        // in the password form, not the available list.
-        if self.state == ListState::PasswordEntry
-            && let Some(selection) = &self.selection
-        {
-            snapshots.retain(|network| network.ssid != selection.ssid);
-        }
 
         // Resolve the configured signal icons once for this rebuild.
         let (signal_icons, connected_icon) = {
@@ -203,187 +91,195 @@ impl AvailableNetworks {
             helpers::signal_strength_icon(snapshot.strength, &signal_icons, &connected_icon)
         };
 
-        // Reconcile the factory in place rather than clearing and rebuilding it.
-        // A wholesale destroy/recreate of every row while the dropdown popover is
-        // open disturbs the popover and closes it; reusing rows also preserves
-        // scroll position. Only genuinely added/removed/moved rows change.
-        let mut guard = self.network_list.guard();
+        let previous_slots = self.visible.then(|| self.row_slots());
+        reconcile_list(&mut self.network_list.guard(), &snapshots, icon_for);
 
-        // 1. Drop rows whose SSID is gone (reverse, to keep indices stable).
-        let mut idx = guard.len();
-        while idx > 0 {
-            idx -= 1;
-            let gone = guard
-                .get(idx)
-                .is_some_and(|item| !snapshots.iter().any(|s| s.ssid == item.ssid()));
-            if gone {
-                guard.remove(idx);
-            }
-        }
-
-        // 2. Walk the target order, reusing rows where possible.
-        for (i, snapshot) in snapshots.iter().enumerate() {
-            let at_i = guard
-                .get(i)
-                .map(|item| (item.ssid() == snapshot.ssid, item.reusable_for(snapshot)));
-            match at_i {
-                // Same network already here: update in place.
-                Some((true, true)) => {
-                    if let Some(item) = guard.get_mut(i) {
-                        item.refresh(snapshot, icon_for(snapshot));
-                    }
-                }
-                // Same SSID but needs a fresh widget (e.g. it became known).
-                Some((true, false)) => {
-                    guard.remove(i);
-                    guard.insert(i, NetworkItemInit { snapshot: snapshot.clone(), icon: icon_for(snapshot) });
-                }
-                // Wrong row here: pull the matching one up if it exists further
-                // down, otherwise insert a new row at this position.
-                Some((false, _)) => {
-                    if let Some(j) =
-                        (i + 1..guard.len()).find(|&j| guard.get(j).is_some_and(|item| item.ssid() == snapshot.ssid))
-                    {
-                        guard.remove(j);
-                    }
-                    guard.insert(i, NetworkItemInit { snapshot: snapshot.clone(), icon: icon_for(snapshot) });
-                }
-                // Past the end: append.
-                None => {
-                    guard.push_back(NetworkItemInit { snapshot: snapshot.clone(), icon: icon_for(snapshot) });
-                }
-            }
-        }
-
-        // 3. Drop any trailing rows (safety net; step 1 + 2 normally leave none).
-        while guard.len() > snapshots.len() {
-            guard.remove(guard.len() - 1);
-        }
-
-        drop(guard);
-    }
-
-    /// Dismiss the password prompt when it is no longer relevant: the target
-    /// network dropped out of the scan, or it became the active connection
-    /// (connecting or connected) — e.g. another client such as `iwctl` connected
-    /// to it under us. The password form is hidden by its `state ==
-    /// PasswordEntry` visibility binding.
-    pub(super) fn dismiss_stale_password_entry(&mut self) {
-        if self.state != ListState::PasswordEntry {
-            return;
-        }
-
-        let Some(ssid) = self.selection.as_ref().map(|selection| selection.ssid.clone()) else {
-            return;
-        };
-
-        let station = self.iwd.station.get();
-
-        // Gone from the scan results — checked against the raw networks, since
-        // the displayed list intentionally filters the prompted SSID out.
-        let still_visible = station.as_ref().is_some_and(|station| {
-            station
-                .networks
-                .get()
-                .iter()
-                .any(|network| network.ssid.get() == ssid)
-        });
-
-        // Became the active connection via any client.
-        let now_active = station
-            .as_ref()
-            .and_then(|station| station.connection.get().ssid().map(str::to_string))
-            .is_some_and(|active| active == ssid);
-
-        if !still_visible || now_active {
-            self.state = ListState::Normal;
-            self.clear_selection();
-        }
-    }
-
-    pub(super) fn select_network(&mut self, index: usize, sender: &ComponentSender<Self>) {
-        // The chosen factory row is the single source of per-network state; copy
-        // out what we need before mutating self (ending the factory borrow).
-        let Some(item) = self.network_list.get(index) else {
-            return;
-        };
-        let network_path = item.object_path().clone();
-        let ssid = item.ssid().to_string();
-        let security = item.security();
-        let strength = item.strength();
-        let known = item.known();
-
-        let security_label = translate_security_type(security);
-        let signal_icon = self.signal_icon(strength);
-        let secured = helpers::requires_password(security);
-
-        self.selection = Some(SelectedNetwork {
-            network_path,
-            ssid: ssid.clone(),
-            security_label: security_label.clone(),
-            strength,
-            secured,
-        });
-
-        if secured && !known {
-            self.state = ListState::PasswordEntry;
-
-            self.password_form.emit(PasswordFormInput::Show {
-                ssid,
-                security_label,
-                signal_icon,
-                error_message: None,
-            });
-
-            // Drop the targeted network from the list now that it is in the form.
-            self.rebuild_network_list();
-        } else {
-            self.connect_to_selected(None, sender);
-        }
-    }
-
-    pub(super) fn handle_password_form(
-        &mut self,
-        form_output: PasswordFormOutput,
-        sender: &ComponentSender<Self>,
-    ) {
-        match form_output {
-            PasswordFormOutput::Connect { password } => {
-                // Close the form but keep the selection so an auth failure can
-                // re-prompt; the service owns the Connecting state from here.
-                self.state = ListState::Normal;
-                self.connect_to_selected(Some(password), sender);
-            }
-            PasswordFormOutput::Cancel => {
-                self.state = ListState::Normal;
-                self.clear_selection();
-                self.rebuild_network_list();
+        // The active-connection card above the list appearing or going away
+        // moves every row, whatever its slot.
+        let card_shown = self.card_shown();
+        let card_changed = card_shown != self.card_shown;
+        self.card_shown = card_shown;
+        if let Some(previous_slots) = previous_slots {
+            if card_changed {
+                self.guard_all_rows();
+            } else {
+                self.guard_shifted_rows(&previous_slots);
             }
         }
     }
 
-    pub(super) fn forget_network(
-        &self,
-        network_path: OwnedObjectPath,
-        sender: &ComponentSender<Self>,
-    ) {
-        let iwd = self.iwd.clone();
-
-        sender.oneshot_command(async move {
-            if let Some(station) = iwd.station.get() {
-                let target = station
-                    .networks
+    /// Whether the active-connection card above the list is shown: a
+    /// connection is under way or up, or a failed connect is reported.
+    fn card_shown(&self) -> bool {
+        self.iwd.station.get().is_some_and(|station| {
+            station.connection.get() != ConnectionState::Idle
+                || station
+                    .last_error
                     .get()
-                    .into_iter()
-                    .find(|network| network.object_path() == &network_path);
+                    .is_some_and(|error| matches!(error.action, StationAction::Connect { .. }))
+        })
+    }
 
-                if let Some(network) = target {
-                    let _ = helpers::forget_network(&network).await;
-                }
+    /// Every row, top to bottom.
+    fn rows(&self) -> impl Iterator<Item = &NetworkItem> {
+        (0..self.network_list.len()).filter_map(|idx| self.network_list.get(idx))
+    }
+
+    /// Each row's slot on screen, by key.
+    fn row_slots(&self) -> HashMap<String, usize> {
+        self.rows()
+            .enumerate()
+            .map(|(slot, row)| (row.key().to_owned(), slot))
+            .collect()
+    }
+
+    /// Guards every row now in a different slot than before, so a click aimed
+    /// at whatever used to be there doesn't land on it. A new row is guarded
+    /// only if its slot was already occupied (a row whose buttons changed is
+    /// new, as it is rebuilt).
+    fn guard_shifted_rows(&self, previous_slots: &HashMap<String, usize>) {
+        for (slot, row) in self.rows().enumerate() {
+            let shifted = match previous_slots.get(row.key()) {
+                Some(&previous_slot) => previous_slot != slot,
+                None => slot < previous_slots.len(),
+            };
+            if shifted {
+                row.arm_click_guard();
             }
+        }
+    }
 
-            AvailableNetworksCmd::NetworksChanged
+    /// Guards every row, for layout changes above the list (the password form
+    /// or the active-connection card appearing or going away).
+    fn guard_all_rows(&self) {
+        if self.visible {
+            for row in self.rows() {
+                row.arm_click_guard();
+            }
+        }
+    }
+
+    pub(super) fn handle_visibility_changed(&mut self, visible: bool) {
+        self.visible = visible;
+        if !visible {
+            for row in self.rows() {
+                row.disarm_click_guard();
+            }
+        }
+    }
+
+    /// IWD's device appeared, went away or was replaced: follow the new one.
+    pub(super) fn handle_station_changed(&mut self, sender: &ComponentSender<Self>) {
+        let token = self.networks_watcher.reset();
+        if let Some(station) = self.station() {
+            watchers::spawn(sender, &station, token);
+        }
+        self.rebuild_network_list();
+    }
+
+    /// Shows IWD's passphrase request in the form, or hides the form once IWD
+    /// stops asking.
+    pub(super) fn show_passphrase_request(&mut self) {
+        match self.iwd.passphrase_request.get() {
+            Some(request) => {
+                let network = &request.network;
+                self.password_form.emit(PasswordFormInput::Show {
+                    ssid: network.ssid.get(),
+                    security_label: translate_security_type(network.security.get()),
+                    signal_icon: self.signal_icon(SignalStrength::from_dbm(network.signal.get())),
+                    error_message: request
+                        .rejected
+                        .then(|| t!("dropdown-iwd-error-connect-failed")),
+                    // It may appear under the pointer.
+                    guard: self.visible,
+                });
+            }
+            None => self.password_form.emit(PasswordFormInput::Hide),
+        }
+        self.rebuild_network_list();
+        // The form appearing or going away moves every row below it.
+        self.guard_all_rows();
+    }
+
+    /// Connects to the chosen row's network. For a secured network without
+    /// saved credentials, IWD then asks for the passphrase, and the form opens.
+    pub(super) fn select_network(network: &Arc<Network>) {
+        network.connect();
+    }
+
+    pub(super) fn handle_password_form(&self, form_output: PasswordFormOutput) {
+        match form_output {
+            PasswordFormOutput::Connect { password } => self.iwd.provide_passphrase(password),
+            PasswordFormOutput::Cancel => self.iwd.cancel_passphrase_request(),
+        }
+    }
+
+    pub(super) fn forget_network(network: &Arc<Network>) {
+        helpers::forget_network(network);
+    }
+}
+
+/// Reconciles the factory in place within a single guard, keyed by network
+/// (see [`NetworkItem::key`]).
+///
+/// Rows whose network is no longer listed are dropped, and so are rows that
+/// must be rebuilt (their Forget availability changed, see
+/// [`NetworkItem::reusable_for`]). Then, walking the new order from the top,
+/// each network's row is moved to its place (or inserted, if new); the rows
+/// above it are already in place. Rows keep their widget (so the popover and
+/// its scroll position are undisturbed), and only a row that would show
+/// something different is marked changed, so an unchanged list renders
+/// nothing. (relm4 works out the widget moves from the final order itself.)
+fn reconcile_list(
+    guard: &mut FactoryVecDequeGuard<'_, NetworkItem>,
+    snapshots: &[helpers::NetworkSnapshot],
+    icon_for: impl Fn(&helpers::NetworkSnapshot) -> String,
+) {
+    let listed: HashMap<&str, &helpers::NetworkSnapshot> = snapshots
+        .iter()
+        .map(|snapshot| (snapshot_key(snapshot), snapshot))
+        .collect();
+
+    for idx in (0..guard.len()).rev() {
+        let keep = guard.get(idx).is_some_and(|item| {
+            listed
+                .get(item.key())
+                .is_some_and(|snapshot| item.reusable_for(snapshot))
         });
+        if !keep {
+            guard.remove(idx);
+        }
+    }
+
+    let rows: HashMap<String, DynamicIndex> = (0..guard.len())
+        .filter_map(|idx| guard.get(idx))
+        .map(|item| (item.key().to_owned(), item.index.clone()))
+        .collect();
+
+    for (position, snapshot) in snapshots.iter().enumerate() {
+        let icon = icon_for(snapshot);
+        let Some(row) = rows.get(snapshot_key(snapshot)) else {
+            guard.insert(
+                position,
+                NetworkItemInit {
+                    snapshot: snapshot.clone(),
+                    icon,
+                },
+            );
+            continue;
+        };
+
+        let current = row.current_index();
+        if current != position {
+            guard.move_to(current, position);
+        }
+
+        let needs_update = guard
+            .get(position)
+            .is_some_and(|item| item.differs_from(snapshot, &icon));
+        if needs_update && let Some(item) = guard.get_mut(position) {
+            item.refresh(snapshot, icon);
+        }
     }
 }
 
@@ -400,10 +296,9 @@ pub(super) fn forward_network_item_output(
     item_output: NetworkItemOutput,
 ) -> AvailableNetworksInput {
     match item_output {
-        NetworkItemOutput::Selected(index) => {
-            AvailableNetworksInput::NetworkSelected(index.current_index())
+        NetworkItemOutput::Selected(network) => AvailableNetworksInput::NetworkSelected(network),
+        NetworkItemOutput::ForgetRequested(network) => {
+            AvailableNetworksInput::ForgetNetwork(network)
         }
-
-        NetworkItemOutput::ForgetRequested(path) => AvailableNetworksInput::ForgetNetwork(path),
     }
 }

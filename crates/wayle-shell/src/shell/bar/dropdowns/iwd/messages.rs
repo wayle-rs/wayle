@@ -3,8 +3,6 @@ use std::sync::Arc;
 use wayle_config::ConfigService;
 use wayle_iwd::IwdService;
 
-use super::available_networks::AvailableNetworksOutput;
-
 pub(crate) struct IwdDropdownInit {
     pub iwd: Arc<IwdService>,
     pub config: Arc<ConfigService>,
@@ -12,17 +10,20 @@ pub(crate) struct IwdDropdownInit {
 
 #[derive(Debug)]
 pub(crate) enum IwdDropdownMsg {
-    PowerToggled(bool),
     /// Trigger a scan (from the Scan button).
     ScanRequested,
-    AvailableNetworks(AvailableNetworksOutput),
+    /// The dropdown opened.
+    Shown,
 }
 
 #[derive(Debug)]
-#[allow(clippy::enum_variant_names)]
 pub(crate) enum IwdDropdownCmd {
     ScaleChanged(f32),
     StationDeviceChanged,
-    /// Combined `Device.Powered` + `Station.Scanning` update.
-    StationFlags { powered: bool, scanning: bool },
+    /// IWD answered a power request, or WiFi turned on or off for another
+    /// reason: the station's `powered` (adapter unblocked and device up)
+    /// changed, or a power request failed (which may change nothing else).
+    PowerAnswered(bool),
+    /// The station started or stopped scanning.
+    ScanningChanged(bool),
 }

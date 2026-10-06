@@ -20,6 +20,8 @@ dropdown-iwd-no-adapter-title = Aucun adaptateur Wi-Fi
 dropdown-iwd-no-adapter-description = Aucun adaptateur sans fil n'a été détecté sur ce système
 dropdown-iwd-disabled-title = Le Wi-Fi est désactivé
 dropdown-iwd-disabled-description = Activez le Wi-Fi avec l'interrupteur ci-dessus pour voir les réseaux disponibles
+dropdown-iwd-blocked-title = Le Wi-Fi est éteint
+dropdown-iwd-blocked-description = Le Wi-Fi n'a pas pu être activé
 
 ## Types de sécurité
 
@@ -28,8 +30,9 @@ dropdown-iwd-security-wep = WEP
 dropdown-iwd-security-psk = PSK
 dropdown-iwd-security-enterprise = EAP
 dropdown-iwd-security-saved = { $security } · Enregistré
+dropdown-iwd-security-unconfigured = { $security } · Non configuré
 
 ## Erreurs de connexion
 
-dropdown-iwd-error-wrong-password = Échec de l'authentification
+dropdown-iwd-error-connect-failed = Connexion impossible. Vérifiez le mot de passe.
 dropdown-iwd-error-generic = Échec de la connexion

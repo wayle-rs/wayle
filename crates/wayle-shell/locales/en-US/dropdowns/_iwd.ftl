@@ -20,6 +20,8 @@ dropdown-iwd-no-adapter-title = No WiFi Adapter
 dropdown-iwd-no-adapter-description = No wireless adapter was detected on this system
 dropdown-iwd-disabled-title = WiFi is disabled
 dropdown-iwd-disabled-description = Turn WiFi on with the switch above to see available networks
+dropdown-iwd-blocked-title = WiFi is turned off
+dropdown-iwd-blocked-description = WiFi couldn't be turned on
 
 ## Security Types
 
@@ -28,8 +30,9 @@ dropdown-iwd-security-wep = WEP
 dropdown-iwd-security-psk = PSK
 dropdown-iwd-security-enterprise = EAP
 dropdown-iwd-security-saved = { $security } · Saved
+dropdown-iwd-security-unconfigured = { $security } · Not set up
 
 ## Connection Errors
 
-dropdown-iwd-error-wrong-password = Authentication failed
+dropdown-iwd-error-connect-failed = Couldn't connect. Check the password.
 dropdown-iwd-error-generic = Connection failed

@@ -22,16 +22,27 @@ pub(super) fn spawn_station_watchers(
     let connection = station.connection.clone();
     let strength = station.strength.clone();
     let frequency = station.frequency.clone();
+    let last_error = station.last_error.clone();
+    // Notifies when a listed network (e.g. the connected one) is saved or
+    // forgotten, which decides whether the card offers Forget.
+    let networks = station.networks.clone();
 
     watch_cancellable!(
         sender,
         token,
-        [connection.watch(), strength.watch(), frequency.watch()],
+        [
+            connection.watch(),
+            strength.watch(),
+            frequency.watch(),
+            last_error.watch(),
+            networks.watch()
+        ],
         |out| {
             let _ = out.send(ActiveConnectionsCmd::StateChanged {
                 connection: connection.get(),
                 strength: strength.get(),
                 frequency: frequency.get(),
+                last_error: last_error.get(),
             });
         }
     );

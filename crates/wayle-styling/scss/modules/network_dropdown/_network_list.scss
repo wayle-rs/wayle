@@ -1,3 +1,5 @@
+$lock-badge-overhang: calc(var(--space-xs) * 0.75);
+
 .network-list-scroll {
     background: transparent;
 }
@@ -20,16 +22,39 @@
     }
 
     image.network-item-signal {
-        -gtk-icon-size: var(--icon-lg);
         margin-right: var(--space-md);
         margin-left: var(--space-sm);
+    }
+
+    // Wider than the signal icon by $lock-badge-overhang, which the badge hangs
+    // into; the right margin gives it back so the text doesn't move.
+    .network-item-signal-overlay {
+        min-width: calc(var(--icon-lg) + #{$lock-badge-overhang});
+        margin-right: calc(var(--space-md) - #{$lock-badge-overhang});
+        margin-left: var(--space-sm);
+    }
+
+    image.network-item-signal {
+        -gtk-icon-size: var(--icon-lg);
         color: var(--fg-muted);
+    }
+
+    // The overlay carries the margins, so the badge lands on the icon itself.
+    .network-item-signal-overlay image.network-item-signal {
+        margin: 0;
     }
 
     image.network-item-lock {
         -gtk-icon-size: var(--icon-md);
         color: var(--fg-subtle);
         margin-right: var(--space-sm);
+    }
+
+    // Badge on the signal icon's bottom-right corner, which the signal wedge
+    // leaves empty. A solid glyph, so its weight matches the signal arcs.
+    image.network-item-lock-badge {
+        -gtk-icon-size: var(--icon-sm);
+        color: var(--fg-muted);
     }
 }
 

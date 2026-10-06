@@ -32,9 +32,9 @@ impl QuickActionsSection {
         let target = !self.wifi_active;
 
         // NetworkManager takes precedence; IWD is the fallback — the same ordering
-        // as `wifi_enabled_property`. The toggle is hand-rolled rather than sharing
-        // that helper because the two backends expose different setters
-        // (`set_enabled` vs `set_powered`) with different error types.
+        // as `wifi_enabled_property`. The two differ: NetworkManager's setter is
+        // awaited and reports its result, while IWD's only queues the request,
+        // whose outcome shows in the station's `powered`.
         if let Some(network) = self.network.clone() {
             sender.oneshot_command(async move {
                 if let Some(wifi) = network.wifi.get()
@@ -44,15 +44,10 @@ impl QuickActionsSection {
                 }
                 QuickActionsCmd::WifiChanged(target)
             });
-        } else if let Some(iwd) = self.iwd.clone() {
-            sender.oneshot_command(async move {
-                if let Some(station) = iwd.station.get()
-                    && let Err(err) = station.set_powered(target).await
-                {
-                    warn!(error = %err, "wifi toggle failed");
-                }
-                QuickActionsCmd::WifiChanged(target)
-            });
+        } else if let Some(station) = self.iwd.as_ref().and_then(|iwd| iwd.station.get()) {
+            // The tile follows the station's `powered` (see
+            // `wifi_enabled_property`), which IWD reports.
+            station.set_powered(target);
         }
     }
 

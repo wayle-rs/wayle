@@ -5,6 +5,9 @@ pub(crate) enum PasswordFormInput {
         security_label: String,
         signal_icon: String,
         error_message: Option<String>,
+        /// Whether to guard the form's buttons against a click aimed at
+        /// whatever was under the pointer before it appeared.
+        guard: bool,
     },
     ConnectClicked,
     CancelClicked,
