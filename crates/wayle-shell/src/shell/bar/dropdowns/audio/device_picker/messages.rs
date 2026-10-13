@@ -1,6 +1,7 @@
 use std::sync::Arc;
 
 use wayle_audio::AudioService;
+use wayle_config::ConfigService;
 
 use crate::shell::bar::dropdowns::audio::VolumeSectionKind;
 
@@ -14,6 +15,7 @@ pub(crate) struct DeviceInfo {
 
 pub(crate) struct DevicePickerInit {
     pub audio: Arc<AudioService>,
+    pub config: Arc<ConfigService>,
     pub kind: VolumeSectionKind,
     pub title: String,
 }

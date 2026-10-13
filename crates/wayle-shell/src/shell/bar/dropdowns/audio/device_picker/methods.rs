@@ -5,7 +5,9 @@ use tracing::warn;
 use wayle_audio::{
     AudioService,
     core::device::{input::InputDevice, output::OutputDevice},
+    types::device::DevicePort,
 };
+use wayle_config::ConfigService;
 
 use super::{
     DevicePicker,
@@ -55,17 +57,52 @@ impl DevicePicker {
 
     pub(super) fn build_device_list(
         audio: &AudioService,
+        config: &ConfigService,
         kind: VolumeSectionKind,
     ) -> Vec<DeviceInfo> {
         match kind {
-            VolumeSectionKind::Output => {
-                build_output_device_list(&audio.output_devices.get(), &audio.default_output.get())
-            }
+            VolumeSectionKind::Output => build_output_device_list(
+                &visible_output_devices(
+                    &audio.output_devices.get(),
+                    hide_unavailable_outputs(config),
+                ),
+                &audio.default_output.get(),
+            ),
             VolumeSectionKind::Input => {
                 build_input_device_list(&audio.input_devices.get(), &audio.default_input.get())
             }
         }
     }
+}
+
+pub(super) fn hide_unavailable_outputs(config: &ConfigService) -> bool {
+    config
+        .config()
+        .modules
+        .volume
+        .dropdown_hide_unavailable_outputs
+        .get()
+}
+
+/// Outputs shown in the picker, in row order.
+///
+/// Every output is shown unless `hide_unavailable` is set. In that case,
+/// outputs whose ports are all unavailable (e.g. HDMI/DisplayPort with nothing
+/// connected) are hidden, while portless outputs such as virtual sinks stay
+/// visible.
+pub(super) fn visible_output_devices(
+    devices: &[Arc<OutputDevice>],
+    hide_unavailable: bool,
+) -> Vec<Arc<OutputDevice>> {
+    devices
+        .iter()
+        .filter(|device| is_visible(&device.ports.get(), hide_unavailable))
+        .cloned()
+        .collect()
+}
+
+fn is_visible(ports: &[DevicePort], hide_unavailable: bool) -> bool {
+    !hide_unavailable || ports.is_empty() || ports.iter().any(|port| port.available)
 }
 
 pub(super) fn build_output_device_list(
@@ -115,4 +152,40 @@ pub(super) fn build_input_device_list(
                 .is_some_and(|default_device| default_device.key == device.key),
         })
         .collect()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn port(available: bool) -> DevicePort {
+        DevicePort {
+            name: String::new(),
+            description: String::new(),
+            priority: 0,
+            available,
+        }
+    }
+
+    #[test]
+    fn everything_is_visible_when_hiding_is_disabled() {
+        assert!(is_visible(&[], false));
+        assert!(is_visible(&[port(false), port(false)], false));
+        assert!(is_visible(&[port(false), port(true)], false));
+    }
+
+    #[test]
+    fn portless_outputs_stay_visible_when_hiding() {
+        assert!(is_visible(&[], true));
+    }
+
+    #[test]
+    fn outputs_with_only_unavailable_ports_are_hidden() {
+        assert!(!is_visible(&[port(false), port(false)], true));
+    }
+
+    #[test]
+    fn outputs_with_any_available_port_stay_visible_when_hiding() {
+        assert!(is_visible(&[port(false), port(true)], true));
+    }
 }
