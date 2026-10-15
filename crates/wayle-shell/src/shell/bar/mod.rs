@@ -167,7 +167,7 @@ impl Component for Bar {
             layout: BarLayout {
                 monitor: String::new(),
                 extends: None,
-                show: true,
+                show: visible_on_startup,
                 left: Vec::new(),
                 center: Vec::new(),
                 right: Vec::new(),

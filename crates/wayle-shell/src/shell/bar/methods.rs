@@ -116,7 +116,7 @@ impl Bar {
             return;
         }
 
-        if self.layout.show != new_layout.show {
+        if root.is_visible() != new_layout.show {
             root.set_visible(new_layout.show);
         }
 

@@ -42,22 +42,33 @@ pub(crate) fn spawn(
 
                 Some(_) = layout_stream.next() => {
                     let layout = build_layout(&config, &ipc, &connector).unwrap_or_else(|| {
-                        warn!(connector = %connector, "no layout matched, sending empty");
-                        BarLayout::default()
+                        warn!(connector = %connector, "no layout matched, hiding bar");
+                        hidden_layout()
                     });
                     let _ = out.send(BarCmd::LayoutLoaded(layout));
                 }
 
                 Some(_) = hidden_stream.next() => {
                     let layout = build_layout(&config, &ipc, &connector).unwrap_or_else(|| {
-                        warn!(connector = %connector, "no layout matched, sending empty");
-                        BarLayout::default()
+                        warn!(connector = %connector, "no layout matched, hiding bar");
+                        hidden_layout()
                     });
                     let _ = out.send(BarCmd::LayoutLoaded(layout));
                 }
             }
         }
     });
+}
+
+/// Layout used when no entry matches: no modules, bar hidden.
+fn hidden_layout() -> BarLayout {
+    BarLayout {
+        show: false,
+        left: Vec::new(),
+        center: Vec::new(),
+        right: Vec::new(),
+        ..BarLayout::default()
+    }
 }
 
 fn build_layout(config: &Config, ipc: &ShellIpcState, connector: &str) -> Option<BarLayout> {
