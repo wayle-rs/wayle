@@ -137,11 +137,20 @@ right = ["volume", "systray"]  # Override just this section
 [[bar.layout]]
 monitor = "HDMI-2"
 show = false
+
+# Target a monitor by make/model or serial; survives connector renames
+[[bar.layout]]
+monitor = "desc:Dell Inc. DELL U2720Q"
+extends = "*"
+
+[[bar.layout]]
+monitor = "sn:ABC123"
+show = false
 ```
 
 | Field | Description |
 |---|---|
-| `monitor` | Monitor connector name (e.g., `"DP-1"`) or `"*"` for all monitors. |
+| `monitor` | Target monitor: `"DP-1"`, `"desc:<prefix>"`, `"sn:<serial>"`, or `"*"` for all monitors. |
 | `extends` | Inherit from another layout by its monitor value (e.g., `"*"`). |
 | `show` | Whether the bar is visible on this monitor. |
 | `left` | Modules in the left section. |
@@ -455,7 +464,7 @@ Per-monitor wallpaper configuration.
 
 | Field | Description |
 |---|---|
-| `name` | Monitor name (e.g., "HDMI-1", "DP-1"). |
+| `name` | Target monitor: `"DP-1"`, `"desc:<prefix>"`, `"sn:<serial>"`, or `"*"`. |
 | `fit-mode` | Image scaling mode for this monitor. |
 | `wallpaper` | Wallpaper image path for this monitor. |
 
@@ -481,7 +490,7 @@ Useful when keybinds use per-monitor numbering (Shift+1 for ws 4, etc.). |
 
 ## OsdMonitor {#osd-monitor}
 
-"primary" or a monitor connector name (e.g. "DP-1")
+"primary", a connector name (e.g. "DP-1"), "desc:<prefix>" or "sn:<serial>"
 
 String.
 
@@ -536,7 +545,7 @@ Behavior when the close button is clicked on a popup card.
 
 ## PopupMonitor {#popup-monitor}
 
-"primary" or a monitor connector name (e.g. "DP-1")
+"primary", a connector name (e.g. "DP-1"), "desc:<prefix>" or "sn:<serial>"
 
 String.
 
