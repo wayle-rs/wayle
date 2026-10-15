@@ -12,6 +12,7 @@ use wayle_media::MediaService;
 use wayle_network::NetworkService;
 use wayle_niri::NiriService;
 use wayle_notification::NotificationService;
+use wayle_output::OutputService;
 use wayle_power_profiles::PowerProfilesService;
 use wayle_sysinfo::SysinfoService;
 use wayle_systray::SystemTrayService;
@@ -38,6 +39,7 @@ pub(crate) struct ShellServices {
     pub niri: Option<Arc<NiriService>>,
     pub network: Option<Arc<NetworkService>>,
     pub notification: Option<Arc<NotificationService>>,
+    pub outputs: Option<Arc<OutputService>>,
     pub power_profiles: DeferredService<PowerProfilesService>,
     pub sysinfo: Arc<SysinfoService>,
     pub systray: Option<Arc<SystemTrayService>>,

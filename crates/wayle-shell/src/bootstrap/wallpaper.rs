@@ -1,5 +1,4 @@
 use std::{
-    collections::HashMap,
     path::PathBuf,
     sync::Arc,
     time::{Duration, Instant},
@@ -7,6 +6,7 @@ use std::{
 
 use tracing::{debug, warn};
 use wayle_config::schemas::wallpaper::MonitorWallpaperConfig;
+use wayle_output::OutputService;
 use wayle_wallpaper::{
     ColorExtractorConfig, MonitorState, TransitionConfig, TransitionDuration, TransitionFps,
     WallpaperService,
@@ -18,6 +18,7 @@ pub(super) async fn build_wallpaper_service(
     cfg: &wayle_config::schemas::wallpaper::WallpaperConfig,
     theming_monitor: Option<String>,
     color_extractor: ColorExtractorConfig,
+    outputs: Option<Arc<OutputService>>,
 ) -> Result<Arc<WallpaperService>, wayle_wallpaper::Error> {
     let transition = TransitionConfig {
         transition_type: wallpaper_map::transition_type(cfg.transition_type.get()),
@@ -27,7 +28,12 @@ pub(super) async fn build_wallpaper_service(
     };
 
     let t = Instant::now();
-    let service = WallpaperService::builder()
+    let mut builder = WallpaperService::builder();
+    if let Some(outputs) = outputs {
+        builder = builder.outputs(outputs);
+    }
+
+    let service = builder
         .transition(transition)
         .theming_monitor(theming_monitor)
         .color_extractor(color_extractor)
@@ -88,8 +94,10 @@ fn apply_monitor_config(
     let mut monitors = service.monitors.get();
     let mut has_wallpapers = false;
 
-    for monitor_cfg in &monitor_configs {
-        has_wallpapers |= apply_single_monitor(&mut monitors, monitor_cfg);
+    for (connector, state) in &mut monitors {
+        if let Some(monitor_cfg) = wallpaper_map::config_for(service, &monitor_configs, connector) {
+            has_wallpapers |= apply_single_monitor(state, connector, monitor_cfg);
+        }
     }
 
     service.monitors.set(monitors);
@@ -98,17 +106,10 @@ fn apply_monitor_config(
 }
 
 fn apply_single_monitor(
-    monitors: &mut HashMap<String, MonitorState>,
+    state: &mut MonitorState,
+    connector: &str,
     monitor_cfg: &MonitorWallpaperConfig,
 ) -> bool {
-    if monitor_cfg.name.is_empty() {
-        return false;
-    }
-
-    let Some(state) = monitors.get_mut(&monitor_cfg.name) else {
-        return false;
-    };
-
     state.fit_mode = wallpaper_map::fit_mode(monitor_cfg.fit_mode);
 
     if monitor_cfg.wallpaper.is_empty() {
@@ -118,7 +119,7 @@ fn apply_single_monitor(
     let path = PathBuf::from(&monitor_cfg.wallpaper);
     if !path.exists() {
         warn!(
-            monitor = %monitor_cfg.name,
+            monitor = %connector,
             path = %monitor_cfg.wallpaper,
             "wallpaper path not found"
         );

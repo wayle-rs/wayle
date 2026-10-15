@@ -27,4 +27,8 @@ pub trait ShellIpc {
 
     #[zbus(property)]
     fn connectors(&self) -> Result<Vec<String>>;
+
+    /// `(connector, description, serial)` per active monitor.
+    #[zbus(property)]
+    fn monitors(&self) -> Result<Vec<(String, String, String)>>;
 }

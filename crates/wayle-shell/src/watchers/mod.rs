@@ -1,6 +1,7 @@
 mod color_extractor;
 mod css;
 mod location;
+mod monitor_selectors;
 mod monitors;
 mod notification;
 mod osd;
@@ -20,7 +21,8 @@ use crate::shell::{Shell, ShellCmd, ShellServices};
 pub(crate) fn init(sender: &ComponentSender<Shell>, services: &ShellServices) {
     css::spawn(sender, services);
     location::spawn(sender, services);
-    monitors::spawn(sender);
+    monitors::spawn(sender, services.outputs.as_ref());
+    monitor_selectors::spawn(services);
     osd::spawn(sender, services);
     color_extractor::spawn(services);
     notification::spawn(services);

@@ -25,7 +25,8 @@ pub struct OsdConfig {
     #[default(2500u32)]
     pub duration: ConfigProperty<u32>,
 
-    /// Target monitor: "primary" or a connector name like "DP-1".
+    /// Target monitor: "primary", a connector name like "DP-1",
+    /// "desc:<prefix>" or "sn:<serial>".
     #[default(OsdMonitor::default())]
     pub monitor: ConfigProperty<OsdMonitor>,
 

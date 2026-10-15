@@ -21,17 +21,20 @@ impl ShellIpcDaemon {
 
 #[interface(name = "com.wayle.Shell1")]
 impl ShellIpcDaemon {
-    /// Hides the bar on a monitor. Empty string hides all bars.
+    /// Hides the bar on monitors matching a connector name or `desc:`/`sn:`
+    /// selector. Empty string hides all bars.
     pub async fn bar_hide(&self, monitor: &str) {
         self.bar.hide(monitor);
     }
 
-    /// Shows the bar on a monitor. Empty string shows all bars.
+    /// Shows the bar on monitors matching a connector name or selector.
+    /// Empty string shows all bars.
     pub async fn bar_show(&self, monitor: &str) {
         self.bar.show(monitor);
     }
 
-    /// Toggles bar visibility on a monitor. Empty string toggles all.
+    /// Toggles bar visibility on monitors matching a connector name or
+    /// selector. Empty string toggles all.
     pub async fn bar_toggle(&self, monitor: &str) -> fdo::Result<()> {
         self.bar.toggle(monitor)
     }
@@ -48,5 +51,24 @@ impl ShellIpcDaemon {
     #[zbus(property)]
     pub async fn connectors(&self) -> Vec<String> {
         self.state.connectors.get()
+    }
+
+    /// Active monitors as `(connector, description, serial)`. Serial is
+    /// empty when the monitor has none.
+    #[zbus(property)]
+    pub async fn monitors(&self) -> Vec<(String, String, String)> {
+        self.state
+            .monitors
+            .get()
+            .into_iter()
+            .map(|monitor| {
+                let description = monitor.description();
+                (
+                    monitor.connector,
+                    description,
+                    monitor.serial.unwrap_or_default(),
+                )
+            })
+            .collect()
     }
 }

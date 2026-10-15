@@ -2,7 +2,7 @@
 
 use std::collections::HashSet;
 
-use wayle_core::Property;
+use wayle_core::{Property, monitor::MonitorInfo};
 
 /// Shared reactive state exposed to shell components via `ShellIpcService`.
 ///
@@ -15,6 +15,10 @@ pub struct ShellIpcState {
     /// All active monitor connectors. Updated by the shell when bars are
     /// created or destroyed.
     pub connectors: Property<Vec<String>>,
+
+    /// Identity of each monitor with a bar, used to resolve `desc:` and
+    /// `sn:` selectors.
+    pub monitors: Property<Vec<MonitorInfo>>,
 }
 
 impl ShellIpcState {
@@ -22,6 +26,7 @@ impl ShellIpcState {
         Self {
             hidden_bars: Property::new(HashSet::new()),
             connectors: Property::new(Vec::new()),
+            monitors: Property::new(Vec::new()),
         }
     }
 }

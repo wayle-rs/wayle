@@ -16,9 +16,13 @@ use wayle_config::{ConfigProperty, schemas::bar::BarLayout};
 use wayle_widgets::{prelude::BarSettings, styling::InlineStyling};
 
 use self::dropdowns::DropdownRegistry;
-use crate::shell::{helpers::layer_shell::apply_layer, services::ShellServices};
+use crate::shell::{
+    helpers::{layer_shell::apply_layer, monitors::monitor_info},
+    services::ShellServices,
+};
 
 pub(crate) struct Bar {
+    monitor: gdk::Monitor,
     settings: BarSettings,
     services: ShellServices,
     dropdowns: Rc<DropdownRegistry>,
@@ -102,8 +106,9 @@ impl Component for Bar {
 
         let visible_on_startup = {
             let connector = monitor_name.as_deref().unwrap_or("unknown");
+            let identity = monitor_info(connector, &init.monitor, init.services.outputs.as_deref());
             let layouts = config.bar.layout.get();
-            let config_visible = watchers::layout::find_layout(&layouts, connector)
+            let config_visible = watchers::layout::find_layout(&layouts, &identity)
                 .is_some_and(|layout| layout.show);
 
             config_visible && !ipc_state.hidden_bars.get().contains(connector)
@@ -152,7 +157,7 @@ impl Component for Bar {
         root.style_context()
             .add_provider(&css_provider, gtk::STYLE_PROVIDER_PRIORITY_USER);
 
-        watchers::layout::spawn(&sender, &init.monitor, &init.services.config, &ipc_state);
+        watchers::layout::spawn(&sender, &init.monitor, &init.services, &ipc_state);
         watchers::dropdowns::spawn(&sender, &init.services.config);
         watchers::exclusive::spawn(&sender, &init.services.config);
         watchers::layer::spawn(&sender, &init.services.config);
@@ -161,6 +166,7 @@ impl Component for Bar {
         dropdowns.warm_all();
 
         let mut model = Self {
+            monitor: init.monitor.clone(),
             settings,
             services: init.services,
             dropdowns,

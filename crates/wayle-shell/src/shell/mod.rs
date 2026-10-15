@@ -44,6 +44,7 @@ pub(crate) enum ShellCmd {
     LocationChanged,
     OsdEnabledChanged(bool),
     SyncMonitors { expected_count: u32, attempt: u32 },
+    OutputsChanged,
 }
 
 #[relm4::component(pub(crate))]
@@ -99,6 +100,7 @@ impl Component for Shell {
                 .launch(PopupHostInit {
                     notification: notification.clone(),
                     config: init.services.config.clone(),
+                    outputs: init.services.outputs.clone(),
                 })
                 .detach()
         });
@@ -147,6 +149,10 @@ impl Component for Shell {
 
             ShellCmd::OsdEnabledChanged(enabled) => {
                 self.toggle_osd(enabled);
+            }
+
+            ShellCmd::OutputsChanged => {
+                helpers::monitors::sync_ipc_state(&self.services, &self.bars);
             }
 
             ShellCmd::SyncMonitors {
@@ -199,6 +205,7 @@ fn create_osd(services: &ShellServices) -> Option<Controller<Osd>> {
         Osd::builder()
             .launch(OsdInit {
                 config: services.config.clone(),
+                outputs: services.outputs.clone(),
                 audio: services.audio.clone(),
                 brightness: services.brightness.clone(),
             })

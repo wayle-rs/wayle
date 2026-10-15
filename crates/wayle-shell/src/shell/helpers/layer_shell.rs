@@ -4,8 +4,10 @@ use gtk4_layer_shell::{Edge, Layer, LayerShell};
 use relm4::gtk;
 use tracing::warn;
 use wayle_config::{ConfigService, schemas::general::Layer as ConfigLayer};
+use wayle_core::monitor::MonitorSelector;
+use wayle_output::OutputService;
 
-use super::monitors::current_monitors;
+use super::monitors::{current_monitors, monitor_info};
 
 /// Clears all layer-shell edge anchors and zeroes margins.
 pub(crate) fn reset_anchors(root: &gtk::Window) {
@@ -53,31 +55,41 @@ pub(crate) fn apply_layer(
     root.set_layer(to_gtk_layer(layer));
 }
 
-/// Resolves and applies a monitor by connector name, falling back to primary.
-pub(crate) fn apply_monitor_by_connector(root: &gtk::Window, connector: &str) {
+/// Applies the first monitor matching `target` (connector name, `desc:` or
+/// `sn:` selector), falling back to primary.
+pub(crate) fn apply_monitor_by_selector(
+    root: &gtk::Window,
+    target: &str,
+    outputs: Option<&OutputService>,
+) {
     let monitors = current_monitors();
-    let mut primary = None;
-    let mut matched = None;
+    let primary = monitors.first().map(|(_, monitor)| monitor.clone());
 
-    for (name, monitor) in monitors {
-        if primary.is_none() {
-            primary = Some(monitor.clone());
+    let selector = match target.parse::<MonitorSelector>() {
+        Ok(selector) => selector,
+        Err(err) => {
+            warn!(target, error = %err, "invalid monitor, falling back to primary");
+            root.set_monitor(primary.as_ref());
+            return;
         }
+    };
 
-        if name == connector {
-            matched = Some(monitor);
-            break;
-        }
-    }
+    let mut matched = monitors
+        .into_iter()
+        .filter(|(connector, monitor)| selector.matches(&monitor_info(connector, monitor, outputs)))
+        .map(|(_, monitor)| monitor);
 
-    if matched.is_none() {
+    let first = matched.next();
+    if first.is_none() {
         warn!(
-            connector,
+            target,
             "configured monitor not found, falling back to primary"
         );
+    } else if matched.next().is_some() {
+        warn!(target, "several monitors match, using the first");
     }
 
-    root.set_monitor(matched.or(primary).as_ref());
+    root.set_monitor(first.or(primary).as_ref());
 }
 
 /// Assigns the first available monitor to the layer-shell surface.

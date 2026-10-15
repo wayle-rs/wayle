@@ -12,6 +12,7 @@ use gtk4_layer_shell::{KeyboardMode, LayerShell};
 use relm4::{gtk, prelude::*};
 use wayle_config::ConfigService;
 use wayle_notification::{NotificationService, core::notification::Notification};
+use wayle_output::OutputService;
 
 pub(crate) use self::messages::PopupHostInit;
 use self::{card::NotificationPopupCard, messages::PopupHostCmd};
@@ -19,6 +20,7 @@ use self::{card::NotificationPopupCard, messages::PopupHostCmd};
 pub(crate) struct NotificationPopupHost {
     notification: Arc<NotificationService>,
     config: Arc<ConfigService>,
+    outputs: Option<Arc<OutputService>>,
     cards: Vec<(Arc<Notification>, Controller<NotificationPopupCard>)>,
     card_container: gtk::Box,
 }
@@ -66,6 +68,7 @@ impl Component for NotificationPopupHost {
         let model = Self {
             notification: init.notification.clone(),
             config: init.config.clone(),
+            outputs: init.outputs.clone(),
             cards: Vec::new(),
             card_container: gtk::Box::default(),
         };

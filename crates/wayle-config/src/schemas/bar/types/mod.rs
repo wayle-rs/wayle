@@ -54,11 +54,23 @@ use wayle_derive::wayle_enum;
 /// [[bar.layout]]
 /// monitor = "HDMI-2"
 /// show = false
+///
+/// # Target a monitor by make/model or serial; survives connector renames
+/// [[bar.layout]]
+/// monitor = "desc:Dell Inc. DELL U2720Q"
+/// extends = "*"
+///
+/// [[bar.layout]]
+/// monitor = "sn:ABC123"
+/// show = false
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, JsonSchema, PartialEq)]
 #[serde(default)]
 pub struct BarLayout {
-    /// Monitor connector name (e.g., `"DP-1"`) or `"*"` for all monitors.
+    /// Target monitor: `"DP-1"`, `"desc:<prefix>"`, `"sn:<serial>"`, or `"*"` for all monitors.
+    ///
+    /// `desc:` matches the start of `"<make> <model> <serial>"`. The most
+    /// specific match wins: `sn:` > `desc:` > connector > `*`.
     pub monitor: String,
     /// Inherit from another layout by its monitor value (e.g., `"*"`).
     pub extends: Option<String>,
