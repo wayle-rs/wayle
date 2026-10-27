@@ -205,6 +205,11 @@ pub struct HyprlandWorkspacesConfig {
     #[default(true)]
     pub show_special: ConfigProperty<bool>,
 
+    /// Wrap around shown workspaces while scrolling.
+    #[serde(rename = "wrap-around")]
+    #[default(true)]
+    pub wrap_around: ConfigProperty<bool>,
+
     /// Pulse animation on workspaces with urgent windows.
     ///
     /// When a window requests attention (e.g., terminal bell), the workspace

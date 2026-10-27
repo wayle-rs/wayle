@@ -24,6 +24,7 @@ right = ["hyprland-workspaces"]
 | `min-workspace-count` | u8 | `0` | Minimum number of workspace buttons to display. |
 | `monitor-specific` | bool | `true` | Show only workspaces belonging to the bar's monitor. |
 | `show-special` | bool | `true` | Include special workspaces (scratchpads) in the display. |
+| `wrap-around` | bool | `true` | Wrap around shown workspaces while scrolling. |
 | `urgent-show` | bool | `true` | Pulse animation on workspaces with urgent windows. |
 | `urgent-mode` | [`UrgentMode`](/config/types#urgent-mode) | `"workspace"` | Where the urgent pulse is applied. |
 | `display-mode` | [`DisplayMode`](/config/types#display-mode) | `"label"` | What identifies each workspace button. |

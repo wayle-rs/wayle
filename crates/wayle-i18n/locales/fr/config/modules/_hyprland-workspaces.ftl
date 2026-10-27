@@ -11,6 +11,9 @@ settings-modules-hyprland-workspaces-monitor-specific = Spécifique au moniteur
 settings-modules-hyprland-workspaces-show-special = Afficher les spéciaux
     .description = Inclure les espaces de travail éphémères
 
+settings-modules-hyprland-workspaces-wrap-around = Passage en boucle
+    .description = Permet de passer en boucle entre les espaces de travail affichés lors du défilement
+
 settings-modules-hyprland-workspaces-urgent-show = Afficher l'urgence
     .description = Animation pulsée sur les espaces de travail avec des fenêtres urgentes
 

@@ -11,6 +11,9 @@ settings-modules-hyprland-workspaces-monitor-specific = Monitor Specific
 settings-modules-hyprland-workspaces-show-special = Show Special
     .description = Include scratchpad workspaces
 
+settings-modules-hyprland-workspaces-wrap-around = Wrap Around
+    .description = Wrap around shown workspaces while scrolling
+
 settings-modules-hyprland-workspaces-urgent-show = Show Urgent
     .description = Pulse animation on workspaces with urgent windows
 

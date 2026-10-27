@@ -33,6 +33,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                         number_u8(&module.min_workspace_count),
                         toggle(&module.monitor_specific),
                         toggle(&module.show_special),
+                        toggle(&module.wrap_around),
                     ],
                 },
                 SectionSpec {

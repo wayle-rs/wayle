@@ -18,7 +18,7 @@ use super::{
     button::{ButtonBuildContext, WorkspaceButtonInput, build_button_init},
     filtering::{
         FilterContext, FilteredWorkspace, WorkspaceData, calculate_navigation_index,
-        filter_workspaces, monitor_workspaces_sorted,
+        calculate_navigation_index_wrapping, filter_workspaces, monitor_workspaces_sorted,
     },
     helpers::{
         addresses_in_workspace, compute_display_id, has_title_patterns, prune_stale_addresses,
@@ -385,7 +385,11 @@ impl HyprlandWorkspaces {
             .position(|ws| ws.id == self.active_workspace_id)
             .unwrap_or(0);
 
-        let new_idx = calculate_navigation_index(current_idx, direction, workspaces.len());
+        let new_idx = if ws_config.wrap_around.get() {
+            calculate_navigation_index_wrapping(current_idx, direction, workspaces.len())
+        } else {
+            calculate_navigation_index(current_idx, direction, workspaces.len())
+        };
 
         if let Some(ws) = workspaces.get(new_idx) {
             self.switch_to_workspace(ws.id);

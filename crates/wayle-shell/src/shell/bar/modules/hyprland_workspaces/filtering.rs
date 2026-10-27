@@ -237,6 +237,20 @@ pub(crate) fn calculate_navigation_index(
     total: usize,
 ) -> usize {
     if direction > 0 {
+        (total - 1).min(current_idx + 1)
+    } else if current_idx == 0 {
+        current_idx
+    } else {
+        current_idx - 1
+    }
+}
+
+pub(crate) fn calculate_navigation_index_wrapping(
+    current_idx: usize,
+    direction: i64,
+    total: usize,
+) -> usize {
+    if direction > 0 {
         (current_idx + 1) % total
     } else if current_idx == 0 {
         total - 1
@@ -646,13 +660,13 @@ mod tests {
         use super::*;
 
         #[test]
-        fn wraps_forward_at_end() {
-            assert_eq!(calculate_navigation_index(4, 1, 5), 0);
+        fn dont_wrap_forward_at_end() {
+            assert_eq!(calculate_navigation_index(4, 1, 5), 4);
         }
 
         #[test]
-        fn wraps_backward_at_start() {
-            assert_eq!(calculate_navigation_index(0, -1, 5), 4);
+        fn dont_wrap_backward_at_start() {
+            assert_eq!(calculate_navigation_index(0, -1, 5), 0);
         }
 
         #[test]
@@ -663,6 +677,30 @@ mod tests {
         #[test]
         fn moves_backward() {
             assert_eq!(calculate_navigation_index(2, -1, 5), 1);
+        }
+    }
+
+    mod calculate_navigation_index_wrapping {
+        use super::*;
+
+        #[test]
+        fn wraps_forward_at_end() {
+            assert_eq!(calculate_navigation_index_wrapping(4, 1, 5), 0);
+        }
+
+        #[test]
+        fn wraps_backward_at_start() {
+            assert_eq!(calculate_navigation_index_wrapping(0, -1, 5), 4);
+        }
+
+        #[test]
+        fn moves_forward() {
+            assert_eq!(calculate_navigation_index_wrapping(2, 1, 5), 3);
+        }
+
+        #[test]
+        fn moves_backward() {
+            assert_eq!(calculate_navigation_index_wrapping(2, -1, 5), 1);
         }
     }
 
