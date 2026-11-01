@@ -25,6 +25,7 @@ pub(super) fn resolve_source_icon(player: &Player) -> String {
 }
 
 pub(super) struct DurationParts {
+    pub hours: u64,
     pub minutes: u64,
     pub seconds: u64,
 }
@@ -32,13 +33,17 @@ pub(super) struct DurationParts {
 pub(super) fn duration_parts(duration: Duration) -> DurationParts {
     let total_secs = duration.as_secs();
     DurationParts {
-        minutes: total_secs / 60,
+        hours: total_secs / 3600,
+        minutes: (total_secs % 3600) / 60,
         seconds: total_secs % 60,
     }
 }
 
 pub(super) fn format_duration(duration: Duration) -> String {
     let parts = duration_parts(duration);
+    if parts.hours > 0 {
+        return format!("{}:{:02}:{:02}", parts.hours, parts.minutes, parts.seconds);
+    }
     format!("{}:{:02}", parts.minutes, parts.seconds)
 }
 
@@ -81,6 +86,16 @@ mod tests {
     #[test]
     fn format_duration_long() {
         assert_eq!(format_duration(Duration::from_secs(354)), "5:54");
+    }
+
+    #[test]
+    fn format_duration_very_long() {
+        assert_eq!(
+            format_duration(
+                Duration::from_hours(2) + Duration::from_mins(35) + Duration::from_secs(49)
+            ),
+            "2:35:49"
+        );
     }
 
     #[test]

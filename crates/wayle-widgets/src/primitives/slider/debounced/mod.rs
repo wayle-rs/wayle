@@ -31,6 +31,11 @@ impl DebouncedSlider {
             .build()
     }
 
+    /// Updates the slider's minimum and maximum bounds.
+    pub fn set_range(&self, min: f64, max: f64) {
+        self.imp().set_range(min, max);
+    }
+
     /// Sets a custom label formatter. Defaults to `"{value:.0}%"`.
     pub fn set_formatter(&self, formatter: impl Fn(f64) -> String + 'static) {
         if let Ok(mut guard) = self.imp().formatter.try_borrow_mut() {

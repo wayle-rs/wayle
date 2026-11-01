@@ -1,38 +1,16 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg
-   width="16"
-   height="16"
-   viewBox="0 0 16 16"
-   gpa:version="1"
-   version="1.1"
-   id="svg3"
-   sodipodi:docname="tb-xbox-x-symbolic.svg"
-   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
-   xmlns="http://www.w3.org/2000/svg"
-   xmlns:svg="http://www.w3.org/2000/svg"
-   xmlns:gpa="https://www.gtk.org/grappa">
-  <defs
-     id="defs3" />
-  <sodipodi:namedview
-     id="namedview3"
-     pagecolor="#ffffff"
-     bordercolor="#000000"
-     borderopacity="0.25"
-     inkscape:showpageshadow="2"
-     inkscape:pageopacity="0.0"
-     inkscape:pagecheckerboard="0"
-     inkscape:deskcolor="#d1d1d1" />
-  <path
-     style="baseline-shift:baseline;display:inline;overflow:visible;vector-effect:none;stroke-linecap:round;stroke-linejoin:round;enable-background:accumulate;stop-color:#000000;stop-opacity:1;opacity:1"
-     d="M 8,1.3359375 C 4.3268988,1.3359375 1.3359375,4.3268988 1.3359375,8 c 0,3.673101 2.9909613,6.664063 6.6640625,6.664063 3.673101,0 6.664063,-2.990962 6.664063,-6.664063 C 14.664063,4.3268988 11.673101,1.3359375 8,1.3359375 Z m 0,1.328125 c 2.954316,0 5.335938,2.3816217 5.335938,5.3359375 0,2.954316 -2.381622,5.335938 -5.335938,5.335938 C 5.0456842,13.335938 2.6640625,10.954316 2.6640625,8 2.6640625,5.0456842 5.0456842,2.6640625 8,2.6640625 Z"
-     id="path1" />
-  <path
-     style="baseline-shift:baseline;display:inline;overflow:visible;vector-effect:none;stroke-linecap:round;stroke-linejoin:round;enable-background:accumulate;stop-color:#000000;stop-opacity:1;opacity:1"
-     d="M 6.09375,4.671875 A 0.66500002,0.66500002 0 0 0 5.6015625,4.7988281 0.66500002,0.66500002 0 0 0 5.46875,5.7285156 l 4,5.3300784 a 0.66500002,0.66500002 0 0 0 0.929688,0.132812 0.66500002,0.66500002 0 0 0 0.132812,-0.929687 l -4,-5.3300784 A 0.66500002,0.66500002 0 0 0 6.09375,4.671875 Z"
-     id="path2" />
-  <path
-     style="baseline-shift:baseline;display:inline;overflow:visible;vector-effect:none;stroke-linecap:round;stroke-linejoin:round;enable-background:accumulate;stop-color:#000000;stop-opacity:1;opacity:1"
-     d="M 10.398438,4.7988281 A 0.66500002,0.66500002 0 0 0 9.46875,4.9316406 l -4,5.3300784 A 0.66500002,0.66500002 0 0 0 5.6015625,11.191406 0.66500002,0.66500002 0 0 0 6.53125,11.058594 l 4,-5.3300784 A 0.66500002,0.66500002 0 0 0 10.398438,4.7988281 Z"
-     id="path3" />
+<svg width='16' height='16'
+     xmlns:gpa='https://www.gtk.org/grappa'
+     gpa:version='2'>
+  <path d='M8.00 13.34Q10.21 13.34 11.77 11.77Q13.34 10.21 13.34 8.00Q13.33 5.79 11.77 4.23Q10.21 2.66 8.00 2.66Q5.79 2.67 4.23 4.23Q2.66 5.79 2.66 8.00Q2.66 10.21 4.23 11.77Q5.79 13.34 8.00 13.34Q8.28 13.34 8.47 13.53Q8.66 13.72 8.66 14.00Q8.66 14.28 8.47 14.47Q8.28 14.66 8.00 14.66Q5.24 14.67 3.29 12.71Q1.34 10.76 1.33 8.00Q1.34 5.24 3.29 3.29Q5.24 1.34 8.00 1.33Q10.76 1.34 12.71 3.29Q14.67 5.24 14.66 8.00Q14.67 10.76 12.71 12.71Q10.76 14.67 8.00 14.66Q7.72 14.66 7.53 14.47Q7.33 14.28 7.34 14.00Q7.33 13.72 7.53 13.53Q7.72 13.34 8.00 13.34Z'
+stroke='none'
+fill='rgb(0,0,0)'
+gpa:fill='foreground'/>
+  <path d='M6.53 4.93L10.53 10.27Q10.70 10.49 10.66 10.76Q10.62 11.04 10.40 11.20Q10.18 11.37 9.91 11.33Q9.63 11.29 9.47 11.07L5.47 5.73Q5.30 5.51 5.34 5.24Q5.38 4.96 5.60 4.80Q5.82 4.63 6.09 4.67Q6.37 4.71 6.53 4.93Z'
+stroke='none'
+fill='rgb(0,0,0)'
+gpa:fill='foreground'/>
+  <path d='M10.53 5.73L6.53 11.07Q6.37 11.29 6.09 11.33Q5.82 11.37 5.60 11.20Q5.38 11.04 5.34 10.76Q5.30 10.49 5.47 10.27L9.47 4.93Q9.63 4.71 9.91 4.67Q10.18 4.63 10.40 4.80Q10.62 4.96 10.66 5.24Q10.70 5.51 10.53 5.73Z'
+stroke='none'
+fill='rgb(0,0,0)'
+gpa:fill='foreground'/>
 </svg>

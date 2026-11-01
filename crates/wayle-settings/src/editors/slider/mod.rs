@@ -1,0 +1,104 @@
+//! Slider backed by DebouncedSlider. Throttled at 100ms during drag,
+//! with a final commit on release.
+
+mod row;
+use std::sync::Arc;
+
+use relm4::{
+    gtk::{glib, prelude::*},
+    prelude::*,
+};
+pub(crate) use row::{normalized, percentage, signed_normalized};
+use wayle_config::ConfigProperty;
+use wayle_widgets::primitives::slider::DebouncedSlider;
+
+use super::{WatcherHandle, spawn_property_watcher};
+
+pub(crate) struct SliderControl<T: Clone + Send + Sync + PartialEq + 'static> {
+    property: ConfigProperty<T>,
+    slider: DebouncedSlider,
+    to_slider: fn(&T) -> f64,
+    _watcher: WatcherHandle,
+}
+
+pub(crate) struct SliderInit<T: Clone + Send + Sync + PartialEq + 'static> {
+    pub(crate) property: ConfigProperty<T>,
+    pub(crate) range_min: f64,
+    pub(crate) range_max: f64,
+    pub(crate) to_slider: fn(&T) -> f64,
+    pub(crate) from_slider: fn(f64) -> T,
+    pub(crate) format_label: fn(f64) -> String,
+}
+
+#[derive(Debug)]
+pub(crate) enum SliderMsg {
+    Refresh,
+}
+
+impl<T> SimpleComponent for SliderControl<T>
+where
+    T: Clone + Send + Sync + PartialEq + 'static,
+{
+    type Init = SliderInit<T>;
+    type Input = SliderMsg;
+    type Output = ();
+    type Root = gtk::Box;
+    type Widgets = ();
+
+    fn init_root() -> Self::Root {
+        gtk::Box::builder()
+            .hexpand(false)
+            .valign(gtk::Align::Center)
+            .build()
+    }
+
+    fn init(
+        init: Self::Init,
+        root: Self::Root,
+        sender: ComponentSender<Self>,
+    ) -> ComponentParts<Self> {
+        let current = (init.to_slider)(&init.property.get());
+
+        let slider = DebouncedSlider::with_label(0.0);
+        slider.set_cursor_from_name(Some("pointer"));
+        slider.set_range(init.range_min, init.range_max);
+        slider.set_formatter(init.format_label);
+        slider.set_value(current);
+
+        let prop = Arc::new(init.property.clone());
+        let from_slider = init.from_slider;
+
+        slider.connect_closure(
+            "committed",
+            false,
+            glib::closure_local!(move |_slider: DebouncedSlider, value: f64| {
+                prop.set(from_slider(value));
+            }),
+        );
+
+        let input_sender = sender.input_sender().clone();
+        let watcher = spawn_property_watcher(&init.property, move || {
+            input_sender.send(SliderMsg::Refresh).is_ok()
+        });
+
+        root.append(&slider);
+
+        let model = Self {
+            property: init.property,
+            slider,
+            to_slider: init.to_slider,
+            _watcher: watcher,
+        };
+
+        ComponentParts { model, widgets: () }
+    }
+
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>) {
+        match msg {
+            SliderMsg::Refresh => {
+                let value = (self.to_slider)(&self.property.get());
+                self.slider.set_value(value);
+            }
+        }
+    }
+}

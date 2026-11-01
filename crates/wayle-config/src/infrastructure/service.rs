@@ -1,6 +1,12 @@
-use std::sync::{Arc, RwLock};
+use std::{
+    io,
+    sync::{Arc, RwLock},
+};
 
-use tokio::fs;
+use tokio::{
+    fs::{self, File},
+    io::AsyncWriteExt,
+};
 use tracing::{info, instrument, warn};
 
 use super::{
@@ -10,8 +16,8 @@ use super::{
     watcher::FileWatcher,
 };
 use crate::{
-    ApplyConfigLayer, ApplyRuntimeLayer, ClearRuntimeByPath, Config, ExtractRuntimeValues,
-    infrastructure::themes::utils::load_themes,
+    ApplyConfigLayer, ApplyRuntimeLayer, ClearAllRuntime, ClearRuntimeByPath, CommitConfigReload,
+    Config, ExtractRuntimeValues, infrastructure::themes::utils::load_themes,
 };
 
 /// Reactive configuration service.
@@ -69,6 +75,8 @@ impl ConfigService {
             Err(e) => warn!("runtime.toml failed:\n{e}"),
         }
 
+        config.commit_config_reload();
+
         let service = Arc::new(Self {
             config: Arc::new(config),
             watcher: Arc::new(RwLock::new(None)),
@@ -91,6 +99,35 @@ impl ConfigService {
     /// Reference to the config root.
     pub fn config(&self) -> &Config {
         &self.config
+    }
+
+    /// Drops every runtime override and deletes `runtime.toml` from disk.
+    ///
+    /// The in-memory reset happens first so subscribers see fresh values
+    /// immediately. The file removal is best-effort: if it fails (permission,
+    /// concurrent removal), a warning is logged and the error is returned so
+    /// callers can decide whether to surface it to the user.
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if `runtime.toml` exists but cannot be removed.
+    pub fn reset_all_runtime(&self) -> Result<(), io::Error> {
+        self.config.clear_all_runtime();
+
+        let runtime_path = ConfigPaths::runtime_config();
+
+        match std::fs::remove_file(&runtime_path) {
+            Ok(()) => Ok(()),
+            Err(err) if err.kind() == io::ErrorKind::NotFound => Ok(()),
+            Err(err) => {
+                tracing::warn!(
+                    error = %err,
+                    path = %runtime_path.display(),
+                    "failed to remove runtime.toml"
+                );
+                Err(err)
+            }
+        }
     }
 
     /// Subscribes to secrets reload events.
@@ -128,17 +165,52 @@ impl ConfigService {
                 source,
             })?;
 
-        fs::write(&temp_path, toml_str)
-            .await
-            .map_err(|source| Error::Persistence {
+        {
+            let mut file = File::create(&temp_path)
+                .await
+                .map_err(|source| Error::Persistence {
+                    path: temp_path.clone(),
+                    source,
+                })?;
+
+            file.write_all(toml_str.as_bytes())
+                .await
+                .map_err(|source| Error::Persistence {
+                    path: temp_path.clone(),
+                    source,
+                })?;
+
+            file.sync_all().await.map_err(|source| Error::Persistence {
                 path: temp_path.clone(),
                 source,
             })?;
+        }
 
         fs::rename(&temp_path, &runtime_path)
             .await
             .map_err(|source| Error::Persistence {
                 path: runtime_path.clone(),
+                source,
+            })?;
+
+        let dir_path = runtime_path.parent().ok_or_else(|| Error::Persistence {
+            path: runtime_path.clone(),
+            source: io::Error::new(
+                io::ErrorKind::InvalidInput,
+                "runtime config path has no parent directory",
+            ),
+        })?;
+
+        File::open(dir_path)
+            .await
+            .map_err(|source| Error::Persistence {
+                path: dir_path.to_path_buf(),
+                source,
+            })?
+            .sync_all()
+            .await
+            .map_err(|source| Error::Persistence {
+                path: dir_path.to_path_buf(),
                 source,
             })?;
 

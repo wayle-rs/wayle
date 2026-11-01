@@ -11,17 +11,14 @@ use std::{
     time::Duration,
 };
 
-use gtk::{
-    CssProvider, STYLE_PROVIDER_PRIORITY_USER, gdk::Display, glib, prelude::*,
-    style_context_add_provider_for_display,
-};
+use gtk::{CssProvider, gdk::Display, glib, prelude::*, style_context_add_provider_for_display};
 use relm4::{gtk, prelude::*};
 use wayle_media::{MediaService, core::player::Player, types::PlaybackState};
 use wayle_widgets::{WatcherToken, prelude::*};
 
 use self::messages::MediaSectionCmd;
 pub(crate) use self::messages::{MediaSectionInit, MediaSectionInput};
-use crate::i18n::t;
+use crate::{i18n::t, shell::helpers::COMPONENT_CSS_PRIORITY};
 
 const PERCENTAGE_SCALE: f64 = 100.0;
 
@@ -114,6 +111,7 @@ impl Component for MediaSection {
                             add_css_class: &model.art_css_class,
                             set_halign: gtk::Align::Start,
                             set_valign: gtk::Align::Center,
+                            set_hexpand: false,
 
                             #[name = "art_placeholder"]
                             gtk::Box {
@@ -279,11 +277,7 @@ impl Component for MediaSection {
 
         #[allow(clippy::expect_used)]
         let display = Display::default().expect("display required for dashboard media");
-        style_context_add_provider_for_display(
-            &display,
-            &art_css_provider,
-            STYLE_PROVIDER_PRIORITY_USER + 1,
-        );
+        style_context_add_provider_for_display(&display, &art_css_provider, COMPONENT_CSS_PRIORITY);
 
         let seek_slider = DebouncedSlider::new(0.0);
 

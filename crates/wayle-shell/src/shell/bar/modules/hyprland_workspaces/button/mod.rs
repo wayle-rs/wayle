@@ -51,6 +51,7 @@ pub(crate) struct WorkspaceButtonInit {
     pub active_indicator: ActiveIndicator,
     pub label_use_name: bool,
     pub mapped_icon: Option<String>,
+    pub mapped_label: Option<String>,
     pub divider: String,
 
     pub show_app_icons: bool,
@@ -77,6 +78,7 @@ pub(crate) struct WorkspaceButton {
     pub(super) display_mode: DisplayMode,
     pub(super) label_use_name: bool,
     pub(super) mapped_icon: Option<String>,
+    pub(super) mapped_label: Option<String>,
     pub(super) divider: String,
     pub(super) is_vertical: bool,
 
@@ -190,6 +192,7 @@ impl FactoryComponent for WorkspaceButton {
             display_mode: init.display_mode,
             label_use_name: init.label_use_name,
             mapped_icon: init.mapped_icon,
+            mapped_label: init.mapped_label,
             divider: init.divider,
             is_vertical: init.is_vertical,
 
@@ -256,10 +259,11 @@ pub(crate) fn build_button_init(
     urgent_addresses: HashSet<Address>,
 ) -> WorkspaceButtonInit {
     let workspace_map = config.workspace_map.get();
-    let mapped_icon = i32::try_from(ctx.id)
+    let mapped_style = i32::try_from(ctx.id)
         .ok()
-        .and_then(|style_id| workspace_map.get(&style_id))
-        .and_then(|style| style.icon.clone());
+        .and_then(|style_id| workspace_map.get(&style_id));
+    let mapped_icon = mapped_style.and_then(|style| style.icon.clone());
+    let mapped_label = mapped_style.and_then(|style| style.label.clone());
 
     let app_icons = if config.app_icons_show.get() {
         let user_map = config.app_icon_map.get();
@@ -296,6 +300,7 @@ pub(crate) fn build_button_init(
         active_indicator: config.active_indicator.get(),
         label_use_name: config.label_use_name.get(),
         mapped_icon,
+        mapped_label,
         divider: config.divider.get(),
 
         show_app_icons: config.app_icons_show.get(),

@@ -50,6 +50,9 @@ settings-modules-media-label-max-length = Label Max Length
 settings-modules-media-button-bg-color = Button Background
     .description = Button background color
 
+settings-modules-media-left-click = Left Click
+    .description = Action on left click
+
 settings-modules-media-right-click = Right Click
     .description = Shell command on right click
 
@@ -61,3 +64,10 @@ settings-modules-media-scroll-up = Scroll Up
 
 settings-modules-media-scroll-down = Scroll Down
     .description = Shell command on scroll down
+
+
+## MediaIconType variants
+enum-media-icon-type-default = Default
+enum-media-icon-type-application = Application
+enum-media-icon-type-spinning-disc = Spinning Disc
+enum-media-icon-type-application-mapped = Application Mapped

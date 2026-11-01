@@ -1,47 +1,51 @@
-use crate::{
-    config::schemas::modules::ClockConfig,
-    docs::module::{ModuleInfo, ModuleInfoProvider},
-};
+//! Lookup over every schema registered with `wayle_config::register_module!`.
+//!
+//! Providers are collected by the `inventory` crate at link time. This module
+//! exposes them in a stable, sorted order so the generator's output is
+//! deterministic.
 
-/// Central registry for all available modules in the Wayle system.
-///
-/// Provides methods to discover, list, and retrieve information about
-/// registered modules including their configuration schemas and metadata.
+use crate::config::docs::{self, ConfigGroup, ModuleInfo, ModuleRegistration};
+
+/// A registered module's metadata paired with the group layout the generator
+/// should render.
+pub struct ModuleEntry {
+    /// Page metadata.
+    pub info: ModuleInfo,
+
+    /// Groups rendered as H2 sections, in order.
+    pub groups: Vec<ConfigGroup>,
+}
+
+/// Static set of schemas the generator emits pages for.
 pub struct ModuleRegistry;
 
 impl ModuleRegistry {
-    /// Returns information about all registered modules.
-    ///
-    /// Collects and returns module metadata including names, descriptions,
-    /// icons, and configuration schemas for every module in the system.
-    pub fn get_all() -> Vec<ModuleInfo> {
-        let module_info = Self::get_module_info::<ClockConfig>();
-        let modules: Vec<ModuleInfo> = vec![module_info];
-        modules
+    /// Every registered entry, sorted by name for deterministic output.
+    pub fn entries() -> Vec<ModuleEntry> {
+        let mut entries: Vec<ModuleEntry> = docs::inventory::iter::<ModuleRegistration>()
+            .map(|registration| {
+                let (info, groups) = (registration.build_entry)();
+                ModuleEntry { info, groups }
+            })
+            .collect();
+
+        entries.sort_by(|left, right| left.info.name.cmp(&right.info.name));
+        entries
     }
 
-    /// Retrieves module information by its name.
-    ///
-    /// Searches for a module with the specified name and returns its
-    /// metadata if found.
-    pub fn get_module_by_name(name: &str) -> Option<ModuleInfo> {
-        Self::get_all()
+    /// The entry whose name matches, or `None` if nothing is registered under
+    /// that name.
+    pub fn find(name: &str) -> Option<ModuleEntry> {
+        Self::entries()
             .into_iter()
-            .find(|module| module.name == name)
+            .find(|entry| entry.info.name == name)
     }
 
-    /// Returns a list of all registered module names.
-    ///
-    /// Useful for discovery and validation of available modules
-    /// without retrieving full module information.
-    pub fn list_module_names() -> Vec<String> {
-        Self::get_all()
+    /// Sorted names of every registered entry.
+    pub fn names() -> Vec<String> {
+        Self::entries()
             .into_iter()
-            .map(|module| module.name)
+            .map(|entry| entry.info.name)
             .collect()
-    }
-
-    fn get_module_info<T: ModuleInfoProvider>() -> ModuleInfo {
-        T::module_info()
     }
 }

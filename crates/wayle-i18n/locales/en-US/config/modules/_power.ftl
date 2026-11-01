@@ -28,3 +28,6 @@ settings-modules-power-scroll-up = Scroll Up
 
 settings-modules-power-scroll-down = Scroll Down
     .description = Shell command on scroll down
+
+settings-modules-power-left-click = Left Click
+    .description = Action on left click

@@ -1,0 +1,61 @@
+.monitor-wallpaper-control {
+    margin-top: var(--space-xs);
+}
+
+.monitor-card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: var(--rounding-element);
+    margin-bottom: var(--space-sm);
+}
+
+.monitor-card-header {
+    padding: var(--space-sm) var(--space-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.monitor-card-header button {
+    margin-left: var(--space-xs);
+}
+
+.monitor-card-label {
+    font-size: var(--text-md);
+    font-weight: var(--weight-semibold);
+    text-transform: capitalize;
+    color: var(--fg-subtle);
+    margin-right: var(--space-xs);
+    min-width: calc(5.5rem * var(--global-scale));
+}
+
+.monitor-card-header entry.monitor-name-entry {
+    font-weight: var(--weight-semibold);
+    font-size: var(--text-sm);
+}
+
+.monitor-card-header entry.monitor-name-entry text {
+    padding: var(--space-xs);
+    min-height: 0;
+}
+
+.monitor-card-body {
+    padding: var(--space-sm) var(--space-md);
+}
+
+.monitor-card-body entry.monitor-wallpaper-entry {
+    font-size: var(--text-sm);
+}
+
+.monitor-card-body entry.monitor-wallpaper-entry text {
+    padding: var(--space-xs);
+    min-height: 0;
+}
+
+.monitor-card-body button.icon {
+    margin-left: var(--space-xs);
+}
+
+.monitor-card-body .monitor-fit-dropdown {
+    margin-left: var(--space-xs);
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+}

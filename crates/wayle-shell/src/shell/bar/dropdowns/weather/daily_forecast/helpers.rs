@@ -1,5 +1,7 @@
-use chrono::{Local, NaiveDate};
+use chrono::{Datelike, Local, NaiveDate, Weekday};
 use wayle_weather::Temperature;
+
+use crate::i18n::t;
 
 pub(super) struct TempBarOffsets {
     pub left_pct: f32,
@@ -31,7 +33,15 @@ pub(super) fn temp_bar_offsets(
 }
 
 pub(super) fn day_label(date: NaiveDate) -> String {
-    date.format("%a").to_string()
+    match date.weekday() {
+        Weekday::Sun => t!("dropdown-weather-day-sun"),
+        Weekday::Mon => t!("dropdown-weather-day-mon"),
+        Weekday::Tue => t!("dropdown-weather-day-tue"),
+        Weekday::Wed => t!("dropdown-weather-day-wed"),
+        Weekday::Thu => t!("dropdown-weather-day-thu"),
+        Weekday::Fri => t!("dropdown-weather-day-fri"),
+        Weekday::Sat => t!("dropdown-weather-day-sat"),
+    }
 }
 
 pub(super) fn is_today(date: NaiveDate) -> bool {
@@ -95,7 +105,7 @@ mod tests {
     fn day_label_returns_abbreviation() {
         let date = NaiveDate::from_ymd_opt(2024, 1, 15).unwrap();
         let label = day_label(date);
-        assert_eq!(label, "Mon");
+        assert!(!label.is_empty());
     }
 
     #[test]

@@ -13,8 +13,9 @@ use std::env;
 
 pub(crate) use color_extractor::build_extractor_config;
 use relm4::ComponentSender;
+use wayle_styling::watcher as user_style;
 
-use crate::shell::{Shell, ShellServices};
+use crate::shell::{Shell, ShellCmd, ShellServices};
 
 pub(crate) fn init(sender: &ComponentSender<Shell>, services: &ShellServices) {
     css::spawn(sender, services);
@@ -24,6 +25,7 @@ pub(crate) fn init(sender: &ComponentSender<Shell>, services: &ShellServices) {
     color_extractor::spawn(services);
     notification::spawn(services);
     sysinfo::spawn(services);
+    user_style::spawn(sender, services.config.clone(), ShellCmd::CssRecompiled);
     wallpaper::spawn(services);
     weather::spawn(services);
 

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, sync::Arc};
+use std::{cmp::Reverse, collections::HashMap, sync::Arc};
 
 use wayle_notification::core::notification::Notification;
 
@@ -22,7 +22,7 @@ pub(super) fn group_by_app(notifications: &[Arc<Notification>]) -> Vec<Notificat
     let mut result: Vec<NotificationGroupData> = groups
         .into_iter()
         .map(|(app_name, mut notifs)| {
-            notifs.sort_by(|left, right| right.timestamp.get().cmp(&left.timestamp.get()));
+            notifs.sort_by_key(|notification| Reverse(notification.timestamp.get()));
             NotificationGroupData {
                 app_name,
                 notifications: notifs,

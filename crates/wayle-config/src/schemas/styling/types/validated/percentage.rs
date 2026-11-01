@@ -9,6 +9,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
 use tracing::warn;
 
+const MIN: u8 = 0;
 const MAX: u8 = 100;
 
 /// Percentage value clamped to 0-100.
@@ -16,16 +17,22 @@ const MAX: u8 = 100;
 #[serde(transparent)]
 #[schemars(transparent)]
 #[derive(Default)]
-pub struct Percentage(#[schemars(range(min = 0, max = MAX))] u8);
+pub struct Percentage(#[schemars(range(min = MIN, max = MAX))] u8);
 
 impl Percentage {
+    /// `0`
+    pub const MIN: u8 = MIN;
+
+    /// `100`
+    pub const MAX: u8 = MAX;
+
     /// Creates a percentage value, clamping to 0-100.
     #[must_use]
     pub fn new(value: u8) -> Self {
-        Self(value.min(MAX))
+        Self(value.min(Self::MAX))
     }
 
-    /// Returns the inner u8 value.
+    /// The raw `u8`.
     #[must_use]
     pub fn value(self) -> u8 {
         self.0
@@ -58,8 +65,12 @@ impl<'de> Deserialize<'de> for Percentage {
         D: Deserializer<'de>,
     {
         let raw = u8::deserialize(deserializer)?;
-        if raw > MAX {
-            warn!("percentage {} exceeds maximum, clamped to {}", raw, MAX);
+        if raw > Percentage::MAX {
+            warn!(
+                "percentage {} exceeds maximum, clamped to {}",
+                raw,
+                Percentage::MAX
+            );
         }
         Ok(Self::new(raw))
     }
@@ -71,15 +82,15 @@ mod tests {
 
     #[test]
     fn clamps_above_max() {
-        assert_eq!(Percentage::new(150).value(), MAX);
-        assert_eq!(Percentage::new(255).value(), MAX);
+        assert_eq!(Percentage::new(150).value(), Percentage::MAX);
+        assert_eq!(Percentage::new(255).value(), Percentage::MAX);
     }
 
     #[test]
     fn preserves_valid() {
         assert_eq!(Percentage::new(0).value(), 0);
         assert_eq!(Percentage::new(50).value(), 50);
-        assert_eq!(Percentage::new(MAX).value(), MAX);
+        assert_eq!(Percentage::new(Percentage::MAX).value(), Percentage::MAX);
     }
 
     #[test]

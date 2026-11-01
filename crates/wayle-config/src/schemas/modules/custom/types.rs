@@ -3,10 +3,10 @@ use std::fmt::{self, Display, Formatter};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
 use tracing::warn;
+use wayle_derive::wayle_enum;
 
 /// Execution mode for custom module commands.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum ExecutionMode {
     /// Run command at regular intervals defined by `interval-ms`.
     ///

@@ -1,18 +1,12 @@
 <svg width='16' height='16'
      xmlns:gpa='https://www.gtk.org/grappa'
-     gpa:version='1'>
-  <path d='M12.00 4.00L4.00 12.00'
-stroke-width='1.33'
-stroke-linecap='round'
-stroke-linejoin='round'
-stroke='rgb(0,0,0)'
-fill='none'
-gpa:stroke='foreground'/>
-  <path d='M4.00 4.00L12.00 12.00'
-stroke-width='1.33'
-stroke-linecap='round'
-stroke-linejoin='round'
-stroke='rgb(0,0,0)'
-fill='none'
-gpa:stroke='foreground'/>
+     gpa:version='2'>
+  <path d='M12.47 4.47L4.47 12.47Q4.28 12.66 4.00 12.66Q3.72 12.66 3.53 12.47Q3.33 12.28 3.33 12.00Q3.33 11.72 3.53 11.53L11.53 3.53Q11.72 3.33 12.00 3.33Q12.28 3.33 12.47 3.53Q12.66 3.72 12.66 4.00Q12.66 4.28 12.47 4.47Z'
+stroke='none'
+fill='rgb(0,0,0)'
+gpa:fill='foreground'/>
+  <path d='M4.47 3.53L12.47 11.53Q12.66 11.72 12.66 12.00Q12.66 12.28 12.47 12.47Q12.28 12.66 12.00 12.66Q11.72 12.66 11.53 12.47L3.53 4.47Q3.33 4.28 3.33 4.00Q3.33 3.72 3.53 3.53Q3.72 3.33 4.00 3.33Q4.28 3.33 4.47 3.53Z'
+stroke='none'
+fill='rgb(0,0,0)'
+gpa:fill='foreground'/>
 </svg>

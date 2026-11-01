@@ -12,7 +12,8 @@ use super::{
     card::{CardInit, NotificationPopupCard},
 };
 use crate::shell::helpers::layer_shell::{
-    apply_monitor_by_connector, apply_primary_monitor, apply_tearing_layer, reset_anchors,
+    apply_layer as apply_window_layer, apply_monitor_by_connector, apply_primary_monitor,
+    reset_anchors,
 };
 
 impl NotificationPopupHost {
@@ -22,7 +23,7 @@ impl NotificationPopupHost {
             .config
             .config()
             .modules
-            .notification
+            .notifications
             .popup_max_visible
             .get() as usize;
 
@@ -56,7 +57,7 @@ impl NotificationPopupHost {
 
     fn insert_new_cards(&mut self, popups: &[Arc<Notification>], existing_ids: &[u32]) {
         let config = self.config.config();
-        let notif_config = &config.modules.notification;
+        let notif_config = &config.modules.notifications;
 
         let hover_pause = notif_config.popup_hover_pause.get();
         let close_behavior = notif_config.popup_close_behavior.get();
@@ -97,7 +98,7 @@ impl NotificationPopupHost {
     /// Applies layer-shell anchors, margins, and monitor based on config.
     pub(super) fn apply_position(&self, root: &gtk::Window) {
         let config = self.config.config();
-        let notif_config = &config.modules.notification;
+        let notif_config = &config.modules.notifications;
         let position = notif_config.popup_position.get();
         let scale = config.styling.scale.get().value();
         let mx = (notif_config.popup_margin_x.get().value() * scale) as i32;
@@ -168,6 +169,7 @@ impl NotificationPopupHost {
     }
 
     pub(super) fn apply_layer(&self, root: &gtk::Window) {
-        apply_tearing_layer(root, &self.config);
+        let configured = self.config.config().modules.notifications.popup_layer.get();
+        apply_window_layer(root, configured, &self.config);
     }
 }

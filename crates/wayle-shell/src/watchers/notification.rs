@@ -14,7 +14,7 @@ pub fn spawn(services: &ShellServices) {
     };
 
     let config = services.config.config();
-    spawn_blocklist_watcher(&config.modules.notification, notification);
+    spawn_blocklist_watcher(&config.modules.notifications, notification);
 }
 
 fn spawn_blocklist_watcher(

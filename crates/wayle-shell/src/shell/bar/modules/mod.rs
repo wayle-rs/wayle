@@ -1,5 +1,6 @@
 mod battery;
 mod bluetooth;
+mod brightness;
 mod cava;
 mod clock;
 mod compositor;
@@ -12,10 +13,12 @@ mod hyprsunset;
 mod idle_inhibit;
 mod keybind_mode;
 mod keyboard_input;
+mod mango_workspaces;
 mod media;
 mod microphone;
 mod netstat;
 mod network;
+mod niri_workspaces;
 mod notification;
 mod power;
 mod ram;
@@ -60,6 +63,7 @@ macro_rules! register_modules {
 register_modules! {
     Battery => battery::Factory,
     Bluetooth => bluetooth::Factory,
+    Brightness => brightness::Factory,
     Cava => cava::Factory,
     Clock => clock::Factory,
     Cpu => cpu::Factory,
@@ -70,10 +74,12 @@ register_modules! {
     IdleInhibit => idle_inhibit::Factory,
     KeybindMode => keybind_mode::Factory,
     KeyboardInput => keyboard_input::Factory,
+    MangoWorkspaces => mango_workspaces::Factory,
     Media => media::Factory,
     Microphone => microphone::Factory,
     Netstat => netstat::Factory,
     Network => network::Factory,
+    NiriWorkspaces => niri_workspaces::Factory,
     Notifications => notification::Factory,
     Power => power::Factory,
     Ram => ram::Factory,

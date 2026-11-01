@@ -22,26 +22,6 @@ pub(crate) fn run_definition_command(
     run_command_async(sender, &definition.id, command, cancel_token);
 }
 
-/// Spawns a click action as fire-and-forget (no output captured).
-///
-/// Used for commands like `pavucontrol` that are intentionally long-lived.
-/// The process runs independently and is not awaited.
-pub(crate) fn spawn_action(command: &str) {
-    let command = command.to_string();
-    tokio::spawn(async move {
-        if let Err(error) = Command::new("sh")
-            .arg("-c")
-            .arg(&command)
-            .stdin(Stdio::null())
-            .stdout(Stdio::null())
-            .stderr(Stdio::null())
-            .spawn()
-        {
-            warn!(error = %error, "failed to spawn action command");
-        }
-    });
-}
-
 /// Runs a command asynchronously with timeout and single-flight cancellation.
 ///
 /// If `cancel_token` is triggered, the command is cancelled.

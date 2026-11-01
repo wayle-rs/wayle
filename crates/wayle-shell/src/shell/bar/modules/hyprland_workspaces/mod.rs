@@ -41,6 +41,7 @@ pub(crate) use self::{
     factory::Factory,
     messages::{WorkspacesCmd, WorkspacesInit, WorkspacesMsg},
 };
+use crate::shell::helpers::COMPONENT_CSS_PRIORITY;
 
 const BLINK_INTERVAL: Duration = Duration::from_millis(500);
 
@@ -107,7 +108,7 @@ impl Component for HyprlandWorkspaces {
         gtk::style_context_add_provider_for_display(
             &root.display(),
             &css_provider,
-            gtk::STYLE_PROVIDER_PRIORITY_USER + 1,
+            COMPONENT_CSS_PRIORITY,
         );
 
         let buttons = FactoryVecDeque::builder().launch(root.clone()).forward(

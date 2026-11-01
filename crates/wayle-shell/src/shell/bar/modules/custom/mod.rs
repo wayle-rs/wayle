@@ -9,7 +9,7 @@ use std::rc::Rc;
 use gtk::prelude::*;
 use relm4::prelude::*;
 use wayle_config::{
-    ConfigProperty,
+    ClickAction, ConfigProperty,
     schemas::{
         modules::{CustomModuleDefinition, ExecutionMode},
         styling::{ColorValue, CssToken},
@@ -26,13 +26,12 @@ pub(crate) use self::{
     factory::Factory,
     messages::{CustomCmd, CustomInit, CustomMsg},
 };
-use crate::shell::bar::dropdowns::DropdownRegistry;
+use crate::shell::bar::dropdowns::{self, DropdownRegistry};
 
 pub(crate) struct CustomModule {
     bar_button: Controller<BarButton>,
     definition: CustomModuleDefinition,
     definition_present: bool,
-    #[allow(dead_code)]
     dropdowns: Rc<DropdownRegistry>,
     poller_token: WatcherToken,
     watcher_token: WatcherToken,
@@ -166,7 +165,7 @@ impl Component for CustomModule {
     fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
         let is_scroll = matches!(msg, CustomMsg::ScrollUp | CustomMsg::ScrollDown);
 
-        let action_cmd = match msg {
+        let action = match msg {
             CustomMsg::LeftClick => &self.definition.left_click,
             CustomMsg::RightClick => &self.definition.right_click,
             CustomMsg::MiddleClick => &self.definition.middle_click,
@@ -174,8 +173,11 @@ impl Component for CustomModule {
             CustomMsg::ScrollDown => &self.definition.scroll_down,
         };
 
-        if !action_cmd.is_empty() {
-            watchers::spawn_action(action_cmd);
+        dropdowns::dispatch_click(action, &self.dropdowns, &self.bar_button);
+
+        // on_action only applies to shell commands (dropdowns handle their own state)
+        if !matches!(action, ClickAction::Shell(_)) {
+            return;
         }
 
         let Some(on_action) = &self.definition.on_action else {

@@ -1,14 +1,17 @@
+//! Init parameters, input messages, and command outputs for the
+//! keyboard-input component.
+
 use std::{rc::Rc, sync::Arc};
 
 use wayle_config::ConfigService;
-use wayle_hyprland::HyprlandService;
 use wayle_widgets::prelude::BarSettings;
 
+use super::sources::{CurrentLayout, KeyboardLayoutSource};
 use crate::shell::bar::dropdowns::DropdownRegistry;
 
 pub(crate) struct KeyboardInputInit {
     pub settings: BarSettings,
-    pub hyprland: Option<Arc<HyprlandService>>,
+    pub source: Arc<dyn KeyboardLayoutSource>,
     pub config: Arc<ConfigService>,
     pub dropdowns: Rc<DropdownRegistry>,
 }
@@ -24,7 +27,7 @@ pub(crate) enum KeyboardInputMsg {
 
 #[derive(Debug)]
 pub(crate) enum KeyboardInputCmd {
-    LayoutChanged(String),
+    LayoutChanged(Option<CurrentLayout>),
     FormatChanged,
     LayoutAliasMapChanged,
     UpdateIcon(String),

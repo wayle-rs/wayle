@@ -29,6 +29,7 @@ pub(crate) struct DashboardDropdownInit {
 #[derive(Debug)]
 pub(crate) enum DashboardDropdownMsg {
     VisibilityChanged(bool),
+    OpenSettings,
 }
 
 #[derive(Debug)]

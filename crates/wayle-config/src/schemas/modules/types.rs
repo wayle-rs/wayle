@@ -2,7 +2,18 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 /// Time display format.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum TimeFormat {
     /// 12-hour format with AM/PM (e.g., "6:30 AM").

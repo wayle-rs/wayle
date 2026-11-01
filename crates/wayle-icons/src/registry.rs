@@ -1,7 +1,6 @@
-//! GTK IconTheme integration for Wayle icons.
+//! Registers the Wayle icon directory with GTK's IconTheme so icons are discoverable at runtime.
 //!
-//! The registry ensures GTK can discover icons in the Wayle icon directory.
-//! It also watches the icon directory for changes and automatically refreshes
+//! Also watches the icon directory for changes and automatically refreshes
 //! GTK's icon cache when icons are added or removed.
 
 use std::{fs, path::PathBuf, thread};
@@ -10,7 +9,10 @@ use gtk4::{gdk, glib};
 use notify::{Event, RecommendedWatcher, RecursiveMode, Watcher};
 use tracing::{debug, info, warn};
 
-use crate::error::{Error, Result};
+use crate::{
+    error::{Error, Result},
+    migrate,
+};
 
 const SYSTEM_ICONS_PATH: &str = "/usr/share/wayle/icons";
 
@@ -123,6 +125,7 @@ impl IconRegistry {
     /// - No display is available (GTK not initialized)
     pub fn init(&self) -> Result<()> {
         self.ensure_setup()?;
+        migrate::run(&self.icons_dir());
         self.register_with_gtk()?;
         self.start_watcher();
 
@@ -233,18 +236,19 @@ impl IconRegistry {
 
         let icon_theme = gtk4::IconTheme::for_display(&display);
 
-        let mut paths: Vec<PathBuf> = icon_theme
+        let existing: Vec<PathBuf> = icon_theme
             .search_path()
             .into_iter()
-            .filter(|p| p != user_path)
+            .filter(|p| p != user_path && !Self::system_icon_paths().contains(p))
             .collect();
 
+        let mut paths = vec![user_path.clone()];
         for system_path in Self::system_icon_paths() {
             if !paths.contains(&system_path) {
                 paths.push(system_path);
             }
         }
-        paths.push(user_path.clone());
+        paths.extend(existing);
 
         let path_refs: Vec<&std::path::Path> = paths.iter().map(|p| p.as_path()).collect();
         icon_theme.set_search_path(&path_refs);
@@ -252,7 +256,7 @@ impl IconRegistry {
         Ok(())
     }
 
-    fn system_icon_paths() -> Vec<PathBuf> {
+    pub(crate) fn system_icon_paths() -> Vec<PathBuf> {
         let mut paths = Vec::new();
 
         let xdg_dirs = std::env::var("XDG_DATA_DIRS").unwrap_or_default();

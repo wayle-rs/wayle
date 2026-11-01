@@ -1,0 +1,31 @@
+.toml-editor {
+    background-color: var(--bg-overlay);
+    border: 1px solid var(--border-default);
+    border-radius: var(--rounding-element);
+    font-size: var(--text-md);
+    color: var(--fg-default);
+    padding: var(--space-sm);
+    min-height: calc(13rem * var(--global-scale));
+}
+
+.toml-editor:focus-within {
+    border-color: var(--accent);
+}
+
+.toml-editor text {
+    background-color: transparent;
+    color: var(--fg-default);
+}
+
+.toml-editor text selection {
+    background-color: var(--accent-subtle);
+    color: var(--fg-default);
+}
+
+.toml-editor.toml-editor-lines-40 {
+    min-height: calc(30rem * var(--global-scale));
+}
+
+.toml-editor + button {
+    margin-top: var(--space-sm);
+}
