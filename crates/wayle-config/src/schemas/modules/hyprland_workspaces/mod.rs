@@ -200,7 +200,7 @@ pub struct HyprlandWorkspacesConfig {
 
     /// Include special workspaces (scratchpads) in the display.
     ///
-    /// Special workspaces have negative IDs in Hyprland.
+    /// Special workspaces have addresses such as `special:chat`.
     #[serde(rename = "show-special")]
     #[default(true)]
     pub show_special: ConfigProperty<bool>,
@@ -370,7 +370,8 @@ pub struct HyprlandWorkspacesConfig {
 
     /// Per-workspace icon and color overrides.
     ///
-    /// Keys are workspace IDs (use negative for special workspaces).
+    /// Keys are numeric workspace IDs. Hyprland identifies special workspaces
+    /// by address, so their old numeric keys no longer apply.
     ///
     /// ## Example
     ///

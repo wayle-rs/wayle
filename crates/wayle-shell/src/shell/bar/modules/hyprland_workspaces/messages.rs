@@ -1,8 +1,10 @@
 use std::{collections::HashMap, sync::Arc};
 
 use wayle_config::ConfigService;
-use wayle_hyprland::{Address, HyprlandService, WorkspaceId};
+use wayle_hyprland::{Address, HyprlandService};
 use wayle_widgets::prelude::BarSettings;
+
+use super::WorkspaceId;
 
 pub(crate) struct WorkspacesInit {
     pub settings: BarSettings,

@@ -6,9 +6,9 @@ use std::{
 
 use glob::Pattern;
 use wayle_config::schemas::modules::{DisplayMode, Numbering};
-use wayle_hyprland::{Address, Client, WorkspaceId};
+use wayle_hyprland::{Address, Client};
 
-use super::filtering::relative_workspace_number;
+use super::{WorkspaceId, filtering::relative_workspace_number};
 use crate::shell::bar::icons::{DEFAULT_APP_ICON_MAP, matches_glob};
 
 pub(crate) struct IconContext<'a> {
@@ -76,7 +76,7 @@ pub(crate) fn resolve_workspace_icons(
 
     for client in clients
         .iter()
-        .filter(|client| client.workspace.get().id == workspace_id)
+        .filter(|client| workspace_id_from_address(&client.workspace.get().address) == workspace_id)
     {
         let class = client.class.get();
         let title = client.title.get();
@@ -114,6 +114,10 @@ pub(super) fn format_workspace_label(
     name: &str,
     use_name: bool,
 ) -> String {
+    if absolute_id < 0 && !name.is_empty() {
+        return name.strip_prefix("special:").unwrap_or(name).to_string();
+    }
+
     if use_name && !name.is_empty() {
         let is_default_name = name == absolute_id.to_string();
         if is_default_name {
@@ -124,6 +128,18 @@ pub(super) fn format_workspace_label(
     } else {
         display_id.to_string()
     }
+}
+
+pub(crate) fn workspace_id_from_address(address: &str) -> WorkspaceId {
+    if let Ok(id) = address.parse::<WorkspaceId>() {
+        return id;
+    }
+
+    // Keep address-based special workspaces distinct in the numeric bar model.
+    let hash = address.bytes().fold(0xcbf29ce484222325_u64, |hash, byte| {
+        (hash ^ u64::from(byte)).wrapping_mul(0x100000001b3)
+    });
+    -((hash & i64::MAX as u64) as i64).max(1)
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -401,8 +417,11 @@ mod tests {
         }
 
         #[test]
-        fn negative_id_for_special() {
-            assert_eq!(format_workspace_label(-99, -99, "scratchpad", false), "-99");
+        fn special_workspace_uses_name() {
+            assert_eq!(
+                format_workspace_label(-99, -99, "special:chat", false),
+                "chat"
+            );
         }
 
         #[test]
@@ -414,6 +433,15 @@ mod tests {
         fn relative_numbering_with_custom_name() {
             assert_eq!(format_workspace_label(1, 4, "browser", true), "browser");
         }
+    }
+
+    #[test]
+    fn workspace_addresses_map_to_stable_distinct_bar_ids() {
+        assert_eq!(workspace_id_from_address("10"), 10);
+        let chat = workspace_id_from_address("special:chat");
+        assert!(chat < 0);
+        assert_eq!(chat, workspace_id_from_address("special:chat"));
+        assert_ne!(chat, workspace_id_from_address("special:browser"));
     }
 
     mod workspace_class_key {

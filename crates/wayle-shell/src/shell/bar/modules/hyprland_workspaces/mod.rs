@@ -30,7 +30,7 @@ use relm4::{factory::FactoryVecDeque, prelude::*};
 use tokio_util::sync::CancellationToken;
 use tracing::debug;
 use wayle_config::ConfigService;
-use wayle_hyprland::{Address, HyprlandService, WorkspaceId};
+use wayle_hyprland::{Address, HyprlandService};
 use wayle_widgets::{prelude::BarSettings, utils::force_window_resize};
 
 use self::{
@@ -44,6 +44,7 @@ pub(crate) use self::{
 use crate::shell::helpers::COMPONENT_CSS_PRIORITY;
 
 const BLINK_INTERVAL: Duration = Duration::from_millis(500);
+type WorkspaceId = i64;
 
 pub(crate) struct HyprlandWorkspaces {
     hyprland: Option<Arc<HyprlandService>>,

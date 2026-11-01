@@ -13,7 +13,7 @@ use wayle_config::{
 use wayle_hyprland::{HyprlandEvent, HyprlandService};
 use wayle_widgets::{prelude::BarSettings, watch};
 
-use super::HyprlandWorkspaces;
+use super::{HyprlandWorkspaces, helpers::workspace_id_from_address};
 use crate::shell::bar::modules::hyprland_workspaces::messages::WorkspacesCmd;
 
 pub(super) fn spawn_watchers(
@@ -75,16 +75,17 @@ async fn watch_workspace_events(
             event = events.next() => {
                 let Some(event) = event else { continue; };
                 match event {
-                    HyprlandEvent::WorkspaceV2 { id, .. } => {
+                    HyprlandEvent::WorkspaceV2 { address, .. } => {
+                        let id = workspace_id_from_address(&address);
                         let _ = out.send(WorkspacesCmd::ActiveWorkspaceChanged(id));
                     }
                     HyprlandEvent::FocusedMonV2 {
                         name,
-                        workspace_id,
+                        workspace_address,
                     } => {
                         let _ = out.send(WorkspacesCmd::MonitorFocused {
                             monitor: name,
-                            workspace_id,
+                            workspace_id: workspace_id_from_address(&workspace_address),
                         });
                     }
                     HyprlandEvent::CreateWorkspaceV2 { .. }
