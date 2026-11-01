@@ -1,8 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-use wayle_hyprland::WorkspaceId;
-
-use super::helpers::matches_ignore_patterns;
+use super::{WorkspaceId, helpers::matches_ignore_patterns};
 
 #[derive(Debug, Clone)]
 pub(crate) struct WorkspaceData {

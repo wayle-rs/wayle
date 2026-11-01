@@ -10,11 +10,11 @@ use wayle_config::schemas::{
     bar::BorderLocation,
     modules::{HyprlandWorkspacesConfig, Numbering, UrgentMode},
 };
-use wayle_hyprland::{Address, HyprlandService, WorkspaceId};
+use wayle_hyprland::{Address, HyprlandService};
 use wayle_widgets::prelude::BarSettings;
 
 use super::{
-    BLINK_INTERVAL, HyprlandWorkspaces,
+    BLINK_INTERVAL, HyprlandWorkspaces, WorkspaceId,
     button::{ButtonBuildContext, WorkspaceButtonInput, build_button_init},
     filtering::{
         FilterContext, FilteredWorkspace, WorkspaceData, calculate_navigation_index,
@@ -22,7 +22,7 @@ use super::{
     },
     helpers::{
         addresses_in_workspace, compute_display_id, has_title_patterns, prune_stale_addresses,
-        workspace_contains_urgent_address,
+        workspace_contains_urgent_address, workspace_id_from_address,
     },
     messages::WorkspacesCmd,
 };
@@ -75,7 +75,7 @@ impl HyprlandWorkspaces {
                 .workspaces
                 .get()
                 .into_iter()
-                .find(|ws| ws.id.get() == id)
+                .find(|ws| workspace_id_from_address(&ws.address.get()) == id)
                 .map(|ws| ws.monitor.get())
         {
             return Some(monitor_name);
@@ -123,13 +123,13 @@ impl HyprlandWorkspaces {
         if monitor_specific && let Some(bar_monitor) = &settings.monitor_name {
             let monitors = hyprland.monitors.get();
             if let Some(monitor) = monitors.iter().find(|m| &m.name.get() == bar_monitor) {
-                return monitor.active_workspace.get().id;
+                return workspace_id_from_address(&monitor.active_workspace.get().address);
             }
         }
 
         let runtime = tokio::runtime::Handle::current();
         match runtime.block_on(hyprland.active_workspace()) {
-            Some(ws) => ws.id.get(),
+            Some(ws) => workspace_id_from_address(&ws.address.get()),
             None => 1,
         }
     }
@@ -189,12 +189,14 @@ impl HyprlandWorkspaces {
             && let Some(bar_monitor) = &self.settings.monitor_name
             && let Some(monitor) = monitors.iter().find(|m| m.name.get() == *bar_monitor)
         {
-            self.active_workspace_id = monitor.active_workspace.get().id;
+            self.active_workspace_id =
+                workspace_id_from_address(&monitor.active_workspace.get().address);
             return;
         }
 
         if let Some(monitor) = monitors.iter().find(|m| m.focused.get()) {
-            self.active_workspace_id = monitor.active_workspace.get().id;
+            self.active_workspace_id =
+                workspace_id_from_address(&monitor.active_workspace.get().address);
         }
     }
 
@@ -270,7 +272,7 @@ impl HyprlandWorkspaces {
         let workspace_data: Vec<WorkspaceData> = all_workspaces
             .iter()
             .map(|ws| WorkspaceData {
-                id: ws.id.get(),
+                id: workspace_id_from_address(&ws.address.get()),
                 name: ws.name.get(),
                 windows: ws.windows.get(),
                 monitor: ws.monitor.get(),
@@ -359,7 +361,7 @@ impl HyprlandWorkspaces {
 
         let hyprland = hyprland.clone();
         tokio::spawn(async move {
-            let Some(selector) = workspace_selector(&hyprland, id).await else {
+            let Some(selector) = workspace_selector(&hyprland, id) else {
                 warn!(workspace = id, "no resolvable selector, skipping dispatch");
                 return;
             };
@@ -440,7 +442,12 @@ impl HyprlandWorkspaces {
         let clients = hyprland.clients.get();
         let client_workspaces: Vec<_> = clients
             .iter()
-            .map(|c| (c.address.get(), c.workspace.get().id))
+            .map(|c| {
+                (
+                    c.address.get(),
+                    workspace_id_from_address(&c.workspace.get().address),
+                )
+            })
             .collect();
         workspace_contains_urgent_address(workspace_id, &self.urgent_windows, &client_workspaces)
     }
@@ -454,7 +461,7 @@ impl HyprlandWorkspaces {
             .workspaces
             .get()
             .iter()
-            .find(|ws| ws.id.get() == workspace_id)
+            .find(|ws| workspace_id_from_address(&ws.address.get()) == workspace_id)
             .map(|ws| ws.windows.get())
             .unwrap_or(0)
     }
@@ -467,7 +474,12 @@ impl HyprlandWorkspaces {
         let clients = hyprland.clients.get();
         let client_workspaces: Vec<_> = clients
             .iter()
-            .map(|c| (c.address.get(), c.workspace.get().id))
+            .map(|c| {
+                (
+                    c.address.get(),
+                    workspace_id_from_address(&c.workspace.get().address),
+                )
+            })
             .collect();
         let to_clear = addresses_in_workspace(workspace_id, &client_workspaces);
         for address in to_clear {
@@ -518,11 +530,15 @@ impl HyprlandWorkspaces {
 /// so the numeric form never reaches the target.
 ///
 /// Returns `None` when a named workspace can't be resolved (gone, empty name).
-async fn workspace_selector(hyprland: &HyprlandService, id: WorkspaceId) -> Option<String> {
+fn workspace_selector(hyprland: &HyprlandService, id: WorkspaceId) -> Option<String> {
     if id >= 0 {
         return Some(id.to_string());
     }
-    let workspace = hyprland.workspace(id).await?;
+    let workspace = hyprland
+        .workspaces
+        .get()
+        .into_iter()
+        .find(|ws| workspace_id_from_address(&ws.address.get()) == id)?;
     let name = workspace.name.get();
     if name.is_empty() {
         return None;

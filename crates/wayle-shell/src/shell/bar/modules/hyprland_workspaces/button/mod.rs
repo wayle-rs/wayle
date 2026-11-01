@@ -5,8 +5,9 @@ use std::{collections::HashSet, mem, sync::Arc};
 use gtk::prelude::*;
 use relm4::{factory::FactoryComponent, prelude::*};
 use wayle_config::schemas::modules::{ActiveIndicator, DisplayMode, HyprlandWorkspacesConfig};
-use wayle_hyprland::{Address, Client, WorkspaceId};
+use wayle_hyprland::{Address, Client};
 
+use super::WorkspaceId;
 use crate::shell::bar::modules::hyprland_workspaces::helpers::{
     IconContext, WorkspaceState, compute_static_css_classes, determine_workspace_state,
     resolve_workspace_icons, workspace_id_css_class,

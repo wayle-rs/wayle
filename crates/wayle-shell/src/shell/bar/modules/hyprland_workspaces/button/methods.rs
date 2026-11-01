@@ -2,11 +2,11 @@ use std::collections::HashSet;
 
 use relm4::{gtk, gtk::prelude::*};
 use wayle_config::schemas::modules::DisplayMode;
-use wayle_hyprland::{Address, WorkspaceId};
+use wayle_hyprland::Address;
 
 use super::{
-    AppIcon, WORKSPACE_CUSTOM_ICON_CSS, WORKSPACE_ICON_CSS, WORKSPACE_ICON_EMPTY_CSS,
-    WORKSPACE_LABEL_CSS, WorkspaceButton,
+    super::WorkspaceId, AppIcon, WORKSPACE_CUSTOM_ICON_CSS, WORKSPACE_ICON_CSS,
+    WORKSPACE_ICON_EMPTY_CSS, WORKSPACE_LABEL_CSS, WorkspaceButton,
 };
 use crate::shell::bar::modules::hyprland_workspaces::helpers::{
     collect_button_css_classes, format_workspace_label, should_show_divider,
