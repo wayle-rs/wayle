@@ -108,7 +108,7 @@ wayle-media = "0.1.2"
 wayle-network = "0.1.2"
 wayle-notification = "0.1.3"
 wayle-power-profiles = "0.1.3"
-wayle-sysinfo = "0.1.2"
+wayle-sysinfo = { git = "https://github.com/Dieterbe/wayle-services", rev = "5c95aee6a2c85def920789d2032503f635c31c44" }
 wayle-systray = "0.1.3"
 wayle-traits = "0.1.2"
 wayle-wallpaper = "0.1.3"
