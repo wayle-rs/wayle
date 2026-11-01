@@ -21,6 +21,7 @@ mod network;
 mod niri_workspaces;
 /// Notification module configuration and popup types.
 pub mod notification;
+mod pomodoro;
 mod power;
 mod ram;
 mod separator;
@@ -61,6 +62,7 @@ pub use notification::{
     IconSource, NotificationConfig, PopupCloseBehavior, PopupMonitor, PopupPosition, StackingOrder,
     UrgencyBarThreshold,
 };
+pub use pomodoro::PomodoroConfig;
 pub use power::PowerConfig;
 pub use ram::RamConfig;
 pub use separator::SeparatorConfig;
@@ -124,6 +126,8 @@ pub struct ModulesConfig {
     #[serde(rename = "notifications")]
     #[wayle(deprecated_alias = "notification")]
     pub notifications: NotificationConfig,
+    /// Pomodoro timer module.
+    pub pomodoro: PomodoroConfig,
     /// Power menu module.
     pub power: PowerConfig,
     /// RAM usage module.

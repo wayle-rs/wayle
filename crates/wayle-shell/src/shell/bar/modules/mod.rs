@@ -19,6 +19,7 @@ mod netstat;
 mod network;
 mod niri_workspaces;
 mod notification;
+mod pomodoro;
 mod power;
 mod ram;
 mod registry;
@@ -79,6 +80,7 @@ register_modules! {
     Network => network::Factory,
     NiriWorkspaces => niri_workspaces::Factory,
     Notifications => notification::Factory,
+    Pomodoro => pomodoro::Factory,
     Power => power::Factory,
     Ram => ram::Factory,
     Separator => separator::Factory,

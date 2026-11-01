@@ -18,7 +18,10 @@ use wayle_systray::SystemTrayService;
 use wayle_wallpaper::WallpaperService;
 use wayle_weather::WeatherService;
 
-use crate::services::{IdleInhibitService, ShellIpcService};
+use crate::{
+    services::{IdleInhibitService, ShellIpcService},
+    shell::SharedPomodoroState,
+};
 
 /// Container for services used by shell components.
 ///
@@ -44,4 +47,5 @@ pub(crate) struct ShellServices {
     pub wallpaper: Option<Arc<WallpaperService>>,
     pub weather: Arc<WeatherService>,
     pub shell_ipc: Arc<ShellIpcService>,
+    pub pomodoro_state: SharedPomodoroState,
 }

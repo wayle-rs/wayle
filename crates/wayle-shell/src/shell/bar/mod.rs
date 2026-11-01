@@ -3,6 +3,7 @@ mod factory;
 pub(crate) mod icons;
 mod methods;
 mod modules;
+pub(crate) mod pomodoro;
 mod styling;
 mod watchers;
 

@@ -233,6 +233,8 @@ pub enum BarModule {
     MangoWorkspaces,
     /// Notification center button.
     Notifications,
+    /// Pomodoro timer.
+    Pomodoro,
     /// Power menu button.
     Power,
     /// RAM usage indicator.
@@ -306,6 +308,7 @@ impl BarModule {
             Self::NiriWorkspaces => "niri-workspaces",
             Self::MangoWorkspaces => "mango-workspaces",
             Self::Notifications => "notifications",
+            Self::Pomodoro => "pomodoro",
             Self::Power => "power",
             Self::Ram => "ram",
             Self::Separator => "separator",
@@ -341,6 +344,7 @@ impl BarModule {
             "niri-workspaces" => Self::NiriWorkspaces,
             "mango-workspaces" => Self::MangoWorkspaces,
             "notifications" => Self::Notifications,
+            "pomodoro" => Self::Pomodoro,
             "power" => Self::Power,
             "ram" => Self::Ram,
             "separator" => Self::Separator,
@@ -427,6 +431,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "network",
     "niri-workspaces",
     "notifications",
+    "pomodoro",
     "power",
     "ram",
     "separator",
