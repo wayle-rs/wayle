@@ -3,7 +3,7 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
@@ -110,10 +110,15 @@ impl ModuleInfoProvider for PomodoroConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("pomodoro"),
-            icon: String::from("󱫢"),
-            description: String::from("Pomodoro timer for time management"),
-            behavior_configs: vec![(String::from("pomodoro"), || schema_for!(PomodoroConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(PomodoroConfig),
+            layout_id: Some(String::from("pomodoro")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(PomodoroConfig);
