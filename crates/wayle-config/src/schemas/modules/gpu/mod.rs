@@ -3,7 +3,7 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
@@ -156,10 +156,15 @@ impl ModuleInfoProvider for GpuConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("gpu"),
-            icon: String::from("󰢮"),
-            description: String::from("GPU usage, memory, and temperature"),
-            behavior_configs: vec![(String::from("gpu"), || schema_for!(GpuConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(GpuConfig),
+            layout_id: Some(String::from("gpu")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(GpuConfig);
