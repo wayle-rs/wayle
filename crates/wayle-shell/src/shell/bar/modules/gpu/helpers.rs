@@ -114,7 +114,10 @@ fn gib(bytes: Option<u64>) -> String {
 
 #[cfg(test)]
 mod tests {
+    use wayle_sysinfo::types::GpuDeviceData;
+
     use super::*;
+
     const GIB: u64 = 1024 * 1024 * 1024;
 
     fn device(
@@ -180,7 +183,7 @@ mod tests {
         let gpu = gpu_data(
             vec![
                 device(0, Some(10.0), 2 * GIB, 8 * GIB, Some(61.0)),
-                device(1, Some(20.0), 1 * GIB, 8 * GIB, Some(73.0)),
+                device(1, Some(20.0), GIB, 8 * GIB, Some(73.0)),
             ],
             15.0,
             19.0,
@@ -194,7 +197,7 @@ mod tests {
         let gpu = gpu_data(
             vec![
                 device(0, Some(52.0), 3 * GIB, 8 * GIB, Some(65.0)),
-                device(1, Some(11.0), 1 * GIB, 8 * GIB, Some(49.0)),
+                device(1, Some(11.0), GIB, 8 * GIB, Some(49.0)),
             ],
             31.5,
             25.0,
@@ -217,7 +220,7 @@ mod tests {
     #[test]
     fn format_label_uses_device_index_not_vector_position() {
         let gpu = gpu_data(
-            vec![device(1, Some(11.0), 1 * GIB, 8 * GIB, Some(49.0))],
+            vec![device(1, Some(11.0), GIB, 8 * GIB, Some(49.0))],
             11.0,
             12.5,
         );
@@ -247,7 +250,7 @@ mod tests {
         let gpu = gpu_data(
             vec![
                 device(0, Some(52.0), 3 * GIB, 8 * GIB, Some(65.0)),
-                device(1, Some(11.0), 1 * GIB, 8 * GIB, Some(49.0)),
+                device(1, Some(11.0), GIB, 8 * GIB, Some(49.0)),
             ],
             31.5,
             25.0,
@@ -266,7 +269,7 @@ mod tests {
         let gpu = gpu_data(
             vec![
                 device(0, Some(52.0), 3 * GIB, 8 * GIB, Some(65.0)),
-                device(1, Some(11.0), 1 * GIB, 8 * GIB, Some(73.0)),
+                device(1, Some(11.0), GIB, 8 * GIB, Some(73.0)),
             ],
             31.5,
             25.0,
