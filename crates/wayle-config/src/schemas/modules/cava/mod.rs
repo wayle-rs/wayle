@@ -8,12 +8,12 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, NormalizedF64, Spacing},
 };
 
-/// Cava audio visualizer module configuration.
-#[wayle_config(bar_container)]
+/// Audio frequency bars visualising the output stream.
+#[wayle_config(bar_container, i18n_prefix = "settings-modules-cava")]
 pub struct CavaConfig {
     /// Number of frequency bars.
     #[default(BarCount::DEFAULT)]
@@ -130,10 +130,15 @@ impl ModuleInfoProvider for CavaConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("cava"),
-            icon: String::from("󰝚"),
-            description: String::from("Audio frequency visualizer"),
-            behavior_configs: vec![(String::from("cava"), || schema_for!(CavaConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(CavaConfig),
+            layout_id: Some(String::from("cava")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::standard()
+    }
 }
+
+crate::register_module!(CavaConfig);

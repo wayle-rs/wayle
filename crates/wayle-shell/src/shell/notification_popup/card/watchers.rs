@@ -7,7 +7,7 @@ use wayle_widgets::watch;
 use super::{CardCmd, NotificationPopupCard};
 
 pub(super) fn spawn(sender: &ComponentSender<NotificationPopupCard>, config: &Arc<ConfigService>) {
-    let notif_config = config.config().modules.notification.clone();
+    let notif_config = config.config().modules.notifications.clone();
     let shadow = notif_config.popup_shadow.clone();
     let urgency_bar = notif_config.popup_urgency_bar.clone();
 

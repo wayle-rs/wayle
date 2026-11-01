@@ -1,5 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
+    collections::{BTreeMap, HashSet},
     hash::Hash,
     sync::Arc,
 };
@@ -12,7 +12,7 @@ use super::filtering::relative_workspace_number;
 use crate::shell::bar::icons::{DEFAULT_APP_ICON_MAP, matches_glob};
 
 pub(crate) struct IconContext<'a> {
-    pub user_map: &'a HashMap<String, String>,
+    pub user_map: &'a BTreeMap<String, String>,
     pub fallback: &'a str,
 }
 
@@ -72,7 +72,7 @@ pub(crate) fn resolve_workspace_icons(
     dedupe: bool,
 ) -> Vec<ResolvedIcon> {
     let mut icons: Vec<ResolvedIcon> = Vec::new();
-    let mut seen: HashMap<String, usize> = HashMap::new();
+    let mut seen: BTreeMap<String, usize> = BTreeMap::new();
 
     for client in clients
         .iter()
@@ -104,7 +104,7 @@ pub(crate) fn resolve_workspace_icons(
     icons
 }
 
-pub(crate) fn has_title_patterns(user_map: &HashMap<String, String>) -> bool {
+pub(crate) fn has_title_patterns(user_map: &BTreeMap<String, String>) -> bool {
     user_map.keys().any(|k| k.starts_with("title:"))
 }
 
@@ -291,7 +291,7 @@ mod tests {
 
         #[test]
         fn exact_class_match() {
-            let user_map = HashMap::new();
+            let user_map = BTreeMap::new();
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
@@ -305,7 +305,7 @@ mod tests {
 
         #[test]
         fn glob_class_match() {
-            let user_map = HashMap::new();
+            let user_map = BTreeMap::new();
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
@@ -319,7 +319,7 @@ mod tests {
 
         #[test]
         fn user_override() {
-            let mut user_map = HashMap::new();
+            let mut user_map = BTreeMap::new();
             user_map.insert("kitty".to_string(), "custom-terminal".to_string());
             let ctx = IconContext {
                 user_map: &user_map,
@@ -334,7 +334,7 @@ mod tests {
 
         #[test]
         fn title_prefix_match() {
-            let mut user_map = HashMap::new();
+            let mut user_map = BTreeMap::new();
             user_map.insert("title:*YouTube*".to_string(), "ld-youtube".to_string());
             let ctx = IconContext {
                 user_map: &user_map,
@@ -349,7 +349,7 @@ mod tests {
 
         #[test]
         fn fallback_for_unknown() {
-            let user_map = HashMap::new();
+            let user_map = BTreeMap::new();
             let ctx = IconContext {
                 user_map: &user_map,
                 fallback: "fallback-icon",
@@ -367,7 +367,7 @@ mod tests {
 
         #[test]
         fn no_title_patterns() {
-            let mut map = HashMap::new();
+            let mut map = BTreeMap::new();
             map.insert("kitty".to_string(), "icon".to_string());
             map.insert("class:firefox".to_string(), "icon".to_string());
             assert!(!has_title_patterns(&map));
@@ -375,7 +375,7 @@ mod tests {
 
         #[test]
         fn with_title_pattern() {
-            let mut map = HashMap::new();
+            let mut map = BTreeMap::new();
             map.insert("kitty".to_string(), "icon".to_string());
             map.insert("title:*YouTube*".to_string(), "icon".to_string());
             assert!(has_title_patterns(&map));

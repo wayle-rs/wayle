@@ -9,6 +9,11 @@ mod system_stats;
 mod user_session;
 mod watchers;
 
+use std::{
+    process::{Command, Stdio},
+    thread,
+};
+
 use gtk::prelude::*;
 use relm4::{gtk, prelude::*};
 use wayle_widgets::prelude::*;
@@ -27,6 +32,24 @@ use self::{
 use crate::{i18n::t, shell::bar::dropdowns::scaled_dimension};
 
 const BASE_WIDTH: f32 = 380.0;
+
+fn spawn_settings_app() {
+    match Command::new("wayle-settings")
+        .stdin(Stdio::null())
+        .stdout(Stdio::null())
+        .stderr(Stdio::null())
+        .spawn()
+    {
+        Ok(mut child) => {
+            thread::spawn(move || {
+                let _ = child.wait();
+            });
+        }
+        Err(err) => {
+            tracing::warn!(error = %err, "failed to spawn wayle-settings");
+        }
+    }
+}
 
 pub(crate) struct DashboardDropdown {
     scaled_width: i32,
@@ -52,6 +75,8 @@ impl Component for DashboardDropdown {
         gtk::Popover {
             set_css_classes: &["dropdown", "dashboard-dropdown"],
             set_has_arrow: false,
+            #[watch]
+            set_width_request: model.scaled_width,
 
             #[template]
             #[name = "dashboard_container"]
@@ -70,6 +95,16 @@ impl Component for DashboardDropdown {
                     #[template_child]
                     label {
                         set_label: &t!("dropdown-dashboard-title"),
+                    },
+                    #[template_child]
+                    actions {
+                        #[template]
+                        GhostIconButton {
+                            add_css_class: "dashboard-settings-btn",
+                            set_icon_name: "ld-settings-symbolic",
+                            set_tooltip_text: Some(&t!("dropdown-dashboard-open-settings")),
+                            connect_clicked => DashboardDropdownMsg::OpenSettings,
+                        },
                     },
                 },
 
@@ -219,12 +254,16 @@ impl Component for DashboardDropdown {
         ComponentParts { model, widgets }
     }
 
-    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
+    fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, root: &Self::Root) {
         match msg {
             DashboardDropdownMsg::VisibilityChanged(visible) => {
                 self.network.emit(NetworkSectionInput::SetActive(visible));
                 self.system_stats.emit(SystemStatsInput::SetActive(visible));
                 self.media.emit(MediaSectionInput::SetActive(visible));
+            }
+            DashboardDropdownMsg::OpenSettings => {
+                root.popdown();
+                spawn_settings_app();
             }
         }
     }

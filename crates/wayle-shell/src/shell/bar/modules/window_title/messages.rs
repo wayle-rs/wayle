@@ -1,14 +1,17 @@
+//! Init parameters, input messages, and command outputs for the
+//! window-title component.
+
 use std::{rc::Rc, sync::Arc};
 
 use wayle_config::ConfigService;
-use wayle_hyprland::HyprlandService;
 use wayle_widgets::prelude::BarSettings;
 
+use super::sources::{FocusedWindow, FocusedWindowSource};
 use crate::shell::bar::dropdowns::DropdownRegistry;
 
 pub(crate) struct WindowTitleInit {
     pub settings: BarSettings,
-    pub hyprland: Option<Arc<HyprlandService>>,
+    pub source: Arc<dyn FocusedWindowSource>,
     pub config: Arc<ConfigService>,
     pub dropdowns: Rc<DropdownRegistry>,
 }
@@ -26,8 +29,7 @@ pub(crate) enum WindowTitleMsg {
 #[allow(clippy::enum_variant_names)]
 pub(crate) enum WindowTitleCmd {
     WindowChanged {
-        title: String,
-        class: String,
+        focused: Option<FocusedWindow>,
         format: String,
     },
     FormatChanged,

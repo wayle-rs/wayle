@@ -159,7 +159,7 @@ impl DebouncedSliderImp {
 
         let label = gtk4::Label::builder()
             .label(self.format_value(val))
-            .width_chars(4)
+            .width_chars(6)
             .xalign(1.0)
             .visible(self.show_label.get())
             .build();
@@ -258,6 +258,15 @@ impl DebouncedSliderImp {
     fn cancel_trailing(&self) {
         if let Some(source_id) = self.trailing_source.take() {
             source_id.remove();
+        }
+    }
+
+    pub(super) fn set_range(&self, min: f64, max: f64) {
+        self.range_min.set(min);
+        self.range_max.set(max);
+
+        if let Some(scale) = self.scale.get() {
+            scale.set_range(min, max);
         }
     }
 

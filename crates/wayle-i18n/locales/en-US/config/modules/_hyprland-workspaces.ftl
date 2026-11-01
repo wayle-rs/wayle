@@ -79,3 +79,16 @@ settings-modules-hyprland-workspaces-workspace-map = Workspace Map
 
 settings-modules-hyprland-workspaces-app-icon-map = App Icon Map
     .description = Window class/title to icon mappings
+
+settings-modules-hyprland-workspaces-urgent-mode = Urgent Mode
+    .description = How urgent workspaces are highlighted (per-workspace or per-application)
+
+
+## DisplayMode variants
+enum-display-mode-label = Label
+enum-display-mode-icon = Icon
+enum-display-mode-none = None
+
+## ActiveIndicator variants
+enum-active-indicator-background = Background
+enum-active-indicator-underline = Underline

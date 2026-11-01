@@ -3,12 +3,12 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
-/// RAM module configuration.
-#[wayle_config(bar_button)]
+/// Memory and swap usage.
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-ram")]
 pub struct RamConfig {
     /// Polling interval in milliseconds.
     ///
@@ -143,10 +143,15 @@ impl ModuleInfoProvider for RamConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("ram"),
-            icon: String::from("󰍛"),
-            description: String::from("Memory and swap usage"),
-            behavior_configs: vec![(String::from("ram"), || schema_for!(RamConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(RamConfig),
+            layout_id: Some(String::from("ram")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(RamConfig);

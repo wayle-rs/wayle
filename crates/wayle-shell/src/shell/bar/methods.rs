@@ -37,6 +37,14 @@ impl Bar {
         }
     }
 
+    pub(super) fn apply_exclusive_zone(window: &gtk::Window, exclusive: bool) {
+        if exclusive {
+            window.auto_exclusive_zone_enable();
+        } else {
+            window.set_exclusive_zone(0);
+        }
+    }
+
     pub(super) fn apply_css_classes(
         window: &gtk::Window,
         monitor: &gdk::Monitor,

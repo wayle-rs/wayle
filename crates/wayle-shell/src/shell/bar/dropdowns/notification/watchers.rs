@@ -63,7 +63,7 @@ fn spawn_icon_source_watcher(
     sender: &ComponentSender<NotificationDropdown>,
     config: &Arc<ConfigService>,
 ) {
-    let icon_source = config.config().modules.notification.icon_source.clone();
+    let icon_source = config.config().modules.notifications.icon_source.clone();
 
     watch!(sender, [icon_source.watch()], |out| {
         let _ = out.send(NotificationDropdownCmd::IconSourceChanged);

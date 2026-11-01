@@ -56,7 +56,7 @@ impl Component for NotificationPopupHost {
         root.set_namespace(Some("wayle-notification-popup"));
 
         let config = init.config.config();
-        let notif_config = &config.modules.notification;
+        let notif_config = &config.modules.notifications;
         let scale = config.styling.scale.get().value();
         let gap = (notif_config.popup_gap.get().value() * scale) as i32;
 
@@ -93,7 +93,7 @@ impl Component for NotificationPopupHost {
                 self.apply_layer(root);
 
                 let config = self.config.config();
-                let notif_config = &config.modules.notification;
+                let notif_config = &config.modules.notifications;
                 let scale = config.styling.scale.get().value();
                 let gap = (notif_config.popup_gap.get().value() * scale) as i32;
                 self.card_container.set_spacing(gap);

@@ -3,12 +3,12 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Dashboard module configuration.
-#[wayle_config]
+/// Quick-access button with a distro icon; opens the dashboard dropdown.
+#[wayle_config(i18n_prefix = "settings-modules-dashboard")]
 pub struct DashboardConfig {
     /// Override the auto-detected distro icon.
     #[serde(rename = "icon-override")]
@@ -84,6 +84,7 @@ pub struct DashboardConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(true)]
     pub icon_show: ConfigProperty<bool>,
 
@@ -91,6 +92,7 @@ pub struct DashboardConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(false)]
     pub label_show: ConfigProperty<bool>,
 
@@ -98,6 +100,7 @@ pub struct DashboardConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(ColorValue::Token(CssToken::Yellow))]
     pub label_color: ConfigProperty<ColorValue>,
 
@@ -105,6 +108,7 @@ pub struct DashboardConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(0)]
     pub label_max_length: ConfigProperty<u32>,
 
@@ -112,6 +116,7 @@ pub struct DashboardConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(ColorValue::Token(CssToken::BgSurfaceElevated))]
     pub button_bg_color: ConfigProperty<ColorValue>,
 }
@@ -120,10 +125,15 @@ impl ModuleInfoProvider for DashboardConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("dashboard"),
-            icon: String::from("󰕰"),
-            description: String::from("Quick access dashboard with distro icon"),
-            behavior_configs: vec![(String::from("dashboard"), || schema_for!(DashboardConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(DashboardConfig),
+            layout_id: Some(String::from("dashboard")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(DashboardConfig);

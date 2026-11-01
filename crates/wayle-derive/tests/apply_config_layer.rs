@@ -1,9 +1,9 @@
 #![allow(missing_docs)]
 
-use wayle_config::{ApplyConfigLayer, ConfigProperty};
-use wayle_derive::ApplyConfigLayer;
+use wayle_config::{ApplyConfigLayer, CommitConfigReload, ConfigProperty};
+use wayle_derive::{ApplyConfigLayer, CommitConfigReload};
 
-#[derive(ApplyConfigLayer)]
+#[derive(ApplyConfigLayer, CommitConfigReload)]
 struct SimpleConfig {
     enabled: ConfigProperty<bool>,
     count: ConfigProperty<u32>,
@@ -22,6 +22,7 @@ fn updates_all_fields_from_table() {
     };
 
     config.apply_config_layer(&toml::Value::Table(toml_value), "");
+    config.commit_config_reload();
 
     assert!(config.enabled.get());
     assert_eq!(config.count.get(), 42);
@@ -39,6 +40,7 @@ fn updates_partial_fields() {
     };
 
     config.apply_config_layer(&toml::Value::Table(toml_value), "");
+    config.commit_config_reload();
 
     assert!(config.enabled.get());
     assert_eq!(config.count.get(), 10);
@@ -58,6 +60,7 @@ fn ignores_unknown_fields() {
     };
 
     config.apply_config_layer(&toml::Value::Table(toml_value), "");
+    config.commit_config_reload();
 
     assert!(config.enabled.get());
     assert_eq!(config.count.get(), 99);
@@ -71,6 +74,7 @@ fn handles_non_table_value() {
     };
 
     config.apply_config_layer(&toml::Value::String("not a table".to_string()), "");
+    config.commit_config_reload();
 
     assert!(config.enabled.get());
     assert_eq!(config.count.get(), 5);
@@ -87,12 +91,13 @@ fn handles_empty_table() {
     let toml_value = Map::new();
 
     config.apply_config_layer(&toml::Value::Table(toml_value), "");
+    config.commit_config_reload();
 
     assert!(config.enabled.get());
     assert_eq!(config.count.get(), 5);
 }
 
-#[derive(ApplyConfigLayer)]
+#[derive(ApplyConfigLayer, CommitConfigReload)]
 struct NestedConfig {
     simple: SimpleConfig,
     name: ConfigProperty<String>,
@@ -116,6 +121,7 @@ fn updates_nested_structs() {
     };
 
     config.apply_config_layer(&toml::Value::Table(toml_value), "");
+    config.commit_config_reload();
 
     assert_eq!(config.name.get(), "new");
     assert!(config.simple.enabled.get());

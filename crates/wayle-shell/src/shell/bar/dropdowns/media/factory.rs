@@ -2,7 +2,7 @@ use relm4::prelude::*;
 
 use super::{MediaDropdown, messages::MediaDropdownInit};
 use crate::shell::{
-    bar::dropdowns::{DropdownFactory, DropdownInstance},
+    bar::dropdowns::{DropdownFactory, DropdownInstance, require_service},
     services::ShellServices,
 };
 
@@ -10,7 +10,7 @@ pub(crate) struct Factory;
 
 impl DropdownFactory for Factory {
     fn create(services: &ShellServices) -> Option<DropdownInstance> {
-        let media = services.media.clone()?;
+        let media = require_service("media", "media", services.media.clone())?;
         let config = services.config.clone();
 
         let init = MediaDropdownInit { media, config };

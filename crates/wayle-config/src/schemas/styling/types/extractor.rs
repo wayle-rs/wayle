@@ -3,10 +3,10 @@ use std::fmt::{self, Display, Formatter};
 use schemars::JsonSchema;
 use serde::{Deserialize, Deserializer, Serialize};
 use tracing::warn;
+use wayle_derive::wayle_enum;
 
 /// Matugen color scheme type.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum MatugenScheme {
     /// Adapts to image content.
     Content,
@@ -53,7 +53,7 @@ impl Display for MatugenScheme {
 }
 
 /// Wallust palette mode.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[wayle_enum(default)]
 #[serde(rename_all = "lowercase")]
 pub enum WallustPalette {
     /// 8 dark colors with 16-color trick.
@@ -155,7 +155,18 @@ impl Display for WallustPalette {
 }
 
 /// Wallust image sampling backend.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum WallustBackend {
     /// Reads every pixel.
@@ -194,7 +205,18 @@ impl Display for WallustBackend {
 }
 
 /// Wallust color space for dominant color selection.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "lowercase")]
 pub enum WallustColorspace {
     /// CIELAB perceptual color space.

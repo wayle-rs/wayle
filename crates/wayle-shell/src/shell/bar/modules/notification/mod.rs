@@ -50,7 +50,7 @@ impl Component for NotificationModule {
         sender: ComponentSender<Self>,
     ) -> ComponentParts<Self> {
         let config = init.config.config();
-        let notification_config = &config.modules.notification;
+        let notification_config = &config.modules.notifications;
 
         let initial_count = init.notification.notifications.get().len();
         let initial_dnd = init.notification.dnd.get();
@@ -111,7 +111,7 @@ impl Component for NotificationModule {
     }
 
     fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
-        let config = &self.config.config().modules.notification;
+        let config = &self.config.config().modules.notifications;
 
         let action = match msg {
             NotificationMsg::LeftClick => config.left_click.get(),
@@ -130,7 +130,7 @@ impl Component for NotificationModule {
         _sender: ComponentSender<Self>,
         _root: &Self::Root,
     ) {
-        let notification_config = &self.config.config().modules.notification;
+        let notification_config = &self.config.config().modules.notifications;
 
         match msg {
             NotificationCmd::NotificationsChanged(count) => {

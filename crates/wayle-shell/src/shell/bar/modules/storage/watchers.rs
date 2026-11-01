@@ -1,11 +1,15 @@
-use std::{path::Path, sync::Arc};
+use std::sync::Arc;
 
 use relm4::ComponentSender;
 use wayle_config::schemas::{modules::StorageConfig, styling::evaluate_thresholds};
 use wayle_sysinfo::SysinfoService;
 use wayle_widgets::watch;
 
-use super::{StorageModule, helpers::format_label, messages::StorageCmd};
+use super::{
+    StorageModule,
+    helpers::{aggregate_storage, format_label},
+    messages::StorageCmd,
+};
 
 pub(super) fn spawn_watchers(
     sender: &ComponentSender<StorageModule>,
@@ -24,25 +28,24 @@ pub(super) fn spawn_watchers(
     let mount_point_thresholds = mount_point.clone();
     watch!(sender, [thresholds_watch.watch()], |out| {
         let disks = sysinfo_thresholds.disks.get();
-        let target = mount_point_thresholds.get();
-        let target_path = Path::new(&target);
+        let mount_points = mount_point_thresholds.get();
 
-        if let Some(disk) = disks.iter().find(|d| d.mount_point == target_path) {
-            let colors = evaluate_thresholds(disk.usage_percent as f64, &thresholds_watch.get());
+        if let Some(snapshot) = aggregate_storage(&disks, &mount_points) {
+            let colors =
+                evaluate_thresholds(snapshot.usage_percent as f64, &thresholds_watch.get());
             let _ = out.send(StorageCmd::UpdateThresholdColors(colors));
         }
     });
 
     watch!(sender, [sysinfo.disks.watch()], |out| {
         let disks = sysinfo_disks.disks.get();
-        let target = mount_point.get();
-        let target_path = Path::new(&target);
+        let mount_points = mount_point.get();
 
-        if let Some(disk) = disks.iter().find(|d| d.mount_point == target_path) {
-            let label = format_label(&format.get(), disk);
+        if let Some(snapshot) = aggregate_storage(&disks, &mount_points) {
+            let label = format_label(&format.get(), &snapshot);
             let _ = out.send(StorageCmd::UpdateLabel(label));
 
-            let colors = evaluate_thresholds(disk.usage_percent as f64, &thresholds.get());
+            let colors = evaluate_thresholds(snapshot.usage_percent as f64, &thresholds.get());
             let _ = out.send(StorageCmd::UpdateThresholdColors(colors));
         }
     });
@@ -51,11 +54,10 @@ pub(super) fn spawn_watchers(
     let mount_point_format = config.mount_point.clone();
     watch!(sender, [format_watch.watch()], |out| {
         let disks = sysinfo_format.disks.get();
-        let target = mount_point_format.get();
-        let target_path = Path::new(&target);
+        let mount_points = mount_point_format.get();
 
-        if let Some(disk) = disks.iter().find(|d| d.mount_point == target_path) {
-            let label = format_label(&format_watch.get(), disk);
+        if let Some(snapshot) = aggregate_storage(&disks, &mount_points) {
+            let label = format_label(&format_watch.get(), &snapshot);
             let _ = out.send(StorageCmd::UpdateLabel(label));
         }
     });

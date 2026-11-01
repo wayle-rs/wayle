@@ -8,7 +8,7 @@ fn hex(s: &str) -> HexColor {
 }
 
 /// Color palette configuration for the active theme.
-#[wayle_config]
+#[wayle_config(i18n_prefix = "settings-palette")]
 pub struct PaletteConfig {
     /// Base background color (darkest).
     #[default(hex(wayle_theme::BG))]

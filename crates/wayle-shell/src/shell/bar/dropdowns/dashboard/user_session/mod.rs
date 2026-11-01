@@ -3,17 +3,14 @@ mod watchers;
 
 use std::{env, path::PathBuf, sync::Arc};
 
-use gtk::{
-    CssProvider, STYLE_PROVIDER_PRIORITY_USER, gdk::Display, prelude::*,
-    style_context_add_provider_for_display,
-};
+use gtk::{CssProvider, gdk::Display, prelude::*, style_context_add_provider_for_display};
 use relm4::{gtk, prelude::*};
 use wayle_config::ConfigService;
 use wayle_widgets::prelude::IconButton;
 
 pub(crate) use self::messages::UserSessionInit;
 use self::messages::{UserSessionCmd, UserSessionInput};
-use crate::{i18n::t, process};
+use crate::{i18n::t, process, shell::helpers::COMPONENT_CSS_PRIORITY};
 
 pub(crate) struct UserSessionSection {
     username: String,
@@ -164,7 +161,7 @@ impl Component for UserSessionSection {
         style_context_add_provider_for_display(
             &display,
             &face_css_provider,
-            STYLE_PROVIDER_PRIORITY_USER + 1,
+            COMPONENT_CSS_PRIORITY,
         );
 
         watchers::spawn_face_watcher(&sender, &face_path);

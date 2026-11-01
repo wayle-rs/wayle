@@ -359,10 +359,11 @@ impl HyprlandWorkspaces {
 
         let hyprland = hyprland.clone();
         tokio::spawn(async move {
-            let command = format!("workspace {}", id);
-            if let Err(e) = hyprland.dispatch(&command).await {
-                error!(error = %e, workspace = id, "Failed to switch workspace");
-            }
+            let Some(selector) = workspace_selector(&hyprland, id).await else {
+                warn!(workspace = id, "no resolvable selector, skipping dispatch");
+                return;
+            };
+            dispatch_workspace_focus(&hyprland, &selector, id).await;
         });
     }
 
@@ -507,5 +508,53 @@ impl HyprlandWorkspaces {
         if show_border && let Some(class) = self.settings.border_location.get().css_class() {
             container.add_css_class(class);
         }
+    }
+}
+
+/// Builds the workspace selector Hyprland's parser expects.
+///
+/// Named workspaces (negative IDs) must dispatch by `name:<name>`: Hyprland's
+/// parser treats a leading `-` as a relative offset and clamps to workspace 1,
+/// so the numeric form never reaches the target.
+///
+/// Returns `None` when a named workspace can't be resolved (gone, empty name).
+async fn workspace_selector(hyprland: &HyprlandService, id: WorkspaceId) -> Option<String> {
+    if id >= 0 {
+        return Some(id.to_string());
+    }
+    let workspace = hyprland.workspace(id).await?;
+    let name = workspace.name.get();
+    if name.is_empty() {
+        return None;
+    }
+    Some(format!("name:{name}"))
+}
+
+fn lua_string_escape(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
+/// Tries the Lua dispatcher first (Hyprland 0.55+ Lua config), falling back
+/// to the legacy `workspace <selector>` form. Both paths share the same
+/// parser inside Hyprland.
+async fn dispatch_workspace_focus(hyprland: &HyprlandService, selector: &str, id: WorkspaceId) {
+    let lua_arg = if selector.starts_with("name:") {
+        format!("\"{}\"", lua_string_escape(selector))
+    } else {
+        selector.to_owned()
+    };
+    let lua_cmd = format!("hl.dsp.focus({{workspace = {lua_arg}}})");
+
+    match hyprland.dispatch(&lua_cmd).await {
+        Ok(resp) if resp.starts_with("error:") || resp.contains("Invalid dispatcher") => {
+            let legacy_cmd = format!("workspace {selector}");
+            if let Err(err) = hyprland.dispatch(&legacy_cmd).await {
+                error!(error = %err, workspace = id, "cannot switch workspace");
+            }
+        }
+        Err(err) => {
+            error!(error = %err, workspace = id, "cannot switch workspace");
+        }
+        _ => {}
     }
 }

@@ -1,18 +1,21 @@
-use std::collections::HashMap;
+//! Pure helpers for the window-title module: template rendering and icon
+//! resolution. No Relm4, no GTK, no service types — easy to unit-test.
+
+use std::collections::BTreeMap;
 
 use serde_json::json;
 use wayle_config::schemas::modules::WINDOW_TITLE_BUILTIN_MAPPINGS;
 
-use crate::{glob, i18n::t};
+use crate::{glob, i18n::t, template};
 
 const TITLE_PREFIX: &str = "title:";
 
-pub(super) fn format_label(format: &str, title: &str, app: &str) -> String {
+pub(super) fn format_label(format: &str, title: &str, app_id: &str) -> String {
     let ctx = json!({
         "title": title,
-        "app": app,
+        "app": app_id,
     });
-    let label = crate::template::render(format, ctx).unwrap_or_default();
+    let label = template::render(format, ctx).unwrap_or_default();
     if label.trim().is_empty() {
         t!("bar-window-title-empty")
     } else {
@@ -22,13 +25,13 @@ pub(super) fn format_label(format: &str, title: &str, app: &str) -> String {
 
 pub(super) struct IconContext<'a> {
     pub title: &'a str,
-    pub class: &'a str,
-    pub user_mappings: &'a HashMap<String, String>,
+    pub app_id: &'a str,
+    pub user_mappings: &'a BTreeMap<String, String>,
     pub fallback: &'a str,
 }
 
 pub(super) fn resolve_icon(ctx: &IconContext<'_>) -> String {
-    let (title_mappings, class_mappings): (Vec<_>, Vec<_>) = ctx
+    let (title_mappings, app_id_mappings): (Vec<_>, Vec<_>) = ctx
         .user_mappings
         .iter()
         .partition(|(pattern, _)| pattern.starts_with(TITLE_PREFIX));
@@ -44,15 +47,16 @@ pub(super) fn resolve_icon(ctx: &IconContext<'_>) -> String {
     }
 
     if let Some(icon) = glob::find_match(
-        class_mappings
+        app_id_mappings
             .iter()
             .map(|(pattern, icon)| (pattern.as_str(), icon.as_str())),
-        ctx.class,
+        ctx.app_id,
     ) {
         return icon.to_string();
     }
 
-    if let Some(icon) = glob::find_match(WINDOW_TITLE_BUILTIN_MAPPINGS.iter().copied(), ctx.class) {
+    if let Some(icon) = glob::find_match(WINDOW_TITLE_BUILTIN_MAPPINGS.iter().copied(), ctx.app_id)
+    {
         return icon.to_string();
     }
 
@@ -111,13 +115,13 @@ mod tests {
 
     #[test]
     fn resolve_icon_user_title_mapping_takes_priority() {
-        let mut mappings = HashMap::new();
+        let mut mappings = BTreeMap::new();
         mappings.insert("title:*Spotify*".to_string(), "user-spotify".to_string());
         mappings.insert("*spotify*".to_string(), "user-class-spotify".to_string());
 
         let icon = resolve_icon(&IconContext {
             title: "Spotify - Playing Music",
-            class: "spotify",
+            app_id: "spotify",
             user_mappings: &mappings,
             fallback: "fallback-icon",
         });
@@ -127,12 +131,12 @@ mod tests {
 
     #[test]
     fn resolve_icon_user_class_mapping_over_builtin() {
-        let mut mappings = HashMap::new();
+        let mut mappings = BTreeMap::new();
         mappings.insert("*firefox*".to_string(), "my-firefox-icon".to_string());
 
         let icon = resolve_icon(&IconContext {
             title: "Home - Firefox",
-            class: "firefox",
+            app_id: "firefox",
             user_mappings: &mappings,
             fallback: "fallback-icon",
         });
@@ -144,8 +148,8 @@ mod tests {
     fn resolve_icon_builtin_class_mapping() {
         let icon = resolve_icon(&IconContext {
             title: "Home - Firefox",
-            class: "firefox",
-            user_mappings: &HashMap::new(),
+            app_id: "firefox",
+            user_mappings: &BTreeMap::new(),
             fallback: "fallback-icon",
         });
 
@@ -156,8 +160,8 @@ mod tests {
     fn resolve_icon_fallback_when_no_match() {
         let icon = resolve_icon(&IconContext {
             title: "Unknown App",
-            class: "unknown-app-class",
-            user_mappings: &HashMap::new(),
+            app_id: "unknown-app-class",
+            user_mappings: &BTreeMap::new(),
             fallback: "fallback-icon",
         });
 
@@ -166,12 +170,12 @@ mod tests {
 
     #[test]
     fn resolve_icon_wildcard_for_static_icon() {
-        let mut mappings = HashMap::new();
+        let mut mappings = BTreeMap::new();
         mappings.insert("*".to_string(), "my-static-icon".to_string());
 
         let icon = resolve_icon(&IconContext {
             title: "Any Title",
-            class: "any-class",
+            app_id: "any-class",
             user_mappings: &mappings,
             fallback: "fallback-icon",
         });

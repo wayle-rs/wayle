@@ -39,11 +39,17 @@ pub mod error;
 /// Icon manager for install, remove, and validation operations.
 pub mod manager;
 
+/// On-disk icon format migration.
+pub mod migrate;
+
 /// GTK IconTheme integration.
 pub mod registry;
 
 /// Icon source definitions (Tabler, Simple Icons, Lucide).
 pub mod sources;
+
+/// Extract icon references from config and install what's missing.
+pub mod sync;
 
 /// SVG transformation for GTK symbolic icon compatibility.
 pub mod transform;
@@ -52,3 +58,4 @@ pub use error::{Error, Result};
 pub use manager::{IconManager, InstallFailure, InstallResult};
 pub use registry::IconRegistry;
 pub use sources::IconSource;
+pub use sync::{IconOrigin, MissingIcon, SyncFailure, SyncSummary};

@@ -8,10 +8,31 @@ use std::{
 use gtk::prelude::*;
 use gtk4_layer_shell::{KeyboardMode, LayerShell};
 use relm4::{gtk, prelude::*};
+use tracing::{debug, warn};
 use wayle_config::{ClickAction, schemas::bar::Location};
 use wayle_widgets::prelude::{BarButton, BarButtonInput};
 
 use crate::{process, shell::services::ShellServices};
+
+/// Returns `value` unchanged, logging at debug if it is `None`.
+///
+/// Use inside dropdown factories that gate on a service dependency: instead of
+/// returning `None` silently, the helper records which dropdown failed and the
+/// service it was waiting on, so the dispatch-site catch-all has the cause
+/// already in the log before it runs.
+pub(crate) fn require_service<T>(
+    dropdown: &'static str,
+    service: &'static str,
+    value: Option<T>,
+) -> Option<T> {
+    if value.is_none() {
+        debug!(
+            dropdown,
+            service, "service unavailable, dropdown disabled on this system"
+        );
+    }
+    value
+}
 
 /// Shared dropdown instance for a dropdown name.
 ///
@@ -27,8 +48,25 @@ impl DropdownInstance {
     pub(crate) fn new(popover: gtk::Popover, controller: Box<dyn Any>) -> Self {
         let thaw_target: Rc<Cell<Option<relm4::Sender<BarButtonInput>>>> = Rc::default();
 
+        popover.connect_map(|popover| {
+            debug!(
+                width = popover.width(),
+                height = popover.height(),
+                autohide = popover.is_autohide(),
+                classes = ?popover.css_classes(),
+                "popover mapped"
+            );
+        });
+
         let thaw = thaw_target.clone();
         popover.connect_closed(move |popover| {
+            debug!(
+                width = popover.width(),
+                height = popover.height(),
+                autohide = popover.is_autohide(),
+                classes = ?popover.css_classes(),
+                "popover closed"
+            );
             let frozen_sender = thaw.take();
 
             if let Some(sender) = &frozen_sender {
@@ -59,17 +97,29 @@ impl DropdownInstance {
     fn toggle_for(&self, bar_button: &Controller<BarButton>, style: DropdownStyle) {
         let widget = bar_button.widget();
         let widget_ref = widget.upcast_ref::<gtk::Widget>();
+        let visible = self.popover.is_visible();
+        let same_parent = self.popover.parent().as_ref() == Some(widget_ref);
 
-        if self.popover.is_visible() {
-            if self.popover.parent().as_ref() == Some(widget_ref) {
-                self.popover.popdown();
-            } else {
-                self.reparent_and_show(bar_button, style);
-            }
-        } else {
-            self.ensure_parent(widget_ref);
-            self.freeze_and_show(bar_button, style);
+        debug!(
+            visible,
+            same_parent,
+            has_parent = self.popover.parent().is_some(),
+            classes = ?self.popover.css_classes(),
+            "toggle_for"
+        );
+
+        if visible && same_parent {
+            self.popover.popdown();
+            return;
         }
+
+        if visible {
+            self.reparent_and_show(bar_button, style);
+            return;
+        }
+
+        self.ensure_parent(widget_ref);
+        self.freeze_and_show(bar_button, style);
     }
 
     /// Toggles popover visibility anchored to an arbitrary widget.
@@ -94,6 +144,12 @@ impl DropdownInstance {
         self.apply_margins(style.margins);
         self.apply_style(&style);
         set_bar_keyboard_mode(&self.popover, KeyboardMode::OnDemand);
+        debug!(
+            classes = ?self.popover.css_classes(),
+            autohide = self.popover.is_autohide(),
+            parent_size = ?self.popover.parent().map(|p| (p.width(), p.height())),
+            "popup (widget path)"
+        );
         self.popover.popup();
     }
 
@@ -136,6 +192,12 @@ impl DropdownInstance {
         self.apply_margins(style.margins);
         self.apply_style(&style);
         set_bar_keyboard_mode(&self.popover, KeyboardMode::OnDemand);
+        debug!(
+            classes = ?self.popover.css_classes(),
+            autohide = self.popover.is_autohide(),
+            parent_size = ?self.popover.parent().map(|p| (p.width(), p.height())),
+            "popup (button path)"
+        );
         self.popover.popup();
     }
 
@@ -316,14 +378,26 @@ impl DropdownRegistry {
         }
     }
 
+    #[allow(clippy::cognitive_complexity)]
     fn get_or_create(&self, name: &str) -> Option<Rc<DropdownInstance>> {
         let mut cache = self.cache.borrow_mut();
         if let Some(instance) = cache.get(name) {
+            debug!(dropdown = name, "cache hit");
             return Some(instance.clone());
         }
 
-        let instance = Rc::new(super::create(name, &self.services)?);
+        debug!(dropdown = name, "creating dropdown");
+        let Some(raw) = super::create(name, &self.services) else {
+            debug!(
+                dropdown = name,
+                "no instance created (factory declined, usually due to a missing service or dependency \
+                 -- see preceding debug log from the factory for the specific cause)"
+            );
+            return None;
+        };
+        let instance = Rc::new(raw);
         cache.insert(name.to_owned(), instance.clone());
+        debug!(dropdown = name, "dropdown cached");
         Some(instance)
     }
 }
@@ -350,6 +424,7 @@ pub(crate) fn dispatch_click_widget(
     });
 }
 
+#[allow(clippy::cognitive_complexity)]
 fn dispatch_action(
     action: &ClickAction,
     registry: &DropdownRegistry,
@@ -357,13 +432,23 @@ fn dispatch_action(
 ) {
     match action {
         ClickAction::Dropdown(name) => {
+            debug!(dropdown = %name, "click: dropdown");
             if let Some(dropdown) = registry.get_or_create(name) {
                 let style = dropdown_style(registry);
                 toggle(&dropdown, style);
+            } else {
+                warn!(
+                    dropdown = %name,
+                    "click dropped: no dropdown available (dropdown is either unregistered or its \
+                     backing service is unavailable on this system)"
+                );
             }
         }
-        ClickAction::Shell(cmd) => process::run_if_set(cmd),
-        ClickAction::None => {}
+        ClickAction::Shell(cmd) => {
+            debug!(command = %cmd, "click: shell");
+            process::run_if_set(cmd);
+        }
+        ClickAction::None => debug!("click: none"),
     }
 }
 

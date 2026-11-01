@@ -3,12 +3,12 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken},
 };
 
-/// Power menu module configuration.
-#[wayle_config]
+/// Shutdown, reboot, and logout menu.
+#[wayle_config(i18n_prefix = "settings-modules-power")]
 pub struct PowerConfig {
     /// Icon name to display.
     #[serde(rename = "icon-name")]
@@ -64,6 +64,7 @@ pub struct PowerConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(true)]
     pub icon_show: ConfigProperty<bool>,
 
@@ -71,6 +72,7 @@ pub struct PowerConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(false)]
     pub label_show: ConfigProperty<bool>,
 
@@ -78,6 +80,7 @@ pub struct PowerConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(ColorValue::Token(CssToken::Red))]
     pub label_color: ConfigProperty<ColorValue>,
 
@@ -85,6 +88,7 @@ pub struct PowerConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(0)]
     pub label_max_length: ConfigProperty<u32>,
 
@@ -92,6 +96,7 @@ pub struct PowerConfig {
     #[serde(skip)]
     #[schemars(skip)]
     #[wayle(skip)]
+    #[i18n(skip)]
     #[default(ColorValue::Token(CssToken::BgSurfaceElevated))]
     pub button_bg_color: ConfigProperty<ColorValue>,
 }
@@ -100,10 +105,15 @@ impl ModuleInfoProvider for PowerConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("power"),
-            icon: String::from(""),
-            description: String::from("Power menu with shutdown, reboot, and logout options"),
-            behavior_configs: vec![(String::from("power"), || schema_for!(PowerConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(PowerConfig),
+            layout_id: Some(String::from("power")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(PowerConfig);

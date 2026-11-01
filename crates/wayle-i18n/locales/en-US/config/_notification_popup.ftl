@@ -2,46 +2,49 @@
 
 ## Shared Settings
 
-settings-modules-notification-blocklist = Blocklist
+settings-modules-notifications-blocklist = Blocklist
     .description = Glob patterns for app names whose notifications are blocked
 
-settings-modules-notification-icon-source = Icon Source
+settings-modules-notifications-icon-source = Icon Source
     .description = How notification icons are resolved
 
 ## Popup Settings
 
-settings-modules-notification-popup-position = Popup Position
-    .description = Screen position for popup notifications
+settings-modules-notifications-popup-position = Popup Position
+    .description = Corner of the screen where notification popups appear
 
-settings-modules-notification-popup-max-visible = Popup Max Visible
-    .description = Maximum number of popups visible at once
+settings-modules-notifications-popup-max-visible = Max Visible
+    .description = Maximum number of popups shown at once before stacking
 
-settings-modules-notification-popup-stacking-order = Popup Stacking Order
-    .description = Order in which popups stack on screen
+settings-modules-notifications-popup-stacking-order = Stacking Order
+    .description = Whether new popups appear above or below existing ones
 
-settings-modules-notification-popup-margin-x = Popup Margin X
-    .description = Horizontal margin from screen edges
+settings-modules-notifications-popup-margin-x = Horizontal Margin
+    .description = Distance from the left/right screen edge
 
-settings-modules-notification-popup-margin-y = Popup Margin Y
-    .description = Vertical margin from screen edges
+settings-modules-notifications-popup-margin-y = Vertical Margin
+    .description = Distance from the top/bottom screen edge
 
-settings-modules-notification-popup-gap = Popup Gap
-    .description = Gap between stacked popups
+settings-modules-notifications-popup-gap = Popup Gap
+    .description = Spacing between stacked notification popups
 
-settings-modules-notification-popup-monitor = Popup Monitor
-    .description = Target monitor: "primary" or a connector name like "DP-1"
+settings-modules-notifications-popup-monitor = Popup Monitor
+    .description = Which monitor shows popups: "primary" or a connector like "DP-1"
 
-settings-modules-notification-popup-duration = Popup Duration
-    .description = Popup display duration in milliseconds
+settings-modules-notifications-popup-layer = Popup Layer
+    .description = Layer-shell layer popup notifications are placed on. Tearing mode demotes overlay to top.
 
-settings-modules-notification-popup-hover-pause = Popup Hover Pause
-    .description = Pause popup auto-dismiss timer on hover
+settings-modules-notifications-popup-duration = Auto-Dismiss
+    .description = How long popups stay visible before closing (ms)
 
-settings-modules-notification-popup-close-behavior = Popup Close Behavior
-    .description = What happens when the close button on a popup is clicked
+settings-modules-notifications-popup-hover-pause = Pause on Hover
+    .description = Stop the auto-dismiss timer while hovering over a popup
 
-settings-modules-notification-popup-urgency-bar = Popup Urgency Bar
-    .description = Minimum urgency level that displays a colored urgency bar
+settings-modules-notifications-popup-close-behavior = Close Behavior
+    .description = What happens when you close a popup (dismiss vs mark read)
+
+settings-modules-notifications-popup-urgency-bar = Urgency Bar
+    .description = Show a colored bar on popups that meet a minimum urgency level
 
 ## Relative Time
 

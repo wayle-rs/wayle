@@ -52,7 +52,7 @@ impl Component for WorldClockModule {
     ) -> ComponentParts<Self> {
         let config = init.config.config();
         let world_clock = &config.modules.world_clock;
-        let label = helpers::format_world_clock(&world_clock.format.get());
+        let label = watchers::render_label(&world_clock.format.get());
         let initial_label_len = label.chars().count();
 
         let bar_button = BarButton::builder()

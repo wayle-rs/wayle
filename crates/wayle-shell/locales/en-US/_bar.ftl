@@ -34,6 +34,9 @@ bar-keybind-mode-default = default
 bar-hyprsunset-on = On
 bar-hyprsunset-off = Off
 
+## Storage
+bar-storage-multiple = Multiple
+
 ## Media
 bar-media-playing = Playing
 bar-media-paused = Paused

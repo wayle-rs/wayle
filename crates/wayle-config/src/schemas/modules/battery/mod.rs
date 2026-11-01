@@ -3,12 +3,18 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
-/// Battery module configuration.
-#[wayle_config(bar_button)]
+/// Battery level, charging state, and a dropdown with power-profile controls.
+///
+/// ::: warning
+///
+/// This module uses `upower` (D-Bus) for battery information. Ensure `upower` daemon is running and exposes a battery device (verify with `upower --battery` or `upower --dump`).
+///
+/// :::
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-battery")]
 pub struct BatteryConfig {
     /// Icons for battery levels from empty to full.
     ///
@@ -146,10 +152,15 @@ impl ModuleInfoProvider for BatteryConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("battery"),
-            icon: String::from("󰁹"),
-            description: String::from("Battery status and charging indicator"),
-            behavior_configs: vec![(String::from("battery"), || schema_for!(BatteryConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(BatteryConfig),
+            layout_id: Some(String::from("battery")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(BatteryConfig);

@@ -81,17 +81,20 @@ impl FileWatcher {
 
     #[instrument(skip(self))]
     async fn reload_and_sync(&self, paths: &[PathBuf]) -> Result<(), Error> {
-        let has_env_changes = paths.iter().any(|path| secrets::is_env_file(path));
-        let has_theme_changes = {
-            let themes_dir = ConfigPaths::themes_dir();
-            paths.iter().any(|path| path.starts_with(&themes_dir))
-        };
-        let has_config_changes = paths.iter().any(|path| {
-            !secrets::is_env_file(path) && {
-                let themes_dir = ConfigPaths::themes_dir();
-                !path.starts_with(&themes_dir)
-            }
-        });
+        let themes_dir = ConfigPaths::themes_dir();
+        let runtime_path = ConfigPaths::runtime_config();
+        let runtime_tmp_path = runtime_path.with_extension("tmp");
+
+        let is_env = |path: &PathBuf| secrets::is_env_file(path);
+        let is_theme = |path: &PathBuf| path.starts_with(&themes_dir);
+        let is_runtime = |path: &PathBuf| path == &runtime_path || path == &runtime_tmp_path;
+
+        let has_env_changes = paths.iter().any(is_env);
+        let has_theme_changes = paths.iter().any(is_theme);
+        let has_runtime_changes = paths.iter().any(is_runtime);
+        let has_main_config_changes = paths
+            .iter()
+            .any(|path| !is_env(path) && !is_theme(path) && !is_runtime(path));
 
         if has_env_changes && let Ok(config_dir) = ConfigPaths::config_dir() {
             secrets::reload_env_files(&config_dir);
@@ -99,35 +102,62 @@ impl FileWatcher {
         }
 
         if has_theme_changes {
-            let themes_dir = ConfigPaths::themes_dir();
             load_themes(self.config_service.config(), &themes_dir);
         }
 
-        if has_config_changes {
-            let config = self.config_service.config();
-
-            let config_path = ConfigPaths::main_config();
-            let toml_value =
-                tokio::task::spawn_blocking(move || Config::load_toml_with_imports(&config_path))
-                    .await
-                    .map_err(|source| Error::TaskJoin { source })??;
-
-            config.reset_config_layer();
-            config.apply_config_layer(&toml_value, "");
-
-            config.reset_runtime_layer();
-            let runtime_path = ConfigPaths::runtime_config();
-            let runtime_result =
-                tokio::task::spawn_blocking(move || ConfigService::load_toml_file(&runtime_path))
-                    .await
-                    .map_err(|source| Error::TaskJoin { source })?;
-
-            if let Ok(runtime_toml) = runtime_result {
-                let _ = config.apply_runtime_layer(&runtime_toml, "");
-            }
-
-            config.commit_config_reload();
+        if has_main_config_changes {
+            self.reload_main_config().await?;
+        } else if has_runtime_changes {
+            self.reload_runtime_only().await?;
         }
+
+        Ok(())
+    }
+
+    async fn reload_main_config(&self) -> Result<(), Error> {
+        let config = self.config_service.config();
+
+        let config_path = ConfigPaths::main_config();
+        let toml_value =
+            tokio::task::spawn_blocking(move || Config::load_toml_with_imports(&config_path))
+                .await
+                .map_err(|source| Error::TaskJoin { source })??;
+
+        config.reset_config_layer();
+        config.apply_config_layer(&toml_value, "");
+
+        config.reset_runtime_layer();
+        let runtime_path = ConfigPaths::runtime_config();
+        let runtime_result =
+            tokio::task::spawn_blocking(move || ConfigService::load_toml_file(&runtime_path))
+                .await
+                .map_err(|source| Error::TaskJoin { source })?;
+
+        if let Ok(runtime_toml) = runtime_result {
+            let _ = config.apply_runtime_layer(&runtime_toml, "");
+        }
+
+        config.commit_config_reload();
+
+        Ok(())
+    }
+
+    async fn reload_runtime_only(&self) -> Result<(), Error> {
+        let config = self.config_service.config();
+        let runtime_path = ConfigPaths::runtime_config();
+
+        let runtime_result =
+            tokio::task::spawn_blocking(move || ConfigService::load_toml_file(&runtime_path))
+                .await
+                .map_err(|source| Error::TaskJoin { source })?;
+
+        let Ok(runtime_toml) = runtime_result else {
+            return Ok(());
+        };
+
+        config.reset_runtime_layer();
+        let _ = config.apply_runtime_layer(&runtime_toml, "");
+        config.commit_config_reload();
 
         Ok(())
     }

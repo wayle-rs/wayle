@@ -24,12 +24,19 @@ pub(crate) fn load_themes(config: &Config, themes_dir: &Path) {
 
         let path = entry.path();
 
+        if path.extension().is_none_or(|ext| ext != "toml") {
+            continue;
+        }
+
         let Ok(theme) = get_theme_from_file(&path) else {
             error!(path = %path.display(), "cannot load theme");
             continue;
         };
 
-        if all_themes.iter().any(|t| t.name == theme.name) {
+        if all_themes
+            .iter()
+            .any(|existing| existing.name == theme.name)
+        {
             error!(theme = %theme.name, "theme already exists, skipping");
             continue;
         }
@@ -41,10 +48,6 @@ pub(crate) fn load_themes(config: &Config, themes_dir: &Path) {
 }
 
 fn get_theme_from_file(path: &Path) -> Result<ThemeEntry, Error> {
-    if path.extension().is_none_or(|ext| ext != "toml") {
-        return Err(Error::ThemeNotToml { path: path.into() });
-    }
-
     let name = path
         .file_stem()
         .and_then(|s| s.to_str())

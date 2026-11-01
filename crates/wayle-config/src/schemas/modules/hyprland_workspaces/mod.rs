@@ -1,18 +1,17 @@
-use std::{collections::HashMap, ops::Deref};
+use std::{collections::BTreeMap, ops::Deref};
 
 use schemars::{JsonSchema, schema_for};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
-use wayle_derive::wayle_config;
+use wayle_derive::{wayle_config, wayle_enum};
 
 use crate::{
     ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ScaleFactor, Spacing},
 };
 
 /// What identifies a workspace in the UI.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum DisplayMode {
     /// Show workspace number or name.
     #[default]
@@ -24,7 +23,18 @@ pub enum DisplayMode {
 }
 
 /// How workspace numbers are displayed.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum Numbering {
     /// Show actual Hyprland workspace IDs (1, 2, 3, 4, 5, 6...).
@@ -38,7 +48,18 @@ pub enum Numbering {
 }
 
 /// Where the urgent pulse animation is applied.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Default,
+    PartialEq,
+    Eq,
+    Serialize,
+    Deserialize,
+    JsonSchema,
+    wayle_derive::EnumVariants,
+)]
 #[serde(rename_all = "kebab-case")]
 pub enum UrgentMode {
     /// Pulse the entire workspace.
@@ -51,8 +72,7 @@ pub enum UrgentMode {
 }
 
 /// Visual indicator style for the active workspace.
-#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
-#[serde(rename_all = "kebab-case")]
+#[wayle_enum(default)]
 pub enum ActiveIndicator {
     /// Entire button gets a colored background.
     #[default]
@@ -78,18 +98,42 @@ pub struct WorkspaceStyle {
     pub icon: Option<String>,
     /// Custom background color for this workspace when active.
     pub color: Option<ColorValue>,
+    /// Text shown instead of the workspace's name or index.
+    pub label: Option<String>,
 }
 
-/// Per-workspace icon and color mappings.
+/// Per-workspace icon and color overrides, keyed by workspace ID.
 ///
-/// TOML table keys are always strings, so this type handles parsing
-/// string keys like "1" into i32 workspace IDs.
+/// TOML table keys are always strings, so `"1"` parses into the workspace
+/// with ID `1`. Negative IDs refer to Hyprland's special workspaces. Keys
+/// that don't appear in the map fall back to the default behaviour set by
+/// [`HyprlandWorkspacesConfig::display_mode`].
+///
+/// ## Examples
+///
+/// ```toml
+/// [modules.hyprland-workspaces.workspace-map]
+/// # Whole entry on one line with an inline table
+/// 1 = { label = "Web", icon = "ld-globe-symbolic", color = "#4a90d9" }
+/// 2 = { icon = "ld-terminal-symbolic" }
+/// 3 = { icon = "ld-code-symbolic", color = "accent" }
+///
+/// # Or spread the entry across its own subtable
+/// [modules.hyprland-workspaces.workspace-map.4]
+/// label = "Chat"
+/// icon = "ld-message-square-symbolic"
+/// color = "status-success"
+///
+/// # Negative IDs target Hyprland special workspaces
+/// [modules.hyprland-workspaces.workspace-map.-99]
+/// icon = "ld-scratch-symbolic"
+/// ```
 #[derive(Debug, Clone, Default, PartialEq, JsonSchema)]
 #[schemars(transparent)]
-pub struct WorkspaceMap(HashMap<i32, WorkspaceStyle>);
+pub struct WorkspaceMap(BTreeMap<i32, WorkspaceStyle>);
 
 impl Deref for WorkspaceMap {
-    type Target = HashMap<i32, WorkspaceStyle>;
+    type Target = BTreeMap<i32, WorkspaceStyle>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -98,7 +142,7 @@ impl Deref for WorkspaceMap {
 
 impl<'a> IntoIterator for &'a WorkspaceMap {
     type Item = (&'a i32, &'a WorkspaceStyle);
-    type IntoIter = std::collections::hash_map::Iter<'a, i32, WorkspaceStyle>;
+    type IntoIter = std::collections::btree_map::Iter<'a, i32, WorkspaceStyle>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
@@ -110,7 +154,7 @@ impl Serialize for WorkspaceMap {
     where
         S: Serializer,
     {
-        let string_map: HashMap<String, &WorkspaceStyle> = self
+        let string_map: BTreeMap<String, &WorkspaceStyle> = self
             .0
             .iter()
             .map(|(key, val)| (key.to_string(), val))
@@ -124,8 +168,8 @@ impl<'de> Deserialize<'de> for WorkspaceMap {
     where
         D: Deserializer<'de>,
     {
-        let string_map: HashMap<String, WorkspaceStyle> = HashMap::deserialize(deserializer)?;
-        let mut result = HashMap::with_capacity(string_map.len());
+        let string_map: BTreeMap<String, WorkspaceStyle> = BTreeMap::deserialize(deserializer)?;
+        let mut result = BTreeMap::new();
         for (key, value) in string_map {
             let id: i32 = key.parse().map_err(serde::de::Error::custom)?;
             result.insert(id, value);
@@ -134,8 +178,8 @@ impl<'de> Deserialize<'de> for WorkspaceMap {
     }
 }
 
-/// Hyprland workspaces module configuration.
-#[wayle_config]
+/// Hyprland workspace indicators with click-to-switch.
+#[wayle_config(i18n_prefix = "settings-modules-hyprland-workspaces")]
 pub struct HyprlandWorkspacesConfig {
     /// Minimum number of workspace buttons to display.
     ///
@@ -356,20 +400,23 @@ pub struct HyprlandWorkspacesConfig {
     /// "title:*YouTube*" = "ld-youtube-symbolic"
     /// ```
     #[serde(rename = "app-icon-map")]
-    #[default(HashMap::new())]
-    pub app_icon_map: ConfigProperty<HashMap<String, String>>,
+    #[default(BTreeMap::new())]
+    pub app_icon_map: ConfigProperty<BTreeMap<String, String>>,
 }
 
 impl ModuleInfoProvider for HyprlandWorkspacesConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("hyprland-workspaces"),
-            icon: String::from("󰖯"),
-            description: String::from("Hyprland workspace indicators"),
-            behavior_configs: vec![(String::from("hyprland-workspaces"), || {
-                schema_for!(HyprlandWorkspacesConfig)
-            })],
-            styling_configs: vec![],
+            schema: || schema_for!(HyprlandWorkspacesConfig),
+            layout_id: Some(String::from("hyprland-workspaces")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::standard()
+    }
 }
+
+crate::register_module!(HyprlandWorkspacesConfig);

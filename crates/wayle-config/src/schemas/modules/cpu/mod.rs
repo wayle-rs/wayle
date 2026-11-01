@@ -3,12 +3,12 @@ use wayle_derive::wayle_config;
 
 use crate::{
     ClickAction, ConfigProperty,
-    docs::{ModuleInfo, ModuleInfoProvider},
+    docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
     schemas::styling::{ColorValue, CssToken, ThresholdEntry},
 };
 
-/// CPU module configuration.
-#[wayle_config(bar_button)]
+/// CPU usage, frequency, and temperature.
+#[wayle_config(bar_button, i18n_prefix = "settings-modules-cpu")]
 pub struct CpuConfig {
     /// Polling interval in milliseconds.
     ///
@@ -17,8 +17,11 @@ pub struct CpuConfig {
     #[default(2000)]
     pub poll_interval_ms: ConfigProperty<u64>,
 
-    /// Temperature sensor label. Use `"auto"` for automatic detection,
-    /// or specify a label (e.g., `"Tctl"`, `"Package id 0"`).
+    /// Temperature sensor label.
+    ///
+    /// Use `"auto"` for automatic detection, or specify a
+    /// label (e.g., `"Tctl"`, `"Package id 0"`).
+    ///
     /// Run `sensors` to see available labels.
     #[serde(rename = "temp-sensor")]
     #[default(String::from("auto"))]
@@ -146,10 +149,15 @@ impl ModuleInfoProvider for CpuConfig {
     fn module_info() -> ModuleInfo {
         ModuleInfo {
             name: String::from("cpu"),
-            icon: String::from("󰻠"),
-            description: String::from("CPU usage, frequency, and temperature"),
-            behavior_configs: vec![(String::from("cpu"), || schema_for!(CpuConfig))],
-            styling_configs: vec![],
+            schema: || schema_for!(CpuConfig),
+            layout_id: Some(String::from("cpu")),
+            array_entry: false,
         }
     }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
 }
+
+crate::register_module!(CpuConfig);

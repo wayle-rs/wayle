@@ -95,15 +95,16 @@ impl WorkspaceButton {
         should_show_divider(self.show_app_icons, &self.divider, self.display_mode)
     }
 
+    fn label_text(&self) -> String {
+        self.mapped_label.clone().unwrap_or_else(|| {
+            format_workspace_label(self.display_id, self.id, &self.name, self.label_use_name)
+        })
+    }
+
     pub(super) fn populate_identity(&self, container: &gtk::Box) {
         match self.display_mode {
             DisplayMode::Label => {
-                let label_text = format_workspace_label(
-                    self.display_id,
-                    self.id,
-                    &self.name,
-                    self.label_use_name,
-                );
+                let label_text = self.label_text();
                 let label = gtk::Label::builder()
                     .label(&label_text)
                     .css_classes([WORKSPACE_LABEL_CSS])
@@ -113,12 +114,7 @@ impl WorkspaceButton {
             }
             DisplayMode::Icon => {
                 let Some(ref icon_name) = self.mapped_icon else {
-                    let label_text = format_workspace_label(
-                        self.display_id,
-                        self.id,
-                        &self.name,
-                        self.label_use_name,
-                    );
+                    let label_text = self.label_text();
                     let label = gtk::Label::builder()
                         .label(&label_text)
                         .css_classes([WORKSPACE_LABEL_CSS])

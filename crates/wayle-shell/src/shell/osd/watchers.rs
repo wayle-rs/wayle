@@ -47,6 +47,7 @@ fn spawn_config_watcher(sender: &ComponentSender<Osd>, config: &Arc<ConfigServic
     let monitor = osd.monitor.clone();
     let margin = osd.margin.clone();
     let border = osd.border.clone();
+    let layer = osd.layer.clone();
     let scale = full_config.styling.scale.clone();
     let tearing_mode = full_config.general.tearing_mode.clone();
 
@@ -58,6 +59,7 @@ fn spawn_config_watcher(sender: &ComponentSender<Osd>, config: &Arc<ConfigServic
             monitor.watch(),
             margin.watch(),
             border.watch(),
+            layer.watch(),
             scale.watch(),
             tearing_mode.watch(),
         ],

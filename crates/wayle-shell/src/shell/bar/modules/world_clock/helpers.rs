@@ -1,13 +1,12 @@
 use gtk4::glib::{DateTime, TimeZone};
 use tracing::warn;
 
-use crate::template::{ErrorKind, TemplateError, Value};
+use crate::template::{self, ErrorKind, TemplateError, Value};
 
-pub(super) fn format_world_clock(format: &str) -> String {
-    crate::template::render_with(format, (), |env| {
+pub(super) fn format_world_clock(format: &str) -> Result<String, TemplateError> {
+    template::render_with(format, (), |env| {
         env.add_function("tz", tz_function);
     })
-    .unwrap_or_default()
 }
 
 fn tz_function(tz_id: &str, time_format: &str) -> Result<Value, TemplateError> {
@@ -33,33 +32,43 @@ mod tests {
     use super::*;
 
     #[test]
-    fn empty_string_returns_empty() {
-        assert_eq!(format_world_clock(""), "");
+    fn empty_string_returns_empty() -> Result<(), TemplateError> {
+        assert_eq!(format_world_clock("")?, "");
+        Ok(())
     }
 
     #[test]
-    fn plain_text_preserved() {
-        assert_eq!(format_world_clock("NYC  TYO"), "NYC  TYO");
+    fn plain_text_preserved() -> Result<(), TemplateError> {
+        assert_eq!(format_world_clock("NYC  TYO")?, "NYC  TYO");
+        Ok(())
     }
 
     #[test]
-    fn valid_timezone_formatted() {
-        assert_eq!(format_world_clock("{{ tz('UTC', '%Z') }}"), "UTC");
+    fn valid_timezone_formatted() -> Result<(), TemplateError> {
+        assert_eq!(format_world_clock("{{ tz('UTC', '%Z') }}")?, "UTC");
+        Ok(())
     }
 
     #[test]
-    fn multiple_timezones_all_formatted() {
+    fn multiple_timezones_all_formatted() -> Result<(), TemplateError> {
         assert_eq!(
-            format_world_clock("{{ tz('UTC', '%Z') }} | {{ tz('UTC', '%Z') }}"),
+            format_world_clock("{{ tz('UTC', '%Z') }} | {{ tz('UTC', '%Z') }}")?,
             "UTC | UTC"
         );
+        Ok(())
     }
 
     #[test]
-    fn mixed_text_and_timezones() {
+    fn mixed_text_and_timezones() -> Result<(), TemplateError> {
         assert_eq!(
-            format_world_clock("Time: {{ tz('UTC', '%Z') }} end"),
+            format_world_clock("Time: {{ tz('UTC', '%Z') }} end")?,
             "Time: UTC end"
         );
+        Ok(())
+    }
+
+    #[test]
+    fn syntax_error_returns_err() {
+        assert!(format_world_clock("{{ unclosed").is_err());
     }
 }
