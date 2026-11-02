@@ -124,6 +124,14 @@ pub struct NotificationConfig {
     #[default(IconSource::default())]
     pub icon_source: ConfigProperty<IconSource>,
 
+    /// Enable the notification daemon. When disabled, notifications will be handled
+    /// by an external notification daemon (e.g., dunst, kvantum, or a custom solution).
+    /// The daemon is responsible for showing notification popups and managing notification
+    /// history.
+    #[serde(rename = "daemon-enabled")]
+    #[default(true)]
+    pub daemon_enabled: ConfigProperty<bool>,
+
     /// Screen position for popup notifications.
     #[serde(rename = "popup-position")]
     #[default(PopupPosition::default())]

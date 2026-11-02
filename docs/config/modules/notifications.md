@@ -30,6 +30,7 @@ right = ["notifications"]
 | `label-max-length` | u32 | `0` | Max label characters before truncation with ellipsis. Set to 0 to disable. |
 | `blocklist` | array of string | `[]` | Glob patterns for app names whose notifications are blocked entirely. |
 | `icon-source` | [`IconSource`](/config/types#icon-source) | `"automatic"` | How notification icons are resolved. |
+| `daemon_enabled` | bool | `true` | Enables the notification daemon. |
 | `popup-position` | [`PopupPosition`](/config/types#popup-position) | `"top-right"` | Screen position for popup notifications. |
 | `popup-max-visible` | u32 | `5` | Maximum number of popups visible at once. |
 | `popup-stacking-order` | [`StackingOrder`](/config/types#stacking-order) | `"newest-first"` | Order in which popups stack on screen. |

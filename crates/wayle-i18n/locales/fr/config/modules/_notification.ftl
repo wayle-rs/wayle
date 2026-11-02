@@ -2,6 +2,9 @@
 
 ## Configuration du module Notification
 
+settings-modules-notifications-daemon-enabled = Démon des notifications
+    .description = Activer le démon de notification intégré de Wayle (désactiver pour utiliser un démon externe)
+
 settings-modules-notifications-icon-name = Icône par défaut
     .description = Icône affichée en l'absence de notifications
 

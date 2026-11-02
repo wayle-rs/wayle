@@ -2,6 +2,9 @@
 
 ## Notification Module Configuration
 
+settings-modules-notifications-daemon-enabled = Notification Daemon
+    .description = Enable Wayle's built-in notification daemon (disable to use external daemon)
+
 settings-modules-notifications-icon-name = Default Icon
     .description = Icon shown when no notifications
 
