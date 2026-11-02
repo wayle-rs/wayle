@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use relm4::{gtk, gtk::prelude::*};
 use wayle_config::schemas::modules::DisplayMode;
-use wayle_hyprland::{Address, WorkspaceId};
+use wayle_hyprland::{Address, WorkspaceAddress};
 
 use super::{
     AppIcon, WORKSPACE_CUSTOM_ICON_CSS, WORKSPACE_ICON_CSS, WORKSPACE_ICON_EMPTY_CSS,
@@ -13,8 +13,8 @@ use crate::shell::bar::modules::hyprland_workspaces::helpers::{
 };
 
 impl WorkspaceButton {
-    pub fn id(&self) -> WorkspaceId {
-        self.id
+    pub fn address(&self) -> &WorkspaceAddress {
+        &self.address
     }
 
     pub(super) fn apply_urgency(&mut self, is_urgent: bool, urgent_addresses: &HashSet<Address>) {
@@ -53,7 +53,13 @@ impl WorkspaceButton {
     pub(super) fn current_css_classes(&self) -> Vec<&str> {
         collect_button_css_classes(
             &self.static_classes,
-            &self.css_id_class,
+            [
+                self.css_id_class.as_deref(),
+                self.css_name_class.as_deref(),
+                self.css_map_class.as_deref(),
+            ]
+            .into_iter()
+            .flatten(),
             self.state,
             self.is_urgent,
         )
