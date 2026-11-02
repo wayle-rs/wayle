@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{mem, path::Path};
 
 #[allow(deprecated)]
 use gtk4::prelude::StyleContextExt;
@@ -138,7 +138,7 @@ impl SystrayItem {
     }
 
     pub(super) fn clear_accelerators(&mut self) {
-        let accels: Vec<String> = self.registered_accels.drain(..).collect();
+        let accels = mem::take(&mut self.registered_accels);
 
         let Some(popover) = self.popover.as_ref() else {
             return;

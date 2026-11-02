@@ -51,7 +51,7 @@ settings-modules-hyprland-workspaces-label-size = Taille des libellés
     .description = Multiplicateur d'échelle pour les libellés d'espaces de travail (0.25-3.0)
 
 settings-modules-hyprland-workspaces-workspace-ignore = Ignorer les espaces de travail
-    .description = Motifs glob pour les identifiants d'espaces de travail à masquer
+    .description = Motifs glob pour les noms ou numéros d'espaces de travail à masquer
 
 settings-modules-hyprland-workspaces-active-indicator = Indicateur actif
     .description = Style visuel pour l'espace de travail actif

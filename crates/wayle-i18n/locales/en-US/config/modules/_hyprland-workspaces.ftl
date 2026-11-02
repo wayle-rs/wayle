@@ -51,7 +51,7 @@ settings-modules-hyprland-workspaces-label-size = Label Size
     .description = Scale multiplier for workspace labels (0.25-3.0)
 
 settings-modules-hyprland-workspaces-workspace-ignore = Ignore Workspaces
-    .description = Glob patterns for workspace IDs to hide
+    .description = Glob patterns for workspace names or numbers to hide
 
 settings-modules-hyprland-workspaces-active-indicator = Active Indicator
     .description = Visual style for the active workspace
