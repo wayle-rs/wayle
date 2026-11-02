@@ -5,10 +5,11 @@ use wayle_notification::core::types::Action;
 use super::NotificationItem;
 use crate::{
     i18n::t,
-    shell::notification_popup::helpers::{RelativeTime, ResolvedIcon},
+    shell::notification_popup::helpers::{RelativeTime, ResolvedIcon, load_scaled_file_icon},
 };
 
 const MAX_ACTIONS_PER_ROW: usize = 3;
+const DROPDOWN_ICON_TEXTURE_SIZE_PX: i32 = 48;
 
 impl NotificationItem {
     pub(super) fn apply_icon(&self, icon: &gtk::Image, icon_container: &gtk::Box) {
@@ -21,8 +22,12 @@ impl NotificationItem {
             }
 
             ResolvedIcon::File(path) => {
-                icon.set_from_file(Some(path));
-                icon_container.add_css_class("file-icon");
+                if let Some(texture) = load_scaled_file_icon(path, DROPDOWN_ICON_TEXTURE_SIZE_PX) {
+                    icon.set_paintable(Some(&texture));
+                    icon_container.add_css_class("file-icon");
+                } else {
+                    icon.set_icon_name(Some("ld-bell-symbolic"));
+                }
             }
         }
     }

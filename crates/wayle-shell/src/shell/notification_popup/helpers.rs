@@ -1,5 +1,5 @@
 use chrono::{DateTime, Utc};
-use relm4::gtk::{glib, pango};
+use relm4::gtk::{gdk, glib, pango};
 use wayle_config::schemas::modules::notification::{IconSource, UrgencyBarThreshold};
 use wayle_notification::types::Urgency;
 
@@ -129,6 +129,17 @@ fn mapped_icon(app_name: &Option<String>) -> ResolvedIcon {
         .unwrap_or(FALLBACK_ICON);
 
     ResolvedIcon::Named(String::from(name))
+}
+
+/// Loads a file-based icon as a scaled texture to avoid keeping oversized
+/// image allocations alive when notifications provide large images.
+pub(crate) fn load_scaled_file_icon(path: &str, target_px: i32) -> Option<gdk::Texture> {
+    if path.is_empty() {
+        return None;
+    }
+
+    let pixbuf = gdk_pixbuf::Pixbuf::from_file_at_scale(path, target_px, target_px, true).ok()?;
+    Some(gdk::Texture::for_pixbuf(&pixbuf))
 }
 
 #[cfg(test)]
