@@ -13,7 +13,9 @@ use wayle_widgets::{
 
 pub(super) use self::factory::Factory;
 use self::{
-    helpers::{day_names_array, format_date_rest, months_array, weekdays_array},
+    helpers::{
+        day_names_array, format_date_rest, months_array, week_start_to_weekday, weekdays_array,
+    },
     messages::{CalendarDropdownCmd, CalendarDropdownInit},
 };
 use crate::{i18n::t, shell::bar::dropdowns::scaled_dimension};
@@ -162,12 +164,14 @@ impl Component for CalendarDropdown {
         let format_str = clock_config.format.get();
         let use_12h = helpers::is_12h_format(&format_str);
         let show_seconds = clock_config.dropdown_show_seconds.get();
+        let first_weekday = week_start_to_weekday(clock_config.dropdown_week_start.get());
 
         let months = months_array();
 
         let calendar = Calendar::builder()
             .launch(CalendarInit {
                 today,
+                first_weekday,
                 labels: CalendarLabels {
                     today: t!("cal-today"),
                     weekdays: weekdays_array(),

@@ -3,7 +3,7 @@
 use wayle_config::Config;
 
 use crate::{
-    editors::{text::text, toggle::toggle},
+    editors::{enum_select::enum_select, text::text, toggle::toggle},
     pages::{
         nav::LeafEntry,
         sections::bar_button::{
@@ -46,7 +46,10 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                 },
                 SectionSpec {
                     title_key: "settings-section-dropdown",
-                    items: vec![toggle(&module.dropdown_show_seconds)],
+                    items: vec![
+                        toggle(&module.dropdown_show_seconds),
+                        enum_select(&module.dropdown_week_start),
+                    ],
                 },
                 bar_display_section(&fields),
                 colors_section(&fields),
