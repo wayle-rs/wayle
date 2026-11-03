@@ -14,7 +14,7 @@ use super::{
 use crate::{
     i18n::t,
     shell::helpers::layer_shell::{
-        apply_layer as apply_window_layer, apply_monitor_by_connector, apply_primary_monitor,
+        apply_layer as apply_window_layer, apply_monitor_by_selector, apply_primary_monitor,
         reset_anchors,
     },
 };
@@ -273,7 +273,7 @@ impl Osd {
         match &monitor {
             OsdMonitor::Primary => apply_primary_monitor(root),
             OsdMonitor::Connector(name) => {
-                apply_monitor_by_connector(root, name);
+                apply_monitor_by_selector(root, name, self.outputs.as_deref());
             }
         }
     }

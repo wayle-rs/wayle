@@ -3,8 +3,10 @@
 use std::{path::PathBuf, sync::Arc, time::Duration};
 
 use futures::StreamExt;
-use tracing::warn;
+use tokio::sync::broadcast::error::RecvError;
+use tracing::{debug, warn};
 use wayle_config::schemas::wallpaper::{MonitorWallpaperConfig, WallpaperConfig};
+use wayle_output::OutputEvent;
 use wayle_wallpaper::{TransitionConfig, TransitionDuration, TransitionFps, WallpaperService};
 
 use crate::{shell::ShellServices, wallpaper_map};
@@ -22,6 +24,7 @@ pub(crate) fn spawn(services: &ShellServices) {
     spawn_shared_cycle_watcher(&config, &wallpaper);
     spawn_engine_watcher(&config, &wallpaper);
     spawn_monitors_watcher(&config, &wallpaper);
+    spawn_hotplug_watcher(&config, &wallpaper);
 }
 
 fn spawn_transition_watcher(config: &WallpaperConfig, wallpaper: &Arc<WallpaperService>) {
@@ -151,30 +154,65 @@ fn spawn_monitors_watcher(config: &WallpaperConfig, wallpaper: &Arc<WallpaperSer
         stream.next().await;
 
         while let Some(monitor_configs) = stream.next().await {
-            for monitor_cfg in &monitor_configs {
-                apply_monitor_config_change(&wallpaper, monitor_cfg).await;
+            for connector in wallpaper.monitor_names() {
+                if let Some(monitor_cfg) =
+                    wallpaper_map::config_for(&wallpaper, &monitor_configs, &connector)
+                {
+                    apply_monitor_config_change(&wallpaper, &connector, monitor_cfg).await;
+                }
             }
+        }
+    });
+}
+
+/// Applies the matching `[[wallpaper.monitors]]` entry to outputs that
+/// appear or change identity while running.
+fn spawn_hotplug_watcher(config: &WallpaperConfig, wallpaper: &Arc<WallpaperService>) {
+    let Some(mut events) = wallpaper.outputs().map(|outputs| outputs.events()) else {
+        return;
+    };
+    let monitors_config = config.monitors.clone();
+    let cycling_enabled = config.cycling_enabled.clone();
+    let wallpaper = wallpaper.clone();
+
+    tokio::spawn(async move {
+        loop {
+            let monitor = match events.recv().await {
+                Ok(OutputEvent::Added(monitor) | OutputEvent::Changed(monitor)) => monitor,
+                Ok(OutputEvent::Removed(_)) | Err(RecvError::Lagged(_)) => continue,
+                Err(RecvError::Closed) => break,
+            };
+
+            if cycling_enabled.get() {
+                continue;
+            }
+
+            let monitor_configs = monitors_config.get();
+            let Some(monitor_cfg) =
+                wallpaper_map::config_for(&wallpaper, &monitor_configs, &monitor.connector)
+            else {
+                continue;
+            };
+
+            debug!(connector = %monitor.connector, entry = %monitor_cfg.name, "applying wallpaper to output");
+            // may run before the service has registered the output itself
+            wallpaper.register_monitor(&monitor.connector);
+            apply_monitor_config_change(&wallpaper, &monitor.connector, monitor_cfg).await;
         }
     });
 }
 
 async fn apply_monitor_config_change(
     wallpaper: &WallpaperService,
+    connector: &str,
     monitor_cfg: &MonitorWallpaperConfig,
 ) {
-    if monitor_cfg.name.is_empty() {
-        return;
-    }
-
     let fit_mode = wallpaper_map::fit_mode(monitor_cfg.fit_mode);
 
-    if let Err(e) = wallpaper
-        .set_fit_mode(fit_mode, Some(&monitor_cfg.name))
-        .await
-    {
+    if let Err(e) = wallpaper.set_fit_mode(fit_mode, Some(connector)).await {
         warn!(
             error = %e,
-            monitor = %monitor_cfg.name,
+            monitor = %connector,
             "could not apply fit mode from config change"
         );
     }
@@ -184,10 +222,10 @@ async fn apply_monitor_config_change(
     }
 
     let path = PathBuf::from(&monitor_cfg.wallpaper);
-    if let Err(e) = wallpaper.set_wallpaper(path, Some(&monitor_cfg.name)).await {
+    if let Err(e) = wallpaper.set_wallpaper(path, Some(connector)).await {
         warn!(
             error = %e,
-            monitor = %monitor_cfg.name,
+            monitor = %connector,
             "could not apply wallpaper from config change"
         );
     }
@@ -197,16 +235,19 @@ async fn restore_monitor_wallpapers(
     wallpaper: &WallpaperService,
     monitors: &[MonitorWallpaperConfig],
 ) {
-    for monitor_cfg in monitors {
-        if monitor_cfg.name.is_empty() || monitor_cfg.wallpaper.is_empty() {
+    for connector in wallpaper.monitor_names() {
+        let Some(monitor_cfg) = wallpaper_map::config_for(wallpaper, monitors, &connector) else {
+            continue;
+        };
+        if monitor_cfg.wallpaper.is_empty() {
             continue;
         }
 
         let path = PathBuf::from(&monitor_cfg.wallpaper);
-        if let Err(e) = wallpaper.set_wallpaper(path, Some(&monitor_cfg.name)).await {
+        if let Err(e) = wallpaper.set_wallpaper(path, Some(&connector)).await {
             warn!(
                 error = %e,
-                monitor = %monitor_cfg.name,
+                monitor = %connector,
                 "cannot restore monitor wallpaper"
             );
         }

@@ -12,7 +12,7 @@ use super::{
     card::{CardInit, NotificationPopupCard},
 };
 use crate::shell::helpers::layer_shell::{
-    apply_layer as apply_window_layer, apply_monitor_by_connector, apply_primary_monitor,
+    apply_layer as apply_window_layer, apply_monitor_by_selector, apply_primary_monitor,
     reset_anchors,
 };
 
@@ -163,7 +163,7 @@ impl NotificationPopupHost {
                 apply_primary_monitor(root);
             }
             PopupMonitor::Connector(name) => {
-                apply_monitor_by_connector(root, name);
+                apply_monitor_by_selector(root, name, self.outputs.as_deref());
             }
         }
     }

@@ -12,6 +12,7 @@ use tracing::debug;
 use wayle_audio::AudioService;
 use wayle_brightness::BrightnessService;
 use wayle_config::ConfigService;
+use wayle_output::OutputService;
 use wayle_widgets::WatcherToken;
 
 pub(crate) use self::messages::OsdInit;
@@ -27,6 +28,7 @@ const BRIGHTNESS_ICON: &str = "ld-sun-symbolic";
 
 pub(crate) struct Osd {
     config: Arc<ConfigService>,
+    outputs: Option<Arc<OutputService>>,
     audio: Option<Arc<AudioService>>,
     brightness: Option<Arc<BrightnessService>>,
     dismiss_id: u32,
@@ -153,6 +155,7 @@ impl Component for Osd {
 
         let model = Self {
             config: init.config.clone(),
+            outputs: init.outputs.clone(),
             audio: init.audio.clone(),
             brightness: init.brightness.clone(),
             dismiss_id: 0,

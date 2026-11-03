@@ -166,7 +166,8 @@ pub struct NotificationConfig {
     #[default(Spacing::new(8.0))]
     pub popup_gap: ConfigProperty<Spacing>,
 
-    /// Target monitor: "primary" or a connector name like "DP-1".
+    /// Target monitor: "primary", a connector name like "DP-1",
+    /// "desc:<prefix>" or "sn:<serial>".
     #[serde(rename = "popup-monitor")]
     #[default(PopupMonitor::default())]
     pub popup_monitor: ConfigProperty<PopupMonitor>,

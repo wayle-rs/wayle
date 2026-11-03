@@ -22,8 +22,9 @@ use crate::{
 #[wayle_config(i18n_prefix = "settings-bar")]
 pub struct BarConfig {
     /// Per-monitor bar layouts. Each entry targets a monitor by connector name
-    /// (e.g., `"DP-1"`) or `"*"` for all monitors. See [`BarLayout`] for the
-    /// full shape, including layout inheritance via `extends`.
+    /// (e.g., `"DP-1"`), `"desc:<prefix>"`, `"sn:<serial>"`, or `"*"` for all
+    /// monitors. See [`BarLayout`] for the full shape, including layout
+    /// inheritance via `extends`.
     ///
     /// ## Example
     ///

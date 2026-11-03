@@ -34,7 +34,7 @@ pub enum OsdMonitor {
     /// Use the first available monitor.
     #[default]
     Primary,
-    /// Use a specific monitor identified by connector name.
+    /// Use the first monitor matching a connector name or `desc:`/`sn:` selector.
     Connector(String),
 }
 
@@ -64,7 +64,7 @@ impl JsonSchema for OsdMonitor {
     fn json_schema(_generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
         schemars::json_schema!({
             "type": "string",
-            "description": "\"primary\" or a monitor connector name (e.g. \"DP-1\")",
+            "description": "\"primary\", a connector name (e.g. \"DP-1\"), \"desc:<prefix>\" or \"sn:<serial>\"",
             "default": "primary"
         })
     }

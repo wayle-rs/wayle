@@ -4,6 +4,7 @@
 pub mod commands;
 mod hide;
 mod inspect;
+mod monitors;
 mod proxy;
 /// Restart command.
 pub mod restart;
@@ -38,5 +39,6 @@ pub async fn execute(command: PanelCommands) -> CliAction {
         PanelCommands::Hide { monitor } => hide::execute(monitor).await,
         PanelCommands::Show { monitor } => show::execute(monitor).await,
         PanelCommands::Toggle { monitor } => toggle::execute(monitor).await,
+        PanelCommands::Monitors => monitors::execute().await,
     }
 }

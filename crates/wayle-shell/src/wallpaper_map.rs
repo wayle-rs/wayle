@@ -1,7 +1,23 @@
 use wayle_config::schemas::wallpaper::{
-    CyclingMode as CfgCyclingMode, FitMode as CfgFitMode, TransitionType as CfgTransitionType,
+    CyclingMode as CfgCyclingMode, FitMode as CfgFitMode, MonitorWallpaperConfig,
+    TransitionType as CfgTransitionType,
 };
-use wayle_wallpaper::{CyclingMode, FitMode, TransitionType};
+use wayle_core::monitor::{MonitorInfo, best_match};
+use wayle_wallpaper::{CyclingMode, FitMode, TransitionType, WallpaperService};
+
+/// The `[[wallpaper.monitors]]` entry that best matches `connector`.
+pub(crate) fn config_for<'a>(
+    service: &WallpaperService,
+    configs: &'a [MonitorWallpaperConfig],
+    connector: &str,
+) -> Option<&'a MonitorWallpaperConfig> {
+    let monitor = service
+        .outputs()
+        .and_then(|outputs| outputs.find(connector))
+        .unwrap_or_else(|| MonitorInfo::new(connector, "", "", None));
+
+    best_match(configs, |cfg| cfg.name.as_str(), &monitor)
+}
 
 pub(crate) fn transition_type(cfg: CfgTransitionType) -> TransitionType {
     match cfg {

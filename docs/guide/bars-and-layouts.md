@@ -8,7 +8,7 @@ A bar layout is an entry in the `[[bar.layout]]` array. Each entry targets a mon
 
 | Field                     | Role                                                                                      |
 | ------------------------- | ----------------------------------------------------------------------------------------- |
-| `monitor`                 | Connector name like `"DP-1"`, or `"*"` to match any monitor without a more specific entry |
+| `monitor`                 | Which monitor the entry targets; see [Targeting monitors](#targeting-monitors)            |
 | `left`, `center`, `right` | Module lists for the three sections                                                       |
 | `extends`                 | Optional. Inherit from another entry by its `monitor` value                               |
 | `show`                    | Optional. Set to `false` to hide the bar on that monitor                                  |
@@ -36,6 +36,38 @@ right = ["battery", "network", "volume", "systray"]
 ```
 
 `monitor` takes a connector name like `"DP-1"` or `"HDMI-A-1"`, or `"*"` to match any monitor without a more specific entry.
+
+## Targeting monitors
+
+Connector names can change: docks and MST hubs often hand out a different `DP-<n>` after a re-plug or reboot. To keep a layout on the same physical monitor, target it by description or serial instead:
+
+| Selector      | Matches                                                         |
+| ------------- | --------------------------------------------------------------- |
+| `*`           | Any monitor                                                     |
+| `DP-1`        | The connector, exactly                                          |
+| `desc:<text>` | Monitors whose `"<make> <model> <serial>"` starts with `<text>` |
+| `sn:<serial>` | The serial number, exactly                                      |
+
+When several entries match one monitor, the most specific wins: `sn:` before `desc:` (longer text first), then the connector, then `*`. Run `wayle panel monitors` to list connected monitors with ready-to-paste selectors.
+
+```toml
+[[bar.layout]]
+monitor = "*"
+left = ["dashboard"]
+center = ["clock"]
+right = ["battery", "network", "volume", "systray"]
+
+[[bar.layout]]
+monitor = "sn:XYZ789"
+extends = "*"
+right = ["volume", "systray"]
+
+[[bar.layout]]
+monitor = "desc:Samsung Electric Company SyncMaster"
+show = false
+```
+
+`desc:` without the serial matches every unit of that model. Monitors that report no serial can still be told apart by connector. The same selectors work for `wallpaper.monitors`, `osd.monitor`, `modules.notifications.popup-monitor`, `styling.theming-monitor`, and `wayle panel hide/show/toggle`.
 
 ## Per-monitor overrides
 

@@ -17,6 +17,10 @@ use super::{
 use crate::shell::services::ShellServices;
 
 impl Bar {
+    pub(crate) fn monitor(&self) -> &gdk::Monitor {
+        &self.monitor
+    }
+
     pub(super) fn apply_anchors(window: &gtk::Window, location: Location) {
         let (anchor_edge, stretch_edges) = match location {
             Location::Top => (Edge::Top, [Edge::Left, Edge::Right]),
@@ -116,7 +120,7 @@ impl Bar {
             return;
         }
 
-        if self.layout.show != new_layout.show {
+        if root.is_visible() != new_layout.show {
             root.set_visible(new_layout.show);
         }
 

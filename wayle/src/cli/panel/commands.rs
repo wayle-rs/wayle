@@ -23,19 +23,22 @@ pub enum PanelCommands {
 
     /// Hide the bar on a monitor
     Hide {
-        /// Monitor connector name (e.g., "DP-1"). Omit to hide all.
+        /// Connector name ("DP-1"), "desc:<prefix>" or "sn:<serial>". Omit to hide all.
         monitor: Option<String>,
     },
 
     /// Show the bar on a monitor
     Show {
-        /// Monitor connector name (e.g., "DP-1"). Omit to show all.
+        /// Connector name ("DP-1"), "desc:<prefix>" or "sn:<serial>". Omit to show all.
         monitor: Option<String>,
     },
 
     /// Toggle bar visibility on a monitor
     Toggle {
-        /// Monitor connector name (e.g., "DP-1"). Omit to toggle all.
+        /// Connector name ("DP-1"), "desc:<prefix>" or "sn:<serial>". Omit to toggle all.
         monitor: Option<String>,
     },
+
+    /// List monitors with selectors usable in config
+    Monitors,
 }

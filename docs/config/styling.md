@@ -15,7 +15,7 @@ Theme, palette, and rounding tokens applied shell-wide. Changes recompile the st
 |---|---|---|---|
 | `scale` | [`ScaleFactor`](/config/types#scale-factor) | `1.01` | Scale multiplier for dropdowns, popovers, and dialogs. |
 | `rounding` | [`RoundingLevel`](/config/types#rounding-level) | `"sm"` | Corner rounding for dropdowns, popovers, and dialogs. |
-| `theming-monitor` | string | `""` | Monitor whose wallpaper drives color extraction. Empty uses the first available. |
+| `theming-monitor` | string | `""` | Monitor whose wallpaper drives color extraction: connector name, `desc:<prefix>` or `sn:<serial>`. Empty uses the first available. |
 
 ## Theme provider
 

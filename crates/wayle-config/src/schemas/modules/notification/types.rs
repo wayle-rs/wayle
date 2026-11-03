@@ -47,13 +47,14 @@ pub enum PopupCloseBehavior {
 
 /// Target monitor for notification popups.
 ///
-/// Accepts `"primary"` or a connector name like `"DP-1"`.
+/// Accepts `"primary"`, a connector name like `"DP-1"`, `"desc:<prefix>"`
+/// or `"sn:<serial>"`.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum PopupMonitor {
     /// Use the first available monitor (primary).
     #[default]
     Primary,
-    /// Use a specific monitor identified by connector name.
+    /// Use the first monitor matching a connector name or `desc:`/`sn:` selector.
     Connector(String),
 }
 
@@ -83,7 +84,7 @@ impl schemars::JsonSchema for PopupMonitor {
     fn json_schema(_generator: &mut schemars::SchemaGenerator) -> schemars::Schema {
         schemars::json_schema!({
             "type": "string",
-            "description": "\"primary\" or a monitor connector name (e.g. \"DP-1\")",
+            "description": "\"primary\", a connector name (e.g. \"DP-1\"), \"desc:<prefix>\" or \"sn:<serial>\"",
             "default": "primary"
         })
     }

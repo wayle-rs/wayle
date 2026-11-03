@@ -34,7 +34,8 @@ pub struct StylingConfig {
     #[default(ThemeProvider::default())]
     pub theme_provider: ConfigProperty<ThemeProvider>,
 
-    /// Monitor whose wallpaper drives color extraction. Empty uses the first available.
+    /// Monitor whose wallpaper drives color extraction: connector name,
+    /// `desc:<prefix>` or `sn:<serial>`. Empty uses the first available.
     #[serde(rename = "theming-monitor")]
     #[default(String::new())]
     pub theming_monitor: ConfigProperty<String>,

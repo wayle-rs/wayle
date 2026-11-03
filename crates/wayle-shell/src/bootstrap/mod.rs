@@ -25,6 +25,7 @@ use wayle_media::MediaService;
 use wayle_network::NetworkService;
 use wayle_niri::NiriService;
 use wayle_notification::NotificationService;
+use wayle_output::OutputService;
 use wayle_power_profiles::PowerProfilesService;
 use wayle_sysinfo::SysinfoService;
 use wayle_systray::{SystemTrayService, types::TrayMode};
@@ -72,6 +73,7 @@ struct CoreServices {
     brightness: Option<Arc<BrightnessService>>,
     idle_inhibit: Arc<IdleInhibitService>,
     network: Option<Arc<NetworkService>>,
+    outputs: Option<Arc<OutputService>>,
     sysinfo: Arc<SysinfoService>,
     wallpaper: Option<Arc<WallpaperService>>,
 }
@@ -169,6 +171,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         niri: optional.niri,
         network: core.network,
         notification: daemons.notification,
+        outputs: core.outputs,
         sysinfo: core.sysinfo,
         systray: daemons.systray,
         wallpaper: core.wallpaper,
@@ -208,12 +211,32 @@ async fn init_core_services(
 
     let startup_duration = modules.idle_inhibit.startup_duration.get();
 
+    let outputs = try_service!(
+        timer,
+        "Outputs",
+        async {
+            tokio::task::spawn_blocking(OutputService::start)
+                .await
+                .map_err(|err| err.to_string())?
+                .ok_or("no Wayland display")
+                .map_err(String::from)
+        },
+        no_wrap
+    );
+
     let battery_task = tokio::spawn(BatteryService::new());
     let brightness_task = tokio::spawn(BrightnessService::new());
     let network_task = tokio::spawn(NetworkService::new());
     let wallpaper_cfg = config.wallpaper.clone();
+    let wallpaper_outputs = outputs.clone();
     let wallpaper_task = tokio::spawn(async move {
-        wallpaper::build_wallpaper_service(&wallpaper_cfg, theming_monitor, color_extractor).await
+        wallpaper::build_wallpaper_service(
+            &wallpaper_cfg,
+            theming_monitor,
+            color_extractor,
+            wallpaper_outputs,
+        )
+        .await
     });
     let idle_inhibit_task = tokio::spawn(IdleInhibitService::new(startup_duration));
 
@@ -230,6 +253,7 @@ async fn init_core_services(
         brightness: brightness.flatten(),
         idle_inhibit: Arc::new(idle_inhibit?),
         network,
+        outputs,
         sysinfo,
         wallpaper,
     })

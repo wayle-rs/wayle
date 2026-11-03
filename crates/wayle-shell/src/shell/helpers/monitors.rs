@@ -8,8 +8,14 @@ use gdk4::{
     glib::{self, object::Cast},
     prelude::{DisplayExt, MonitorExt},
 };
-use relm4::{Controller, gtk::gdk, prelude::*};
+use relm4::{
+    Controller,
+    gtk::{gdk, prelude::GtkWindowExt},
+    prelude::*,
+};
 use tracing::{debug, info, warn};
+use wayle_core::monitor::MonitorInfo;
+use wayle_output::OutputService;
 
 use crate::shell::{
     ShellCmd,
@@ -43,6 +49,25 @@ pub(crate) fn current_monitors() -> Vec<(Connector, gdk::Monitor)> {
             }
         })
         .collect()
+}
+
+/// Identity of a GDK monitor. Prefers the output service, which knows the
+/// serial; falls back to what GDK reports.
+pub(crate) fn monitor_info(
+    connector: &str,
+    monitor: &gdk::Monitor,
+    outputs: Option<&OutputService>,
+) -> MonitorInfo {
+    if let Some(info) = outputs.and_then(|outputs| outputs.find(connector)) {
+        return info;
+    }
+
+    MonitorInfo::from_description(
+        connector,
+        monitor.manufacturer().as_deref().unwrap_or_default(),
+        monitor.model().as_deref().unwrap_or_default(),
+        monitor.description().as_deref().unwrap_or_default(),
+    )
 }
 
 pub(crate) fn create_bars(services: &ShellServices) -> BarMap {
@@ -164,8 +189,19 @@ fn reconcile_bars(
     }
 
     for (connector, monitor) in monitors {
-        let Entry::Vacant(entry) = bars.entry(connector) else {
-            continue;
+        let entry = match bars.entry(connector) {
+            Entry::Vacant(entry) => entry,
+            // connector now belongs to another monitor
+            Entry::Occupied(entry) if entry.get().model().monitor() != &monitor => {
+                let (connector, stale) = entry.remove_entry();
+                stale.widget().destroy();
+                info!(connector = %connector, "Replacing bar, connector reused");
+                match bars.entry(connector) {
+                    Entry::Vacant(entry) => entry,
+                    Entry::Occupied(_) => continue,
+                }
+            }
+            Entry::Occupied(_) => continue,
         };
 
         info!(connector = %entry.key(), "Creating bar for new monitor");
@@ -183,9 +219,21 @@ fn reconcile_bars(
     debug!(bar_count = bars.len(), "Bar reconciliation complete");
 }
 
-fn sync_ipc_state(services: &ShellServices, bars: &BarMap) {
+pub(crate) fn sync_ipc_state(services: &ShellServices, bars: &BarMap) {
     let connectors: Vec<String> = bars.keys().cloned().collect();
     let ipc = services.shell_ipc.state();
+
+    let monitors = bars
+        .iter()
+        .map(|(connector, bar)| {
+            monitor_info(
+                connector,
+                bar.model().monitor(),
+                services.outputs.as_deref(),
+            )
+        })
+        .collect();
+    ipc.monitors.set(monitors);
 
     let mut hidden = ipc.hidden_bars.get();
     let before = hidden.len();

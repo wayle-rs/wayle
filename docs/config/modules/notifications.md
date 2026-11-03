@@ -38,7 +38,7 @@ right = ["notifications"]
 | `popup-margin-x` | [`Spacing`](/config/types#spacing) | `0` | Horizontal margin from screen edges. |
 | `popup-margin-y` | [`Spacing`](/config/types#spacing) | `0` | Vertical margin from screen edges. |
 | `popup-gap` | [`Spacing`](/config/types#spacing) | `8` | Gap between stacked popups. |
-| `popup-monitor` | [`PopupMonitor`](/config/types#popup-monitor) | `"primary"` | Target monitor: "primary" or a connector name like "DP-1". |
+| `popup-monitor` | [`PopupMonitor`](/config/types#popup-monitor) | `"primary"` | Target monitor: "primary", a connector name like "DP-1", "desc:<prefix>" or "sn:<serial>". |
 | `popup-layer` | [`Layer`](/config/types#layer) | `"overlay"` | Layer-shell layer popup notifications are placed on. |
 | `popup-close-behavior` | [`PopupCloseBehavior`](/config/types#popup-close-behavior) | `"dismiss"` | What happens when the close button on a popup is clicked. |
 | `popup-shadow` | bool | `true` | Display drop shadow on popup cards. |

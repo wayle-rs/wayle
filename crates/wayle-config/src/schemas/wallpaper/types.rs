@@ -251,7 +251,9 @@ impl<'de> Deserialize<'de> for CyclingInterval {
 #[derive(Debug, Clone, Default, PartialEq, Eq, Serialize, Deserialize, JsonSchema)]
 #[serde(rename_all = "kebab-case")]
 pub struct MonitorWallpaperConfig {
-    /// Monitor name (e.g., "HDMI-1", "DP-1").
+    /// Target monitor: `"DP-1"`, `"desc:<prefix>"`, `"sn:<serial>"`, or `"*"`.
+    ///
+    /// The most specific entry wins per monitor.
     pub name: String,
     /// Image scaling mode for this monitor.
     #[serde(default)]
