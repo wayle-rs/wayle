@@ -33,6 +33,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                         number_u8(&module.min_workspace_count),
                         toggle(&module.monitor_specific),
                         toggle(&module.show_special),
+                        toggle(&module.highlight_active_on_other_monitor),
                     ],
                 },
                 SectionSpec {
@@ -98,6 +99,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                     items: vec![
                         enum_select(&module.active_indicator),
                         color_value(&module.active_color),
+                        color_value(&module.active_on_other_monitor_color),
                         color_value(&module.occupied_color),
                         color_value(&module.empty_color),
                         color_value(&module.container_bg_color),
