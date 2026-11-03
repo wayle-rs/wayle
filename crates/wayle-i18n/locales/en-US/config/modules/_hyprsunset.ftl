@@ -2,6 +2,9 @@
 
 ## Hyprsunset Module Configuration
 
+settings-modules-hyprsunset-use-hyprsunset-config = Use Hyprsunset Configuration
+    .description = Start hyprsunset without temperature or gamma overrides, allowing its configuration file and time-based profiles to apply
+
 settings-modules-hyprsunset-temperature = Temperature
     .description = Color temperature in Kelvin when filter is enabled (1000-20000)
 

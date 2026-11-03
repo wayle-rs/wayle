@@ -14,6 +14,7 @@ impl HyprsunsetModule {
         let enabled = self.enabled;
         let temp = config.temperature.get();
         let gamma = config.gamma.get();
+        let use_hyprsunset_config = config.use_hyprsunset_config.get();
 
         debug!(current_enabled = enabled, "toggle_filter called");
 
@@ -23,8 +24,9 @@ impl HyprsunsetModule {
                 let _ = helpers::stop().await;
                 HyprsunsetCmd::StateChanged(None)
             } else {
-                debug!(temp, gamma, "starting hyprsunset");
-                let _ = helpers::start(temp, gamma).await;
+                debug!(temp, gamma, use_hyprsunset_config, "starting hyprsunset");
+                let overrides = (!use_hyprsunset_config).then_some((temp, gamma));
+                let _ = helpers::start(overrides).await;
                 HyprsunsetCmd::StateChanged(Some(helpers::HyprsunsetState { temp, gamma }))
             }
         });

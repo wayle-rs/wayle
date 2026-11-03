@@ -29,6 +29,12 @@ pub struct HyprsunsetConfig {
     #[default(String::from("{{ status }}"))]
     pub format: ConfigProperty<String>,
 
+    /// Use hyprsunset's configuration file and time-based profiles instead of
+    /// overriding temperature and gamma.
+    #[serde(rename = "use-hyprsunset-config")]
+    #[default(false)]
+    pub use_hyprsunset_config: ConfigProperty<bool>,
+
     /// Color temperature in Kelvin when filter is enabled. Range: 1000-20000.
     #[serde(rename = "temperature")]
     #[default(5000)]
