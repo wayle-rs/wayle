@@ -27,6 +27,8 @@ dropdown-battery-charge-limit = Charge Limit
 dropdown-battery-limit-to = Limit to { $threshold }%
 dropdown-battery-resumes-at = Resumes charging at { $threshold }%
 dropdown-battery-charge-limit-not-supported = Charge limit not supported on this device
+dropdown-battery-charge-limit-optimized = Optimized Battery Health
+dropdown-battery-charge-limit-optimized-subtitle = Prolongs lifespan by limiting full charges
 
 ## Power Profile
 dropdown-battery-power-profile = Power Profile
