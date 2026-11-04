@@ -5,14 +5,12 @@ dropdown-bluetooth-my-devices = My Devices
 dropdown-bluetooth-available-devices = Available Devices
 dropdown-bluetooth-connected = Connected
 dropdown-bluetooth-scanning = Scanning
-dropdown-bluetooth-connect = Connect
 dropdown-bluetooth-disconnect = Disconnect
 dropdown-bluetooth-forget = Forget
 dropdown-bluetooth-pair = Pair
 dropdown-bluetooth-cancel = Cancel
 dropdown-bluetooth-confirm = Confirm
 dropdown-bluetooth-reject = Reject
-dropdown-bluetooth-try-again = Try Again
 dropdown-bluetooth-allow = Allow
 dropdown-bluetooth-deny = Deny
 
@@ -24,6 +22,13 @@ dropdown-bluetooth-new-device = New device
 dropdown-bluetooth-status-connecting = Connecting...
 dropdown-bluetooth-status-disconnecting = Disconnecting...
 dropdown-bluetooth-status-forgetting = Removing...
+dropdown-bluetooth-status-error = Error
+dropdown-bluetooth-error-connect = Couldn't connect
+dropdown-bluetooth-error-disconnect = Couldn't disconnect
+dropdown-bluetooth-error-pair = Pairing failed
+dropdown-bluetooth-error-forget = Couldn't remove
+dropdown-bluetooth-error-generic = Action failed
+dropdown-bluetooth-dismiss = Dismiss
 
 ## Device Types - Computer
 dropdown-bluetooth-type-computer = Computer
@@ -128,6 +133,9 @@ dropdown-bluetooth-no-devices-title = No Devices Found
 dropdown-bluetooth-no-devices-description = Make sure your device is in pairing mode
 dropdown-bluetooth-off-title = Bluetooth is Off
 dropdown-bluetooth-off-description = Turn on Bluetooth to connect devices
+dropdown-bluetooth-turning-on-title = Turning On…
+dropdown-bluetooth-blocked-title = Bluetooth is Blocked
+dropdown-bluetooth-blocked-description = A hardware switch has turned Bluetooth off
 dropdown-bluetooth-no-adapter-title = No Bluetooth Adapter
 dropdown-bluetooth-no-adapter-description = No Bluetooth adapter was detected
 dropdown-bluetooth-no-nearby = No other devices nearby
@@ -153,5 +161,3 @@ dropdown-bluetooth-pairing-enter-legacy-pin = Enter the PIN for this device
 # Placeholder text for the legacy PIN input field
 dropdown-bluetooth-pairing-pin-placeholder = PIN
 dropdown-bluetooth-pairing-common-pins = Common PINs: 0000, 1234, 1111
-# Pairing failure
-dropdown-bluetooth-pairing-failed = Pairing failed. The PIN may be incorrect or the request timed out.

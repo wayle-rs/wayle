@@ -31,8 +31,9 @@ pub(crate) enum QuickActionsInput {
 pub(crate) enum QuickActionsCmd {
     WifiChanged(bool),
     WifiAvailabilityChanged(bool),
-    BluetoothChanged(bool),
-    BluetoothAvailabilityChanged(bool),
+    /// The Bluetooth service's `enabled`, `available` or `radio_block`
+    /// changed.
+    BluetoothChanged,
     BluetoothReady(Arc<BluetoothService>),
     DndChanged(bool),
     IdleInhibitChanged(bool),

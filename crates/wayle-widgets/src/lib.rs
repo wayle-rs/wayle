@@ -17,6 +17,7 @@
 //! use wayle_widgets::components::bar_buttons::{BarButton, BarButtonOutput};
 //! ```
 
+pub mod click_guard;
 pub mod components;
 pub mod icons;
 pub mod primitives;
@@ -29,6 +30,7 @@ pub use watchers::WatcherToken;
 /// Convenient re-exports of all widget templates and class constants.
 pub mod prelude {
     pub use crate::{
+        click_guard::{CLICK_GUARD_INTERVAL, ClickGuard},
         components::{bar_buttons::*, bar_container::*},
         primitives::{
             alert::*, badge::*, buttons::*, card::*, checkbox::*, confirm_modal::*, dropdown::*,

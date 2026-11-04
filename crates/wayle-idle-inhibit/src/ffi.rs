@@ -173,6 +173,14 @@ mod sys {
 
     use super::{WlInterface, WlProxy};
 
+    // Declare the library these symbols come from so rustc emits
+    // `-lwayland-client` adjacent to this crate's objects. This keeps it out of
+    // reach of the linker's `--as-needed` pruning (which can otherwise drop a
+    // `-lwayland-client` that appears before the code referencing it, depending
+    // on link ordering) and propagates the link requirement to every binary and
+    // test that depends on this crate. gtk4-layer-shell interposition ordering
+    // is still the final binary's concern (see the shell's build script).
+    #[link(name = "wayland-client")]
     unsafe extern "C" {
         pub fn wl_display_roundtrip(display: *mut super::WlDisplay) -> c_int;
         pub fn wl_proxy_add_listener(

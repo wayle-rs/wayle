@@ -8,9 +8,8 @@ use wayle_bluetooth::types::agent::PairingRequest;
 use super::{PairingCard, PairingVariant};
 use crate::{
     i18n::{t, td},
-    shell::bar::dropdowns::bluetooth::{
-        helpers::{format_passkey, service_name_key},
-        messages::PairingCardOutput,
+    shell::bar::dropdowns::bluetooth::helpers::{
+        DeviceDisplayInfo, format_passkey, resolve_device_display, service_name_key,
     },
 };
 
@@ -21,83 +20,89 @@ enum PinKeyAction {
 }
 
 impl PairingCard {
-    fn clear_inputs(&mut self) {
+    pub(super) fn clear_inputs(&self) {
         for entry in &self.pin_entries {
             entry.set_text("");
         }
         self.legacy_pin_entry.set_text("");
-        self.pin_code.clear();
-        self.legacy_pin.clear();
     }
 
-    pub(super) fn apply_request(&mut self, request: &PairingRequest) {
-        self.clear_inputs();
-        match request {
-            PairingRequest::DisplayPinCode { pincode, .. } => {
-                self.variant = PairingVariant::DisplayPin;
-                self.pin_code = pincode.clone();
+    pub(super) fn variant(&self) -> PairingVariant {
+        match &self.request {
+            None => PairingVariant::None,
+            Some(PairingRequest::DisplayPinCode { .. }) => PairingVariant::DisplayPin,
+            Some(PairingRequest::RequestPasskey { .. }) => PairingVariant::RequestPasskey,
+            Some(PairingRequest::DisplayPasskey { .. }) => PairingVariant::DisplayPasskey,
+            Some(PairingRequest::RequestConfirmation { .. }) => PairingVariant::RequestConfirmation,
+            Some(PairingRequest::RequestAuthorization { .. }) => {
+                PairingVariant::RequestAuthorization
             }
-            PairingRequest::RequestPasskey { .. } => {
-                self.variant = PairingVariant::RequestPasskey;
-                self.pin_code.clear();
+            Some(PairingRequest::RequestServiceAuthorization { .. }) => {
+                PairingVariant::RequestServiceAuthorization
             }
-            PairingRequest::DisplayPasskey {
-                passkey, entered, ..
-            } => {
-                self.variant = PairingVariant::DisplayPasskey;
-                self.pin_code = format_passkey(*passkey);
-                self.passkey_entered = *entered;
+            Some(PairingRequest::RequestPinCode { .. }) => PairingVariant::RequestPinCode,
+        }
+    }
+
+    /// How the request's device is shown, as the service has it now.
+    pub(super) fn display(&self) -> DeviceDisplayInfo {
+        self.request
+            .as_ref()
+            .zip(self.bluetooth.get())
+            .and_then(|(request, bluetooth)| bluetooth.device(request.device_path()))
+            .map(|device| resolve_device_display(&device.info.get()))
+            .unwrap_or_default()
+    }
+
+    /// The PIN or passkey shown, if the request shows one.
+    pub(super) fn pin_code(&self) -> String {
+        match &self.request {
+            Some(PairingRequest::DisplayPinCode { pincode, .. }) => pincode.clone(),
+            Some(
+                PairingRequest::DisplayPasskey { passkey, .. }
+                | PairingRequest::RequestConfirmation { passkey, .. },
+            ) => format_passkey(*passkey),
+            _ => String::new(),
+        }
+    }
+
+    /// How many digits of a displayed passkey were typed on the device.
+    pub(super) fn passkey_entered(&self) -> u16 {
+        match &self.request {
+            Some(PairingRequest::DisplayPasskey { entered, .. }) => *entered,
+            _ => 0,
+        }
+    }
+
+    /// The service a service authorization is for.
+    pub(super) fn service_name(&self) -> String {
+        match &self.request {
+            Some(PairingRequest::RequestServiceAuthorization { uuid, .. }) => {
+                td!(service_name_key(uuid))
             }
-            PairingRequest::RequestConfirmation { passkey, .. } => {
-                self.variant = PairingVariant::RequestConfirmation;
-                self.pin_code = format_passkey(*passkey);
-            }
-            PairingRequest::RequestAuthorization { .. } => {
-                self.variant = PairingVariant::RequestAuthorization;
-            }
-            PairingRequest::RequestServiceAuthorization { uuid, .. } => {
-                self.variant = PairingVariant::RequestServiceAuthorization;
-                let name_key = service_name_key(uuid);
-                self.service_uuid = td!(name_key);
-            }
-            PairingRequest::RequestPinCode { .. } => {
-                self.variant = PairingVariant::RequestPinCode;
-                self.legacy_pin.clear();
-            }
+            _ => String::new(),
         }
     }
 
     pub(super) fn left_action_label(&self) -> String {
-        match self.variant {
+        match self.variant() {
             PairingVariant::RequestConfirmation | PairingVariant::RequestPasskey => {
                 t!("dropdown-bluetooth-reject")
             }
             PairingVariant::RequestAuthorization | PairingVariant::RequestServiceAuthorization => {
                 t!("dropdown-bluetooth-deny")
             }
-            PairingVariant::Failed => {
-                t!("dropdown-bluetooth-cancel")
-            }
             _ => t!("dropdown-bluetooth-cancel"),
         }
     }
 
     pub(super) fn right_action_label(&self) -> String {
-        match self.variant {
+        match self.variant() {
             PairingVariant::RequestPasskey | PairingVariant::RequestPinCode => {
                 t!("dropdown-bluetooth-pair")
             }
-            PairingVariant::RequestConfirmation => {
-                t!("dropdown-bluetooth-confirm")
-            }
-            PairingVariant::RequestAuthorization => {
+            PairingVariant::RequestAuthorization | PairingVariant::RequestServiceAuthorization => {
                 t!("dropdown-bluetooth-allow")
-            }
-            PairingVariant::RequestServiceAuthorization => {
-                t!("dropdown-bluetooth-allow")
-            }
-            PairingVariant::Failed => {
-                t!("dropdown-bluetooth-try-again")
             }
             _ => t!("dropdown-bluetooth-confirm"),
         }
@@ -105,42 +110,61 @@ impl PairingCard {
 
     pub(super) fn has_confirm_action(&self) -> bool {
         !matches!(
-            self.variant,
+            self.variant(),
             PairingVariant::DisplayPin | PairingVariant::DisplayPasskey | PairingVariant::None
         )
     }
 
-    pub(super) fn build_confirm_output(&self) -> Option<PairingCardOutput> {
-        match self.variant {
-            PairingVariant::RequestPasskey => {
-                let passkey: String = self
-                    .pin_entries
-                    .iter()
-                    .map(|entry| entry.text().to_string())
-                    .collect();
-                Some(PairingCardOutput::PinSubmitted(passkey))
+    /// Answers the request with what the card holds, if it's complete.
+    pub(super) fn confirm(&self) {
+        let (Some(bluetooth), Some(request)) = (self.bluetooth.get(), &self.request) else {
+            return;
+        };
+
+        match request {
+            PairingRequest::RequestPasskey { .. } => {
+                if let Some(passkey) = self.typed_passkey() {
+                    bluetooth.provide_passkey(passkey);
+                }
             }
-            PairingVariant::RequestConfirmation => Some(PairingCardOutput::PasskeyConfirmed),
-            PairingVariant::RequestAuthorization => Some(PairingCardOutput::AuthorizationAccepted),
-            PairingVariant::RequestServiceAuthorization => {
-                Some(PairingCardOutput::ServiceAuthorizationAccepted)
+            PairingRequest::RequestPinCode { .. } => {
+                if let Some(pin) = self.typed_pin() {
+                    bluetooth.provide_pin(pin);
+                }
             }
-            PairingVariant::RequestPinCode => Some(PairingCardOutput::LegacyPinSubmitted(
-                self.legacy_pin_entry.text().to_string(),
-            )),
-            _ => None,
+            PairingRequest::RequestConfirmation { .. } => bluetooth.provide_confirmation(true),
+            PairingRequest::RequestAuthorization { .. } => bluetooth.provide_authorization(true),
+            PairingRequest::RequestServiceAuthorization { .. } => {
+                bluetooth.provide_service_authorization(true);
+            }
+            PairingRequest::DisplayPinCode { .. } | PairingRequest::DisplayPasskey { .. } => {}
         }
     }
 
-    pub(super) fn build_reject_output(&self) -> PairingCardOutput {
-        match self.variant {
-            PairingVariant::RequestConfirmation => PairingCardOutput::PasskeyRejected,
-            PairingVariant::RequestAuthorization => PairingCardOutput::AuthorizationRejected,
-            PairingVariant::RequestServiceAuthorization => {
-                PairingCardOutput::ServiceAuthorizationRejected
-            }
-            _ => PairingCardOutput::Cancelled,
+    /// Turns the request down (or stops displaying it).
+    pub(super) fn cancel(&self) {
+        if let Some(bluetooth) = self.bluetooth.get() {
+            bluetooth.cancel_pending_request();
         }
+    }
+
+    /// The passkey typed, once all six digits are.
+    fn typed_passkey(&self) -> Option<u32> {
+        let digits: String = self
+            .pin_entries
+            .iter()
+            .map(|entry| entry.text().to_string())
+            .collect();
+
+        (digits.len() == self.pin_entries.len())
+            .then(|| digits.parse().ok())
+            .flatten()
+    }
+
+    /// The legacy PIN typed, if it's one BlueZ accepts (1 to 16 bytes).
+    fn typed_pin(&self) -> Option<String> {
+        let pin = self.legacy_pin_entry.text().to_string();
+        (1..=16).contains(&pin.len()).then_some(pin)
     }
 }
 

@@ -29,5 +29,4 @@ pub(crate) enum BluetoothCmd {
     ServiceReady(Arc<BluetoothService>),
     StateChanged,
     IconConfigChanged,
-    AdapterChanged,
 }

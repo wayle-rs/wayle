@@ -12,7 +12,8 @@
     color: var(--fg-muted);
     transition: background var(--duration-fast);
 
-    &.available:hover {
+    // Rows whose click connects the device.
+    &.clickable:hover {
         background: var(--bg-hover);
     }
 
@@ -51,6 +52,14 @@
             color: var(--accent);
         }
     }
+
+    &.error {
+        background: var(--status-error-subtle);
+
+        image.bluetooth-icon {
+            color: var(--status-error);
+        }
+    }
 }
 
 .bluetooth-device-info {
@@ -81,6 +90,10 @@
     font-size: var(--text-base);
     font-weight: var(--weight-medium);
     color: var(--fg-subtle);
+
+    &.error {
+        color: var(--status-error);
+    }
 }
 
 .bluetooth-hover-stack {
@@ -94,9 +107,8 @@
     margin-left: 0;
     margin-right: var(--space-sm);
 
-    &.pending {
-        color: var(--fg-muted);
-    }
+    // In-progress and error states are `badge-subtle warning` / `error`
+    // badges (styled by the badge primitive), as in the network dropdowns.
 }
 
 .bluetooth-device-actions {

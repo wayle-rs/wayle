@@ -27,20 +27,8 @@ impl BluetoothModule {
 
         let available = bt.available.get();
         let enabled = bt.enabled.get();
-        let devices = bt.devices.get();
-        let connected_addresses = bt.connected.get();
-
-        let discovering = bt
-            .primary_adapter
-            .get()
-            .map(|adapter| adapter.discovering.get())
-            .unwrap_or(false);
-
-        let connected_devices: Vec<_> = devices
-            .iter()
-            .filter(|device| connected_addresses.contains(&device.address.get()))
-            .cloned()
-            .collect();
+        let discovering = bt.discovering.get();
+        let connected_devices = bt.connected.get();
 
         let ctx = BluetoothContext {
             available,

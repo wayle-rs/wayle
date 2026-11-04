@@ -3,7 +3,6 @@ use std::sync::Arc;
 use wayle_bluetooth::{BluetoothService, types::agent::PairingRequest};
 use wayle_config::ConfigService;
 use wayle_core::DeferredService;
-use zbus::zvariant::OwnedObjectPath;
 
 pub(crate) struct BluetoothDropdownInit {
     pub bluetooth: DeferredService<BluetoothService>,
@@ -12,41 +11,28 @@ pub(crate) struct BluetoothDropdownInit {
 
 #[derive(Debug)]
 pub(crate) enum BluetoothDropdownMsg {
-    BluetoothToggled(bool),
+    VisibilityChanged(bool),
     ScanRequested,
-    DeviceAction(DeviceActionMsg),
-    PairingCard(PairingCardOutput),
-}
-
-#[derive(Debug)]
-pub(crate) enum DeviceActionMsg {
-    Connect(OwnedObjectPath),
-    Disconnect(OwnedObjectPath),
-    Forget(OwnedObjectPath),
-}
-
-#[derive(Debug)]
-pub(crate) enum PairingCardOutput {
-    Cancelled,
-    PinSubmitted(String),
-    PasskeyConfirmed,
-    PasskeyRejected,
-    AuthorizationAccepted,
-    AuthorizationRejected,
-    ServiceAuthorizationAccepted,
-    ServiceAuthorizationRejected,
-    LegacyPinSubmitted(String),
 }
 
 #[derive(Debug)]
 pub(crate) enum BluetoothDropdownCmd {
     ServiceReady(Arc<BluetoothService>),
     ScaleChanged(f32),
-    EnabledChanged(bool),
-    AvailableChanged(bool),
-    ScanComplete,
+    /// The service's `available`, `enabled`, `powered` or `discovering`
+    /// changed, or an adapter's `last_error` did (a power request that failed
+    /// may have changed nothing else).
+    StateChanged,
+    /// The service's `radio_block` changed. Unlike `StateChanged`, this
+    /// leaves the switch's knob alone: rfkill reports a block lifted before
+    /// BlueZ has powered the adapters back on.
+    RadioBlockChanged,
     DevicesChanged,
     DevicePropertyChanged,
-    DeviceActionFailed(OwnedObjectPath),
-    PairingRequested(Option<PairingRequest>),
+    PairingRequested {
+        request: Option<PairingRequest>,
+        /// Whether it's a different prompt (or none) rather than an update of
+        /// the one shown, such as a passkey's digits being typed.
+        new_prompt: bool,
+    },
 }

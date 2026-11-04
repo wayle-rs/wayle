@@ -5,14 +5,12 @@ dropdown-bluetooth-my-devices = Mes appareils
 dropdown-bluetooth-available-devices = Appareils disponibles
 dropdown-bluetooth-connected = Connecté
 dropdown-bluetooth-scanning = Recherche
-dropdown-bluetooth-connect = Connecter
 dropdown-bluetooth-disconnect = Déconnecter
 dropdown-bluetooth-forget = Oublier
 dropdown-bluetooth-pair = Jumeler
 dropdown-bluetooth-cancel = Annuler
 dropdown-bluetooth-confirm = Confirmer
 dropdown-bluetooth-reject = Rejeter
-dropdown-bluetooth-try-again = Réessayer
 dropdown-bluetooth-allow = Autoriser
 dropdown-bluetooth-deny = Refuser
 
@@ -24,6 +22,13 @@ dropdown-bluetooth-new-device = Nouvel appareil
 dropdown-bluetooth-status-connecting = Connexion…
 dropdown-bluetooth-status-disconnecting = Déconnexion…
 dropdown-bluetooth-status-forgetting = Suppression…
+dropdown-bluetooth-status-error = Erreur
+dropdown-bluetooth-error-connect = Connexion impossible
+dropdown-bluetooth-error-disconnect = Déconnexion impossible
+dropdown-bluetooth-error-pair = Échec du jumelage
+dropdown-bluetooth-error-forget = Suppression impossible
+dropdown-bluetooth-error-generic = Échec de l'action
+dropdown-bluetooth-dismiss = Fermer
 
 ## Types d'appareils — Ordinateur
 dropdown-bluetooth-type-computer = Ordinateur
@@ -128,6 +133,9 @@ dropdown-bluetooth-no-devices-title = Aucun appareil trouvé
 dropdown-bluetooth-no-devices-description = Assurez-vous que votre appareil est en mode de jumelage
 dropdown-bluetooth-off-title = Bluetooth désactivé
 dropdown-bluetooth-off-description = Activez le Bluetooth pour connecter des appareils
+dropdown-bluetooth-turning-on-title = Activation…
+dropdown-bluetooth-blocked-title = Bluetooth bloqué
+dropdown-bluetooth-blocked-description = Un interrupteur matériel a désactivé le Bluetooth
 dropdown-bluetooth-no-adapter-title = Aucun adaptateur Bluetooth
 dropdown-bluetooth-no-adapter-description = Aucun adaptateur Bluetooth n'a été détecté
 dropdown-bluetooth-no-nearby = Aucun autre appareil à proximité
@@ -153,5 +161,3 @@ dropdown-bluetooth-pairing-enter-legacy-pin = Entrez le NIP de cet appareil
 # Texte indicatif pour le champ de saisie du NIP
 dropdown-bluetooth-pairing-pin-placeholder = NIP
 dropdown-bluetooth-pairing-common-pins = NIP courants : 0000, 1234, 1111
-# Échec du jumelage
-dropdown-bluetooth-pairing-failed = Échec du jumelage. Le NIP est peut-être incorrect ou la demande a expiré.

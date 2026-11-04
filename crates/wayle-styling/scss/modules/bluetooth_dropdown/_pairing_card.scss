@@ -125,24 +125,6 @@ entry.bluetooth-pin-digit {
     margin-bottom: var(--space-xs);
 }
 
-.bluetooth-pairing-error {
-    padding: var(--space-sm);
-    background: var(--status-error-subtle);
-    border-radius: var(--rounding-element);
-    margin-bottom: var(--space-md);
-
-    image.bluetooth-pairing-error-icon {
-        -gtk-icon-size: var(--icon-md);
-        color: var(--status-error);
-        margin-right: var(--space-sm);
-    }
-}
-
-.bluetooth-pairing-error-text {
-    font-size: var(--text-xs);
-    color: var(--status-error);
-}
-
 .bluetooth-pairing-actions {
     margin-top: var(--space-sm);
 

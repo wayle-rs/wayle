@@ -35,7 +35,7 @@ pub(crate) fn format_label(ctx: &BluetoothContext<'_>) -> String {
 
     match ctx.connected_devices.len() {
         0 => t!("bar-bluetooth-disconnected"),
-        1 => ctx.connected_devices[0].alias.get(),
+        1 => ctx.connected_devices[0].info.get().alias.clone(),
         n => t!("bar-bluetooth-connected-count", count = n),
     }
 }

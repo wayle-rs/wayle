@@ -4,64 +4,52 @@ mod methods;
 use gtk::{pango, prelude::*};
 use relm4::{gtk, prelude::*};
 use wayle_widgets::prelude::*;
-use zbus::zvariant::OwnedObjectPath;
 
-use self::messages::{DeviceItemInit, DeviceItemInput, DeviceItemOutput, PendingAction};
+use self::messages::{DeviceItemInit, DeviceItemInput};
+pub(crate) use self::methods::ActionsLayout;
 use crate::{
-    i18n::{t, td},
-    shell::bar::dropdowns::bluetooth::helpers::{DeviceCategory, battery_level_icon},
+    i18n::t,
+    shell::bar::dropdowns::bluetooth::helpers::{DeviceSnapshot, battery_level_icon},
 };
 
 const DETAIL_SEPARATOR: &str = "\u{2022}";
 const HOVER_TRANSITION_MS: u32 = 150;
 
 pub(crate) struct DeviceItem {
-    name: String,
-    device_type: String,
-    battery_text: Option<String>,
-    battery_icon: Option<&'static str>,
-    icon: &'static str,
-
-    connected: bool,
-    paired: bool,
+    /// What the row shows, and the device its actions act on.
+    snapshot: DeviceSnapshot,
     hovered: bool,
-    pub(crate) pending: Option<PendingAction>,
-
-    category: DeviceCategory,
-    pub(crate) device_path: OwnedObjectPath,
+    /// This row's position in its list, kept current by the factory; lets the
+    /// parent locate a row in O(1) while reordering.
+    pub(crate) index: DynamicIndex,
+    /// Guards the row (and its buttons) after it moves under the pointer; set
+    /// once the row's widget exists.
+    click_guard: Option<ClickGuard>,
+    /// Guards just the buttons, which take Dismiss's place when an error is
+    /// dismissed (see [`ActionsLayout::only_dismissed`]).
+    actions_guard: Option<ClickGuard>,
 }
 
 #[relm4::factory(pub(crate))]
 impl FactoryComponent for DeviceItem {
     type Init = DeviceItemInit;
     type Input = DeviceItemInput;
-    type Output = DeviceItemOutput;
+    type Output = ();
     type CommandOutput = ();
     type ParentWidget = gtk::Box;
 
     view! {
         gtk::Box {
             add_css_class: "bluetooth-device",
-            set_cursor_from_name: Some("pointer"),
+            #[watch]
+            set_cursor_from_name: self.row_clickable().then_some("pointer"),
             #[watch]
             set_css_classes: &self.root_css_classes(),
 
             #[name = "icon_container"]
             gtk::Box {
                 #[watch]
-                set_css_classes: &match self.category {
-                    DeviceCategory::Connected => vec![
-                        "bluetooth-device-icon",
-                        "connected",
-                    ],
-                    DeviceCategory::Paired => vec![
-                        "bluetooth-device-icon",
-                        "paired",
-                    ],
-                    DeviceCategory::Available => vec![
-                        "bluetooth-device-icon",
-                    ],
-                },
+                set_css_classes: &self.icon_css_classes(),
                 set_hexpand: false,
 
                 #[name = "device_icon"]
@@ -70,7 +58,7 @@ impl FactoryComponent for DeviceItem {
                     set_halign: gtk::Align::Center,
                     set_valign: gtk::Align::Center,
                     #[watch]
-                    set_icon_name: Some(self.icon),
+                    set_icon_name: Some(self.snapshot.icon),
                 },
             },
 
@@ -90,7 +78,7 @@ impl FactoryComponent for DeviceItem {
                     set_ellipsize:
                         pango::EllipsizeMode::End,
                     #[watch]
-                    set_label: &self.name,
+                    set_label: &self.snapshot.name,
                 },
 
                 #[name = "detail_row"]
@@ -101,10 +89,12 @@ impl FactoryComponent for DeviceItem {
 
                     #[name = "device_type_label"]
                     gtk::Label {
-                        add_css_class:
-                            "bluetooth-device-detail",
                         #[watch]
-                        set_label: &self.device_type,
+                        set_css_classes: &self.detail_css_classes(),
+                        #[watch]
+                        set_label: &self.detail_text(),
+                        #[watch]
+                        set_tooltip_text: self.error_tooltip(),
                     },
 
                     #[name = "battery_separator"]
@@ -113,8 +103,7 @@ impl FactoryComponent for DeviceItem {
                             "bluetooth-detail-separator",
                         set_label: DETAIL_SEPARATOR,
                         #[watch]
-                        set_visible:
-                            self.battery_icon.is_some(),
+                        set_visible: self.snapshot.battery.is_some(),
                     },
 
                     #[name = "battery_icon"]
@@ -122,11 +111,9 @@ impl FactoryComponent for DeviceItem {
                         add_css_class:
                             "bluetooth-battery-icon",
                         #[watch]
-                        set_visible:
-                            self.battery_icon.is_some(),
+                        set_visible: self.snapshot.battery.is_some(),
                         #[watch]
-                        set_icon_name:
-                            self.battery_icon,
+                        set_icon_name: self.snapshot.battery.map(battery_level_icon),
                     },
 
                     #[name = "battery_label"]
@@ -134,13 +121,9 @@ impl FactoryComponent for DeviceItem {
                         add_css_class:
                             "bluetooth-device-detail",
                         #[watch]
-                        set_visible:
-                            self.battery_text.is_some(),
+                        set_visible: self.snapshot.battery.is_some(),
                         #[watch]
-                        set_label:
-                            self.battery_text
-                                .as_deref()
-                                .unwrap_or_default(),
+                        set_label: &self.battery_text(),
                     },
                 },
             },
@@ -154,27 +137,83 @@ impl FactoryComponent for DeviceItem {
                 set_hexpand: false,
                 #[watch]
                 set_visible: self.is_my_device()
-                    || self.pending.is_some(),
+                    || self.is_busy()
+                    || self.shown_error().is_some(),
                 add_named[Some("status")] = &gtk::Box {
                     set_halign: gtk::Align::End,
                     set_valign: gtk::Align::Center,
 
+                    // Settled states are plain text; in-progress and error
+                    // states are a badge, as in the network dropdowns.
                     gtk::Label {
+                        add_css_class: "bluetooth-device-status",
                         set_vexpand: false,
                         set_valign: gtk::Align::Center,
                         #[watch]
-                        set_css_classes:
-                            &self.status_css_classes(),
-                        #[watch]
                         set_label: &self.status_label(),
                         #[watch]
-                        set_visible: self.status_visible(),
+                        set_visible: self.status_visible() && self.status_badge().is_none(),
+                    },
+
+                    #[template]
+                    SubtleBadge {
+                        #[watch]
+                        set_css_classes: &self.status_badge_css_classes(),
+                        #[watch]
+                        set_label: &self.status_label(),
+                        set_vexpand: false,
+                        set_valign: gtk::Align::Center,
+                        #[watch]
+                        set_visible: self.status_badge().is_some(),
                     },
                 },
 
+                add_named[Some("error-actions")] = &gtk::Box {
+                    add_css_class:
+                        "bluetooth-device-actions",
+                    set_halign: gtk::Align::End,
+                    set_valign: gtk::Align::Center,
+
+                    // A failure can leave the device connected (e.g. a
+                    // connect whose profiles the device then connected
+                    // itself), and it can still be disconnected.
+                    #[template]
+                    GhostButton {
+                        add_css_class:
+                            "bluetooth-action-toggle",
+                        #[watch]
+                        set_visible: self.toggle_visible(),
+                        #[template_child]
+                        label {
+                            #[watch]
+                            set_label: &self.toggle_label(),
+                        },
+                        connect_clicked =>
+                            DeviceItemInput::ToggleClicked,
+                    },
+
+                    #[template]
+                    GhostButton {
+                        add_css_class:
+                            "bluetooth-action-dismiss",
+                        #[template_child]
+                        label {
+                            set_label: &t!(
+                                "dropdown-bluetooth-dismiss"
+                            ),
+                        },
+                        connect_clicked =>
+                            DeviceItemInput::DismissClicked,
+                    },
+                },
+
+                #[name = "actions_box"]
                 add_named[Some("actions")] = &gtk::Box {
                     add_css_class:
                         "bluetooth-device-actions",
+                    // The stack sizes its pages to the widest one (e.g. the
+                    // "Connecting…" status); keep the buttons at the right.
+                    set_halign: gtk::Align::End,
                     set_valign: gtk::Align::Center,
 
                     #[template]
@@ -182,23 +221,14 @@ impl FactoryComponent for DeviceItem {
                         add_css_class:
                             "bluetooth-action-toggle",
                         #[watch]
-                        set_sensitive:
-                            self.pending.is_none(),
+                        set_visible: self.toggle_visible(),
                         #[template_child]
                         label {
                             #[watch]
-                            set_label: &if self.connected {
-                                t!(
-                                    "dropdown-bluetooth-disconnect"
-                                )
-                            } else {
-                                t!(
-                                    "dropdown-bluetooth-connect"
-                                )
-                            },
+                            set_label: &self.toggle_label(),
                         },
                         connect_clicked =>
-                            DeviceItemInput::Clicked,
+                            DeviceItemInput::ToggleClicked,
                     },
 
                     #[template]
@@ -206,8 +236,7 @@ impl FactoryComponent for DeviceItem {
                         add_css_class:
                             "bluetooth-forget",
                         #[watch]
-                        set_sensitive:
-                            self.pending.is_none(),
+                        set_visible: self.forget_visible(),
                         #[template_child]
                         label {
                             set_label: &t!(
@@ -220,54 +249,50 @@ impl FactoryComponent for DeviceItem {
                 },
 
                 #[watch]
-                set_visible_child_name:
-                    if self.hovered
-                        && self.pending.is_none()
-                    {
-                        "actions"
-                    } else {
-                        "status"
-                    },
+                set_visible_child_name: self.hover_page(),
             },
         }
     }
 
-    fn init_model(init: Self::Init, _index: &Self::Index, _sender: FactorySender<Self>) -> Self {
-        let snapshot = init.snapshot;
-        let device_type = td!(snapshot.device_type_key);
-        let battery_text = snapshot
-            .battery
-            .map(|percent| t!("dropdown-bluetooth-battery", percent = percent));
-        let battery_icon = snapshot.battery.map(battery_level_icon);
-
+    fn init_model(init: Self::Init, index: &Self::Index, _sender: FactorySender<Self>) -> Self {
         Self {
-            name: snapshot.name,
-            device_type,
-            battery_text,
-            battery_icon,
-            icon: snapshot.icon,
-            connected: snapshot.connected,
-            paired: snapshot.paired,
+            snapshot: init.snapshot,
             hovered: false,
-            pending: None,
-            category: snapshot.category,
-            device_path: snapshot.device.object_path.clone(),
+            index: index.clone(),
+            click_guard: None,
+            actions_guard: None,
         }
     }
 
-    fn update(&mut self, msg: DeviceItemInput, sender: FactorySender<Self>) {
+    fn update(&mut self, msg: DeviceItemInput, _sender: FactorySender<Self>) {
+        // A guarded row can't be targeted by the pointer; this also covers a
+        // click that was already queued when the row moved.
+        let clicked_row = matches!(
+            msg,
+            DeviceItemInput::Clicked
+                | DeviceItemInput::ToggleClicked
+                | DeviceItemInput::ForgetClicked
+                | DeviceItemInput::DismissClicked
+        );
+        let clicked_button = matches!(
+            msg,
+            DeviceItemInput::ToggleClicked | DeviceItemInput::ForgetClicked
+        );
+        let armed = |guard: &Option<ClickGuard>| guard.as_ref().is_some_and(ClickGuard::is_armed);
+        if (clicked_row && armed(&self.click_guard))
+            || (clicked_button && armed(&self.actions_guard))
+        {
+            return;
+        }
+
+        // Actions go straight to the device; their progress and outcome come
+        // back through its state (`activity`, `connected`, `last_error`, ...).
         match msg {
-            DeviceItemInput::Clicked => {
-                self.handle_click(&sender);
-            }
-
-            DeviceItemInput::Hovered(hovered) => {
-                self.hovered = hovered;
-            }
-
-            DeviceItemInput::ForgetClicked => {
-                self.handle_forget(&sender);
-            }
+            DeviceItemInput::Clicked => self.handle_click(),
+            DeviceItemInput::ToggleClicked => self.handle_toggle(),
+            DeviceItemInput::Hovered(hovered) => self.hovered = hovered,
+            DeviceItemInput::DismissClicked => self.snapshot.device.dismiss_error(),
+            DeviceItemInput::ForgetClicked => self.handle_forget(),
         }
     }
 
@@ -279,6 +304,8 @@ impl FactoryComponent for DeviceItem {
         sender: FactorySender<Self>,
     ) -> Self::Widgets {
         let widgets = view_output!();
+        self.click_guard = Some(ClickGuard::new(&root));
+        self.actions_guard = Some(ClickGuard::new(&widgets.actions_box));
 
         let click = gtk::GestureClick::new();
         let click_sender = sender.input_sender().clone();
@@ -288,18 +315,18 @@ impl FactoryComponent for DeviceItem {
         });
         root.add_controller(click);
 
-        if self.is_my_device() {
-            let hover = gtk::EventControllerMotion::new();
-            let hover_sender = sender.input_sender().clone();
-            hover.connect_enter(move |_, _, _| {
-                hover_sender.emit(DeviceItemInput::Hovered(true));
-            });
-            let leave_sender = sender.input_sender().clone();
-            hover.connect_leave(move |_| {
-                leave_sender.emit(DeviceItemInput::Hovered(false));
-            });
-            root.add_controller(hover);
-        }
+        // Every row tracks hover: available rows show their actions too, to
+        // offer Cancel while connecting.
+        let hover = gtk::EventControllerMotion::new();
+        let hover_sender = sender.input_sender().clone();
+        hover.connect_enter(move |_, _, _| {
+            hover_sender.emit(DeviceItemInput::Hovered(true));
+        });
+        let leave_sender = sender.input_sender().clone();
+        hover.connect_leave(move |_| {
+            leave_sender.emit(DeviceItemInput::Hovered(false));
+        });
+        root.add_controller(hover);
 
         widgets
     }

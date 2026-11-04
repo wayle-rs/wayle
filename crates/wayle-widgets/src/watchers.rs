@@ -8,9 +8,9 @@
 //!
 //! [`CancellationToken`]: tokio_util::sync::CancellationToken
 
-use std::pin::Pin;
+use std::{future, pin::Pin};
 
-use futures::stream::Stream;
+use futures::stream::{self, SelectAll, Stream, StreamExt};
 use tokio::sync::mpsc;
 use tokio_stream::wrappers::UnboundedReceiverStream;
 use tokio_util::sync::CancellationToken;
@@ -77,6 +77,63 @@ pub fn changes_stream<T: SubscribeChanges>(subscribable: &T) -> UnboundedReceive
 
 /// Type alias for boxed streams used internally by the watch macro.
 pub type BoxedStream = Pin<Box<dyn Stream<Item = ()> + Send>>;
+
+/// Emits for every item of `stream` whose `key` differs from the previous
+/// item's. The first item is compared with `start`, or always emitted if
+/// `start` is `None`.
+///
+/// A property's `watch()` stream yields the value it has when the stream is
+/// first polled, so with no `start` a change made in between is never
+/// missed. A caller that has already acted on the value it read can pass that
+/// value's key as `start` to skip the redundant first emission.
+pub fn key_changes<T, K>(
+    stream: impl Stream<Item = T> + Send + 'static,
+    start: Option<K>,
+    key: impl Fn(&T) -> K + Send + 'static,
+) -> impl Stream<Item = ()> + Send + 'static
+where
+    K: PartialEq + Send + 'static,
+{
+    let mut last = start;
+    stream.filter_map(move |item| {
+        let current = key(&item);
+        let changed = last.as_ref() != Some(&current);
+        if changed {
+            last = Some(current);
+        }
+        future::ready(changed.then_some(()))
+    })
+}
+
+/// Emits whenever one of the streams `each` makes for the elements of the
+/// latest list from `lists` emits. The element streams are made afresh for
+/// each new list; streams that emit their current state first (such as
+/// [`key_changes`] with no start) then miss nothing while re-subscribing.
+pub fn each_changes<T, S>(
+    lists: impl Stream<Item = Vec<T>> + Send + 'static,
+    each: impl Fn(&T) -> S + Send + 'static,
+) -> impl Stream<Item = ()> + Send + 'static
+where
+    T: Send + 'static,
+    S: Stream<Item = ()> + Send + 'static,
+{
+    let lists = Box::pin(lists);
+    let elements: SelectAll<Pin<Box<S>>> = SelectAll::new();
+
+    stream::unfold(
+        (lists, elements, each),
+        |(mut lists, mut elements, each)| async move {
+            loop {
+                tokio::select! {
+                    list = lists.next() => {
+                        elements = list?.iter().map(|element| Box::pin(each(element))).collect();
+                    }
+                    Some(()) = elements.next() => return Some(((), (lists, elements, each))),
+                }
+            }
+        },
+    )
+}
 
 /// Watches multiple streams and runs a handler when any emits.
 ///
@@ -385,4 +442,33 @@ macro_rules! watch_async {
             }
         });
     }};
+}
+
+#[cfg(test)]
+mod tests {
+    use futures::{StreamExt, stream};
+
+    use super::*;
+
+    #[tokio::test]
+    async fn key_changes_emits_the_first_item_and_every_change() {
+        let changes = key_changes(stream::iter([1, 1, 2, 2, 3]), None, |item: &i32| *item);
+
+        assert_eq!(changes.count().await, 3);
+    }
+
+    #[tokio::test]
+    async fn key_changes_compares_the_first_item_with_the_start() {
+        let changes = key_changes(stream::iter([1, 2]), Some(1), |item: &i32| *item);
+
+        assert_eq!(changes.count().await, 1);
+    }
+
+    #[tokio::test]
+    async fn each_changes_merges_the_elements_of_the_latest_list() {
+        let lists = stream::iter([vec![2_usize, 3]]).chain(stream::pending());
+        let changes = each_changes(lists, |count: &usize| stream::iter(vec![(); *count]));
+
+        assert_eq!(changes.take(5).count().await, 5);
+    }
 }

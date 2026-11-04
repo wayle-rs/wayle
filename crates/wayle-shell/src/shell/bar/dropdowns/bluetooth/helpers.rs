@@ -1,6 +1,10 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
-use wayle_bluetooth::core::device::Device;
+use wayle_bluetooth::{
+    core::device::{Device, DeviceInfo},
+    types::device::{DeviceActivity, DeviceError},
+};
+use zbus::zvariant::OwnedObjectPath;
 
 const MAJOR_COMPUTER: u32 = 0x01;
 const MAJOR_PHONE: u32 = 0x02;
@@ -87,14 +91,21 @@ fn peripheral_icon(minor: u32) -> &'static str {
     }
 }
 
+// Imaging minor classes are bit flags (in the minor-class field, after its
+// two reserved low bits).
+const IMAGING_DISPLAY: u32 = 0x04;
+const IMAGING_CAMERA: u32 = 0x08;
+const IMAGING_SCANNER: u32 = 0x10;
+const IMAGING_PRINTER: u32 = 0x20;
+
 fn imaging_icon(minor: u32) -> &'static str {
-    if minor & 0x08 != 0 {
+    if minor & IMAGING_PRINTER != 0 {
         return "ld-printer-symbolic";
     }
-    if minor & 0x02 != 0 {
+    if minor & IMAGING_CAMERA != 0 {
         return "ld-camera-symbolic";
     }
-    if minor & 0x01 != 0 {
+    if minor & IMAGING_DISPLAY != 0 {
         return "ld-monitor-symbolic";
     }
     "ld-printer-symbolic"
@@ -212,16 +223,16 @@ fn toy_type_key(minor: u32) -> &'static str {
 }
 
 fn imaging_type_key(minor: u32) -> &'static str {
-    if minor & 0x08 != 0 {
+    if minor & IMAGING_PRINTER != 0 {
         return "dropdown-bluetooth-type-printer";
     }
-    if minor & 0x04 != 0 {
+    if minor & IMAGING_SCANNER != 0 {
         return "dropdown-bluetooth-type-scanner";
     }
-    if minor & 0x02 != 0 {
+    if minor & IMAGING_CAMERA != 0 {
         return "dropdown-bluetooth-type-camera";
     }
-    if minor & 0x01 != 0 {
+    if minor & IMAGING_DISPLAY != 0 {
         return "dropdown-bluetooth-type-display";
     }
     "dropdown-bluetooth-type-imaging"
@@ -306,75 +317,76 @@ impl Default for DeviceDisplayInfo {
     }
 }
 
-pub(super) fn resolve_device_display(device: &Device) -> DeviceDisplayInfo {
-    let alias = device.alias.get();
-    let name = if alias.is_empty() {
-        device.name.get().unwrap_or_else(|| "-".into())
-    } else {
-        alias
-    };
-    let icon_hint = device.icon.get();
-    let class = device.class.get();
-
+/// How a device is shown: its name, icon and type.
+pub(super) fn resolve_device_display(info: &DeviceInfo) -> DeviceDisplayInfo {
     DeviceDisplayInfo {
-        name,
-        icon: device_icon(icon_hint.as_deref(), class),
-        device_type_key: device_type_key(icon_hint.as_deref(), class),
+        name: info.alias.clone(),
+        icon: device_icon(info.icon.as_deref(), info.class),
+        device_type_key: device_type_key(info.icon.as_deref(), info.class),
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq)]
-pub(crate) enum DeviceCategory {
-    Connected,
-    Paired,
-    Available,
-}
-
-#[derive(Debug, Clone)]
+/// What a device's row shows, and the device it acts on. Equal snapshots
+/// look and act the same, so a row whose snapshot is unchanged is left alone.
+#[derive(Debug, Clone, PartialEq)]
 pub(crate) struct DeviceSnapshot {
+    /// BlueZ's alias, which falls back to the device's name, then its address.
     pub name: String,
     pub icon: &'static str,
+    /// Localization key of the device type, translated when displayed.
     pub device_type_key: &'static str,
     pub battery: Option<u8>,
     pub connected: bool,
     pub paired: bool,
-    pub category: DeviceCategory,
+    pub activity: DeviceActivity,
+    /// The most recent failed action on the device, if any.
+    pub error: Option<DeviceError>,
     pub device: Arc<Device>,
 }
 
-pub(crate) fn categorize_device(device: &Arc<Device>) -> Option<DeviceSnapshot> {
-    let connected = device.connected.get();
-    let paired = device.paired.get();
+impl DeviceSnapshot {
+    /// Whether it's one of the user's devices (see [`is_mine`]).
+    pub(crate) fn is_mine(&self) -> bool {
+        mine(self.connected, self.paired)
+    }
+}
 
-    let category = if connected {
-        DeviceCategory::Connected
-    } else if paired {
-        DeviceCategory::Paired
-    } else {
-        DeviceCategory::Available
-    };
+/// Whether a device is one of the user's, listed under "My devices": it is
+/// connected or paired. The others are available to connect to.
+pub(crate) fn is_mine(info: &DeviceInfo) -> bool {
+    mine(info.connected, info.paired)
+}
 
-    let alias = device.alias.get();
-    let name = if alias.is_empty() {
-        device.name.get()?
-    } else if category == DeviceCategory::Available && device.name.get().is_none() {
-        return None;
-    } else {
-        alias
-    };
+fn mine(connected: bool, paired: bool) -> bool {
+    connected || paired
+}
 
-    let icon_hint = device.icon.get();
-    let class = device.class.get();
+/// Whether the dropdown lists a device: it is one of the user's, or
+/// advertises a name. Most devices seen while scanning somewhere crowded
+/// advertise no name; this is checked before any other work on them.
+pub(crate) fn is_listed(info: &DeviceInfo) -> bool {
+    info.name.is_some() || is_mine(info)
+}
 
-    Some(DeviceSnapshot {
-        name,
-        icon: device_icon(icon_hint.as_deref(), class),
-        device_type_key: device_type_key(icon_hint.as_deref(), class),
-        battery: device.battery_percentage.get(),
-        connected,
-        paired,
-        category,
-        device: Arc::clone(device),
+/// What `device`'s row shows given its `info`, if it has a row.
+pub(crate) fn snapshot_of(device: &Arc<Device>, info: &DeviceInfo) -> Option<DeviceSnapshot> {
+    is_listed(info).then(|| {
+        let DeviceDisplayInfo {
+            name,
+            icon,
+            device_type_key,
+        } = resolve_device_display(info);
+        DeviceSnapshot {
+            name,
+            icon,
+            device_type_key,
+            battery: info.battery_percentage,
+            connected: info.connected,
+            paired: info.paired,
+            activity: info.activity,
+            error: info.last_error.clone(),
+            device: Arc::clone(device),
+        }
     })
 }
 
@@ -383,45 +395,63 @@ pub(crate) struct SplitDeviceLists {
     pub available_devices: Vec<DeviceSnapshot>,
 }
 
-pub(crate) fn build_split_device_lists(devices: &[Arc<Device>]) -> SplitDeviceLists {
+/// Splits `devices` into the two dropdown lists.
+///
+/// "My devices" are ordered connected first, then by name. Available devices
+/// are ordered strongest signal first, with devices not currently seen last.
+/// Ties keep the order in `shown_available` (each device's current row), so
+/// equal readings never swap rows; new devices among them are ordered by name.
+///
+/// This sorts on the RSSI BlueZ reports, which already has per-device
+/// hysteresis: BlueZ only reports a change once a device has moved at least 8
+/// dBm (`RSSI_THRESHOLD`) from its last report. Jitter below that never
+/// reorders the list, and devices more than 16 dBm apart are always in order.
+/// (BlueZ 5.87 and earlier drop the threshold while any client's discovery
+/// filter is active, and report every change.)
+pub(crate) fn build_split_device_lists(
+    devices: &[Arc<Device>],
+    shown_available: &HashMap<OwnedObjectPath, usize>,
+) -> SplitDeviceLists {
     let mut my_devices = Vec::new();
+    // With each device's RSSI, `None` while it isn't being seen.
     let mut available_devices = Vec::new();
 
     for device in devices {
-        let Some(snapshot) = categorize_device(device) else {
+        let Some(snapshot) = snapshot_of(device, &device.info.get()) else {
             continue;
         };
-        match snapshot.category {
-            DeviceCategory::Connected | DeviceCategory::Paired => {
-                my_devices.push(snapshot);
-            }
-            DeviceCategory::Available => {
-                available_devices.push(snapshot);
-            }
+        if snapshot.is_mine() {
+            my_devices.push(snapshot);
+        } else {
+            available_devices.push((device.signal.get().rssi, snapshot));
         }
     }
 
-    fn sort_devices(list: &mut [DeviceSnapshot]) {
-        list.sort_by(|left, right| {
-            fn category_order(cat: &DeviceCategory) -> u8 {
-                match cat {
-                    DeviceCategory::Connected => 0,
-                    DeviceCategory::Paired => 1,
-                    DeviceCategory::Available => 2,
-                }
-            }
-            category_order(&left.category)
-                .cmp(&category_order(&right.category))
-                .then_with(|| left.name.cmp(&right.name))
-        });
-    }
-
-    sort_devices(&mut my_devices);
-    sort_devices(&mut available_devices);
+    my_devices.sort_by(|left, right| {
+        right
+            .connected
+            .cmp(&left.connected)
+            .then_with(|| left.name.cmp(&right.name))
+    });
+    let shown_row = |snapshot: &DeviceSnapshot| {
+        shown_available
+            .get(&snapshot.device.object_path)
+            .copied()
+            .unwrap_or(usize::MAX)
+    };
+    available_devices.sort_by(|(left_rssi, left), (right_rssi, right)| {
+        right_rssi
+            .cmp(left_rssi)
+            .then_with(|| shown_row(left).cmp(&shown_row(right)))
+            .then_with(|| left.name.cmp(&right.name))
+    });
 
     SplitDeviceLists {
         my_devices,
-        available_devices,
+        available_devices: available_devices
+            .into_iter()
+            .map(|(_, snapshot)| snapshot)
+            .collect(),
     }
 }
 
@@ -680,6 +710,36 @@ mod tests {
             device_type_key(None, Some(class)),
             "dropdown-bluetooth-type-smartphone"
         );
+    }
+
+    #[test]
+    fn imaging_devices_from_their_class_of_device() {
+        // As BlueZ reports them: the imaging flags are bits 4-7.
+        for (class, key, icon) in [
+            (
+                0x00_0610,
+                "dropdown-bluetooth-type-display",
+                "ld-monitor-symbolic",
+            ),
+            (
+                0x00_0620,
+                "dropdown-bluetooth-type-camera",
+                "ld-camera-symbolic",
+            ),
+            (
+                0x00_0640,
+                "dropdown-bluetooth-type-scanner",
+                "ld-printer-symbolic",
+            ),
+            (
+                0x04_0680,
+                "dropdown-bluetooth-type-printer",
+                "ld-printer-symbolic",
+            ),
+        ] {
+            assert_eq!(device_type_key(None, Some(class)), key);
+            assert_eq!(device_icon(None, Some(class)), icon);
+        }
     }
 
     #[test]

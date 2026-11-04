@@ -28,14 +28,12 @@ pub(crate) struct QuickActionsSection {
     wifi_enabled_token: WatcherToken,
 
     wifi_active: bool,
-    bluetooth_active: bool,
     airplane_active: bool,
     dnd_active: bool,
     idle_inhibit_active: bool,
     power_saver_active: bool,
 
     has_wifi: bool,
-    has_bluetooth: bool,
     has_notification: bool,
     has_power_profiles: bool,
 
@@ -105,9 +103,11 @@ impl Component for QuickActionsSection {
                 attach[1, 0, 1, 1] = &gtk::Button {
                     add_css_class: "quick-action",
                     #[watch]
-                    set_class_active: ("active", model.bluetooth_active),
+                    set_class_active: ("active", model.bluetooth_active()),
                     #[watch]
-                    set_sensitive: model.has_bluetooth && !model.airplane_active,
+                    set_sensitive: model.has_bluetooth()
+                        && !model.airplane_active
+                        && !model.bluetooth_hardware_blocked(),
                     set_cursor_from_name: Some("pointer"),
                     connect_clicked => QuickActionsInput::BluetoothToggled,
 
@@ -122,7 +122,7 @@ impl Component for QuickActionsSection {
 
                             gtk::Image {
                                 #[watch]
-                                set_icon_name: Some(if model.bluetooth_active {
+                                set_icon_name: Some(if model.bluetooth_active() {
                                     "ld-bluetooth-symbolic"
                                 } else {
                                     "ld-bluetooth-off-symbolic"
@@ -144,7 +144,7 @@ impl Component for QuickActionsSection {
                     #[watch]
                     set_class_active: ("active", model.airplane_active),
                     #[watch]
-                    set_sensitive: model.has_wifi || model.has_bluetooth,
+                    set_sensitive: model.has_wifi || model.has_bluetooth(),
                     set_cursor_from_name: Some("pointer"),
                     connect_clicked => QuickActionsInput::AirplaneToggled,
 
@@ -282,16 +282,6 @@ impl Component for QuickActionsSection {
             .as_ref()
             .is_some_and(|network| network.wifi.get().is_some());
 
-        let current_bt = init.bluetooth.get();
-
-        let has_bluetooth = current_bt
-            .as_ref()
-            .is_some_and(|bluetooth| bluetooth.available.get());
-
-        let bluetooth_active = current_bt
-            .as_ref()
-            .is_some_and(|bluetooth| bluetooth.enabled.get());
-
         let has_notification = init.notification.is_some();
 
         let current_pp = init.power_profiles.get();
@@ -337,14 +327,12 @@ impl Component for QuickActionsSection {
             wifi_enabled_token,
 
             wifi_active,
-            bluetooth_active,
             airplane_active: false,
             dnd_active: false,
             idle_inhibit_active: false,
             power_saver_active,
 
             has_wifi,
-            has_bluetooth,
             has_notification,
             has_power_profiles,
 
@@ -359,7 +347,7 @@ impl Component for QuickActionsSection {
     fn update(&mut self, msg: Self::Input, sender: ComponentSender<Self>, _root: &Self::Root) {
         match msg {
             QuickActionsInput::WifiToggled => self.toggle_wifi(&sender),
-            QuickActionsInput::BluetoothToggled => self.toggle_bluetooth(&sender),
+            QuickActionsInput::BluetoothToggled => self.toggle_bluetooth(),
             QuickActionsInput::AirplaneToggled => self.toggle_airplane(&sender),
             QuickActionsInput::DndToggled => self.toggle_dnd(&sender),
             QuickActionsInput::IdleInhibitToggled => self.toggle_idle_inhibit(),
@@ -390,23 +378,14 @@ impl Component for QuickActionsSection {
                 }
             }
 
-            QuickActionsCmd::BluetoothChanged(active) => self.bluetooth_active = active,
-
-            QuickActionsCmd::BluetoothAvailabilityChanged(available) => {
-                self.has_bluetooth = available;
-                if !available {
-                    self.bluetooth_active = false;
-                }
-            }
+            // The view reads the service's state afresh.
+            QuickActionsCmd::BluetoothChanged => {}
 
             QuickActionsCmd::DndChanged(active) => self.dnd_active = active,
             QuickActionsCmd::IdleInhibitChanged(active) => self.idle_inhibit_active = active,
             QuickActionsCmd::PowerSaverChanged(active) => self.power_saver_active = active,
 
             QuickActionsCmd::BluetoothReady(service) => {
-                self.has_bluetooth = service.available.get();
-                self.bluetooth_active = service.enabled.get();
-
                 watchers::spawn_bluetooth_watchers(&sender, &service);
             }
 

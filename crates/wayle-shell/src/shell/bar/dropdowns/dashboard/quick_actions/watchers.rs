@@ -53,18 +53,16 @@ pub(super) fn spawn_bluetooth_watchers(
     service: &Arc<BluetoothService>,
 ) {
     let enabled = service.enabled.clone();
-
-    watch!(sender, [enabled.watch()], |out| {
-        let _ = out.send(QuickActionsCmd::BluetoothChanged(enabled.get()));
-    });
-
     let available = service.available.clone();
+    let radio_block = service.radio_block.clone();
 
-    watch!(sender, [available.watch()], |out| {
-        let _ = out.send(QuickActionsCmd::BluetoothAvailabilityChanged(
-            available.get(),
-        ));
-    });
+    watch!(
+        sender,
+        [enabled.watch(), available.watch(), radio_block.watch()],
+        |out| {
+            let _ = out.send(QuickActionsCmd::BluetoothChanged);
+        }
+    );
 }
 
 pub(super) fn spawn_bluetooth_availability(
