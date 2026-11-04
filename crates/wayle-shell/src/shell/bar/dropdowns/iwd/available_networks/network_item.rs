@@ -153,31 +153,12 @@ impl FactoryComponent for NetworkItem {
             #[watch]
             set_cursor_from_name: self.joinable().then_some("pointer"),
 
-            // Signal strength, badged with a lock unless the network is open.
-            #[name = "signal_overlay"]
-            gtk::Overlay {
-                add_css_class: "network-item-signal-overlay",
+            #[name = "signal_icon"]
+            gtk::Image {
+                add_css_class: "network-item-signal",
+                #[watch]
+                set_icon_name: Some(self.icon.as_str()),
                 set_valign: gtk::Align::Center,
-
-                #[name = "signal_icon"]
-                gtk::Image {
-                    add_css_class: "network-item-signal",
-                    // The overlay is wider than the icon, so the badge can
-                    // hang off its right edge.
-                    set_halign: gtk::Align::Start,
-                    #[watch]
-                    set_icon_name: Some(self.icon.as_str()),
-                },
-
-                add_overlay = &gtk::Image {
-                    add_css_class: "network-item-lock-badge",
-                    set_icon_name: Some("tbf-lock-symbolic"),
-                    set_halign: gtk::Align::End,
-                    set_valign: gtk::Align::End,
-                    set_can_target: false,
-                    #[watch]
-                    set_visible: helpers::secured(self.snapshot.security),
-                },
             },
 
             #[name = "info_column"]
@@ -212,9 +193,21 @@ impl FactoryComponent for NetworkItem {
                 set_valign: gtk::Align::Center,
                 set_hexpand: false,
                 #[watch]
-                set_visible: self.offers_forget(),
+                set_visible: helpers::secured(self.snapshot.security) || self.offers_forget(),
 
-                add_named[Some("idle")] = &gtk::Box {},
+                add_named[Some("lock")] = &gtk::Box {
+                    set_halign: gtk::Align::End,
+                    set_valign: gtk::Align::Center,
+
+                    #[name = "lock_icon"]
+                    gtk::Image {
+                        add_css_class: "network-item-lock",
+                        set_icon_name: Some("ld-lock-symbolic"),
+                        set_valign: gtk::Align::Center,
+                        #[watch]
+                        set_visible: helpers::secured(self.snapshot.security),
+                    },
+                },
 
                 add_named[Some("actions")] = &gtk::Box {
                     add_css_class: "network-item-actions",
@@ -236,7 +229,7 @@ impl FactoryComponent for NetworkItem {
                     if self.hovered && self.offers_forget() {
                         "actions"
                     } else {
-                        "idle"
+                        "lock"
                     },
             },
         }
