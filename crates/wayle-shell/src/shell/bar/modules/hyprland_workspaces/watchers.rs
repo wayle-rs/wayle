@@ -13,7 +13,7 @@ use wayle_config::{
 use wayle_hyprland::{HyprlandEvent, HyprlandService};
 use wayle_widgets::{prelude::BarSettings, watch};
 
-use super::HyprlandWorkspaces;
+use super::{HyprlandWorkspaces, filtering::ActiveWorkspace};
 use crate::shell::bar::modules::hyprland_workspaces::messages::WorkspacesCmd;
 
 pub(super) fn spawn_watchers(
@@ -75,22 +75,27 @@ async fn watch_workspace_events(
             event = events.next() => {
                 let Some(event) = event else { continue; };
                 match event {
-                    HyprlandEvent::WorkspaceV2 { id, .. } => {
-                        let _ = out.send(WorkspacesCmd::ActiveWorkspaceChanged(id));
+                    HyprlandEvent::WorkspaceV2 { id, address, .. } => {
+                        let workspace = ActiveWorkspace { id, address };
+                        let _ = out.send(WorkspacesCmd::ActiveWorkspaceChanged(workspace));
                     }
                     HyprlandEvent::FocusedMonV2 {
                         name,
                         workspace_id,
+                        workspace_address,
                     } => {
+                        let workspace = workspace_address
+                            .map(|address| ActiveWorkspace { id: workspace_id, address });
                         let _ = out.send(WorkspacesCmd::MonitorFocused {
                             monitor: name,
-                            workspace_id,
+                            workspace,
                         });
                     }
                     HyprlandEvent::CreateWorkspaceV2 { .. }
                     | HyprlandEvent::DestroyWorkspaceV2 { .. }
                     | HyprlandEvent::MoveWorkspaceV2 { .. }
                     | HyprlandEvent::RenameWorkspace { .. }
+                    | HyprlandEvent::ChangeWorkspaceId { .. }
                     | HyprlandEvent::ActiveSpecialV2 { .. }
                     | HyprlandEvent::MonitorAddedV2 { .. }
                     | HyprlandEvent::MonitorRemovedV2 { .. } => {

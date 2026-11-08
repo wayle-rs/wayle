@@ -35,7 +35,7 @@ use wayle_widgets::{prelude::BarSettings, utils::force_window_resize};
 
 use self::{
     button::{WorkspaceButton, WorkspaceButtonOutput},
-    helpers::should_update_for_monitor,
+    filtering::ActiveWorkspace,
 };
 pub(crate) use self::{
     factory::Factory,
@@ -49,7 +49,7 @@ pub(crate) struct HyprlandWorkspaces {
     hyprland: Option<Arc<HyprlandService>>,
     config: Arc<ConfigService>,
     settings: BarSettings,
-    active_workspace_id: WorkspaceId,
+    active_workspace: Option<ActiveWorkspace>,
     focused_monitor: Option<String>,
     workspace_monitor_rules: HashMap<WorkspaceId, String>,
     urgent_windows: HashSet<Address>,
@@ -88,7 +88,7 @@ impl Component for HyprlandWorkspaces {
         let monitor_specific = workspaces_config.monitor_specific.get();
         let theme_provider = config.styling.theme_provider.clone();
 
-        let active_id =
+        let active_workspace =
             Self::initial_active_workspace(&init.hyprland, &init.settings, monitor_specific);
         let focused_monitor = Self::initial_focused_monitor(&init.hyprland);
         let bar_scale = config.bar.scale.clone();
@@ -114,7 +114,7 @@ impl Component for HyprlandWorkspaces {
         let buttons = FactoryVecDeque::builder().launch(root.clone()).forward(
             sender.input_sender(),
             |output| match output {
-                WorkspaceButtonOutput::Clicked(id) => WorkspacesMsg::WorkspaceClicked(id),
+                WorkspaceButtonOutput::Clicked(address) => WorkspacesMsg::WorkspaceClicked(address),
                 WorkspaceButtonOutput::ScrollUp => WorkspacesMsg::ScrollUp,
                 WorkspaceButtonOutput::ScrollDown => WorkspacesMsg::ScrollDown,
             },
@@ -124,7 +124,7 @@ impl Component for HyprlandWorkspaces {
             hyprland: init.hyprland,
             config: init.config,
             settings: init.settings,
-            active_workspace_id: active_id,
+            active_workspace,
             focused_monitor,
             workspace_monitor_rules: HashMap::new(),
             urgent_windows: HashSet::new(),
@@ -143,8 +143,8 @@ impl Component for HyprlandWorkspaces {
 
     fn update(&mut self, msg: Self::Input, _sender: ComponentSender<Self>, _root: &Self::Root) {
         match msg {
-            WorkspacesMsg::WorkspaceClicked(id) => {
-                self.switch_to_workspace(id);
+            WorkspacesMsg::WorkspaceClicked(address) => {
+                self.focus_workspace(&address);
             }
             WorkspacesMsg::ScrollUp => {
                 self.navigate_workspace(-1);
@@ -179,43 +179,12 @@ impl Component for HyprlandWorkspaces {
             WorkspacesCmd::TitleChanged => {
                 self.update_app_icons_on_title_change();
             }
-            WorkspacesCmd::ActiveWorkspaceChanged(id) => {
-                let config = self.config.config();
-                let monitor_specific = config.modules.hyprland_workspaces.monitor_specific.get();
-                let has_min_workspace_count =
-                    config.modules.hyprland_workspaces.min_workspace_count.get() > 0;
-
-                if !self.should_apply_active_workspace_change(id, monitor_specific) {
-                    return;
-                }
-
-                self.clear_urgent_windows_for_workspace(id);
-                self.stop_blink_if_no_urgent();
-                self.active_workspace_id = id;
-                self.sync_after_active_workspace_change(has_min_workspace_count);
+            WorkspacesCmd::ActiveWorkspaceChanged(workspace) => {
+                self.apply_active_workspace_change(workspace);
             }
 
-            WorkspacesCmd::MonitorFocused {
-                monitor,
-                workspace_id,
-            } => {
-                self.focused_monitor = Some(monitor.clone());
-
-                let config = self.config.config();
-                let monitor_specific = config.modules.hyprland_workspaces.monitor_specific.get();
-                let has_min_workspace_count =
-                    config.modules.hyprland_workspaces.min_workspace_count.get() > 0;
-
-                if should_update_for_monitor(
-                    monitor_specific,
-                    self.settings.monitor_name.as_deref(),
-                    &monitor,
-                ) {
-                    self.clear_urgent_windows_for_workspace(workspace_id);
-                    self.stop_blink_if_no_urgent();
-                    self.active_workspace_id = workspace_id;
-                    self.sync_after_active_workspace_change(has_min_workspace_count);
-                }
+            WorkspacesCmd::MonitorFocused { monitor, workspace } => {
+                self.apply_monitor_focus(monitor, workspace);
             }
             WorkspacesCmd::HyprlandConfigReloaded => {
                 debug!("Hyprland config reloaded, refreshing workspace rules");

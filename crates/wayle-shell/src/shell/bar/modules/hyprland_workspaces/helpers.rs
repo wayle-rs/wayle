@@ -1,12 +1,15 @@
 use std::{
+    borrow::Cow,
     collections::{BTreeMap, HashSet},
     hash::Hash,
     sync::Arc,
 };
 
 use glob::Pattern;
-use wayle_config::schemas::modules::{DisplayMode, Numbering};
-use wayle_hyprland::{Address, Client, WorkspaceId};
+use wayle_config::schemas::modules::{
+    DisplayMode, HyprlandWorkspaceMap, Numbering, WorkspaceStyle,
+};
+use wayle_hyprland::{Address, Client, WorkspaceAddress, WorkspaceId, WorkspaceKind};
 
 use super::filtering::relative_workspace_number;
 use crate::shell::bar::icons::{DEFAULT_APP_ICON_MAP, matches_glob};
@@ -66,7 +69,7 @@ pub(crate) struct ResolvedIcon {
 }
 
 pub(crate) fn resolve_workspace_icons(
-    workspace_id: WorkspaceId,
+    workspace: &WorkspaceAddress,
     clients: &[Arc<Client>],
     ctx: &IconContext<'_>,
     dedupe: bool,
@@ -76,7 +79,7 @@ pub(crate) fn resolve_workspace_icons(
 
     for client in clients
         .iter()
-        .filter(|client| client.workspace.get().id == workspace_id)
+        .filter(|client| client.workspace.get().address == *workspace)
     {
         let class = client.class.get();
         let title = client.title.get();
@@ -108,12 +111,19 @@ pub(crate) fn has_title_patterns(user_map: &BTreeMap<String, String>) -> bool {
     user_map.keys().any(|k| k.starts_with("title:"))
 }
 
+/// Label text for a workspace button.
+///
+/// Workspaces without a number (named and special) always show their name.
 pub(super) fn format_workspace_label(
-    display_id: WorkspaceId,
-    absolute_id: WorkspaceId,
+    display_id: Option<WorkspaceId>,
+    absolute_id: Option<WorkspaceId>,
     name: &str,
     use_name: bool,
 ) -> String {
+    let (Some(display_id), Some(absolute_id)) = (display_id, absolute_id) else {
+        return name.to_string();
+    };
+
     if use_name && !name.is_empty() {
         let is_default_name = name == absolute_id.to_string();
         if is_default_name {
@@ -143,28 +153,59 @@ impl WorkspaceState {
     }
 }
 
+/// `workspace-id-<n>` class; only numbered workspaces get one.
 pub(crate) fn workspace_id_css_class(id: WorkspaceId) -> String {
-    if id < 0 {
-        format!("workspace-id-neg{}", id.unsigned_abs())
-    } else {
-        format!("workspace-id-{id}")
-    }
+    format!("workspace-id-{id}")
 }
 
-pub(crate) fn matches_ignore_patterns(id: WorkspaceId, patterns: &[String]) -> bool {
-    if patterns.is_empty() {
-        return false;
-    }
+/// `workspace-name-<name>` class for user stylesheets.
+///
+/// The name is used as-is; stylesheets escape characters such as `:` or spaces
+/// (`.workspace-name-special\:magic`). Placeholders for numbered workspaces
+/// have no name and get no class.
+pub(crate) fn workspace_name_css_class(name: &str) -> Option<String> {
+    (!name.is_empty()).then(|| format!("workspace-name-{name}"))
+}
 
-    let id_str = id.to_string();
-    for pattern in patterns {
-        if let Ok(glob) = Pattern::new(pattern)
-            && glob.matches(&id_str)
-        {
-            return true;
-        }
-    }
-    false
+/// CSS class carrying the color of a `workspace-map` entry, by its position
+/// in the map.
+pub(crate) fn workspace_map_css_class(position: usize) -> String {
+    format!("workspace-map-{position}")
+}
+
+/// Keys that `workspace-map` and `workspace-ignore` match a workspace by: its
+/// name, then its number.
+fn config_keys(name: &str, id: Option<WorkspaceId>) -> impl Iterator<Item = Cow<'_, str>> {
+    let name_key = (!name.is_empty()).then_some(Cow::Borrowed(name));
+    let number_key = id.map(|id| Cow::Owned(id.to_string()));
+    name_key.into_iter().chain(number_key)
+}
+
+/// The `workspace-map` entry for a workspace, with its position in the map.
+pub(crate) fn mapped_workspace_style<'a>(
+    workspace_map: &'a HyprlandWorkspaceMap,
+    name: &str,
+    id: Option<WorkspaceId>,
+) -> Option<(usize, &'a WorkspaceStyle)> {
+    config_keys(name, id).find_map(|key| {
+        workspace_map
+            .iter()
+            .enumerate()
+            .find(|(_, (map_key, _))| map_key.as_str() == key)
+            .map(|(position, (_, style))| (position, style))
+    })
+}
+
+/// Whether a workspace is hidden by `workspace-ignore`.
+pub(crate) fn matches_ignore_patterns(
+    name: &str,
+    id: Option<WorkspaceId>,
+    patterns: &[String],
+) -> bool {
+    patterns
+        .iter()
+        .filter_map(|pattern| Pattern::new(pattern).ok())
+        .any(|glob| config_keys(name, id).any(|key| glob.matches(&key)))
 }
 
 pub(crate) fn determine_workspace_state(is_active: bool, windows: u16) -> WorkspaceState {
@@ -178,12 +219,12 @@ pub(crate) fn determine_workspace_state(is_active: bool, windows: u16) -> Worksp
 }
 
 pub(crate) fn compute_static_css_classes(
-    id: WorkspaceId,
+    kind: WorkspaceKind,
     indicator_class: &'static str,
     is_vertical: bool,
 ) -> Vec<&'static str> {
     let mut classes = vec!["workspace", indicator_class];
-    if id < 0 {
+    if kind == WorkspaceKind::Special {
         classes.push("special");
     }
     if is_vertical {
@@ -194,12 +235,12 @@ pub(crate) fn compute_static_css_classes(
 
 pub(crate) fn collect_button_css_classes<'a>(
     static_classes: &[&'a str],
-    css_id_class: &'a str,
+    identity_classes: impl IntoIterator<Item = &'a str>,
     state: WorkspaceState,
     is_urgent: bool,
 ) -> Vec<&'a str> {
     let mut classes: Vec<&str> = static_classes.to_vec();
-    classes.push(css_id_class);
+    classes.extend(identity_classes);
     classes.push(state.css_class());
     if is_urgent {
         classes.push("urgent");
@@ -247,32 +288,32 @@ pub(crate) fn should_update_for_monitor(
     }
 }
 
-pub(crate) fn workspace_contains_urgent_address<A: Eq + Hash>(
-    workspace_id: WorkspaceId,
+pub(crate) fn workspace_contains_urgent_address<A: Eq + Hash, W: PartialEq>(
+    workspace: &W,
     urgent_addresses: &HashSet<A>,
-    client_workspaces: &[(A, WorkspaceId)],
+    client_workspaces: &[(A, W)],
 ) -> bool {
     if urgent_addresses.is_empty() {
         return false;
     }
 
-    client_workspaces
-        .iter()
-        .any(|(address, ws_id)| *ws_id == workspace_id && urgent_addresses.contains(address))
+    client_workspaces.iter().any(|(address, client_workspace)| {
+        client_workspace == workspace && urgent_addresses.contains(address)
+    })
 }
 
-pub(crate) fn addresses_in_workspace<A: Clone>(
-    workspace_id: WorkspaceId,
-    client_workspaces: &[(A, WorkspaceId)],
+pub(crate) fn addresses_in_workspace<A: Clone, W: PartialEq>(
+    workspace: &W,
+    client_workspaces: &[(A, W)],
 ) -> Vec<A> {
     client_workspaces
         .iter()
-        .filter(|(_, ws_id)| *ws_id == workspace_id)
+        .filter(|(_, client_workspace)| client_workspace == workspace)
         .map(|(addr, _)| addr.clone())
         .collect()
 }
 
-pub(crate) fn prune_stale_addresses<A: Eq + std::hash::Hash + Clone>(
+pub(crate) fn prune_stale_addresses<A: Eq + Hash + Clone>(
     urgent_addresses: &HashSet<A>,
     current_addresses: &HashSet<A>,
 ) -> HashSet<A> {
@@ -387,32 +428,41 @@ mod tests {
 
         #[test]
         fn use_id_when_name_disabled() {
-            assert_eq!(format_workspace_label(1, 1, "main", false), "1");
+            assert_eq!(format_workspace_label(Some(1), Some(1), "main", false), "1");
         }
 
         #[test]
         fn use_custom_name_when_enabled() {
-            assert_eq!(format_workspace_label(1, 1, "main", true), "main");
+            assert_eq!(
+                format_workspace_label(Some(1), Some(1), "main", true),
+                "main"
+            );
         }
 
         #[test]
         fn fallback_to_id_on_empty_name() {
-            assert_eq!(format_workspace_label(2, 2, "", true), "2");
+            assert_eq!(format_workspace_label(Some(2), Some(2), "", true), "2");
         }
 
         #[test]
-        fn negative_id_for_special() {
-            assert_eq!(format_workspace_label(-99, -99, "scratchpad", false), "-99");
+        fn unnumbered_workspace_shows_name() {
+            assert_eq!(
+                format_workspace_label(None, None, "special:scratchpad", false),
+                "special:scratchpad"
+            );
         }
 
         #[test]
         fn relative_numbering_with_default_name() {
-            assert_eq!(format_workspace_label(1, 4, "4", true), "1");
+            assert_eq!(format_workspace_label(Some(1), Some(4), "4", true), "1");
         }
 
         #[test]
         fn relative_numbering_with_custom_name() {
-            assert_eq!(format_workspace_label(1, 4, "browser", true), "browser");
+            assert_eq!(
+                format_workspace_label(Some(1), Some(4), "browser", true),
+                "browser"
+            );
         }
     }
 
@@ -461,32 +511,37 @@ mod tests {
 
         #[test]
         fn includes_base_and_indicator() {
-            let classes = compute_static_css_classes(1, "indicator-background", false);
+            let classes =
+                compute_static_css_classes(WorkspaceKind::Normal, "indicator-background", false);
             assert!(classes.contains(&"workspace"));
             assert!(classes.contains(&"indicator-background"));
         }
 
         #[test]
-        fn adds_special_for_negative_id() {
-            let classes = compute_static_css_classes(-99, "indicator-background", false);
+        fn adds_special_for_special_workspace() {
+            let classes =
+                compute_static_css_classes(WorkspaceKind::Special, "indicator-background", false);
             assert!(classes.contains(&"special"));
         }
 
         #[test]
-        fn no_special_for_positive_id() {
-            let classes = compute_static_css_classes(1, "indicator-background", false);
+        fn no_special_for_normal_workspace() {
+            let classes =
+                compute_static_css_classes(WorkspaceKind::Normal, "indicator-background", false);
             assert!(!classes.contains(&"special"));
         }
 
         #[test]
         fn adds_vertical_class() {
-            let classes = compute_static_css_classes(1, "indicator-underline", true);
+            let classes =
+                compute_static_css_classes(WorkspaceKind::Normal, "indicator-underline", true);
             assert!(classes.contains(&"vertical"));
         }
 
         #[test]
         fn no_vertical_when_horizontal() {
-            let classes = compute_static_css_classes(1, "indicator-underline", false);
+            let classes =
+                compute_static_css_classes(WorkspaceKind::Normal, "indicator-underline", false);
             assert!(!classes.contains(&"vertical"));
         }
     }
@@ -499,7 +554,7 @@ mod tests {
             let static_classes = vec!["workspace", "indicator-background"];
             let classes = collect_button_css_classes(
                 &static_classes,
-                "workspace-id-1",
+                ["workspace-id-1"],
                 WorkspaceState::Active,
                 false,
             );
@@ -508,11 +563,19 @@ mod tests {
         }
 
         #[test]
+        fn omits_id_class_for_unnumbered_workspace() {
+            let static_classes = vec!["workspace"];
+            let classes =
+                collect_button_css_classes(&static_classes, [], WorkspaceState::Empty, false);
+            assert_eq!(classes, vec!["workspace", "empty"]);
+        }
+
+        #[test]
         fn includes_id_class() {
             let static_classes = vec!["workspace"];
             let classes = collect_button_css_classes(
                 &static_classes,
-                "workspace-id-5",
+                ["workspace-id-5"],
                 WorkspaceState::Occupied,
                 false,
             );
@@ -520,11 +583,44 @@ mod tests {
         }
 
         #[test]
+        fn includes_every_identity_class() {
+            let static_classes = vec!["workspace"];
+            let classes = collect_button_css_classes(
+                &static_classes,
+                ["workspace-id-3", "workspace-name-web", "workspace-map-0"],
+                WorkspaceState::Occupied,
+                false,
+            );
+            assert_eq!(
+                classes,
+                vec![
+                    "workspace",
+                    "workspace-id-3",
+                    "workspace-name-web",
+                    "workspace-map-0",
+                    "occupied"
+                ]
+            );
+        }
+
+        #[test]
+        fn includes_map_class() {
+            let static_classes = vec!["workspace"];
+            let classes = collect_button_css_classes(
+                &static_classes,
+                ["workspace-map-2"],
+                WorkspaceState::Occupied,
+                false,
+            );
+            assert!(classes.contains(&"workspace-map-2"));
+        }
+
+        #[test]
         fn includes_state_class() {
             let static_classes = vec!["workspace"];
             let classes = collect_button_css_classes(
                 &static_classes,
-                "workspace-id-1",
+                ["workspace-id-1"],
                 WorkspaceState::Empty,
                 false,
             );
@@ -536,7 +632,7 @@ mod tests {
             let static_classes = vec!["workspace"];
             let classes = collect_button_css_classes(
                 &static_classes,
-                "workspace-id-1",
+                ["workspace-id-1"],
                 WorkspaceState::Occupied,
                 true,
             );
@@ -548,7 +644,7 @@ mod tests {
             let static_classes = vec!["workspace"];
             let classes = collect_button_css_classes(
                 &static_classes,
-                "workspace-id-1",
+                ["workspace-id-1"],
                 WorkspaceState::Active,
                 false,
             );
@@ -665,7 +761,7 @@ mod tests {
         fn returns_false_for_empty_urgent() {
             let urgent: HashSet<u32> = HashSet::new();
             let clients = vec![(1u32, 1i64), (2, 1), (3, 2)];
-            assert!(!workspace_contains_urgent_address(1, &urgent, &clients));
+            assert!(!workspace_contains_urgent_address(&1, &urgent, &clients));
         }
 
         #[test]
@@ -673,7 +769,7 @@ mod tests {
             let mut urgent = HashSet::new();
             urgent.insert(2u32);
             let clients = vec![(1u32, 1i64), (2, 1), (3, 2)];
-            assert!(workspace_contains_urgent_address(1, &urgent, &clients));
+            assert!(workspace_contains_urgent_address(&1, &urgent, &clients));
         }
 
         #[test]
@@ -681,7 +777,7 @@ mod tests {
             let mut urgent = HashSet::new();
             urgent.insert(3u32);
             let clients = vec![(1u32, 1i64), (2, 1), (3, 2)];
-            assert!(!workspace_contains_urgent_address(1, &urgent, &clients));
+            assert!(!workspace_contains_urgent_address(&1, &urgent, &clients));
         }
 
         #[test]
@@ -689,7 +785,7 @@ mod tests {
             let mut urgent = HashSet::new();
             urgent.insert(99u32);
             let clients = vec![(1u32, 1i64), (2, 1), (3, 2)];
-            assert!(!workspace_contains_urgent_address(1, &urgent, &clients));
+            assert!(!workspace_contains_urgent_address(&1, &urgent, &clients));
         }
     }
 
@@ -699,21 +795,21 @@ mod tests {
         #[test]
         fn returns_matching_addresses() {
             let clients = vec![(1u32, 1i64), (2, 1), (3, 2), (4, 1)];
-            let result = addresses_in_workspace(1, &clients);
+            let result = addresses_in_workspace(&1, &clients);
             assert_eq!(result, vec![1, 2, 4]);
         }
 
         #[test]
         fn returns_empty_for_no_matches() {
             let clients = vec![(1u32, 2i64), (2, 2)];
-            let result = addresses_in_workspace(1, &clients);
+            let result = addresses_in_workspace(&1, &clients);
             assert!(result.is_empty());
         }
 
         #[test]
         fn returns_empty_for_empty_clients() {
             let clients: Vec<(u32, i64)> = vec![];
-            let result = addresses_in_workspace(1, &clients);
+            let result = addresses_in_workspace(&1, &clients);
             assert!(result.is_empty());
         }
     }
@@ -765,40 +861,172 @@ mod tests {
         }
     }
 
+    mod workspace_name_css_class_tests {
+        use super::*;
+
+        #[test]
+        fn uses_the_name_as_is() {
+            assert_eq!(
+                workspace_name_css_class("special:magic").as_deref(),
+                Some("workspace-name-special:magic")
+            );
+        }
+
+        #[test]
+        fn omits_class_for_unnamed_placeholder() {
+            assert_eq!(workspace_name_css_class(""), None);
+        }
+    }
+
     mod matches_ignore_patterns_tests {
         use super::*;
+
+        fn ignores_numbered(id: WorkspaceId, patterns: &[String]) -> bool {
+            matches_ignore_patterns(&id.to_string(), Some(id), patterns)
+        }
+
+        fn ignores_unnumbered(name: &str, patterns: &[String]) -> bool {
+            matches_ignore_patterns(name, None, patterns)
+        }
 
         #[test]
         fn exact_match() {
             let patterns = vec!["10".to_string()];
-            assert!(matches_ignore_patterns(10, &patterns));
-            assert!(!matches_ignore_patterns(1, &patterns));
-            assert!(!matches_ignore_patterns(100, &patterns));
+            assert!(ignores_numbered(10, &patterns));
+            assert!(!ignores_numbered(1, &patterns));
+            assert!(!ignores_numbered(100, &patterns));
         }
 
         #[test]
         fn wildcard_single_char() {
             let patterns = vec!["1?".to_string()];
-            assert!(matches_ignore_patterns(10, &patterns));
-            assert!(matches_ignore_patterns(11, &patterns));
-            assert!(matches_ignore_patterns(19, &patterns));
-            assert!(!matches_ignore_patterns(1, &patterns));
-            assert!(!matches_ignore_patterns(100, &patterns));
+            assert!(ignores_numbered(10, &patterns));
+            assert!(ignores_numbered(11, &patterns));
+            assert!(ignores_numbered(19, &patterns));
+            assert!(!ignores_numbered(1, &patterns));
+            assert!(!ignores_numbered(100, &patterns));
         }
 
         #[test]
         fn wildcard_multi_char() {
             let patterns = vec!["1*".to_string()];
-            assert!(matches_ignore_patterns(1, &patterns));
-            assert!(matches_ignore_patterns(10, &patterns));
-            assert!(matches_ignore_patterns(100, &patterns));
-            assert!(!matches_ignore_patterns(2, &patterns));
+            assert!(ignores_numbered(1, &patterns));
+            assert!(ignores_numbered(10, &patterns));
+            assert!(ignores_numbered(100, &patterns));
+            assert!(!ignores_numbered(2, &patterns));
+        }
+
+        #[test]
+        fn matches_special_workspace_by_name() {
+            let patterns = vec!["special:*".to_string()];
+            assert!(ignores_unnumbered("special:scratch", &patterns));
+            assert!(!ignores_unnumbered("music", &patterns));
+        }
+
+        #[test]
+        fn matches_named_workspace_by_name() {
+            let patterns = vec!["chat".to_string()];
+            assert!(ignores_unnumbered("chat", &patterns));
+            assert!(!ignores_unnumbered("web", &patterns));
+        }
+
+        #[test]
+        fn matches_renamed_numbered_workspace_by_name_or_number() {
+            let by_name = vec!["web".to_string()];
+            let by_number = vec!["3".to_string()];
+            assert!(matches_ignore_patterns("web", Some(3), &by_name));
+            assert!(matches_ignore_patterns("web", Some(3), &by_number));
+        }
+
+        #[test]
+        fn placeholder_matches_by_number() {
+            let patterns = vec!["4".to_string()];
+            assert!(matches_ignore_patterns("", Some(4), &patterns));
         }
 
         #[test]
         fn empty_patterns() {
             let patterns: Vec<String> = vec![];
-            assert!(!matches_ignore_patterns(10, &patterns));
+            assert!(!ignores_numbered(10, &patterns));
+        }
+    }
+
+    mod mapped_workspace_style_tests {
+        use serde_json::{Error as JsonError, Map, Value, json};
+
+        use super::*;
+
+        fn workspace_map(entries: &[(&str, &str)]) -> Result<HyprlandWorkspaceMap, JsonError> {
+            let table: Map<String, Value> = entries
+                .iter()
+                .map(|(key, icon)| (key.to_string(), json!({ "icon": icon })))
+                .collect();
+            serde_json::from_value(Value::Object(table))
+        }
+
+        fn mapped_icon(
+            workspace_map: &HyprlandWorkspaceMap,
+            name: &str,
+            id: Option<WorkspaceId>,
+        ) -> Option<String> {
+            mapped_workspace_style(workspace_map, name, id)
+                .and_then(|(_, style)| style.icon.clone())
+        }
+
+        #[test]
+        fn matches_numbered_workspace_by_number() -> Result<(), JsonError> {
+            let workspace_map = workspace_map(&[("3", "by-number")])?;
+            let icon = mapped_icon(&workspace_map, "3", Some(3));
+            assert_eq!(icon.as_deref(), Some("by-number"));
+            Ok(())
+        }
+
+        #[test]
+        fn matches_named_workspace_by_name() -> Result<(), JsonError> {
+            let workspace_map = workspace_map(&[("chat", "by-name")])?;
+            let icon = mapped_icon(&workspace_map, "chat", None);
+            assert_eq!(icon.as_deref(), Some("by-name"));
+            Ok(())
+        }
+
+        #[test]
+        fn matches_special_workspace_by_prefixed_name() -> Result<(), JsonError> {
+            let workspace_map = workspace_map(&[("special:magic", "scratch")])?;
+            let icon = mapped_icon(&workspace_map, "special:magic", None);
+            assert_eq!(icon.as_deref(), Some("scratch"));
+            Ok(())
+        }
+
+        #[test]
+        fn prefers_name_over_number() -> Result<(), JsonError> {
+            let workspace_map = workspace_map(&[("3", "by-number"), ("web", "by-name")])?;
+            let icon = mapped_icon(&workspace_map, "web", Some(3));
+            assert_eq!(icon.as_deref(), Some("by-name"));
+            Ok(())
+        }
+
+        #[test]
+        fn falls_back_to_number_when_name_unmapped() -> Result<(), JsonError> {
+            let workspace_map = workspace_map(&[("3", "by-number")])?;
+            let icon = mapped_icon(&workspace_map, "web", Some(3));
+            assert_eq!(icon.as_deref(), Some("by-number"));
+            Ok(())
+        }
+
+        #[test]
+        fn returns_position_of_matched_entry() -> Result<(), JsonError> {
+            let workspace_map = workspace_map(&[("1", "one"), ("chat", "chat")])?;
+            let position =
+                mapped_workspace_style(&workspace_map, "chat", None).map(|(position, _)| position);
+            assert_eq!(position, Some(1));
+            Ok(())
+        }
+
+        #[test]
+        fn returns_none_when_unmapped() -> Result<(), JsonError> {
+            let workspace_map = workspace_map(&[("1", "one")])?;
+            assert!(mapped_workspace_style(&workspace_map, "chat", None).is_none());
+            Ok(())
         }
     }
 }

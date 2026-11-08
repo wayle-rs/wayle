@@ -286,7 +286,7 @@ What identifies a workspace in the UI.
 
 | Value | Meaning |
 |---|---|
-| `"label"` | Show workspace number or name. |
+| `"label"` | Show workspace number, or name for named and special workspaces. |
 | `"icon"` | Show icon from `workspace-map` (falls back to label if unmapped). |
 | `"none"` | Show nothing - only app icons visible. |
 
@@ -473,7 +473,7 @@ How workspace numbers are displayed.
 
 | Value | Meaning |
 |---|---|
-| `"absolute"` | Show actual Hyprland workspace IDs (1, 2, 3, 4, 5, 6...). |
+| `"absolute"` | Show actual Hyprland workspace numbers (1, 2, 3, 4, 5, 6...). |
 | `"relative"` | Show numbers relative to monitor's starting workspace.
 
 If monitor has workspaces 4, 5, 6 assigned, they display as 1, 2, 3.
@@ -850,12 +850,14 @@ String.
 
 ## WorkspaceMap {#workspace-map}
 
-Per-workspace icon and color overrides, keyed by workspace ID.
+Per-workspace icon and color overrides, keyed by workspace name or number.
 
-TOML table keys are always strings, so `"1"` parses into the workspace
-with ID `1`. Negative IDs refer to Hyprland's special workspaces. Keys
-that don't appear in the map fall back to the default behaviour set by
-[`HyprlandWorkspacesConfig::display_mode`].
+Each workspace is looked up by its name first, then by its number.
+Special workspaces are named with their `special:` prefix, such as
+`"special:magic"`. Named and special workspaces have no number. Workspaces
+that match no key fall back to the defaults set by
+[`HyprlandWorkspacesConfig::display_mode`] and the active, occupied and
+empty colors.
 
 ### Examples
 
@@ -864,17 +866,14 @@ that don't appear in the map fall back to the default behaviour set by
 # Whole entry on one line with an inline table
 1 = { label = "Web", icon = "ld-globe-symbolic", color = "#4a90d9" }
 2 = { icon = "ld-terminal-symbolic" }
-3 = { icon = "ld-code-symbolic", color = "accent" }
+chat = { icon = "ld-message-circle-symbolic", color = "accent" }
+"special:magic" = { icon = "ld-layers-symbolic" }
 
 # Or spread the entry across its own subtable
-[modules.hyprland-workspaces.workspace-map.4]
-label = "Chat"
-icon = "ld-message-square-symbolic"
+[modules.hyprland-workspaces.workspace-map.3]
+label = "Code"
+icon = "ld-code-symbolic"
 color = "status-success"
-
-# Negative IDs target Hyprland special workspaces
-[modules.hyprland-workspaces.workspace-map.-99]
-icon = "ld-scratch-symbolic"
 ```
 
 ## WorkspaceStyle {#workspace-style}

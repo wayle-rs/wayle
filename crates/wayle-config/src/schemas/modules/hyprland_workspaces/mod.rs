@@ -1,7 +1,11 @@
-use std::{collections::BTreeMap, ops::Deref};
+use std::{
+    collections::{BTreeMap, btree_map},
+    ops::Deref,
+};
 
 use schemars::{JsonSchema, schema_for};
-use serde::{Deserialize, Deserializer, Serialize, Serializer};
+use serde::{Deserialize, Deserializer, Serialize};
+use tracing::warn;
 use wayle_derive::{wayle_config, wayle_enum};
 
 use crate::{
@@ -13,7 +17,7 @@ use crate::{
 /// What identifies a workspace in the UI.
 #[wayle_enum(default)]
 pub enum DisplayMode {
-    /// Show workspace number or name.
+    /// Show workspace number, or name for named and special workspaces.
     #[default]
     Label,
     /// Show icon from `workspace-map` (falls back to label if unmapped).
@@ -37,7 +41,7 @@ pub enum DisplayMode {
 )]
 #[serde(rename_all = "kebab-case")]
 pub enum Numbering {
-    /// Show actual Hyprland workspace IDs (1, 2, 3, 4, 5, 6...).
+    /// Show actual Hyprland workspace numbers (1, 2, 3, 4, 5, 6...).
     #[default]
     Absolute,
     /// Show numbers relative to monitor's starting workspace.
@@ -102,12 +106,14 @@ pub struct WorkspaceStyle {
     pub label: Option<String>,
 }
 
-/// Per-workspace icon and color overrides, keyed by workspace ID.
+/// Per-workspace icon and color overrides, keyed by workspace name or number.
 ///
-/// TOML table keys are always strings, so `"1"` parses into the workspace
-/// with ID `1`. Negative IDs refer to Hyprland's special workspaces. Keys
-/// that don't appear in the map fall back to the default behaviour set by
-/// [`HyprlandWorkspacesConfig::display_mode`].
+/// Each workspace is looked up by its name first, then by its number.
+/// Special workspaces are named with their `special:` prefix, such as
+/// `"special:magic"`. Named and special workspaces have no number. Workspaces
+/// that match no key fall back to the defaults set by
+/// [`HyprlandWorkspacesConfig::display_mode`] and the active, occupied and
+/// empty colors.
 ///
 /// ## Examples
 ///
@@ -116,24 +122,22 @@ pub struct WorkspaceStyle {
 /// # Whole entry on one line with an inline table
 /// 1 = { label = "Web", icon = "ld-globe-symbolic", color = "#4a90d9" }
 /// 2 = { icon = "ld-terminal-symbolic" }
-/// 3 = { icon = "ld-code-symbolic", color = "accent" }
+/// chat = { icon = "ld-message-circle-symbolic", color = "accent" }
+/// "special:magic" = { icon = "ld-layers-symbolic" }
 ///
 /// # Or spread the entry across its own subtable
-/// [modules.hyprland-workspaces.workspace-map.4]
-/// label = "Chat"
-/// icon = "ld-message-square-symbolic"
+/// [modules.hyprland-workspaces.workspace-map.3]
+/// label = "Code"
+/// icon = "ld-code-symbolic"
 /// color = "status-success"
-///
-/// # Negative IDs target Hyprland special workspaces
-/// [modules.hyprland-workspaces.workspace-map.-99]
-/// icon = "ld-scratch-symbolic"
 /// ```
-#[derive(Debug, Clone, Default, PartialEq, JsonSchema)]
+#[derive(Debug, Clone, Default, PartialEq, Serialize, JsonSchema)]
+#[serde(transparent)]
 #[schemars(transparent)]
-pub struct WorkspaceMap(BTreeMap<i32, WorkspaceStyle>);
+pub struct WorkspaceMap(BTreeMap<String, WorkspaceStyle>);
 
 impl Deref for WorkspaceMap {
-    type Target = BTreeMap<i32, WorkspaceStyle>;
+    type Target = BTreeMap<String, WorkspaceStyle>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
@@ -141,25 +145,11 @@ impl Deref for WorkspaceMap {
 }
 
 impl<'a> IntoIterator for &'a WorkspaceMap {
-    type Item = (&'a i32, &'a WorkspaceStyle);
-    type IntoIter = std::collections::btree_map::Iter<'a, i32, WorkspaceStyle>;
+    type Item = (&'a String, &'a WorkspaceStyle);
+    type IntoIter = btree_map::Iter<'a, String, WorkspaceStyle>;
 
     fn into_iter(self) -> Self::IntoIter {
         self.0.iter()
-    }
-}
-
-impl Serialize for WorkspaceMap {
-    fn serialize<S>(&self, serializer: S) -> Result<S::Ok, S::Error>
-    where
-        S: Serializer,
-    {
-        let string_map: BTreeMap<String, &WorkspaceStyle> = self
-            .0
-            .iter()
-            .map(|(key, val)| (key.to_string(), val))
-            .collect();
-        string_map.serialize(serializer)
     }
 }
 
@@ -168,14 +158,22 @@ impl<'de> Deserialize<'de> for WorkspaceMap {
     where
         D: Deserializer<'de>,
     {
-        let string_map: BTreeMap<String, WorkspaceStyle> = BTreeMap::deserialize(deserializer)?;
-        let mut result = BTreeMap::new();
-        for (key, value) in string_map {
-            let id: i32 = key.parse().map_err(serde::de::Error::custom)?;
-            result.insert(id, value);
+        let entries: BTreeMap<String, WorkspaceStyle> = BTreeMap::deserialize(deserializer)?;
+
+        for key in entries.keys().filter(|key| is_negative_number(key)) {
+            warn!(
+                key = %key,
+                "workspace-map key is a negative workspace ID and matches nothing; \
+                 key named and special workspaces by name, such as \"special:magic\""
+            );
         }
-        Ok(WorkspaceMap(result))
+
+        Ok(Self(entries))
     }
+}
+
+fn is_negative_number(key: &str) -> bool {
+    key.parse::<i64>().is_ok_and(|number| number < 0)
 }
 
 /// Hyprland workspace indicators with click-to-switch.
@@ -184,8 +182,9 @@ pub struct HyprlandWorkspacesConfig {
     /// Minimum number of workspace buttons to display.
     ///
     /// When set to 0 (default), only active and occupied workspaces are shown.
-    /// When set to N, at least N buttons are always visible, with empty ones
-    /// using `empty-color` styling.
+    /// When set to N, numbered workspaces 1 to N are always visible, with empty
+    /// ones using `empty-color` styling. Named workspaces are shown only while
+    /// they exist; a Hyprland `persistent` workspace rule keeps one alive.
     #[serde(rename = "min-workspace-count")]
     #[default(0)]
     pub min_workspace_count: ConfigProperty<u8>,
@@ -199,8 +198,6 @@ pub struct HyprlandWorkspacesConfig {
     pub monitor_specific: ConfigProperty<bool>,
 
     /// Include special workspaces (scratchpads) in the display.
-    ///
-    /// Special workspaces have negative IDs in Hyprland.
     #[serde(rename = "show-special")]
     #[default(true)]
     pub show_special: ConfigProperty<bool>,
@@ -224,7 +221,8 @@ pub struct HyprlandWorkspacesConfig {
 
     /// What identifies each workspace button.
     ///
-    /// - `label`: Shows workspace number (or name if `label-use-name` is true)
+    /// - `label`: Shows workspace number (or name if `label-use-name` is true).
+    ///   Named and special workspaces always show their name.
     /// - `icon`: Shows icon from `workspace-map` (falls back to label if unmapped)
     /// - `none`: Shows nothing - only app icons visible
     #[serde(rename = "display-mode")]
@@ -232,6 +230,9 @@ pub struct HyprlandWorkspacesConfig {
     pub display_mode: ConfigProperty<DisplayMode>,
 
     /// Use workspace name instead of number when displaying labels.
+    ///
+    /// Affects numbered workspaces only; named and special workspaces always
+    /// show their name.
     ///
     /// Only applies when `display-mode = "label"` or as fallback for unmapped
     /// workspaces in `display-mode = "icon"`.
@@ -241,7 +242,7 @@ pub struct HyprlandWorkspacesConfig {
 
     /// How workspace numbers are displayed.
     ///
-    /// - `absolute`: Show actual Hyprland workspace IDs (1, 2, 3, 4, 5, 6...)
+    /// - `absolute`: Show actual Hyprland workspace numbers (1, 2, 3, 4, 5, 6...)
     /// - `relative`: Show numbers relative to monitor's starting workspace.
     ///   If a monitor has workspaces 4, 5, 6 assigned, they display as 1, 2, 3.
     ///   Useful when keybinds use per-monitor numbering.
@@ -319,9 +320,12 @@ pub struct HyprlandWorkspacesConfig {
 
     /// Workspaces to hide from the display.
     ///
-    /// Glob patterns matching workspace IDs. Examples:
+    /// Glob patterns matching a workspace's name or number. Special workspaces
+    /// include their `special:` prefix. Examples:
     /// - `"10"` - hide workspace 10
     /// - `"1?"` - hide workspaces 10-19
+    /// - `"chat"` - hide the workspace named chat
+    /// - `"special:*"` - hide all special workspaces
     #[serde(rename = "workspace-ignore")]
     #[default(Vec::new())]
     pub workspace_ignore: ConfigProperty<Vec<String>>,
@@ -370,7 +374,9 @@ pub struct HyprlandWorkspacesConfig {
 
     /// Per-workspace icon and color overrides.
     ///
-    /// Keys are workspace IDs (use negative for special workspaces).
+    /// Keys are workspace names or numbers. A workspace is matched by its name
+    /// first, then by its number. Special workspaces include their `special:`
+    /// prefix.
     ///
     /// ## Example
     ///
@@ -378,6 +384,8 @@ pub struct HyprlandWorkspacesConfig {
     /// [modules.hyprland-workspaces.workspace-map]
     /// 1 = { icon = "ld-globe-symbolic", color = "#4a90d9" }
     /// 2 = { icon = "ld-terminal-symbolic" }
+    /// chat = { icon = "ld-message-circle-symbolic" }
+    /// "special:magic" = { icon = "ld-layers-symbolic" }
     /// ```
     #[serde(rename = "workspace-map")]
     #[default(WorkspaceMap::default())]
@@ -420,3 +428,37 @@ impl ModuleInfoProvider for HyprlandWorkspacesConfig {
 }
 
 crate::register_module!(HyprlandWorkspacesConfig);
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn workspace_map_accepts_numbers_and_names() -> Result<(), toml::de::Error> {
+        let workspace_map: WorkspaceMap = toml::from_str(
+            r#"
+            1 = { icon = "one" }
+            chat = { icon = "chat" }
+            "special:magic" = { icon = "magic" }
+            "#,
+        )?;
+
+        let keys: Vec<&str> = workspace_map.keys().map(String::as_str).collect();
+        assert_eq!(keys, vec!["1", "chat", "special:magic"]);
+        Ok(())
+    }
+
+    #[test]
+    fn workspace_map_still_loads_negative_keys() -> Result<(), toml::de::Error> {
+        let workspace_map: WorkspaceMap = toml::from_str(r#"-99 = { icon = "scratch" }"#)?;
+        assert!(workspace_map.contains_key("-99"));
+        Ok(())
+    }
+
+    #[test]
+    fn detects_negative_number_keys() {
+        assert!(is_negative_number("-99"));
+        assert!(!is_negative_number("3"));
+        assert!(!is_negative_number("special:magic"));
+    }
+}
