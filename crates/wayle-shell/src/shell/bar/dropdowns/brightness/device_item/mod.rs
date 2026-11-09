@@ -8,6 +8,11 @@ pub(super) use self::messages::{
     BrightnessDeviceInit, BrightnessDeviceItemMsg, BrightnessDeviceItemOutput,
 };
 
+/// Many backlights turn the panel fully off at 0%, leaving no way to see the
+/// slider to bring it back.
+const MIN_BRIGHTNESS: f64 = 1.0;
+const MAX_BRIGHTNESS: f64 = 100.0;
+
 pub(super) struct BrightnessDeviceItem {
     pub name: String,
     pub subtitle: Option<String>,
@@ -77,11 +82,14 @@ impl FactoryComponent for BrightnessDeviceItem {
     }
 
     fn init_model(init: Self::Init, _index: &Self::Index, _sender: FactorySender<Self>) -> Self {
+        let slider = DebouncedSlider::with_label(init.percentage);
+        slider.set_range(MIN_BRIGHTNESS, MAX_BRIGHTNESS);
+
         Self {
             name: init.name,
             subtitle: init.subtitle,
             icon: init.icon,
-            slider: DebouncedSlider::with_label(init.percentage),
+            slider,
         }
     }
 
