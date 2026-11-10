@@ -22,6 +22,7 @@ use wayle_hyprland::HyprlandService;
 use wayle_ipc::shell::APP_ID;
 use wayle_mango::MangoService;
 use wayle_media::MediaService;
+use wayle_mullvad::MullvadService;
 use wayle_network::NetworkService;
 use wayle_niri::NiriService;
 use wayle_notification::NotificationService;
@@ -126,6 +127,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
 
     let bluetooth: DeferredService<BluetoothService> = DeferredService::new(None);
     let power_profiles: DeferredService<PowerProfilesService> = DeferredService::new(None);
+    let mullvad: DeferredService<MullvadService> = DeferredService::new(None);
 
     let (weather, core, daemons, optional) = {
         let config = config_service.config();
@@ -144,6 +146,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
 
     spawn_deferred_bluetooth(bluetooth.clone());
     spawn_deferred_power_profiles(power_profiles.clone());
+    spawn_deferred_mullvad(mullvad.clone());
 
     let shell_ipc = match ShellIpcService::new().await {
         Ok(service) => Arc::new(service),
@@ -166,6 +169,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         idle_inhibit: core.idle_inhibit,
         mango: optional.mango,
         media: daemons.media,
+        mullvad,
         niri: optional.niri,
         network: core.network,
         notification: daemons.notification,
@@ -282,6 +286,23 @@ fn spawn_deferred_power_profiles(property: DeferredService<PowerProfilesService>
             }
             Err(err) => {
                 warn!(error = %err, "PowerProfiles unavailable");
+            }
+        }
+    });
+}
+
+fn spawn_deferred_mullvad(property: DeferredService<MullvadService>) {
+    tokio::spawn(async move {
+        let start = Instant::now();
+
+        match MullvadService::new().await {
+            Ok(service) => {
+                let duration_ms = start.elapsed().as_millis() as u64;
+                info!(duration_ms, "Mullvad ready (deferred)");
+                property.replace(Some(service));
+            }
+            Err(err) => {
+                warn!(error = %err, "Mullvad unavailable");
             }
         }
     });

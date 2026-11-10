@@ -1,0 +1,179 @@
+// Edge inset matches wayle-iwd: keep the default `.dropdown-content` padding
+// (var(--space-sm) + var(--space-xs) = 0.75rem) rather than the notification
+// dropdown's tighter 0.5rem inset, so no padding/margin override here.
+
+// Section labels ("Current connection" / "Available relays"): the first is
+// flush; one that follows an elevated surface gets a var(--space-lg) gap above
+// it — matching iwd's active-connection -> "Available" spacing.
+.mullvad-content .section-label {
+    margin-top: 0;
+}
+
+.mullvad-content .card + .section-label {
+    margin-top: var(--space-lg);
+}
+
+// Country flags render at one shared size in both the pinned current-connection
+// card and the relay list.
+$flag-icon-size: var(--icon-lg);
+
+// Padding around the flag inside the current-connection badge, derived so the
+// badge stays 2.75rem square regardless of the flag size — matching the base
+// `--icon-md` box (`--icon-md` + 2·(`--space-sm` + `--space-xs`) = 2.75rem, the
+// network dropdown's connection-icon box). margin = (2.75rem − flag) / 2. Kept
+// scale-aware (every term scales with `--global-scale`).
+$flag-box-margin: calc(
+    var(--icon-md) * 0.5 + var(--space-sm) + var(--space-xs) - var(--icon-lg) * 0.5
+);
+
+// Status-colored flag square on the current-connection card (iwd pattern):
+// rounded square via the base `.network-connection-icon`, with a translucent
+// status-tinted background and matching icon color per state. Scoped under
+// `.mullvad-content` so the shared `image` sizing below outranks the network
+// module's global `.network-connection-icon image { --icon-sm }` (same-name
+// class, reused here) — which would otherwise shrink the flag.
+.mullvad-content .network-connection-icon {
+    // Flag/globe sizing shared across all states (only the tint differs by
+    // state below); kept equal to the relay-list flags. `$flag-box-margin` holds
+    // the box at 2.75rem square despite the larger `--icon-lg` flag, so the card
+    // height doesn't grow.
+    image {
+        margin: $flag-box-margin;
+        -gtk-icon-size: $flag-icon-size;
+    }
+
+    // Connected: align with IWD's connected signal icon (base
+    // `.network-connection-icon.wifi`/`.ethernet` both use `--accent`), so a
+    // connected VPN and a connected link read the same.
+    &.mullvad-connected {
+        background: var(--accent-subtle);
+
+        image {
+            color: var(--accent);
+        }
+    }
+
+    &.mullvad-connecting {
+        background: var(--status-warning-subtle);
+
+        image {
+            color: var(--status-warning);
+        }
+    }
+
+    // Disconnected: a neutral/muted "off" tint — deliberately NOT `--accent`,
+    // which now means "connected" (above) and matches IWD's connected icon.
+    &.mullvad-disconnected {
+        background: color-mix(in srgb, var(--fg-muted) 15%, transparent);
+
+        image {
+            color: var(--fg-muted);
+        }
+    }
+
+    &.mullvad-blocked {
+        background: var(--status-error-subtle);
+
+        image {
+            color: var(--status-error);
+        }
+    }
+}
+
+.mullvad-list-scroll {
+    background: transparent;
+}
+
+.mullvad-list {
+    padding: 0;
+
+    .mullvad-country + .mullvad-country {
+        border-top: 1px solid var(--border-subtle);
+    }
+}
+
+// Country / city expandable rows share the flat "expand" button look.
+button.mullvad-expand {
+    all: unset;
+    padding: var(--space-sm);
+    transition: background var(--duration-fast);
+
+    &:hover {
+        background: var(--bg-overlay);
+    }
+}
+
+image.mullvad-country-flag {
+    // Same size as the pinned current-connection flag (see `$flag-icon-size`).
+    -gtk-icon-size: $flag-icon-size;
+    margin-right: var(--space-md);
+    margin-left: var(--space-sm);
+}
+
+.mullvad-country-name {
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--fg-default);
+}
+
+.mullvad-city-name {
+    font-size: var(--text-md);
+    font-weight: var(--weight-medium);
+    color: var(--fg-muted);
+}
+
+// Select: a hover-revealed pill floating on top of the row (right-aligned),
+// mirroring the connect/disconnect button on the current-connection card.
+button.mullvad-select-btn {
+    all: unset;
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+    color: var(--accent);
+    background: var(--accent-subtle);
+    border-radius: var(--rounding-element);
+    padding: var(--space-xs) var(--space-sm);
+    margin-right: var(--space-sm);
+
+    &:hover {
+        color: var(--accent-hover);
+    }
+}
+
+.mullvad-cities {
+    .mullvad-city + .mullvad-city {
+        border-top: 1px solid var(--border-subtle);
+    }
+}
+
+// Show the country -> city -> relay tree via CONTENT indentation (padding-left
+// inside the row), so each button — and its hover highlight — still spans the
+// full width of the list, flush to the left like its parent country button.
+.mullvad-city .mullvad-expand {
+    padding-left: calc(var(--space-sm) + var(--space-lg));
+}
+
+button.mullvad-relay-item {
+    all: unset;
+    padding: var(--space-xs) var(--space-sm);
+    padding-left: calc(var(--space-sm) + var(--space-lg) * 2);
+    transition: background var(--duration-fast);
+
+    &:hover {
+        background: var(--bg-overlay);
+    }
+
+    &:disabled {
+        opacity: 0.5;
+    }
+}
+
+.mullvad-relay-name {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-medium);
+    color: var(--fg-subtle);
+}
+
+button.network-action-toggle {
+    font-size: var(--text-sm);
+    font-weight: var(--weight-bold);
+}

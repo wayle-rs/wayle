@@ -223,6 +223,8 @@ pub enum BarModule {
     Media,
     /// Microphone mute status.
     Microphone,
+    /// Mullvad VPN connection status.
+    Mullvad,
     /// Network connection status.
     Network,
     /// Network traffic statistics.
@@ -301,6 +303,7 @@ impl BarModule {
             Self::KeyboardInput => "keyboard-input",
             Self::Media => "media",
             Self::Microphone => "microphone",
+            Self::Mullvad => "mullvad",
             Self::Network => "network",
             Self::Netstat => "netstat",
             Self::NiriWorkspaces => "niri-workspaces",
@@ -336,6 +339,7 @@ impl BarModule {
             "keyboard-input" => Self::KeyboardInput,
             "media" => Self::Media,
             "microphone" => Self::Microphone,
+            "mullvad" => Self::Mullvad,
             "network" => Self::Network,
             "netstat" => Self::Netstat,
             "niri-workspaces" => Self::NiriWorkspaces,
@@ -423,6 +427,7 @@ const BUILTIN_MODULES: &[&str] = &[
     "media",
     "mango-workspaces",
     "microphone",
+    "mullvad",
     "netstat",
     "network",
     "niri-workspaces",

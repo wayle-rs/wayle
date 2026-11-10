@@ -9,6 +9,7 @@ use wayle_core::DeferredService;
 use wayle_hyprland::HyprlandService;
 use wayle_mango::MangoService;
 use wayle_media::MediaService;
+use wayle_mullvad::MullvadService;
 use wayle_network::NetworkService;
 use wayle_niri::NiriService;
 use wayle_notification::NotificationService;
@@ -35,6 +36,7 @@ pub(crate) struct ShellServices {
     pub idle_inhibit: Arc<IdleInhibitService>,
     pub mango: Option<Arc<MangoService>>,
     pub media: Option<Arc<MediaService>>,
+    pub mullvad: DeferredService<MullvadService>,
     pub niri: Option<Arc<NiriService>>,
     pub network: Option<Arc<NetworkService>>,
     pub notification: Option<Arc<NotificationService>>,

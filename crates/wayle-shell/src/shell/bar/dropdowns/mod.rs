@@ -5,6 +5,7 @@ mod brightness;
 mod calendar;
 mod dashboard;
 mod media;
+mod mullvad;
 mod network;
 mod notification;
 mod registry;
@@ -47,6 +48,7 @@ register_dropdowns! {
     "calendar" => calendar::Factory,
     "dashboard" => dashboard::Factory,
     "media" => media::Factory,
+    "mullvad" => mullvad::Factory,
     "network" => network::Factory,
     "notification" => notification::Factory,
     "weather" => weather::Factory,

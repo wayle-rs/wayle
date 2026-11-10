@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use gdk4::Display;
 use gtk4::{
-    CssProvider, STYLE_PROVIDER_PRIORITY_USER, Window, glib, prelude::ApplicationExt,
-    style_context_add_provider_for_display,
+    CssProvider, IconTheme, STYLE_PROVIDER_PRIORITY_USER, Window, gio, glib,
+    prelude::ApplicationExt, style_context_add_provider_for_display,
 };
 use relm4::{
     actions::{RelmAction, RelmActionGroup},
@@ -24,6 +24,30 @@ pub(crate) fn init_icons() {
     if let Err(err) = IconRegistry::new().and_then(|r| r.init()) {
         warn!(error = %err, "Icon registry init failed");
     }
+    register_bundled_flags();
+}
+
+/// Registers the bundled country-flag icons (compiled into a GResource by
+/// `build.rs`) with the default `IconTheme`, so `flag-<code>` names resolve to
+/// full-color, rounded flags. They live under their own resource path — outside
+/// wayle-icons' monochrome symbolic pipeline — so they keep their colors.
+fn register_bundled_flags() {
+    let bytes =
+        glib::Bytes::from_static(include_bytes!(concat!(env!("OUT_DIR"), "/flags.gresource")));
+    let resource = match gio::Resource::from_data(&bytes) {
+        Ok(resource) => resource,
+        Err(err) => {
+            warn!(error = %err, "cannot load bundled flag resources");
+            return;
+        }
+    };
+    gio::resources_register(&resource);
+
+    let Some(display) = Display::default() else {
+        warn!("no display available; bundled flags not registered with icon theme");
+        return;
+    };
+    IconTheme::for_display(&display).add_resource_path("/dev/wayle/icons");
 }
 
 pub(crate) fn init_css_provider(
