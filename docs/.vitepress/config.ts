@@ -39,6 +39,7 @@ export default defineConfig({
                 { text: 'Debian / Ubuntu', link: '/guide/getting-started-debian' },
                 { text: 'Fedora', link: '/guide/getting-started-fedora' },
                 { text: 'NixOS', link: '/guide/getting-started-nixos' },
+                { text: 'OpenSUSE', link: '/guide/getting-started-opensuse' },
               ],
             },
             { text: 'Editing config', link: '/guide/editing-config' },
