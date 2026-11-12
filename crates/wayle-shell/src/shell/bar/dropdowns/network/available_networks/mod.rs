@@ -83,15 +83,15 @@ impl Component for AvailableNetworks {
             Card {
                 add_css_class: "network-list",
                 set_overflow: gtk::Overflow::Hidden,
-                set_vexpand: true,
                 #[watch]
                 set_visible: model.wifi_available && !model.ap_cache.is_empty(),
 
                 #[name = "network_list_scroll"]
                 gtk::ScrolledWindow {
                     add_css_class: "network-list-scroll",
-                    set_vexpand: true,
                     set_hscrollbar_policy: gtk::PolicyType::Never,
+                    set_propagate_natural_height: true,
+                    set_max_content_height: 300,
 
                     #[local_ref]
                     network_list_widget -> gtk::Box {

@@ -5,6 +5,7 @@ pub(crate) mod helpers;
 mod messages;
 mod methods;
 mod password_form;
+mod vpn_tunnels;
 mod watchers;
 
 use std::sync::Arc;
@@ -21,20 +22,20 @@ use self::{
         AvailableNetworks, AvailableNetworksInit, AvailableNetworksInput, AvailableNetworksOutput,
     },
     messages::{NetworkDropdownCmd, NetworkDropdownInit, NetworkDropdownMsg},
+    vpn_tunnels::{VpnTunnels, VpnTunnelsInit},
 };
 use crate::{i18n::t, shell::bar::dropdowns::scaled_dimension};
 
 const BASE_WIDTH: f32 = 382.0;
-const BASE_HEIGHT: f32 = 512.0;
 
 pub(crate) struct NetworkDropdown {
     network: Arc<NetworkService>,
     scaled_width: i32,
-    scaled_height: i32,
     wifi_enabled: bool,
     wifi_available: bool,
     scanning: bool,
     active_connections: Controller<ActiveConnections>,
+    vpn_tunnels: Controller<VpnTunnels>,
     available_networks: Controller<AvailableNetworks>,
     wifi_watcher: WatcherToken,
 }
@@ -53,8 +54,6 @@ impl Component for NetworkDropdown {
             set_has_arrow: false,
             #[watch]
             set_width_request: model.scaled_width,
-            #[watch]
-            set_height_request: model.scaled_height,
 
             #[template]
             Dropdown {
@@ -114,15 +113,15 @@ impl Component for NetworkDropdown {
                 #[template]
                 DropdownContent {
                     add_css_class: "network-content",
-                    set_vexpand: true,
 
                     #[local_ref]
                     active_connections_widget -> gtk::Box {},
 
                     #[local_ref]
-                    available_networks_widget -> gtk::Box {
-                        set_vexpand: true,
-                    },
+                    vpn_tunnels_widget -> gtk::Box {},
+
+                    #[local_ref]
+                    available_networks_widget -> gtk::Box {},
                 },
             },
         }
@@ -138,6 +137,14 @@ impl Component for NetworkDropdown {
                 network: init.network.clone(),
             })
             .detach();
+
+        let vpn_tunnels = VpnTunnels::builder()
+            .launch(VpnTunnelsInit {
+                network: init.network.clone(),
+                config: init.config.clone(),
+                provider: vpn_tunnels::providers::wireguard_config(),
+            })
+            .forward(sender.input_sender(), NetworkDropdownMsg::VpnTunnels);
 
         let available_networks = AvailableNetworks::builder()
             .launch(AvailableNetworksInit {
@@ -156,11 +163,11 @@ impl Component for NetworkDropdown {
         let mut model = Self {
             network: init.network,
             scaled_width: scaled_dimension(BASE_WIDTH, scale),
-            scaled_height: scaled_dimension(BASE_HEIGHT, scale),
             wifi_enabled,
             wifi_available,
             scanning: false,
             active_connections,
+            vpn_tunnels,
             available_networks,
             wifi_watcher: WatcherToken::new(),
         };
@@ -168,6 +175,7 @@ impl Component for NetworkDropdown {
         model.reset_wifi_watchers(&sender);
 
         let active_connections_widget = model.active_connections.widget();
+        let vpn_tunnels_widget = model.vpn_tunnels.widget();
         let available_networks_widget = model.available_networks.widget();
         let widgets = view_output!();
 
@@ -182,6 +190,9 @@ impl Component for NetworkDropdown {
             NetworkDropdownMsg::ScanRequested => {
                 self.available_networks
                     .emit(AvailableNetworksInput::ScanRequested);
+            }
+            NetworkDropdownMsg::VpnTunnels(_output) => {
+                // VPN tunnel events are handled internally by the component
             }
             NetworkDropdownMsg::AvailableNetworks(output) => match output {
                 AvailableNetworksOutput::ScanStarted => {
@@ -232,7 +243,6 @@ impl Component for NetworkDropdown {
         match msg {
             NetworkDropdownCmd::ScaleChanged(scale) => {
                 self.scaled_width = scaled_dimension(BASE_WIDTH, scale);
-                self.scaled_height = scaled_dimension(BASE_HEIGHT, scale);
             }
 
             NetworkDropdownCmd::WifiDeviceChanged => {

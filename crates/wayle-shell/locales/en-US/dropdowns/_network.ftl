@@ -20,6 +20,11 @@ dropdown-network-no-networks-description = Make sure WiFi is enabled and try sca
 dropdown-network-no-adapter-title = No WiFi Adapter
 dropdown-network-no-adapter-description = No wireless adapter was detected on this system
 
+## VPN / WireGuard
+
+dropdown-network-wireguard-tunnels = WireGuard Tunnels
+dropdown-network-wireguard-import = Import WireGuard Configuration
+
 ## Security Types
 
 dropdown-network-security-open = Open
