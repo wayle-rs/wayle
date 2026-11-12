@@ -70,6 +70,7 @@ reqwest = { version = "0.13", default-features = false, features = [
 rusqlite = { version = "0.38.0", features = ["bundled"] }
 rust-embed = "8"
 schemars = { version = "1.0.4", features = ["derive"] }
+sd-notify = "0.5"
 serde = { version = "1.0.228", features = ["derive"] }
 serde_json = { version = "1.0.145", features = ["preserve_order"] }
 serde_json_path = "0.7"

@@ -25,6 +25,7 @@ rust-embed.workspace = true
 indicatif.workspace = true
 notify.workspace = true
 relm4.workspace = true
+sd-notify.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 thiserror.workspace = true
