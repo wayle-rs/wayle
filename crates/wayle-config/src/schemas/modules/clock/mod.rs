@@ -16,6 +16,7 @@ pub struct ClockConfig {
     ///
     /// - `%H` - Hour (00-23)
     /// - `%I` - Hour (01-12)
+    /// - `%-H` / `%-I` - Hour without a leading zero (9, not 09)
     /// - `%M` - Minute (00-59)
     /// - `%S` - Second (00-59)
     /// - `%p` - AM/PM
@@ -24,14 +25,15 @@ pub struct ClockConfig {
     /// - `%b` - Abbreviated month (Jan, Feb)
     /// - `%B` - Full month (January)
     /// - `%d` - Day of month (01-31)
+    /// - `%-d` - Day of month without a leading zero (5, not 05)
     /// - `%Y` - Year (2024)
     ///
     /// ## Examples
     ///
     /// - `"%H:%M"` - "14:30"
     /// - `"%I:%M %p"` - "02:30 PM"
-    /// - `"%a %b %d %I:%M %p"` - "Mon Jan 15 02:30 PM"
-    #[default(String::from("%a %b %d %I:%M %p"))]
+    /// - `"%a %b %-d %-I:%M %p"` - "Mon Jan 5 2:30 PM"
+    #[default(String::from("%a %b %-d %-I:%M %p"))]
     pub format: ConfigProperty<String>,
 
     /// Symbolic icon name.

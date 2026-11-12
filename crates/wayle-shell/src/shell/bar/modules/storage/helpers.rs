@@ -58,7 +58,7 @@ pub(super) fn aggregate_storage(
 
 pub(super) fn format_label(format: &str, snapshot: &StorageSnapshot) -> String {
     let ctx = json!({
-        "percent": format!("{:02.0}", snapshot.usage_percent),
+        "percent": format!("{:.0}", snapshot.usage_percent),
         "used_tib": tib(snapshot.used_bytes),
         "used_gib": gib(snapshot.used_bytes),
         "used_mib": mib(snapshot.used_bytes),
@@ -88,8 +88,16 @@ fn mib(bytes: u64) -> String {
     format!("{:.0}", ByteSize::b(bytes).as_mib())
 }
 
+/// Auto-scaled size with a stable shape: always one decimal place and a 3-char
+/// unit (KiB/MiB/GiB/TiB). Flooring at KiB avoids the sub-KiB "B" tier, which
+/// would otherwise vary the decimal structure and unit length.
 fn auto(bytes: u64) -> String {
-    ByteSize::b(bytes).to_string()
+    const KIB: u64 = 1024;
+    if bytes < KIB {
+        format!("{:.1} KiB", bytes as f64 / KIB as f64)
+    } else {
+        ByteSize::b(bytes).to_string()
+    }
 }
 
 #[cfg(test)]
@@ -213,10 +221,10 @@ mod tests {
     }
 
     #[test]
-    fn format_label_percent_pads_single_digits() {
+    fn format_label_percent_minimal_digits() {
         let snapshot = storage_snapshot(50 * GIB, 1000 * GIB, 950 * GIB, 5.0, "ext4");
         let result = format_label("{{ percent }}", &snapshot);
-        assert_eq!(result, "05");
+        assert_eq!(result, "5");
     }
 
     #[test]
@@ -245,6 +253,12 @@ mod tests {
         let snapshot = storage_snapshot(512 * MIB, 2 * GIB, GIB + 512 * MIB, 25.0, "ext4");
         let result = format_label("{{ used_auto }}", &snapshot);
         assert_eq!(result, "512.0 MiB");
+    }
+
+    #[test]
+    fn format_label_auto_floors_sub_kib_at_kib() {
+        let snapshot = storage_snapshot(512, 2 * GIB, 2 * GIB - 512, 0.0, "ext4");
+        assert_eq!(format_label("{{ used_auto }}", &snapshot), "0.5 KiB");
     }
 
     #[test]

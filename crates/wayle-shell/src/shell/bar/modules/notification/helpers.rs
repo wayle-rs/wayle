@@ -19,7 +19,7 @@ pub(crate) fn select_icon(ctx: &IconContext<'_>) -> String {
 }
 
 pub(crate) fn format_label(count: usize) -> String {
-    format!("{count:02}")
+    format!("{count}")
 }
 
 #[cfg(test)]
@@ -61,9 +61,9 @@ mod tests {
     }
 
     #[test]
-    fn label_shows_count_zero_padded() {
-        assert_eq!(format_label(5), "05");
-        assert_eq!(format_label(0), "00");
+    fn label_shows_count_minimal_digits() {
+        assert_eq!(format_label(5), "5");
+        assert_eq!(format_label(0), "0");
         assert_eq!(format_label(12), "12");
         assert_eq!(format_label(99), "99");
         assert_eq!(format_label(100), "100");

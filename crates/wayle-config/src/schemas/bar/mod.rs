@@ -247,9 +247,10 @@ pub struct BarConfig {
     /// Freeze the bar button label while its dropdown is open.
     ///
     /// Prevents the button from resizing mid-interaction, which keeps the
-    /// dropdown anchored in place.
+    /// dropdown anchored in place. Off by default: labels reserve width for the
+    /// widest digit, so their width no longer jitters as values change.
     #[serde(rename = "dropdown-freeze-label")]
-    #[default(true)]
+    #[default(false)]
     pub dropdown_freeze_label: ConfigProperty<bool>,
 }
 

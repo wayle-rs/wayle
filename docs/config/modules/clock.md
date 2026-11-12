@@ -21,7 +21,7 @@ right = ["clock"]
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `format` | string | `"%a %b %d %I:%M %p"` | Format string using strftime syntax. |
+| `format` | string | `"%a %b %-d %-I:%M %p"` | Format string using strftime syntax. |
 | `icon-name` | string | `"tb-calendar-time-symbolic"` | Symbolic icon name. |
 | `border-show` | bool | `false` | Display border around button. |
 | `icon-show` | bool | `true` | Display module icon. |
@@ -34,6 +34,7 @@ right = ["clock"]
 
 - `%H` - Hour (00-23)
 - `%I` - Hour (01-12)
+- `%-H` / `%-I` - Hour without a leading zero (9, not 09)
 - `%M` - Minute (00-59)
 - `%S` - Second (00-59)
 - `%p` - AM/PM
@@ -42,13 +43,14 @@ right = ["clock"]
 - `%b` - Abbreviated month (Jan, Feb)
 - `%B` - Full month (January)
 - `%d` - Day of month (01-31)
+- `%-d` - Day of month without a leading zero (5, not 05)
 - `%Y` - Year (2024)
 
 #### Examples
 
 - `"%H:%M"` - "14:30"
 - `"%I:%M %p"` - "02:30 PM"
-- `"%a %b %d %I:%M %p"` - "Mon Jan 15 02:30 PM"
+- `"%a %b %-d %-I:%M %p"` - "Mon Jan 5 2:30 PM"
 
 :::
 
@@ -82,7 +84,7 @@ right = ["clock"]
 
 ```toml
 [modules.clock]
-format = "%a %b %d %I:%M %p"
+format = "%a %b %-d %-I:%M %p"
 icon-name = "tb-calendar-time-symbolic"
 border-show = false
 border-color = "border-accent"

@@ -20,7 +20,9 @@ use super::{
     },
     watchers::{spawn_icon_position_watcher, spawn_variant_watcher},
 };
-use crate::{styling::InlineStyling, utils::force_window_resize};
+use crate::{
+    primitives::stable_label::StableLabel, styling::InlineStyling, utils::force_window_resize,
+};
 
 /// Initialization data for BarButton.
 #[derive(Debug, Clone)]
@@ -56,6 +58,11 @@ pub enum BarButtonInput {
     ConfigChanged,
     /// Apply threshold-based color overrides.
     SetThresholdColors(ThresholdColors),
+    /// Reserve label width for at least this many digit slots, so volatile
+    /// numeric fields don't jitter across their common value range.
+    SetLabelMinDigits(u32),
+    /// Reserve width only for colon-separated time components (used by clocks).
+    SetLabelReserveTimeOnly(bool),
 }
 
 /// Command outputs from async watchers.
@@ -74,6 +81,13 @@ pub struct BarButton {
     tooltip: Option<String>,
     size_frozen: bool,
     pending_label: Option<String>,
+    /// Digits each number's integer part reserves width for. Defaults to 2 so a
+    /// numeric label shows the natural value (e.g. `5%`) yet holds the width of a
+    /// 2-digit value; applied per number, so multi-field formats stay stable too.
+    label_min_digits: u32,
+    /// When true, reserve width only for colon-separated time components (clocks),
+    /// so date parts that change at most daily get no reserved space.
+    label_reserve_time_only: bool,
     pub(super) variant: BarButtonVariant,
     pub(super) colors: BarButtonColors,
     pub(super) behavior: BarButtonBehavior,
@@ -149,22 +163,30 @@ impl Component for BarButton {
                     #[watch]
                     set_hexpand: model.settings.is_vertical.get(),
 
-                    gtk::Label {
+                    StableLabel {
                         add_css_class: "bar-button-label",
                         set_align: gtk::Align::Center,
-                        set_justify: gtk::Justification::Center,
 
                         #[watch]
                         set_hexpand: model.settings.is_vertical.get(),
 
                         #[watch]
-                        set_label: &model.label,
+                        set_text: &model.label,
 
                         #[watch]
                         set_ellipsize: model.ellipsize(),
 
                         #[watch]
                         set_max_width_chars: model.max_width_chars(),
+
+                        #[watch]
+                        set_stabilize: model.stabilize_enabled(),
+
+                        #[watch]
+                        set_min_digits: model.label_min_digits,
+
+                        #[watch]
+                        set_time_only: model.label_reserve_time_only,
                     },
                 },
             },
@@ -185,6 +207,8 @@ impl Component for BarButton {
             tooltip: init.tooltip,
             size_frozen: false,
             pending_label: None,
+            label_min_digits: 2,
+            label_reserve_time_only: false,
             variant: init.settings.variant.get(),
             colors: init.colors,
             behavior: init.behavior,
@@ -241,6 +265,12 @@ impl Component for BarButton {
                     self.threshold_overrides = colors;
                     self.reload_css();
                 }
+            }
+            BarButtonInput::SetLabelMinDigits(min_digits) => {
+                self.label_min_digits = min_digits;
+            }
+            BarButtonInput::SetLabelReserveTimeOnly(time_only) => {
+                self.label_reserve_time_only = time_only;
             }
         }
     }
@@ -322,6 +352,13 @@ impl BarButton {
     fn max_width_chars(&self) -> i32 {
         let max = self.behavior.label_max_chars.get();
         if max > 0 { max as i32 } else { -1 }
+    }
+
+    /// Stabilize label width only for non-truncating horizontal labels. Truncating
+    /// (ellipsized) labels must stay free to shrink; vertical bars size their labels
+    /// to the bar width, so a horizontal-width floor is unwanted there.
+    fn stabilize_enabled(&self) -> bool {
+        self.behavior.label_max_chars.get() == 0 && !self.settings.is_vertical.get()
     }
 
     fn is_icon_only(&self) -> bool {

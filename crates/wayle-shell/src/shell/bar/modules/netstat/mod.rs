@@ -84,6 +84,11 @@ impl Component for NetstatModule {
                 BarButtonOutput::ScrollDown => NetstatMsg::ScrollDown,
             });
 
+        // Rates swing across orders of magnitude every second. Reserve the integer
+        // part to 3 digits so idle<->active swings up to 999 don't shove neighbors;
+        // only rare 4-integer-digit values (1000+, just before the unit switch) grow.
+        bar_button.emit(BarButtonInput::SetLabelMinDigits(3));
+
         watchers::spawn_watchers(&sender, netstat_config, &init.sysinfo);
 
         let model = Self {

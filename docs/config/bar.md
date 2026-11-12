@@ -118,7 +118,7 @@ When disabled, windows may overlap the bar and the bar draws over them.
 | `dropdown-shadow` | bool | `true` | Enable dropdown panel shadow. |
 | `dropdown-opacity` | [`Percentage`](/config/types#percentage) | `100` | Dropdown panel opacity (0-100). |
 | `dropdown-autohide` | bool | `true` | Close dropdown when clicking outside it. |
-| `dropdown-freeze-label` | bool | `true` | Freeze the bar button label while its dropdown is open. |
+| `dropdown-freeze-label` | bool | `false` | Freeze the bar button label while its dropdown is open. |
 
 ::: details More about `dropdown-freeze-label`
 
@@ -171,7 +171,7 @@ button-group-rounding = "sm"
 dropdown-shadow = true
 dropdown-opacity = 100
 dropdown-autohide = true
-dropdown-freeze-label = true
+dropdown-freeze-label = false
 ```
 
 

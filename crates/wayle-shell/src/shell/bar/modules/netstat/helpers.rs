@@ -29,8 +29,16 @@ fn gib(bytes: u64) -> String {
     format!("{:.2}", ByteSize::b(bytes).as_gib())
 }
 
+/// Auto-scaled rate with a stable shape: always one decimal place and a 3-char
+/// unit (KiB/MiB/GiB/TiB). Flooring at KiB avoids the sub-KiB "B" tier, which
+/// would otherwise vary the decimal structure and unit length as traffic idles.
 fn auto(bytes: u64) -> String {
-    ByteSize::b(bytes).to_string()
+    const KIB: u64 = 1024;
+    if bytes < KIB {
+        format!("{:.1} KiB", bytes as f64 / KIB as f64)
+    } else {
+        ByteSize::b(bytes).to_string()
+    }
 }
 
 pub(super) fn select_interface<'a>(
@@ -119,6 +127,14 @@ mod tests {
         let net = net_data("eth0", 100 * KIB, 2 * MIB);
         let result = format_label("{{ up_auto }}", &net);
         assert_eq!(result, "2.0 MiB");
+    }
+
+    #[test]
+    fn format_label_auto_floors_sub_kib_at_kib() {
+        // Idle / sub-KiB traffic keeps the 1-decimal + KiB shape instead of "0 B".
+        let net = net_data("eth0", 0, 512);
+        assert_eq!(format_label("{{ down_auto }}", &net), "0.0 KiB");
+        assert_eq!(format_label("{{ up_auto }}", &net), "0.5 KiB");
     }
 
     #[test]
