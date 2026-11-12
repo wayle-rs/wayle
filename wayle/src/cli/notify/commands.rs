@@ -10,7 +10,7 @@ pub enum NotifyCommands {
     Dismiss {
         /// Notification ID to dismiss
         #[arg(value_name = "ID")]
-        id: u32,
+        id: i64,
     },
 
     /// Dismiss all notifications

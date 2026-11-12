@@ -25,6 +25,7 @@ use wayle_media::MediaService;
 use wayle_network::NetworkService;
 use wayle_niri::NiriService;
 use wayle_notification::NotificationService;
+use wayle_portal::PortalHost;
 use wayle_power_profiles::PowerProfilesService;
 use wayle_sysinfo::SysinfoService;
 use wayle_systray::{SystemTrayService, types::TrayMode};
@@ -155,6 +156,11 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
 
     timer.mark_services_done();
 
+    // Serve the portal notification backend (best-effort) so sandboxed apps' notifications
+    // reach the notification service via xdg-desktop-portal. Borrow the service before it
+    // moves into `ShellServices` below.
+    let portal_host = init_portal_backend(daemons.notification.as_deref()).await;
+
     let services = ShellServices {
         audio: daemons.audio,
         battery: core.battery,
@@ -169,6 +175,7 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
         niri: optional.niri,
         network: core.network,
         notification: daemons.notification,
+        portal_host,
         sysinfo: core.sysinfo,
         systray: daemons.systray,
         wallpaper: core.wallpaper,
@@ -330,4 +337,40 @@ async fn init_daemon_services(
         notification,
         systray,
     }
+}
+
+/// The portal-backend bus name Wayle serves the notification impl interface on.
+const PORTAL_BUS_NAME: &str = "org.freedesktop.impl.portal.desktop.wayle";
+
+/// Serves `org.freedesktop.impl.portal.Notification` so xdg-desktop-portal can forward
+/// sandboxed apps' notifications into the notification service. Best-effort: on any error
+/// the portal backend is simply disabled (unsandboxed apps are unaffected).
+///
+/// For xdg-desktop-portal to actually route to this backend, a `.portal` file plus a
+/// `portals.conf` selecting `wayle` for the Notification interface must be installed
+/// (packaging). Owning the name here is harmless without them.
+async fn init_portal_backend(notification: Option<&NotificationService>) -> Option<PortalHost> {
+    let notification = notification?;
+
+    let mut host = match PortalHost::new(PORTAL_BUS_NAME).await {
+        Ok(host) => host,
+        Err(err) => {
+            warn!(error = %err, "cannot open portal backend connection; portal notifications disabled");
+            return None;
+        }
+    };
+
+    // Register the interface object BEFORE requesting the well-known name.
+    if let Err(err) = notification.attach_portal(host.connection()).await {
+        warn!(error = %err, "cannot register portal notification backend; portal notifications disabled");
+        return None;
+    }
+
+    if let Err(err) = host.serve().await {
+        warn!(error = %err, "cannot acquire {PORTAL_BUS_NAME}; portal notifications disabled");
+        return None;
+    }
+
+    info!("portal notification backend registered at {PORTAL_BUS_NAME}");
+    Some(host)
 }

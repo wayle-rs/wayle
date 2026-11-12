@@ -15,14 +15,14 @@ pub(super) fn group_by_app(notifications: &[Arc<Notification>]) -> Vec<Notificat
     let mut groups: HashMap<Option<String>, Vec<Arc<Notification>>> = HashMap::new();
 
     for notification in notifications {
-        let key = notification.app_name.get();
+        let key = notification.view.get().origin.name;
         groups.entry(key).or_default().push(notification.clone());
     }
 
     let mut result: Vec<NotificationGroupData> = groups
         .into_iter()
         .map(|(app_name, mut notifs)| {
-            notifs.sort_by_key(|notification| Reverse(notification.timestamp.get()));
+            notifs.sort_by_key(|notification| Reverse(notification.view.get().received));
             NotificationGroupData {
                 app_name,
                 notifications: notifs,
@@ -34,11 +34,11 @@ pub(super) fn group_by_app(notifications: &[Arc<Notification>]) -> Vec<Notificat
         let left_ts = left
             .notifications
             .first()
-            .map(|notification| notification.timestamp.get());
+            .map(|notification| notification.view.get().received);
         let right_ts = right
             .notifications
             .first()
-            .map(|notification| notification.timestamp.get());
+            .map(|notification| notification.view.get().received);
         right_ts.cmp(&left_ts)
     });
 

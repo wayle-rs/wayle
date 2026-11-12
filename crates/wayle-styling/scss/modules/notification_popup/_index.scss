@@ -26,7 +26,11 @@
         --_urgency-shadow: inset 0 calc(2px * var(--global-scale)) 0 0 var(--accent);
     }
 
-    &.urgency-bar.critical {
+    &.urgency-bar.high {
+        --_urgency-shadow: inset 0 calc(2px * var(--global-scale)) 0 0 var(--status-warning);
+    }
+
+    &.urgency-bar.urgent {
         --_urgency-shadow: inset 0 calc(2px * var(--global-scale)) 0 0 var(--status-error);
     }
 
