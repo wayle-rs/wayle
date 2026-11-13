@@ -36,6 +36,7 @@ right = ["battery"]
 | `format` | string | `"{{ percent }}%"` | Format string for the label. |
 | `label-max-length` | u32 | `0` | Max label characters before truncation with ellipsis. Set to 0 to disable. |
 | `thresholds` | array of [`ThresholdEntry`](/config/types#threshold-entry) | `[]` | Dynamic color thresholds based on battery percentage. |
+| `custom-upower-device` | string | `"/org/freedesktop/UPower/devices/DisplayDevice"` |  Overrides the default DisplayDevice from upower |
 
 ::: details More about `level-icons`
 

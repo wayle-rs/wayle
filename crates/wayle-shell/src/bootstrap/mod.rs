@@ -29,7 +29,7 @@ use wayle_power_profiles::PowerProfilesService;
 use wayle_sysinfo::SysinfoService;
 use wayle_systray::{SystemTrayService, types::TrayMode};
 use wayle_wallpaper::WallpaperService;
-use zbus::{Connection, fdo::DBusProxy};
+use zbus::{Connection, fdo::DBusProxy, zvariant::OwnedObjectPath};
 
 use crate::{
     services::{IdleInhibitService, ShellIpcService},
@@ -208,7 +208,21 @@ async fn init_core_services(
 
     let startup_duration = modules.idle_inhibit.startup_duration.get();
 
-    let battery_task = tokio::spawn(BatteryService::new());
+    let battery_cfg = config.modules.battery.custom_upower_device.get();
+    let mut battery_builder = BatteryService::builder();
+    if !battery_cfg.is_empty() {
+        match OwnedObjectPath::try_from(battery_cfg.as_str()) {
+            Ok(path) => battery_builder = battery_builder.device_path(path),
+            Err(err) => {
+                warn!(
+                    error = %err,
+                    path = %battery_cfg,
+                    "Invalid UPower device path in config, using DisplayDevice"
+                );
+            }
+        }
+    }
+    let battery_task = tokio::spawn(battery_builder.build());
     let brightness_task = tokio::spawn(BrightnessService::new());
     let network_task = tokio::spawn(NetworkService::new());
     let wallpaper_cfg = config.wallpaper.clone();
