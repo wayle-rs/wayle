@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use wayle_audio::AudioService;
-use wayle_battery::BatteryService;
 use wayle_bluetooth::BluetoothService;
 use wayle_config::ConfigService;
 use wayle_core::DeferredService;
@@ -11,7 +10,7 @@ use wayle_notification::NotificationService;
 use wayle_power_profiles::PowerProfilesService;
 use wayle_sysinfo::SysinfoService;
 
-use crate::services::IdleInhibitService;
+use crate::services::{BatteryService, IdleInhibitService};
 
 pub(crate) struct DashboardDropdownInit {
     pub audio: Option<Arc<AudioService>>,

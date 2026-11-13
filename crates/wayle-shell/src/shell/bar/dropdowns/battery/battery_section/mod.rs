@@ -7,15 +7,12 @@ use std::sync::Arc;
 
 use gtk::prelude::*;
 use relm4::{gtk, prelude::*};
-use wayle_battery::{
-    BatteryService,
-    types::{DeviceState, WarningLevel},
-};
+use wayle_battery::types::{DeviceState, WarningLevel};
 use wayle_widgets::prelude::*;
 
 pub(crate) use self::messages::BatterySectionInit;
 use self::messages::{BatterySectionCmd, BatterySectionInput};
-use crate::i18n::t;
+use crate::{i18n::t, services::BatteryService};
 
 pub(crate) struct BatterySection {
     battery: Arc<BatteryService>,

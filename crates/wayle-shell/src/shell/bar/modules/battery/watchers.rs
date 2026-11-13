@@ -1,7 +1,6 @@
 use std::sync::Arc;
 
 use relm4::ComponentSender;
-use wayle_battery::BatteryService;
 use wayle_config::schemas::{modules::BatteryConfig, styling::evaluate_thresholds};
 use wayle_widgets::watch;
 
@@ -10,6 +9,7 @@ use super::{
     helpers::{IconContext, format_label, select_icon},
     messages::BatteryCmd,
 };
+use crate::services::BatteryService;
 
 pub(super) fn spawn_watchers(
     sender: &ComponentSender<BatteryModule>,
