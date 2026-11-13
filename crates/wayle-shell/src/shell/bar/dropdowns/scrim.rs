@@ -36,7 +36,9 @@
 //! The scrim maps at `overlay` (above fullscreen — dismissal + popup shortcuts keep
 //! working while an app is fullscreen); `show` then raises the bar to `overlay` too,
 //! *after* the scrim maps, so it (and its popovers) stack above the scrim. On close
-//! the bar drops back to its configured layer.
+//! the bar drops back to its configured layer. Both layer changes are committed
+//! right away (see `helpers::surface_commit`): while a fullscreen window hides the
+//! bar, the compositor may withhold the frame callback GTK's next paint waits for.
 //!
 //! Transparent-but-clickable. Input is independent of opacity, but
 //! `set_input_region` only marks the region dirty; it reaches the compositor solely
@@ -52,7 +54,10 @@ use gtk4_layer_shell::{Edge, KeyboardMode, Layer, LayerShell};
 use relm4::gtk::{self, cairo, glib, prelude::*};
 
 use super::coordinator::OpenSurfaceCoordinator;
-use crate::shell::{helpers::layer_shell::apply_layer, services::ShellServices};
+use crate::shell::{
+    helpers::{layer_shell::apply_layer, surface_commit::commit_now},
+    services::ShellServices,
+};
 
 pub(crate) struct Scrim {
     window: gtk::Window,
@@ -181,6 +186,10 @@ impl Scrim {
             // popover routes keys there.
             bar.set_layer(Layer::Overlay);
             bar.set_keyboard_mode(KeyboardMode::OnDemand);
+            // Apply both now instead of on GTK's next paint: while a fullscreen
+            // window hides the bar, the compositor may withhold the frame callback
+            // that paint waits for, and the bar would never come up.
+            commit_now(&bar);
         }
     }
 
@@ -201,6 +210,7 @@ impl Scrim {
                 self.services.config.config().bar.layer.get(),
                 &self.services.config,
             );
+            commit_now(&bar);
         }
     }
 }
