@@ -103,7 +103,7 @@ impl Component for Shell {
                 .detach()
         });
 
-        let osd = create_osd(&init.services);
+        let osd = create_osd(&init.services, 0);
 
         let model = Shell {
             css_provider,
@@ -179,7 +179,10 @@ impl Shell {
 
     fn toggle_osd(&mut self, enabled: bool) {
         if enabled && self._osd.is_none() {
-            self._osd = create_osd(&self.services);
+            let ipc = self.services.shell_ipc.state();
+            let seen_seq = ipc.osd_request.get().map_or(0, |request| request.seq);
+
+            self._osd = create_osd(&self.services, seen_seq);
             debug!("OSD enabled");
         } else if !enabled && let Some(controller) = self._osd.take() {
             controller.widget().destroy();
@@ -188,7 +191,13 @@ impl Shell {
     }
 }
 
-fn create_osd(services: &ShellServices) -> Option<Controller<Osd>> {
+/// Builds the OSD component, ignoring IPC requests at or below `seen_seq`.
+///
+/// Startup passes 0, so a request that landed while the shell was still coming
+/// up still renders. Recreating after an `osd.enabled` toggle passes the
+/// pending sequence, so the request `Property::watch()` replays to the new
+/// subscriber is dropped instead of resurfacing.
+fn create_osd(services: &ShellServices, seen_seq: u64) -> Option<Controller<Osd>> {
     let osd_enabled = services.config.config().osd.enabled.get();
 
     if !osd_enabled {
@@ -201,6 +210,8 @@ fn create_osd(services: &ShellServices) -> Option<Controller<Osd>> {
                 config: services.config.clone(),
                 audio: services.audio.clone(),
                 brightness: services.brightness.clone(),
+                shell_ipc: services.shell_ipc.state(),
+                seen_seq,
             })
             .detach(),
     )

@@ -21,6 +21,18 @@ settings-osd-border = Border
 settings-osd-layer = Layer
     .description = Layer-shell layer the OSD is placed on. Tearing mode demotes overlay to top.
 
+settings-osd-auto-speaker = Speaker Changes
+    .description = Show the speaker OSD automatically when output volume or mute changes
+
+settings-osd-auto-microphone = Microphone Changes
+    .description = Show the microphone OSD automatically when input volume or mute changes
+
+settings-osd-auto-brightness = Brightness Changes
+    .description = Show the brightness OSD automatically when display brightness changes. Turn off when another program adjusts brightness continuously.
+
+settings-osd-auto-toggles = Lock Keys
+    .description = Show the OSD automatically when caps, num, or scroll lock is pressed
+
 
 ## OsdPosition variants
 enum-osd-position-top-left = Top Left

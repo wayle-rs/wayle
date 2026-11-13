@@ -9,7 +9,7 @@ use clap_complete::Shell;
 use crate::cli::{
     audio::commands::AudioCommands, config::commands::ConfigCommands,
     icons::commands::IconsCommands, idle::commands::IdleCommands, media::commands::MediaCommands,
-    notify::commands::NotifyCommands, panel::commands::PanelCommands,
+    notify::commands::NotifyCommands, osd::commands::OsdCommands, panel::commands::PanelCommands,
     power::commands::PowerCommands, systray::commands::SystrayCommands,
     wallpaper::commands::WallpaperCommands,
 };
@@ -67,6 +67,12 @@ pub enum Commands {
         /// Notification subcommand to execute.
         #[command(subcommand)]
         command: NotifyCommands,
+    },
+    /// On-screen display commands
+    Osd {
+        /// OSD subcommand to execute.
+        #[command(subcommand)]
+        command: OsdCommands,
     },
     /// Panel management commands
     Panel {

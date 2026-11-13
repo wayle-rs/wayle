@@ -22,6 +22,7 @@ use self::{
         is_toggle, osd_classes,
     },
 };
+use crate::services::shell_ipc::OsdDevice;
 
 const BRIGHTNESS_ICON: &str = "ld-sun-symbolic";
 
@@ -35,10 +36,17 @@ pub(crate) struct Osd {
     input_device_watcher: WatcherToken,
     brightness_watcher: WatcherToken,
 
+    /// Device the visible overlay is reporting on, watched while it stays up.
+    displayed: Option<OsdDevice>,
+    displayed_watcher: WatcherToken,
+
     current_event: Option<OsdEvent>,
     last_volume: Option<(u32, bool)>,
     last_input_volume: Option<(u32, bool)>,
     last_brightness: Option<u32>,
+
+    /// Highest IPC request sequence already handled.
+    seen_seq: u64,
 }
 
 #[allow(clippy::needless_borrow)]
@@ -160,10 +168,13 @@ impl Component for Osd {
             device_watcher: WatcherToken::new(),
             input_device_watcher: WatcherToken::new(),
             brightness_watcher: WatcherToken::new(),
+            displayed: None,
+            displayed_watcher: WatcherToken::new(),
             current_event: None,
             last_volume: None,
             last_input_volume: None,
             last_brightness: None,
+            seen_seq: init.seen_seq,
         };
 
         model.apply_position(&root);
@@ -176,7 +187,13 @@ impl Component for Osd {
 
         let widgets = view_output!();
 
-        watchers::spawn(&sender, &init.config, &init.audio, &init.brightness);
+        watchers::spawn(
+            &sender,
+            &init.config,
+            &init.audio,
+            &init.brightness,
+            &init.shell_ipc,
+        );
 
         ComponentParts { model, widgets }
     }
@@ -190,6 +207,7 @@ impl Component for Osd {
             OsdCmd::Dismiss(dismiss_id) => {
                 if dismiss_id == self.dismiss_id {
                     root.set_visible(false);
+                    self.clear_displayed();
                     debug!("OSD dismissed");
                 }
             }
@@ -225,6 +243,14 @@ impl Component for Osd {
 
             OsdCmd::ToggleChanged(toggle) => {
                 self.handle_toggle_changed(toggle, &sender, root);
+            }
+
+            OsdCmd::ShowRequested(request) => {
+                self.handle_show_requested(request, &sender, root);
+            }
+
+            OsdCmd::DisplayedValueChanged => {
+                self.handle_displayed_value_changed();
             }
         }
     }

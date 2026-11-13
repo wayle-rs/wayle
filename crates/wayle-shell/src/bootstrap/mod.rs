@@ -145,7 +145,13 @@ pub async fn init_services() -> Result<(StartupTimer, ShellServices), Box<dyn Er
     spawn_deferred_bluetooth(bluetooth.clone());
     spawn_deferred_power_profiles(power_profiles.clone());
 
-    let shell_ipc = match ShellIpcService::new().await {
+    let shell_ipc = match ShellIpcService::new(
+        Arc::clone(&config_service),
+        daemons.audio.clone(),
+        core.brightness.clone(),
+    )
+    .await
+    {
         Ok(service) => Arc::new(service),
         Err(err) => {
             warn!(error = %err, "Shell IPC service unavailable");

@@ -18,6 +18,21 @@ settings-osd-margin = Marge
 settings-osd-border = Bordure
     .description = Dessiner une bordure autour de l'indicateur OSD
 
+settings-osd-layer = Couche
+    .description = Couche layer-shell de l'OSD. Le mode tearing rétrograde overlay vers top.
+
+settings-osd-auto-speaker = Changements de haut-parleur
+    .description = Afficher l'OSD du haut-parleur automatiquement lorsque le volume ou la sourdine de sortie change
+
+settings-osd-auto-microphone = Changements de microphone
+    .description = Afficher l'OSD du microphone automatiquement lorsque le volume ou la sourdine d'entrée change
+
+settings-osd-auto-brightness = Changements de luminosité
+    .description = Afficher l'OSD de luminosité automatiquement lorsque la luminosité de l'écran change. Désactivez si un autre programme ajuste la luminosité en continu.
+
+settings-osd-auto-toggles = Touches de verrouillage
+    .description = Afficher l'OSD automatiquement lors de l'appui sur verr. maj., verr. num. ou arrêt défil.
+
 
 ## Variantes de OsdPosition
 enum-osd-position-top-left = Haut gauche

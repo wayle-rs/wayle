@@ -3,13 +3,8 @@
 use std::time::Duration;
 
 use futures::StreamExt;
-use wayle_ipc::{
-    shell::{APP_ID, GtkActionsProxy},
-    shell_ipc::ShellIpcProxy,
-};
-use zbus::{Connection, Error as ZbusError, fdo::DBusProxy};
-
-use crate::cli::dbus;
+use wayle_ipc::shell::{APP_ID, GtkActionsProxy};
+use zbus::{Connection, fdo::DBusProxy};
 
 const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -88,24 +83,4 @@ pub async fn wait_for_shutdown(connection: &Connection) -> Result<(), String> {
     tokio::time::timeout(SHUTDOWN_TIMEOUT, wait_for_release)
         .await
         .map_err(|_| "Timeout waiting for panel to stop".to_string())?
-}
-
-/// Creates a ShellIpcProxy for shell commands.
-///
-/// # Errors
-///
-/// Returns error if D-Bus connection or proxy creation fails.
-pub async fn shell_ipc_proxy() -> Result<(Connection, ShellIpcProxy<'static>), String> {
-    let connection = connect().await?;
-
-    let proxy = ShellIpcProxy::new(&connection)
-        .await
-        .map_err(|err| format!("cannot create shell IPC proxy: {err}"))?;
-
-    Ok((connection, proxy))
-}
-
-/// Formats a shell IPC D-Bus error for CLI output.
-pub fn format_ipc_error(operation: &str, error: ZbusError) -> String {
-    dbus::format_error("Shell", operation, error)
 }
