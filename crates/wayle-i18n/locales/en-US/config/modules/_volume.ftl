@@ -56,6 +56,9 @@ settings-modules-volume-left-click = Left Click
 settings-modules-volume-dropdown-app-icons = App Icons in Dropdown
     .description = Show application icons in the audio dropdown
 
+settings-modules-volume-dropdown-hide-unavailable-outputs = Hide Unavailable Outputs
+    .description = Hide outputs that cannot play sound, such as disconnected HDMI ports, from the output picker
+
 settings-modules-volume-thresholds = Thresholds
     .description = Color thresholds that change based on value levels
 

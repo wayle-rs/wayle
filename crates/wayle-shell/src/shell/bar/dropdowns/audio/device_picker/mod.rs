@@ -8,6 +8,7 @@ use std::sync::Arc;
 use gtk::prelude::*;
 use relm4::{factory::FactoryVecDeque, gtk, prelude::*};
 use wayle_audio::AudioService;
+use wayle_config::ConfigService;
 
 use self::device_item::DeviceOptionItem;
 pub(super) use self::messages::*;
@@ -15,6 +16,7 @@ use crate::shell::bar::dropdowns::audio::VolumeSectionKind;
 
 pub(crate) struct DevicePicker {
     audio: Arc<AudioService>,
+    config: Arc<ConfigService>,
     kind: VolumeSectionKind,
     title: String,
     devices: FactoryVecDeque<DeviceOptionItem>,
@@ -81,16 +83,23 @@ impl Component for DevicePicker {
 
         let devices = FactoryVecDeque::builder().launch(device_list).detach();
 
-        watchers::spawn(&sender, &init.audio, init.kind);
+        watchers::spawn(&sender, &init.audio, &init.config, init.kind);
 
-        let initial_list = Self::build_device_list(&init.audio, init.kind);
+        let initial_list = Self::build_device_list(&init.audio, &init.config, init.kind);
         let (cached_output, cached_input) = match init.kind {
-            VolumeSectionKind::Output => (init.audio.output_devices.get(), Vec::new()),
+            VolumeSectionKind::Output => (
+                methods::visible_output_devices(
+                    &init.audio.output_devices.get(),
+                    methods::hide_unavailable_outputs(&init.config),
+                ),
+                Vec::new(),
+            ),
             VolumeSectionKind::Input => (Vec::new(), init.audio.input_devices.get()),
         };
 
         let mut model = Self {
             audio: init.audio,
+            config: init.config,
             kind: init.kind,
             title: init.title,
             devices,
@@ -126,7 +135,10 @@ impl Component for DevicePicker {
             DevicePickerCmd::DevicesChanged(list) => {
                 match self.kind {
                     VolumeSectionKind::Output => {
-                        self.cached_output_devices = self.audio.output_devices.get();
+                        self.cached_output_devices = methods::visible_output_devices(
+                            &self.audio.output_devices.get(),
+                            methods::hide_unavailable_outputs(&self.config),
+                        );
                     }
                     VolumeSectionKind::Input => {
                         self.cached_input_devices = self.audio.input_devices.get();

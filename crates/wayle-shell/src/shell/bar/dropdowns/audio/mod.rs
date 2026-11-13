@@ -117,6 +117,7 @@ impl Component for AudioDropdown {
         let output_picker = DevicePicker::builder()
             .launch(DevicePickerInit {
                 audio: init.audio.clone(),
+                config: init.config.clone(),
                 kind: VolumeSectionKind::Output,
                 title: t!("dropdown-audio-output-devices"),
             })
@@ -125,6 +126,7 @@ impl Component for AudioDropdown {
         let input_picker = DevicePicker::builder()
             .launch(DevicePickerInit {
                 audio: init.audio.clone(),
+                config: init.config.clone(),
                 kind: VolumeSectionKind::Input,
                 title: t!("dropdown-audio-input-devices"),
             })

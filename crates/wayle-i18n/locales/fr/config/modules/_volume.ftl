@@ -56,6 +56,9 @@ settings-modules-volume-left-click = Clic gauche
 settings-modules-volume-dropdown-app-icons = Icônes d'applications dans le menu déroulant
     .description = Afficher les icônes d'applications dans le menu déroulant audio
 
+settings-modules-volume-dropdown-hide-unavailable-outputs = Masquer les sorties indisponibles
+    .description = Masquer du sélecteur de sortie les sorties qui ne peuvent pas lire de son, comme les ports HDMI déconnectés
+
 settings-modules-volume-thresholds = Seuils
     .description = Seuils de couleur qui changent selon le niveau de valeur
 

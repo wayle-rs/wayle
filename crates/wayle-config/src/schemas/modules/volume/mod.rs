@@ -125,6 +125,18 @@ pub struct VolumeConfig {
     #[default(AppIconSource::Mapped)]
     pub dropdown_app_icons: ConfigProperty<AppIconSource>,
 
+    /// Hide output devices that cannot currently play sound from the audio
+    /// dropdown's output picker.
+    ///
+    /// An output is hidden when every one of its ports reports itself as
+    /// unavailable, such as an HDMI or DisplayPort output with nothing
+    /// connected. Outputs without ports and outputs with unknown availability
+    /// are always shown, and hidden outputs reappear when they become
+    /// available. When disabled, every output is listed.
+    #[serde(rename = "dropdown-hide-unavailable-outputs")]
+    #[default(false)]
+    pub dropdown_hide_unavailable_outputs: ConfigProperty<bool>,
+
     /// Dynamic color thresholds based on volume percentage.
     ///
     /// Entries are checked in order; the last matching entry wins for each

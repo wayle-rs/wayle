@@ -95,6 +95,17 @@ label-color = "status-error"
 | Field | Type | Default | Description |
 |---|---|---|---|
 | `dropdown-app-icons` | [`AppIconSource`](/config/types#app-icon-source) | `"mapped"` | Icon source for app volume entries in the audio dropdown. |
+| `dropdown-hide-unavailable-outputs` | bool | `false` | Hide output devices that cannot currently play sound from the audio dropdown's output picker. |
+
+::: details More about `dropdown-hide-unavailable-outputs`
+
+An output is hidden when every one of its ports reports itself as
+unavailable, such as an HDMI or DisplayPort output with nothing
+connected. Outputs without ports and outputs with unknown availability
+are always shown, and hidden outputs reappear when they become
+available. When disabled, every output is listed.
+
+:::
 
 ## Default configuration
 
@@ -122,6 +133,7 @@ middle-click = "wayle audio output-mute"
 scroll-up = ""
 scroll-down = ""
 dropdown-app-icons = "mapped"
+dropdown-hide-unavailable-outputs = false
 thresholds = []
 ```
 
