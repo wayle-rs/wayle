@@ -83,6 +83,8 @@ impl FactoryComponent for MangoTagButton {
     view! {
         #[root]
         gtk::Button {
+            set_cursor_from_name: Some("pointer"),
+
             set_css_classes: &self.classes.iter().map(String::as_str).collect::<Vec<_>>(),
 
             connect_clicked[sender, index = self.index] => move |_| {
