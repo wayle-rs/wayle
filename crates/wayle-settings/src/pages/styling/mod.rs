@@ -42,6 +42,7 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
                         theme_selector(
                             &styling.available,
                             palette,
+                            &styling.palette_base_theme,
                             &styling.scale,
                             "settings-theme-preset",
                         ),
