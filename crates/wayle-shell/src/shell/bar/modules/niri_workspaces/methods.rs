@@ -59,7 +59,6 @@ impl NiriWorkspaces {
             monitor_specific: ws_config.monitor_specific.get(),
             bar_monitor: self.bar_monitor(),
             hide_trailing_empty: ws_config.hide_trailing_empty.get(),
-            min_workspace_count: usize::from(ws_config.min_workspace_count.get()),
             ignore_patterns: &ignore_patterns,
         };
 

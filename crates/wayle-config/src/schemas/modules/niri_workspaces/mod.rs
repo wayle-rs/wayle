@@ -154,17 +154,6 @@ impl<'a> IntoIterator for &'a WorkspaceMap {
 /// Niri workspace indicators with click-to-switch.
 #[wayle_config(i18n_prefix = "settings-modules-niri-workspaces")]
 pub struct NiriWorkspacesConfig {
-    /// Always-visible ceiling for numerically-named workspaces.
-    ///
-    /// Workspaces whose name parses to an integer at or below this value
-    /// stay visible even when empty. Workspaces with non-numeric names
-    /// and those above the ceiling follow the normal empty/occupied
-    /// filtering. When `0` (default), no extra workspaces are forced
-    /// visible.
-    #[serde(rename = "min-workspace-count")]
-    #[default(0)]
-    pub min_workspace_count: ConfigProperty<u8>,
-
     /// Show only workspaces on this bar's monitor.
     ///
     /// When `true` (default), each bar shows only its own output's
