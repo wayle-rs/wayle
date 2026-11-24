@@ -1,4 +1,8 @@
-use std::{path::PathBuf, sync::Arc, time::Duration};
+use std::{
+    path::{Path, PathBuf},
+    sync::Arc,
+    time::Duration,
+};
 
 use notify::{
     Event, RecommendedWatcher, RecursiveMode, Watcher as NotifyWatcher, event::EventKind,
@@ -61,6 +65,8 @@ impl FileWatcher {
 
         info!(?config_dir, "Config directory watcher started");
 
+        watch_override_dir(&mut watcher, &config_dir, config_service.main_config_path());
+
         let file_watcher = Self {
             config_service,
             secrets_tx,
@@ -117,7 +123,7 @@ impl FileWatcher {
     async fn reload_main_config(&self) -> Result<(), Error> {
         let config = self.config_service.config();
 
-        let config_path = ConfigPaths::main_config();
+        let config_path = self.config_service.main_config_path().to_path_buf();
         let toml_value =
             tokio::task::spawn_blocking(move || Config::load_toml_with_imports(&config_path))
                 .await
@@ -160,6 +166,18 @@ impl FileWatcher {
         config.commit_config_reload();
 
         Ok(())
+    }
+}
+
+/// Watches a `--config` override file that lives outside the (already
+/// recursively-watched) config dir, so it hot-reloads like the default.
+/// Watching its parent dir survives editor atomic-save/rename; failure is
+/// non-fatal (the initial load already succeeded).
+fn watch_override_dir(watcher: &mut RecommendedWatcher, config_dir: &Path, main_config: &Path) {
+    if let Some(parent) = main_config.parent()
+        && !parent.starts_with(config_dir)
+    {
+        let _ = watcher.watch(parent, RecursiveMode::NonRecursive);
     }
 }
 

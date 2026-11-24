@@ -4,7 +4,7 @@
 //! The `shell` subcommand runs the GUI directly and manages its own
 //! tokio runtime. All other commands share a single runtime.
 
-use std::process;
+use std::{path::PathBuf, process};
 
 use clap::Parser;
 use tokio::runtime::Runtime;
@@ -17,7 +17,7 @@ fn main() {
     let cli = Cli::parse();
 
     match cli.command {
-        Commands::Shell => return run_shell(),
+        Commands::Shell { config } => return run_shell(config),
         Commands::Completions { shell } => {
             cli::app::generate_completions(shell);
             return;
@@ -50,7 +50,7 @@ fn main() {
             Commands::Systray { command } => cli::systray::execute(command).await,
             Commands::Wallpaper { command } => cli::wallpaper::execute(command).await,
             Commands::Idle { command } => cli::idle::execute(command).await,
-            Commands::Shell | Commands::Completions { .. } => unreachable!(),
+            Commands::Shell { .. } | Commands::Completions { .. } => unreachable!(),
         }
     });
 
@@ -60,8 +60,8 @@ fn main() {
     }
 }
 
-fn run_shell() {
-    if let Err(err) = wayle_shell::run() {
+fn run_shell(config_override: Option<PathBuf>) {
+    if let Err(err) = wayle_shell::run(config_override) {
         eprintln!("Error: {err}");
         process::exit(1);
     }

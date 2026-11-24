@@ -14,7 +14,7 @@ use crate::{cli::CliAction, config::ConfigService};
 /// Returns error if the config fails to load, fails to serialize, or the
 /// icon manager cannot be constructed.
 pub async fn execute(dry_run: bool) -> CliAction {
-    let config_service = ConfigService::load()
+    let config_service = ConfigService::load(None)
         .await
         .map_err(|err| format!("Failed to load config: {err}"))?;
 
