@@ -135,7 +135,7 @@ async fn run_child(
 }
 
 fn spawn_child(command: &str) -> Result<tokio::process::Child, std::io::Error> {
-    Command::new("sh")
+    Command::new("/bin/sh")
         .arg("-c")
         .arg(command)
         .stdout(Stdio::piped())
@@ -212,7 +212,7 @@ mod tests {
     }
 
     fn exit_status(code: i32) -> ExitStatus {
-        std::process::Command::new("sh")
+        std::process::Command::new("/bin/sh")
             .arg("-c")
             .arg(format!("exit {code}"))
             .status()

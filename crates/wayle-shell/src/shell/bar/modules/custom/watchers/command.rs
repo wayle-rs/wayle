@@ -75,7 +75,7 @@ fn map_exec_outcome(module_id: &str, outcome: ExecOutcome) -> CustomCmd {
 }
 
 async fn run_command(command: &str) -> Result<String, std::io::Error> {
-    let output = Command::new("sh")
+    let output = Command::new("/bin/sh")
         .arg("-c")
         .arg(command)
         .stdout(Stdio::piped())
