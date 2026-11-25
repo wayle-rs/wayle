@@ -33,6 +33,7 @@ pub fn builtins() -> Vec<ThemeEntry> {
         ("everforest-light", everforest_light),
         ("everforest-light-hard", everforest_light_hard),
         ("everforest-light-soft", everforest_light_soft),
+        ("gneiss", gneiss),
         ("gruvbox-dark", gruvbox),
         ("gruvbox-dark-hard", gruvbox_dark_hard),
         ("gruvbox-dark-soft", gruvbox_dark_soft),
@@ -192,6 +193,21 @@ fn nord() -> Palette {
         elevated: String::from("#434c5e"),
         fg: String::from("#eceff4"),
         fg_muted: String::from("#d8dee9"),
+        primary: String::from("#88c0d0"),
+        red: String::from("#bf616a"),
+        yellow: String::from("#ebcb8b"),
+        green: String::from("#a3be8c"),
+        blue: String::from("#81a1c1"),
+    }
+}
+
+fn gneiss() -> Palette {
+    Palette {
+        bg: String::from("#1c1c1c"),
+        surface: String::from("#2d2d2d"),
+        elevated: String::from("#383838"),
+        fg: String::from("#d8dee9"),
+        fg_muted: String::from("#a2a2a2"),
         primary: String::from("#88c0d0"),
         red: String::from("#bf616a"),
         yellow: String::from("#ebcb8b"),
