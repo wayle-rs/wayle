@@ -1,3 +1,5 @@
+/// Schema for types in dropdowns
+pub mod dropdowns;
 mod types;
 
 use schemars::schema_for;

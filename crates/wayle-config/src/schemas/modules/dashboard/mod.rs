@@ -4,7 +4,10 @@ use wayle_derive::wayle_config;
 use crate::{
     ClickAction, ConfigProperty,
     docs::{ConfigGroup, GroupDefaults, ModuleInfo, ModuleInfoProvider},
-    schemas::styling::{ColorValue, CssToken},
+    schemas::{
+        bar::dropdowns::dashboard::user_session::SessionAction,
+        styling::{ColorValue, CssToken},
+    },
 };
 
 /// Quick-access button with a distro icon; opens the dashboard dropdown.
@@ -80,6 +83,10 @@ pub struct DashboardConfig {
     #[default(String::from("systemctl poweroff"))]
     pub dropdown_poweroff_command: ConfigProperty<String>,
 
+    /// User session configuration
+    #[serde(rename = "user-session")]
+    pub user_session: UserSessionConfig,
+
     /// Hidden: icon always shown.
     #[serde(skip)]
     #[schemars(skip)]
@@ -136,4 +143,35 @@ impl ModuleInfoProvider for DashboardConfig {
     }
 }
 
+/// Settings for user session the in dashboard
+/// ## Examples
+///
+/// ```toml
+/// [modules.dashboard.user-session]
+/// actions = [ "lock", "log-out", "reboot", "power-off" ]
+/// ```
+#[wayle_config(i18n_prefix = "settings-modules-dashboard-user-session")]
+pub struct UserSessionConfig {
+    /// Session actions to show on dashboard
+    #[serde(rename = "actions")]
+    #[default(vec![SessionAction::Lock, SessionAction::Logout, SessionAction::Reboot, SessionAction::PowerOff])]
+    pub actions: ConfigProperty<Vec<SessionAction>>,
+}
+
+impl ModuleInfoProvider for UserSessionConfig {
+    fn module_info() -> ModuleInfo {
+        ModuleInfo {
+            name: String::from("dropdown-dashboard-user-session"),
+            schema: || schema_for!(UserSessionConfig),
+            layout_id: Some(String::from("user-session")),
+            array_entry: false,
+        }
+    }
+
+    fn groups() -> Vec<ConfigGroup> {
+        GroupDefaults::bar_button()
+    }
+}
+
+crate::register_module!(UserSessionConfig);
 crate::register_module!(DashboardConfig);
