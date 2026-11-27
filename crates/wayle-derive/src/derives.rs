@@ -105,8 +105,14 @@ pub fn apply_config_layer(input: TokenStream) -> TokenStream {
 }
 
 /// Generates `ApplyRuntimeLayer`. Works like [`apply_config_layer`] but for
-/// runtime.toml (GUI overrides). Returns `Err` if a field rejects the value,
-/// so bad overrides get caught before they propagate.
+/// runtime.toml (GUI overrides).
+///
+/// A field that rejects its value is logged and skipped rather than
+/// propagated with `?`: this struct is itself one field of a parent struct,
+/// and an early return here would abort every *sibling* field still waiting
+/// in the parent's loop, silently dropping unrelated, perfectly valid
+/// runtime overrides. One bad value must never wipe out the rest of the
+/// config.
 pub fn apply_runtime_layer(input: TokenStream) -> TokenStream {
     let derive_input = parse_macro_input!(input as DeriveInput);
     let struct_name = &derive_input.ident;
@@ -124,7 +130,15 @@ pub fn apply_runtime_layer(input: TokenStream) -> TokenStream {
             let field_ident = &field.ident;
             lookup_loop(
                 field,
-                quote! { self.#field_ident.apply_runtime_layer(field_value, &child_path)?; },
+                quote! {
+                    if let Err(err) = self.#field_ident.apply_runtime_layer(field_value, &child_path) {
+                        ::tracing::warn!(
+                            field = %child_path,
+                            error = %err,
+                            "invalid runtime value; ignoring this field, keeping the rest",
+                        );
+                    }
+                },
             )
         });
 
