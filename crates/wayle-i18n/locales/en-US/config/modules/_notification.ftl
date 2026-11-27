@@ -1,6 +1,9 @@
-### Wayle Configuration - Notification Module
+### Wayle Configuration - Notifications Module
 
-## Notification Module Configuration
+## Notifications Module Configuration
+
+settings-modules-notifications-enabled = Enabled
+    .description = Enable the notifications service and module
 
 settings-modules-notifications-icon-name = Default Icon
     .description = Icon shown when no notifications

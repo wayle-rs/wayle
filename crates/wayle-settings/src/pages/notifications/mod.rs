@@ -27,6 +27,10 @@ pub(crate) fn entry(config: &Config) -> LeafEntry {
             "settings-page-notifications",
             vec![
                 SectionSpec {
+                    title_key: "settings-section-general",
+                    items: vec![toggle(&notif.enabled)],
+                },
+                SectionSpec {
                     title_key: "settings-section-popup-display",
                     items: vec![
                         enum_select(&notif.popup_position),

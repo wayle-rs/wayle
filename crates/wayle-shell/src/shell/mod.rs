@@ -94,14 +94,7 @@ impl Component for Shell {
 
         init.timer.finish();
 
-        let notification_popup = init.services.notification.as_ref().map(|notification| {
-            NotificationPopupHost::builder()
-                .launch(PopupHostInit {
-                    notification: notification.clone(),
-                    config: init.services.config.clone(),
-                })
-                .detach()
-        });
+        let notification_popup = create_notification_popup(&init.services);
 
         let osd = create_osd(&init.services);
 
@@ -210,4 +203,24 @@ fn create_osd(services: &ShellServices) -> Option<Controller<Osd>> {
 fn trigger_layer_shell_reconfigure(window: &gtk::Window) {
     window.set_default_size(1, 1);
     window.set_default_size(0, 0);
+}
+
+fn create_notification_popup(
+    services: &ShellServices,
+) -> Option<Controller<NotificationPopupHost>> {
+    let notification_enabled = services.config.config().modules.notifications.enabled.get();
+    let notification = services.notification.as_ref()?;
+
+    if !notification_enabled {
+        return None;
+    }
+
+    Some(
+        NotificationPopupHost::builder()
+            .launch(PopupHostInit {
+                notification: notification.clone(),
+                config: services.config.clone(),
+            })
+            .detach(),
+    )
 }

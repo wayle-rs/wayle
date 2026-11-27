@@ -303,13 +303,6 @@ async fn init_daemon_services(
             .priority_players(priority)
             .build(),
     );
-    let blocklist = Property::new(modules.notifications.blocklist.get());
-    let notification_task = tokio::spawn(
-        NotificationService::builder()
-            .with_daemon()
-            .blocklist(blocklist)
-            .build(),
-    );
     let systray_task = tokio::spawn(
         SystemTrayService::builder()
             .with_daemon()
@@ -317,10 +310,23 @@ async fn init_daemon_services(
             .build(),
     );
 
-    let (audio, media, notification, systray) = tokio::join!(
+    // Conditionally initialize notification service
+    let notification = if modules.notifications.enabled.get() {
+        let blocklist = Property::new(modules.notifications.blocklist.get());
+        let notification_task = tokio::spawn(
+            NotificationService::builder()
+                .with_daemon()
+                .blocklist(blocklist)
+                .build(),
+        );
+        try_service!(timer, "Notification", spawned(notification_task), no_wrap)
+    } else {
+        None
+    };
+
+    let (audio, media, systray) = tokio::join!(
         async { try_service!(timer, "Audio", spawned(audio_task), no_wrap) },
         async { try_service!(timer, "Media", spawned(media_task), no_wrap) },
-        async { try_service!(timer, "Notification", spawned(notification_task), no_wrap) },
         async { try_service!(timer, "SystemTray", spawned(systray_task), no_wrap) },
     );
 

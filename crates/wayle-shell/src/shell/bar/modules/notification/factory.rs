@@ -21,11 +21,16 @@ impl ModuleFactory for Factory {
         dropdowns: &Rc<DropdownRegistry>,
         class: Option<String>,
     ) -> Option<ModuleInstance> {
+        let notification_enabled = services.config.config().modules.notifications.enabled.get();
         let notification = require_service(
             "notification",
             "notification",
             services.notification.clone(),
         )?;
+
+        if !notification_enabled {
+            return None;
+        }
 
         let init = NotificationInit {
             settings: settings.clone(),
