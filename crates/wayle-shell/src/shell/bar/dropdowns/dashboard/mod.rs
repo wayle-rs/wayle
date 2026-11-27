@@ -113,23 +113,36 @@ impl Component for DashboardDropdown {
                 DropdownContent {
                     set_vexpand: true,
 
-                    #[local_ref]
-                    quick_actions_widget -> gtk::Box {},
+                    gtk::ScrolledWindow {
+                        set_hscrollbar_policy: gtk::PolicyType::Never,
+                        set_vexpand: true,
+                        set_propagate_natural_height: true,
+                        add_css_class: "dashboard-scroll",
 
-                    #[local_ref]
-                    controls_widget -> gtk::Box {},
+                        #[wrap(Some)]
+                        set_child = &gtk::Box {
+                            add_css_class: "dashboard-content-box",
+                            set_orientation: gtk::Orientation::Vertical,
 
-                    #[local_ref]
-                    media_widget -> gtk::Box {},
+                            #[local_ref]
+                            quick_actions_widget -> gtk::Box {},
 
-                    #[local_ref]
-                    info_row_widget -> gtk::Box {},
+                            #[local_ref]
+                            controls_widget -> gtk::Box {},
 
-                    #[local_ref]
-                    system_stats_widget -> gtk::Box {},
+                            #[local_ref]
+                            media_widget -> gtk::Box {},
 
-                    #[local_ref]
-                    user_session_widget -> gtk::Box {},
+                            #[local_ref]
+                            info_row_widget -> gtk::Box {},
+
+                            #[local_ref]
+                            system_stats_widget -> gtk::Box {},
+
+                            #[local_ref]
+                            user_session_widget -> gtk::Box {},
+                        },
+                    },
                 },
             },
         }

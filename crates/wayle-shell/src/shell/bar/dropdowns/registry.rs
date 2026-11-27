@@ -42,11 +42,13 @@ pub(crate) struct DropdownInstance {
     popover: gtk::Popover,
     _controller: Box<dyn Any>,
     thaw_target: Rc<Cell<Option<relm4::Sender<BarButtonInput>>>>,
+    original_height: Cell<Option<i32>>,
 }
 
 impl DropdownInstance {
     pub(crate) fn new(popover: gtk::Popover, controller: Box<dyn Any>) -> Self {
         let thaw_target: Rc<Cell<Option<relm4::Sender<BarButtonInput>>>> = Rc::default();
+        let original_height = Cell::new(None);
 
         popover.connect_map(|popover| {
             debug!(
@@ -82,10 +84,48 @@ impl DropdownInstance {
             set_bar_keyboard_mode(popover, KeyboardMode::None);
         });
 
+        popover.connect_notify_local(Some("height-request"), move |popover, _| {
+            let Some(parent) = popover.parent() else {
+                return;
+            };
+            let Some(root) = parent.root().and_then(|r| r.downcast::<gtk::Window>().ok()) else {
+                return;
+            };
+            let display = gtk::prelude::WidgetExt::display(&root);
+            let monitor = if let Some(native) = root.dynamic_cast_ref::<gtk::Native>() {
+                native
+                    .surface()
+                    .and_then(|surface| display.monitor_at_surface(&surface))
+            } else {
+                None
+            };
+            let monitor = monitor.or_else(|| {
+                let monitors = display.monitors();
+                if monitors.n_items() > 0 {
+                    monitors.item(0).and_downcast::<gtk::gdk::Monitor>()
+                } else {
+                    None
+                }
+            });
+
+            if let Some(monitor) = monitor {
+                let monitor_height = monitor.geometry().height();
+                let max_allowed_height = monitor_height - 100;
+
+                Self::find_and_clamp_scrolled_windows(popover.upcast_ref(), max_allowed_height);
+
+                let current = popover.height_request();
+                if current > max_allowed_height {
+                    popover.set_height_request(max_allowed_height);
+                }
+            }
+        });
+
         Self {
             popover,
             _controller: controller,
             thaw_target,
+            original_height,
         }
     }
 
@@ -143,6 +183,7 @@ impl DropdownInstance {
         self.apply_position();
         self.apply_margins(style.margins);
         self.apply_style(&style);
+        self.clamp_height();
         set_bar_keyboard_mode(&self.popover, KeyboardMode::OnDemand);
         debug!(
             classes = ?self.popover.css_classes(),
@@ -191,6 +232,7 @@ impl DropdownInstance {
         self.apply_position();
         self.apply_margins(style.margins);
         self.apply_style(&style);
+        self.clamp_height();
         set_bar_keyboard_mode(&self.popover, KeyboardMode::OnDemand);
         debug!(
             classes = ?self.popover.css_classes(),
@@ -199,6 +241,83 @@ impl DropdownInstance {
             "popup (button path)"
         );
         self.popover.popup();
+    }
+
+    fn clamp_height(&self) {
+        let current_height = self.popover.height_request();
+
+        if self.original_height.get().is_none() && current_height > 0 {
+            self.original_height.set(Some(current_height));
+        }
+
+        let height_to_clamp = self.original_height.get().unwrap_or(current_height);
+
+        let Some(parent) = self.popover.parent() else {
+            return;
+        };
+        let Some(root) = parent.root().and_then(|r| r.downcast::<gtk::Window>().ok()) else {
+            return;
+        };
+        let display = gtk::prelude::WidgetExt::display(&root);
+        let monitor = if let Some(native) = root.dynamic_cast_ref::<gtk::Native>() {
+            native
+                .surface()
+                .and_then(|surface| display.monitor_at_surface(&surface))
+        } else {
+            None
+        };
+        let monitor = monitor.or_else(|| {
+            let monitors = display.monitors();
+            if monitors.n_items() > 0 {
+                monitors.item(0).and_downcast::<gtk::gdk::Monitor>()
+            } else {
+                None
+            }
+        });
+
+        if let Some(monitor) = monitor {
+            let monitor_height = monitor.geometry().height();
+            let max_allowed_height = monitor_height - 100;
+
+            Self::find_and_clamp_scrolled_windows(self.popover.upcast_ref(), max_allowed_height);
+
+            let height_to_check = if height_to_clamp > 0 {
+                height_to_clamp
+            } else {
+                self.popover.preferred_size().1.height()
+            };
+
+            if height_to_check > max_allowed_height {
+                self.popover.set_height_request(max_allowed_height);
+                debug!(
+                    clamped_height = max_allowed_height,
+                    original_height = height_to_check,
+                    "clamped popover height request"
+                );
+            } else if height_to_clamp > 0 {
+                self.popover.set_height_request(height_to_clamp);
+            } else {
+                self.popover.set_height_request(-1);
+            }
+        }
+    }
+
+    fn find_and_clamp_scrolled_windows(widget: &gtk::Widget, max_allowed_height: i32) {
+        if let Some(scrolled) = widget.downcast_ref::<gtk::ScrolledWindow>() {
+            let content_max = max_allowed_height - 80;
+            let current_min = scrolled.min_content_height();
+            if current_min > content_max {
+                scrolled.set_min_content_height(content_max);
+            }
+            scrolled.set_max_content_height(content_max);
+            scrolled.set_propagate_natural_height(true);
+            return;
+        }
+        let mut child = widget.first_child();
+        while let Some(c) = child {
+            Self::find_and_clamp_scrolled_windows(&c, max_allowed_height);
+            child = c.next_sibling();
+        }
     }
 
     fn apply_style(&self, style: &DropdownStyle) {
