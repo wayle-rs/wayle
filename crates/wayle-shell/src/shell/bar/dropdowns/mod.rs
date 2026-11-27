@@ -8,6 +8,8 @@ mod media;
 mod network;
 mod notification;
 mod registry;
+mod sysinfo;
+mod updates;
 mod weather;
 
 pub(crate) use self::registry::{
@@ -49,5 +51,7 @@ register_dropdowns! {
     "media" => media::Factory,
     "network" => network::Factory,
     "notification" => notification::Factory,
+    "sysinfo" => sysinfo::Factory,
+    "updates" => updates::Factory,
     "weather" => weather::Factory,
 }
