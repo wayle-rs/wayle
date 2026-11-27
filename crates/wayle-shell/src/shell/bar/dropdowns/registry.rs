@@ -166,6 +166,9 @@ impl DropdownInstance {
             return;
         }
         if self.popover.parent().is_some() {
+            // Reparenting skips `connect_closed`, so the old window's layer-shell
+            // surface would otherwise stay stuck in OnDemand keyboard mode forever.
+            set_bar_keyboard_mode(&self.popover, KeyboardMode::None);
             self.popover.unparent();
         }
         self.popover.set_parent(target);
